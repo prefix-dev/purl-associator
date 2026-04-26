@@ -1,0 +1,97 @@
+name: Deploy frontend to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "web/**"
+      - "mappings/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-deploy
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: web/package-lock.json
+
+      - name: Refresh served mappings.json from latest committed auto+manual
+        run: |
+          mkdir -p web/public
+          python3 -c "
+          import json, pathlib
+          from datetime import datetime, timezone
+          ROOT = pathlib.Path('.')
+          auto = json.loads((ROOT/'mappings/auto.json').read_text() or '{}')
+          manual = json.loads((ROOT/'mappings/manual.json').read_text() or '{}')
+          merged = {}
+          for n, e in (auto.get('packages') or {}).items():
+              merged[n] = {**e, 'status': 'auto-unverified', 'source': 'auto'}
+          for n, o in (manual.get('packages') or {}).items():
+              base = merged.get(n, {'name': n})
+              merged[n] = {**base, **o, 'status': o.get('status', 'verified'), 'source': 'manual'}
+              if n in (auto.get('packages') or {}):
+                  a = auto['packages'][n]
+                  merged[n]['auto'] = {
+                      'purl': a.get('purl'), 'type': a.get('type'),
+                      'namespace': a.get('namespace'), 'pkg_name': a.get('pkg_name'),
+                      'confidence': a.get('confidence', 0.0),
+                      'sources': a.get('sources', []),
+                  }
+          payload = {
+              'schema_version': 1,
+              'generated_at': datetime.now(timezone.utc).isoformat(timespec='seconds'),
+              'auto_generated_at': auto.get('generated_at'),
+              'manual_updated_at': manual.get('updated_at'),
+              'channel': auto.get('channel', 'conda-forge'),
+              'package_count': len(merged),
+              'packages': dict(sorted(merged.items())),
+          }
+          out = ROOT/'web/public/mappings.json'
+          out.parent.mkdir(parents=True, exist_ok=True)
+          out.write_text(json.dumps(payload, indent=2) + '\n')
+          print(f'wrote {len(merged)} entries to {out}')
+          "
+
+      - name: Install web deps
+        working-directory: web
+        run: npm ci || npm install
+
+      - name: Build
+        working-directory: web
+        env:
+          VITE_REPO_OWNER: ${{ github.repository_owner }}
+          VITE_REPO_NAME: ${{ github.event.repository.name }}
+          VITE_REPO_BRANCH: ${{ github.event.repository.default_branch }}
+          VITE_OAUTH_WORKER_URL: ${{ vars.OAUTH_WORKER_URL }}
+          VITE_GITHUB_CLIENT_ID: ${{ vars.GITHUB_OAUTH_CLIENT_ID }}
+        run: npm run build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

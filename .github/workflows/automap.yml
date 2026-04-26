@@ -1,0 +1,64 @@
+name: Automatic PURL mapping
+
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: "Limit packages processed (blank = all)"
+        required: false
+        default: ""
+      only:
+        description: "Comma-separated package names (blank = all)"
+        required: false
+        default: ""
+  schedule:
+    # Every 24 hours at 03:17 UTC. Off the hour to avoid the cron rush.
+    - cron: "17 3 * * *"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: automap
+  cancel-in-progress: false
+
+jobs:
+  automap:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: prefix-dev/setup-pixi@v0.8.1
+        with:
+          pixi-version: latest
+          cache: true
+
+      - name: Run automap
+        run: |
+          set -euo pipefail
+          ARGS=()
+          if [ -n "${{ inputs.limit }}" ]; then ARGS+=(--limit "${{ inputs.limit }}"); fi
+          if [ -n "${{ inputs.only }}" ]; then ARGS+=(--only "${{ inputs.only }}"); fi
+          pixi run python -m scripts.automap "${ARGS[@]}"
+
+      - name: Merge mappings for the SPA
+        run: pixi run python -m scripts.merge_mappings
+
+      - name: Open / update PR if mappings changed
+        uses: peter-evans/create-pull-request@v6
+        with:
+          add-paths: |
+            mappings/auto.json
+            web/public/mappings.json
+          branch: automap/refresh
+          base: main
+          title: "automap: refresh PURL mappings"
+          body: |
+            Automated refresh of `mappings/auto.json` from the latest
+            conda-forge package metadata.
+
+            This PR is opened by the scheduled `automap` workflow. Review the
+            diff for unexpected churn and merge to publish the new mappings.
+          commit-message: "automap: refresh PURL mappings"
+          delete-branch: true
