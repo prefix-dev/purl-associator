@@ -1,4 +1,23 @@
 import { CSSProperties, ReactNode, useMemo, useState } from "react";
+import {
+  AlertTriangle,
+  Check,
+  ChevronDown,
+  Database,
+  Edit3,
+  Eye,
+  GitBranch,
+  GitPullRequest,
+  Info,
+  Link as LinkIcon,
+  Plus,
+  RefreshCw,
+  Search,
+  Sparkles,
+  Undo2,
+  X,
+  type LucideIcon,
+} from "lucide-react";
 import { ECOSYSTEMS } from "../data/loader";
 
 export type ThemeShape = {
@@ -75,106 +94,55 @@ export function useTheme(): Theme {
   return { dark, setDark, t };
 }
 
-const PATHS: Record<string, ReactNode> = {
-  search: (
-    <>
-      <circle cx="11" cy="11" r="7" />
-      <path d="M21 21l-4.3-4.3" />
-    </>
-  ),
-  close: <path d="M6 6l12 12M18 6L6 18" />,
-  chev: <path d="M6 9l6 6 6-6" />,
-  plus: <path d="M12 5v14M5 12h14" />,
-  check: <path d="M4 12l5 5L20 6" />,
-  edit: <path d="M3 21l4-1 12-12-3-3L4 17l-1 4z" />,
-  link: (
-    <>
-      <path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1" />
-      <path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1" />
-    </>
-  ),
-  alert: (
-    <>
-      <path d="M12 2L2 21h20L12 2z" />
-      <path d="M12 9v5M12 18v.01" />
-    </>
-  ),
-  sparkle: <path d="M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" />,
-  branch: (
-    <>
-      <circle cx="6" cy="6" r="2" />
-      <circle cx="6" cy="18" r="2" />
-      <circle cx="18" cy="8" r="2" />
-      <path d="M6 8v8M18 10v2a4 4 0 0 1-4 4H6" />
-    </>
-  ),
-  pr: (
-    <>
-      <circle cx="6" cy="6" r="2" />
-      <circle cx="6" cy="18" r="2" />
-      <circle cx="18" cy="18" r="2" />
-      <path d="M6 8v8M18 6v10M14 6h4" />
-    </>
-  ),
-  undo: (
-    <>
-      <path d="M9 14L4 9l5-5" />
-      <path d="M4 9h11a5 5 0 0 1 0 10h-3" />
-    </>
-  ),
-  eye: (
-    <>
-      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
-      <circle cx="12" cy="12" r="3" />
-    </>
-  ),
-  github: (
-    <path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.69c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.46-1.11-1.46-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.89 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2z" />
-  ),
-  info: (
-    <>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 8v.01M12 11v5" />
-    </>
-  ),
-  db: (
-    <>
-      <ellipse cx="12" cy="5" rx="9" ry="3" />
-      <path d="M3 5v6c0 1.66 4 3 9 3s9-1.34 9-3V5M3 11v6c0 1.66 4 3 9 3s9-1.34 9-3v-6" />
-    </>
-  ),
-  refresh: (
-    <>
-      <path d="M21 12a9 9 0 1 1-3-6.7" />
-      <path d="M21 4v5h-5" />
-    </>
-  ),
+const ICONS: Record<string, LucideIcon> = {
+  search: Search,
+  close: X,
+  chev: ChevronDown,
+  plus: Plus,
+  check: Check,
+  edit: Edit3,
+  link: LinkIcon,
+  alert: AlertTriangle,
+  sparkle: Sparkles,
+  branch: GitBranch,
+  pr: GitPullRequest,
+  undo: Undo2,
+  eye: Eye,
+  info: Info,
+  db: Database,
+  refresh: RefreshCw,
 };
+
+// GitHub mark from Simple Icons (https://simpleicons.org/icons/github), MIT.
+// Lucide dropped brand icons in v1, so we inline the official mark instead.
+function GithubMark({ size = 14 }: { size?: number }) {
+  return (
+    <svg
+      role="img"
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      style={{ flexShrink: 0 }}
+    >
+      <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.4 3-.405 1.02.005 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
+    </svg>
+  );
+}
 
 export function Glyph({
   name,
   size = 14,
   stroke = 1.6,
 }: {
-  name: keyof typeof PATHS | string;
+  name: string;
   size?: number;
   stroke?: number;
 }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={stroke}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      style={{ flexShrink: 0 }}
-    >
-      {PATHS[name] ?? null}
-    </svg>
-  );
+  if (name === "github") return <GithubMark size={size} />;
+  const Icon = ICONS[name];
+  if (!Icon) return null;
+  return <Icon size={size} strokeWidth={stroke} style={{ flexShrink: 0 }} />;
 }
 
 export function StatusPill({
