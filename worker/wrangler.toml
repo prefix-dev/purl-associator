@@ -1,11 +1,14 @@
-# Cloudflare Worker that handles the GitHub OAuth code-exchange step.
+# Cloudflare Worker for PURL Associator.
 #
-# Deploy:
-#   wrangler secret put GITHUB_CLIENT_SECRET   # one-time, from the OAuth app
-#   wrangler deploy
+# Two endpoints:
+#   POST /exchange     — OAuth code-exchange (user identity only)
+#   POST /api/submit   — open PR; uses GitHub App installation token
 #
-# The frontend POSTs { code, state } to /exchange; the worker swaps that
-# with GitHub's OAuth endpoint server-side and returns { access_token }.
+# Secrets (set via `wrangler secret put`):
+#   GITHUB_CLIENT_SECRET     — the App's OAuth client secret
+#   GITHUB_APP_PRIVATE_KEY   — the .pem file contents (PKCS#8) verbatim
+#
+# Vars below are non-secret.
 
 name = "purl-associator-oauth"
 main = "src/index.ts"
@@ -13,8 +16,17 @@ compatibility_date = "2024-09-23"
 account_id = "e1a7cde76f1780ec06bac859036dbaf7"  # prefix.dev GmbH
 
 [vars]
-# Comma-separated Origin headers allowed to call /exchange. Add the Pages
-# URL once it's published.
 ALLOWED_ORIGINS = "https://prefix-dev.github.io,http://localhost:5173"
-# Public — paired with a GITHUB_CLIENT_SECRET worker secret.
-GITHUB_CLIENT_ID = "Ov23litlsxJR1mZN3QHo"
+
+# OAuth — used to identify the user. Public.
+GITHUB_CLIENT_ID = "Iv23ctuMoVMmjgu37PGC"
+
+# GitHub App — used to mint installation tokens for writes.
+GITHUB_APP_ID = "3517599"
+GITHUB_INSTALLATION_ID = "127444629"
+
+# Where the App is installed and what to PR against.
+GITHUB_REPO_OWNER = "prefix-dev"
+GITHUB_REPO_NAME = "purl-associator"
+GITHUB_DEFAULT_BRANCH = "main"
+GITHUB_MANUAL_PATH = "mappings/manual.json"

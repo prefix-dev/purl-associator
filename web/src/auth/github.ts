@@ -15,7 +15,10 @@ import type { GitHubUser } from "../data/types";
 
 const TOKEN_KEY = "purl-associator/gh_token";
 const STATE_KEY = "purl-associator/oauth_state";
-const SCOPES = "public_repo";
+// GitHub Apps don't use OAuth scopes — permissions are configured at App
+// registration. Leaving this empty makes the consent screen narrow:
+// "PURL Associator wants to: Read your public profile".
+const SCOPES = "";
 
 export type AuthState =
   | { kind: "anonymous" }
@@ -60,7 +63,7 @@ export function startLogin(): void {
   const url = new URL("https://github.com/login/oauth/authorize");
   url.searchParams.set("client_id", config.githubClientId);
   url.searchParams.set("redirect_uri", redirectUri);
-  url.searchParams.set("scope", SCOPES);
+  if (SCOPES) url.searchParams.set("scope", SCOPES);
   url.searchParams.set("state", state);
   location.assign(url.toString());
 }
