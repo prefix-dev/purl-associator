@@ -24,16 +24,12 @@ jobs:
         working-directory: worker
         run: npm ci || npm install
 
+      # account_id, GITHUB_CLIENT_ID, GITHUB_APP_ID, GITHUB_INSTALLATION_ID
+      # are all in wrangler.toml. The two secrets (GITHUB_CLIENT_SECRET and
+      # GITHUB_APP_PRIVATE_KEY) live on the worker — they must already have
+      # been set with `wrangler secret put` and are not pushed by this job.
       - name: Deploy with wrangler
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: worker
-          # Pass the GitHub OAuth client_id as a non-secret var, the
-          # client_secret must be `wrangler secret put GITHUB_CLIENT_SECRET`
-          # ahead of time.
-          vars: |
-            GITHUB_CLIENT_ID
-        env:
-          GITHUB_CLIENT_ID: ${{ vars.OAUTH_CLIENT_ID }}
