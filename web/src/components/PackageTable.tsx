@@ -156,8 +156,7 @@ export function PackageTable({
     }
   }
 
-  function selectOnly(name: string): void {
-    setSelectedSet(new Set([name]));
+  function focusOnly(name: string): void {
     setFocusedId(name);
     lastClickedRef.current = name;
   }
@@ -167,33 +166,33 @@ export function PackageTable({
     if (next.has(name)) next.delete(name);
     else next.add(name);
     setSelectedSet(next);
-    setFocusedId(name);
     lastClickedRef.current = name;
   }
 
   function selectRange(name: string): void {
     if (!lastClickedRef.current) {
-      selectOnly(name);
+      toggleOne(name);
       return;
     }
     const last = lastClickedRef.current;
     const ai = filtered.findIndex((p) => p.name === last);
     const bi = filtered.findIndex((p) => p.name === name);
     if (ai === -1 || bi === -1) {
-      selectOnly(name);
+      toggleOne(name);
       return;
     }
     const [lo, hi] = ai < bi ? [ai, bi] : [bi, ai];
     const next = new Set(selectedSet);
     for (let i = lo; i <= hi; i++) next.add(filtered[i].name);
     setSelectedSet(next);
-    setFocusedId(name);
   }
 
+  // Row click = focus only (right pane shows that package). Selection is
+  // toggled via the checkbox column or Shift/Cmd-click on a row.
   function handleRowClick(e: React.MouseEvent, name: string): void {
     if (e.metaKey || e.ctrlKey) toggleOne(name);
     else if (e.shiftKey) selectRange(name);
-    else selectOnly(name);
+    else focusOnly(name);
   }
 
   function toggleAllVisible(): void {

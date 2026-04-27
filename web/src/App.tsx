@@ -74,13 +74,13 @@ export function App() {
     }
   }, []);
 
-  // Default: when packages first arrive, single-select the first row.
+  // Default: when packages first arrive, focus the first row (but don't
+  // mark it as selected — selection is the checkbox state).
   useEffect(() => {
-    if (selectedSet.size === 0 && packages.length > 0 && focusedId === null) {
-      setSelectedSet(new Set([packages[0].name]));
+    if (focusedId === null && packages.length > 0) {
       setFocusedId(packages[0].name);
     }
-  }, [packages, selectedSet.size, focusedId]);
+  }, [packages, focusedId]);
 
   const focusedPkg = useMemo(
     () => (focusedId ? packages.find((p) => p.name === focusedId) ?? null : null),

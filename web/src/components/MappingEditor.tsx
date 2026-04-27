@@ -389,59 +389,16 @@ export function MappingEditor({
           title="PURL mapping"
           subtitle="Edit any field to override the automatic match."
         >
-          <div
-            style={{
-              background: t.surface,
-              border: `1px solid ${t.border}`,
-              borderRadius: 12,
-              padding: 14,
-              marginBottom: 14,
-            }}
-          >
-            <div
-              style={{
-                fontSize: 11,
-                color: t.fg2,
-                fontWeight: 600,
-                marginBottom: 7,
-                letterSpacing: ".04em",
-                textTransform: "uppercase",
-              }}
-            >
-              Resulting PURL
-            </div>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                flexWrap: "wrap",
-              }}
-            >
-              <PurlChip
-                purl={eff.unmapped ? null : eff.purl}
-                theme={theme}
-                edited={isEdited}
-                size="lg"
-              />
-              {isEdited &&
-                !eff.unmapped &&
-                auto.purl &&
-                eff.purl !== auto.purl && (
-                  <span style={{ fontSize: 11, color: t.fg2 }}>
-                    was{" "}
-                    <span
-                      style={{
-                        textDecoration: "line-through",
-                        fontFamily: "JetBrains Mono, monospace",
-                      }}
-                    >
-                      {auto.purl}
-                    </span>
-                  </span>
-                )}
-            </div>
-          </div>
+          <ResultingPurls
+            theme={theme}
+            primary={eff.unmapped ? "" : eff.purl}
+            alternates={eff.unmapped ? [] : eff.alternative_purls}
+            sourced={p.alternative_purls ?? p.auto?.alternative_purls ?? []}
+            isEdited={isEdited}
+            onPromote={promoteAlt}
+            onRemove={removeAlt}
+            onAdd={addAlt}
+          />
 
           <div
             style={{
@@ -530,17 +487,6 @@ export function MappingEditor({
               </span>
             </span>
           </label>
-
-          <AlternativePurls
-            theme={theme}
-            primary={eff.purl}
-            current={eff.alternative_purls}
-            sourced={p.alternative_purls ?? p.auto?.alternative_purls ?? []}
-            disabled={eff.unmapped}
-            onPromote={promoteAlt}
-            onRemove={removeAlt}
-            onAdd={addAlt}
-          />
 
           <div style={{ marginTop: 14 }}>
             <Field label="Note" hint="Optional context — shown on the PR.">
@@ -673,21 +619,21 @@ function selectStyle(theme: Theme) {
   } as const;
 }
 
-function AlternativePurls({
+function ResultingPurls({
   theme,
   primary,
-  current,
+  alternates,
   sourced,
-  disabled,
+  isEdited,
   onPromote,
   onRemove,
   onAdd,
 }: {
   theme: Theme;
   primary: string;
-  current: string[];
+  alternates: string[];
   sourced: { purl: string; confidence: number; source: string }[];
-  disabled: boolean;
+  isEdited: boolean;
   onPromote: (purl: string) => void;
   onRemove: (purl: string) => void;
   onAdd: (purl: string) => void;
@@ -695,35 +641,58 @@ function AlternativePurls({
   const t = theme.t;
   const [draft, setDraft] = useState("");
   const sourcedByPurl = new Map(sourced.map((s) => [s.purl, s]));
-  return (
-    <div style={{ marginTop: 14 }}>
-      <div
-        style={{
-          fontSize: 11,
-          fontWeight: 600,
-          marginBottom: 5,
-          letterSpacing: ".04em",
-          textTransform: "uppercase",
-          opacity: 0.7,
-        }}
-      >
-        Alternative PURLs
-      </div>
-      <div style={{ fontSize: 11, opacity: 0.55, marginBottom: 8 }}>
-        Same package in another ecosystem (e.g. pypi primary + github alt). Used
-        to broaden CVE matching across feeds.
-      </div>
+  const all = primary ? [primary, ...alternates.filter((p) => p !== primary)] : [];
+  const suggestedExtras = sourced.filter((s) => !all.includes(s.purl));
 
+  return (
+    <div
+      style={{
+        background: t.surface,
+        border: `1px solid ${t.border}`,
+        borderRadius: 12,
+        padding: 14,
+        marginBottom: 14,
+      }}
+    >
       <div
         style={{
           display: "flex",
-          flexDirection: "column",
-          gap: 6,
-          opacity: disabled ? 0.4 : 1,
-          pointerEvents: disabled ? "none" : "auto",
+          alignItems: "center",
+          gap: 8,
+          marginBottom: 10,
         }}
       >
-        {current.length === 0 && (
+        <span
+          style={{
+            fontSize: 11,
+            color: t.fg2,
+            fontWeight: 600,
+            letterSpacing: ".04em",
+            textTransform: "uppercase",
+          }}
+        >
+          Resulting PURLs
+        </span>
+        <span
+          style={{
+            fontSize: 10,
+            fontWeight: 700,
+            background: theme.dark ? "#0a0d11" : "#ece8df",
+            color: t.fg2,
+            padding: "0 6px",
+            borderRadius: 3,
+            fontVariantNumeric: "tabular-nums",
+          }}
+        >
+          {all.length}
+        </span>
+        <span style={{ fontSize: 11, color: t.fg3 }}>
+          all are recorded in the mapping
+        </span>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        {all.length === 0 && (
           <div
             style={{
               fontSize: 12,
@@ -732,10 +701,12 @@ function AlternativePurls({
               padding: "6px 0",
             }}
           >
-            No alternatives.
+            No PURLs.
           </div>
         )}
-        {current.map((purl) => {
+
+        {all.map((purl, idx) => {
+          const isPrimary = idx === 0;
           const meta = sourcedByPurl.get(purl);
           return (
             <div
@@ -745,90 +716,140 @@ function AlternativePurls({
                 alignItems: "center",
                 gap: 10,
                 padding: "7px 10px",
-                background: t.surface,
-                border: `1px solid ${t.border}`,
+                background: isPrimary
+                  ? theme.dark
+                    ? "#1a2233"
+                    : "#fff7d6"
+                  : t.surface2,
+                border: `1px solid ${
+                  isPrimary
+                    ? theme.dark
+                      ? "#2a3a55"
+                      : "#f0e2a3"
+                    : t.border
+                }`,
                 borderRadius: 8,
               }}
             >
-              <PurlChip purl={purl} theme={theme} />
-              {meta && <ConfidenceBar score={meta.confidence} theme={theme} width={50} />}
+              <PurlChip purl={purl} theme={theme} edited={isEdited} />
+              <span
+                style={{
+                  fontSize: 9.5,
+                  fontWeight: 700,
+                  letterSpacing: ".06em",
+                  textTransform: "uppercase",
+                  color: isPrimary
+                    ? theme.dark
+                      ? "#ffd432"
+                      : "#866400"
+                    : t.fg2,
+                  background: isPrimary
+                    ? theme.dark
+                      ? "#2a2616"
+                      : "#ffeec4"
+                    : "transparent",
+                  padding: isPrimary ? "2px 6px" : 0,
+                  borderRadius: 3,
+                }}
+              >
+                {isPrimary ? "primary" : "alt"}
+              </span>
+              {meta && (
+                <ConfidenceBar
+                  score={meta.confidence}
+                  theme={theme}
+                  width={50}
+                />
+              )}
               {meta && <SourceTag source={meta.source} theme={theme} />}
               <div style={{ flex: 1 }} />
-              <button
-                onClick={() => onPromote(purl)}
-                style={{
-                  background: "transparent",
-                  border: `1px solid ${t.border}`,
-                  borderRadius: 6,
-                  color: t.fg1,
-                  fontSize: 11,
-                  fontWeight: 600,
-                  padding: "3px 8px",
-                  cursor: "pointer",
-                }}
-              >
-                Make primary
-              </button>
-              <button
-                onClick={() => onRemove(purl)}
-                title="Remove"
-                style={{
-                  background: "transparent",
-                  border: `1px solid ${t.border}`,
-                  borderRadius: 6,
-                  color: t.fg2,
-                  width: 24,
-                  height: 24,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  cursor: "pointer",
-                }}
-              >
-                <Glyph name="close" size={11} />
-              </button>
+              {!isPrimary && (
+                <>
+                  <button
+                    onClick={() => onPromote(purl)}
+                    style={{
+                      background: "transparent",
+                      border: `1px solid ${t.border}`,
+                      borderRadius: 6,
+                      color: t.fg1,
+                      fontSize: 11,
+                      fontWeight: 600,
+                      padding: "3px 8px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Make primary
+                  </button>
+                  <button
+                    onClick={() => onRemove(purl)}
+                    title="Remove"
+                    style={{
+                      background: "transparent",
+                      border: `1px solid ${t.border}`,
+                      borderRadius: 6,
+                      color: t.fg2,
+                      width: 24,
+                      height: 24,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <Glyph name="close" size={11} />
+                  </button>
+                </>
+              )}
             </div>
           );
         })}
 
-        {/* Suggested but not currently chosen */}
-        {sourced
-          .filter((s) => s.purl !== primary && !current.includes(s.purl))
-          .map((s) => (
-            <div
-              key={s.purl}
+        {suggestedExtras.map((s) => (
+          <div
+            key={s.purl}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              padding: "7px 10px",
+              background: t.surface2,
+              border: `1px dashed ${t.border}`,
+              borderRadius: 8,
+              opacity: 0.85,
+            }}
+          >
+            <PurlChip purl={s.purl} theme={theme} />
+            <span
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                padding: "7px 10px",
-                background: t.surface2,
-                border: `1px dashed ${t.border}`,
-                borderRadius: 8,
-                opacity: 0.85,
+                fontSize: 9.5,
+                fontWeight: 700,
+                letterSpacing: ".06em",
+                textTransform: "uppercase",
+                color: t.fg3,
               }}
             >
-              <PurlChip purl={s.purl} theme={theme} />
-              <ConfidenceBar score={s.confidence} theme={theme} width={50} />
-              <SourceTag source={s.source} theme={theme} />
-              <div style={{ flex: 1 }} />
-              <button
-                onClick={() => onAdd(s.purl)}
-                style={{
-                  background: "transparent",
-                  border: `1px solid ${t.border}`,
-                  borderRadius: 6,
-                  color: t.link,
-                  fontSize: 11,
-                  fontWeight: 600,
-                  padding: "3px 8px",
-                  cursor: "pointer",
-                }}
-              >
-                + Add
-              </button>
-            </div>
-          ))}
+              suggested
+            </span>
+            <ConfidenceBar score={s.confidence} theme={theme} width={50} />
+            <SourceTag source={s.source} theme={theme} />
+            <div style={{ flex: 1 }} />
+            <button
+              onClick={() => onAdd(s.purl)}
+              style={{
+                background: "transparent",
+                border: `1px solid ${t.border}`,
+                borderRadius: 6,
+                color: t.link,
+                fontSize: 11,
+                fontWeight: 600,
+                padding: "3px 8px",
+                cursor: "pointer",
+              }}
+            >
+              + Add
+            </button>
+          </div>
+        ))}
 
         <form
           onSubmit={(e) => {
@@ -871,7 +892,7 @@ function AlternativePurls({
               opacity: draft.trim().startsWith("pkg:") ? 1 : 0.5,
             }}
           >
-            Add
+            Add another
           </button>
         </form>
       </div>

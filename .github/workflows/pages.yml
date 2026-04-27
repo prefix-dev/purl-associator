@@ -30,44 +30,10 @@ jobs:
           cache: "npm"
           cache-dependency-path: web/package-lock.json
 
-      - name: Refresh served mappings.json from latest committed auto+manual
+      - name: Refresh served mappings.json (auto + manual + contributions)
         run: |
           mkdir -p web/public
-          python3 -c "
-          import json, pathlib
-          from datetime import datetime, timezone
-          ROOT = pathlib.Path('.')
-          auto = json.loads((ROOT/'mappings/auto.json').read_text() or '{}')
-          manual = json.loads((ROOT/'mappings/manual.json').read_text() or '{}')
-          merged = {}
-          for n, e in (auto.get('packages') or {}).items():
-              merged[n] = {**e, 'status': 'auto-unverified', 'source': 'auto'}
-          for n, o in (manual.get('packages') or {}).items():
-              base = merged.get(n, {'name': n})
-              merged[n] = {**base, **o, 'status': o.get('status', 'verified'), 'source': 'manual'}
-              if n in (auto.get('packages') or {}):
-                  a = auto['packages'][n]
-                  merged[n]['auto'] = {
-                      'purl': a.get('purl'), 'type': a.get('type'),
-                      'namespace': a.get('namespace'), 'pkg_name': a.get('pkg_name'),
-                      'confidence': a.get('confidence', 0.0),
-                      'sources': a.get('sources', []),
-                      'alternative_purls': a.get('alternative_purls'),
-                  }
-          payload = {
-              'schema_version': 1,
-              'generated_at': datetime.now(timezone.utc).isoformat(timespec='seconds'),
-              'auto_generated_at': auto.get('generated_at'),
-              'manual_updated_at': manual.get('updated_at'),
-              'channel': auto.get('channel', 'conda-forge'),
-              'package_count': len(merged),
-              'packages': dict(sorted(merged.items())),
-          }
-          out = ROOT/'web/public/mappings.json'
-          out.parent.mkdir(parents=True, exist_ok=True)
-          out.write_text(json.dumps(payload, indent=2) + '\n')
-          print(f'wrote {len(merged)} entries to {out}')
-          "
+          python3 scripts/merge_mappings.py
 
       - name: Install web deps
         working-directory: web

@@ -29,7 +29,8 @@ type Env = {
   GITHUB_REPO_OWNER: string;
   GITHUB_REPO_NAME: string;
   GITHUB_DEFAULT_BRANCH: string;
-  GITHUB_MANUAL_PATH: string;
+  /** Directory each PR drops a uniquely-named contribution file into. */
+  GITHUB_CONTRIBUTIONS_DIR: string;
 
   ALLOWED_ORIGINS: string;
 };
@@ -269,34 +270,26 @@ type GhUser = {
   email: string | null;
 };
 
-function applyEditsToManual(
-  manualText: string,
+/** Build the contribution-file payload. Each PR produces one such file
+ *  with a unique filename, so two PRs editing the same packages never
+ *  conflict on disk. The pages-build step merges all contributions in
+ *  chronological order before the SPA reads them.
+ */
+function buildContributionFile(
   edits: Record<string, EditPayload>,
   user: GhUser,
+  title: string,
+  timestamp: string,
 ): string {
-  let manual: {
-    schema_version?: number;
-    updated_at?: string | null;
-    description?: string;
-    packages: Record<string, unknown>;
-  };
-  try {
-    manual = JSON.parse(manualText);
-  } catch {
-    manual = { packages: {} };
-  }
-  if (!manual.packages || typeof manual.packages !== "object") manual.packages = {};
-  const now = new Date().toISOString();
+  const packages: Record<string, unknown> = {};
   for (const [name, edit] of Object.entries(edits)) {
     if (edit.unmapped) {
-      manual.packages[name] = {
+      packages[name] = {
         unmapped: true,
         note: edit.note || undefined,
-        approved_by: user.login,
-        approved_at: now,
       };
     } else {
-      manual.packages[name] = {
+      packages[name] = {
         purl: edit.purl,
         type: edit.type,
         namespace: edit.namespace || null,
@@ -304,17 +297,27 @@ function applyEditsToManual(
         alternative_purls:
           edit.alternative_purls.length > 0 ? edit.alternative_purls : undefined,
         note: edit.note || undefined,
-        approved_by: user.login,
-        approved_at: now,
       };
     }
   }
-  manual.updated_at = now;
-  manual.schema_version = manual.schema_version ?? 1;
-  manual.description =
-    manual.description ??
-    "Human-curated PURL overrides for conda-forge packages. Editing happens through the web UI.";
-  return JSON.stringify(manual, null, 2) + "\n";
+  const payload = {
+    schema_version: 1,
+    title,
+    author: user.login,
+    author_name: user.name ?? null,
+    timestamp,
+    packages,
+  };
+  return JSON.stringify(payload, null, 2) + "\n";
+}
+
+function contributionFilename(user: GhUser, timestamp: string): string {
+  // Unique per PR, sortable, easy to attribute. e.g.
+  //   2026-04-27T08-00-00-000Z--wolfv--3kf91.json
+  const tsSafe = timestamp.replace(/[:.]/g, "-");
+  const rand = Math.random().toString(36).slice(2, 7);
+  const userSafe = user.login.replace(/[^A-Za-z0-9._-]/g, "_");
+  return `${tsSafe}--${userSafe}--${rand}.json`;
 }
 
 async function handleSubmit(request: Request, env: Env): Promise<Response> {
@@ -366,7 +369,13 @@ async function handleSubmit(request: Request, env: Env): Promise<Response> {
   const owner = env.GITHUB_REPO_OWNER;
   const repo = env.GITHUB_REPO_NAME;
   const baseBranch = env.GITHUB_DEFAULT_BRANCH || "main";
-  const path = env.GITHUB_MANUAL_PATH || "mappings/manual.json";
+  const dir = (env.GITHUB_CONTRIBUTIONS_DIR || "mappings/contributions").replace(
+    /\/+$/,
+    "",
+  );
+  const timestamp = new Date().toISOString();
+  const filename = contributionFilename(user, timestamp);
+  const path = `${dir}/${filename}`;
   const branch = `purl-mapping/${user.login}-${Date.now().toString(36)}`;
 
   try {
@@ -382,43 +391,30 @@ async function handleSubmit(request: Request, env: Env): Promise<Response> {
       { ref: `refs/heads/${branch}`, sha: ref.object.sha },
     );
 
-    // 4. Read existing manual.json on the new branch.
-    let existing: { sha: string; content: string } | null = null;
-    try {
-      existing = await ghApi<{ sha: string; content: string }>(
-        installToken,
-        `/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(branch)}`,
-      );
-    } catch (err) {
-      if (!String(err).includes("404")) throw err;
-    }
-    const existingText = existing
-      ? b64decode(existing.content)
-      : '{"schema_version":1,"packages":{}}';
-    const newText = applyEditsToManual(existingText, payload.edits, user);
-
-    // 5. Commit. Author is the user (so the PR is attributed correctly), but
-    //    the commit is made via the App's installation token.
+    // 4. Each PR writes a uniquely-named contribution file — never edits an
+    //    existing one. Two simultaneous PRs are conflict-free on disk.
+    const newText = buildContributionFile(
+      payload.edits,
+      user,
+      payload.title,
+      timestamp,
+    );
     const email = user.email ?? `${user.login}@users.noreply.github.com`;
-    const authorBlock = {
-      name: user.name ?? user.login,
-      email,
-    };
+    const authorBlock = { name: user.name ?? user.login, email };
     await ghApi(
       installToken,
       `/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`,
       "PUT",
       {
-        message: payload.title || "purl: update mappings",
+        message: payload.title || "purl: contribution",
         content: b64encode(newText),
-        sha: existing?.sha,
         branch,
         author: authorBlock,
         committer: authorBlock,
       },
     );
 
-    // 6. Open the PR.
+    // 5. Open the PR.
     const pr = await ghApi<{ number: number; html_url: string }>(
       installToken,
       `/repos/${owner}/${repo}/pulls`,
@@ -433,7 +429,7 @@ async function handleSubmit(request: Request, env: Env): Promise<Response> {
     );
 
     return json(
-      { number: pr.number, html_url: pr.html_url, branch },
+      { number: pr.number, html_url: pr.html_url, branch, file: path },
       { status: 200, origin, env },
     );
   } catch (err) {
