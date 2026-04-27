@@ -224,6 +224,8 @@ export function applyEditsToManual(
         type: edit.type,
         namespace: edit.namespace || null,
         pkg_name: edit.pkgName,
+        alternative_purls:
+          edit.alternative_purls.length > 0 ? edit.alternative_purls : undefined,
         note: edit.note || undefined,
         approved_by: user.login,
         approved_at: now,

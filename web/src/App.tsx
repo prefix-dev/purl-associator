@@ -95,7 +95,15 @@ export function App() {
       type: selectedPkg.type,
       namespace: selectedPkg.namespace,
       pkg_name: selectedPkg.pkg_name,
+      alternative_purls: selectedPkg.alternative_purls,
     };
+    const autoAltSet = new Set(
+      (auto.alternative_purls ?? []).map((a) => a.purl).sort(),
+    );
+    const editAltSet = new Set([...newEdit.alternative_purls].sort());
+    const altsMatch =
+      autoAltSet.size === editAltSet.size &&
+      [...autoAltSet].every((p) => editAltSet.has(p));
     const isSame =
       auto.purl &&
       !newEdit.unmapped &&
@@ -103,6 +111,7 @@ export function App() {
       newEdit.type === auto.type &&
       (newEdit.namespace || "") === (auto.namespace || "") &&
       newEdit.pkgName === auto.pkg_name &&
+      altsMatch &&
       !newEdit.note;
     setEdits((prev) => {
       const next = { ...prev };
@@ -123,6 +132,7 @@ export function App() {
       type: selectedPkg.type,
       namespace: selectedPkg.namespace,
       pkg_name: selectedPkg.pkg_name,
+      alternative_purls: selectedPkg.alternative_purls,
     };
     if (!auto.purl) return;
     setEdits((prev) => ({
@@ -132,6 +142,8 @@ export function App() {
         type: auto.type ?? "pypi",
         namespace: auto.namespace ?? "",
         pkgName: auto.pkg_name ?? selectedPkg.name,
+        alternative_purls:
+          (auto.alternative_purls ?? []).map((a) => a.purl) ?? [],
         unmapped: false,
         note: "",
         approved: true,

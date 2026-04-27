@@ -1,24 +1,20 @@
 # Cloudflare Worker that handles the GitHub OAuth code-exchange step.
 #
-# The frontend (deployed to GitHub Pages) cannot call
-# https://github.com/login/oauth/access_token directly because that endpoint
-# does not return CORS headers AND because we'd need to embed the OAuth
-# client_secret in the bundle. This worker keeps the secret server-side.
-#
-# Deploy with:
-#   wrangler secret put GITHUB_CLIENT_SECRET
+# Deploy:
+#   wrangler secret put GITHUB_CLIENT_SECRET   # one-time, from the OAuth app
 #   wrangler deploy
 #
-# Configure the GitHub OAuth App's Authorization callback URL to point at the
-# *frontend's* origin (the SPA receives ?code=...&state=... and POSTs to this
-# worker's /exchange endpoint).
+# The frontend POSTs { code, state } to /exchange; the worker swaps that
+# with GitHub's OAuth endpoint server-side and returns { access_token }.
 
 name = "purl-associator-oauth"
 main = "src/index.ts"
 compatibility_date = "2024-09-23"
+account_id = "e1a7cde76f1780ec06bac859036dbaf7"  # prefix.dev GmbH
 
-# Set via `wrangler.toml` for non-secret config:
 [vars]
-# Comma-separated list of allowed Origin headers for the CORS preflight.
-ALLOWED_ORIGINS = "http://localhost:5173"
+# Comma-separated Origin headers allowed to call /exchange. Add the Pages
+# URL once it's published.
+ALLOWED_ORIGINS = "https://prefix-dev.github.io,http://localhost:5173"
+# Set after registering the GitHub OAuth App. Public — not a secret.
 GITHUB_CLIENT_ID = ""

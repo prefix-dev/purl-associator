@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { PURL_TYPES } from "../data/loader";
 import type { Edit, PackageEntry } from "../data/types";
 import {
@@ -71,31 +71,72 @@ export function MappingEditor({
     );
   }
 
-  const auto = pkg.auto ?? {
-    purl: pkg.purl,
-    type: pkg.type,
-    namespace: pkg.namespace,
-    pkg_name: pkg.pkg_name,
-    confidence: pkg.confidence,
-    sources: pkg.sources,
+  // After the early return above, pkg is non-null. Capture into a const so
+  // the narrowing flows into closures (promoteAlt, addAlt, …).
+  const p: PackageEntry = pkg;
+  const auto = p.auto ?? {
+    purl: p.purl,
+    type: p.type,
+    namespace: p.namespace,
+    pkg_name: p.pkg_name,
+    confidence: p.confidence,
+    sources: p.sources,
   };
 
+  const autoAlts = (p.auto?.alternative_purls ?? p.alternative_purls ?? []).map(
+    (a) => a.purl,
+  );
   const eff: Edit = {
-    type: edit?.type ?? auto.type ?? pkg.type ?? "pypi",
-    namespace: edit?.namespace ?? auto.namespace ?? pkg.namespace ?? "",
-    pkgName: edit?.pkgName ?? auto.pkg_name ?? pkg.pkg_name ?? pkg.name,
-    purl: edit?.purl ?? auto.purl ?? pkg.purl ?? "",
-    unmapped: edit?.unmapped ?? pkg.unmapped ?? pkg.purl === null,
+    type: edit?.type ?? auto.type ?? p.type ?? "pypi",
+    namespace: edit?.namespace ?? auto.namespace ?? p.namespace ?? "",
+    pkgName: edit?.pkgName ?? auto.pkg_name ?? p.pkg_name ?? p.name,
+    purl: edit?.purl ?? auto.purl ?? p.purl ?? "",
+    alternative_purls: edit?.alternative_purls ?? autoAlts,
+    unmapped: edit?.unmapped ?? p.unmapped ?? p.purl === null,
     note: edit?.note ?? "",
   };
 
   const isEdited = !!edit;
-  const isVerified = pkg.status === "verified" && !isEdited;
+  const isVerified = p.status === "verified" && !isEdited;
 
   function updatePart(patch: Partial<Edit>): void {
     const next: Edit = { ...eff, ...patch };
     if (!("purl" in patch)) next.purl = buildPurl(next.type, next.namespace, next.pkgName);
     onEdit(next);
+  }
+
+  function promoteAlt(purl: string): void {
+    const alt = (p.alternative_purls ?? p.auto?.alternative_purls ?? []).find(
+      (a) => a.purl === purl,
+    );
+    if (!alt) return;
+    // Promoting an alternative: it becomes the primary; the previous primary
+    // demotes into the alternatives list.
+    const newAlternates = [
+      ...eff.alternative_purls.filter((p) => p !== purl),
+    ];
+    if (eff.purl && eff.purl !== purl) newAlternates.unshift(eff.purl);
+    onEdit({
+      ...eff,
+      purl: alt.purl,
+      type: alt.type,
+      namespace: alt.namespace ?? "",
+      pkgName: alt.pkg_name,
+      alternative_purls: newAlternates,
+    });
+  }
+
+  function removeAlt(purl: string): void {
+    onEdit({
+      ...eff,
+      alternative_purls: eff.alternative_purls.filter((p) => p !== purl),
+    });
+  }
+
+  function addAlt(purl: string): void {
+    if (!purl.startsWith("pkg:")) return;
+    if (eff.alternative_purls.includes(purl) || eff.purl === purl) return;
+    onEdit({ ...eff, alternative_purls: [...eff.alternative_purls, purl] });
   }
 
   function updatePurlString(str: string): void {
@@ -149,7 +190,7 @@ export function MappingEditor({
                   lineHeight: 1.1,
                 }}
               >
-                {pkg.name}
+                {p.name}
               </h1>
               <span
                 style={{
@@ -161,20 +202,20 @@ export function MappingEditor({
                   borderRadius: 4,
                 }}
               >
-                v{pkg.version}
+                v{p.version}
               </span>
               <StatusPill
                 status={
                   isEdited
                     ? "edited"
-                    : pkg.status === "unmapped" || pkg.purl === null
+                    : p.status === "unmapped" || p.purl === null
                       ? "unmapped"
-                      : pkg.status
+                      : p.status
                 }
                 theme={theme}
               />
             </div>
-            {pkg.summary && (
+            {p.summary && (
               <div
                 style={{
                   fontSize: 13,
@@ -183,7 +224,7 @@ export function MappingEditor({
                   maxWidth: 720,
                 }}
               >
-                {pkg.summary}
+                {p.summary}
               </div>
             )}
             <div
@@ -195,20 +236,20 @@ export function MappingEditor({
                 fontSize: 11.5,
               }}
             >
-              {pkg.source_url && (
-                <UrlRow label="Source" url={pkg.source_url} theme={theme} />
+              {p.source_url && (
+                <UrlRow label="Source" url={p.source_url} theme={theme} />
               )}
-              {pkg.homepage && (
-                <UrlRow label="Homepage" url={pkg.homepage} theme={theme} />
+              {p.homepage && (
+                <UrlRow label="Homepage" url={p.homepage} theme={theme} />
               )}
-              {pkg.repo && pkg.repo !== pkg.source_url && (
-                <UrlRow label="Repository" url={pkg.repo} theme={theme} />
+              {p.repo && p.repo !== p.source_url && (
+                <UrlRow label="Repository" url={p.repo} theme={theme} />
               )}
-              {pkg.recipe_url && (
-                <UrlRow label="Recipe" url={pkg.recipe_url} theme={theme} />
+              {p.recipe_url && (
+                <UrlRow label="Recipe" url={p.recipe_url} theme={theme} />
               )}
-              {pkg.url && (
-                <UrlRow label="Artifact" url={pkg.url} theme={theme} />
+              {p.url && (
+                <UrlRow label="Artifact" url={p.url} theme={theme} />
               )}
             </div>
           </div>
@@ -287,7 +328,7 @@ export function MappingEditor({
                   ))}
                 </div>
               )}
-              {pkg.note && (
+              {p.note && (
                 <div
                   style={{
                     marginTop: 10,
@@ -307,7 +348,7 @@ export function MappingEditor({
                   >
                     <Glyph name="info" size={12} />
                   </span>
-                  <span>{pkg.note}</span>
+                  <span>{p.note}</span>
                 </div>
               )}
             </div>
@@ -333,11 +374,11 @@ export function MappingEditor({
                 <Glyph name="alert" size={14} />
                 <strong>No automatic match found.</strong>
               </div>
-              {pkg.note && (
+              {p.note && (
                 <div
                   style={{ color: t.fg2, fontSize: 12, marginTop: 4 }}
                 >
-                  {pkg.note}
+                  {p.note}
                 </div>
               )}
             </div>
@@ -443,7 +484,7 @@ export function MappingEditor({
                 onChange={(v) => updatePart({ pkgName: v })}
                 theme={theme}
                 mono
-                placeholder={pkg.name}
+                placeholder={p.name}
               />
             </Field>
           </div>
@@ -490,6 +531,17 @@ export function MappingEditor({
             </span>
           </label>
 
+          <AlternativePurls
+            theme={theme}
+            primary={eff.purl}
+            current={eff.alternative_purls}
+            sourced={p.alternative_purls ?? p.auto?.alternative_purls ?? []}
+            disabled={eff.unmapped}
+            onPromote={promoteAlt}
+            onRemove={removeAlt}
+            onAdd={addAlt}
+          />
+
           <div style={{ marginTop: 14 }}>
             <Field label="Note" hint="Optional context — shown on the PR.">
               <textarea
@@ -514,7 +566,7 @@ export function MappingEditor({
           </div>
         </Section>
 
-        {pkg.status === "verified" && pkg.approved_by && !isEdited && (
+        {p.status === "verified" && p.approved_by && !isEdited && (
           <Section title="Verification">
             <div
               style={{
@@ -529,8 +581,8 @@ export function MappingEditor({
             >
               <Glyph name="check" size={16} />
               <div style={{ fontSize: 13 }}>
-                Verified by <strong>@{pkg.approved_by}</strong>
-                {pkg.approved_at && ` on ${pkg.approved_at.slice(0, 10)}`}
+                Verified by <strong>@{p.approved_by}</strong>
+                {p.approved_at && ` on ${p.approved_at.slice(0, 10)}`}
               </div>
             </div>
           </Section>
@@ -619,6 +671,212 @@ function selectStyle(theme: Theme) {
     cursor: "pointer",
     outline: "none",
   } as const;
+}
+
+function AlternativePurls({
+  theme,
+  primary,
+  current,
+  sourced,
+  disabled,
+  onPromote,
+  onRemove,
+  onAdd,
+}: {
+  theme: Theme;
+  primary: string;
+  current: string[];
+  sourced: { purl: string; confidence: number; source: string }[];
+  disabled: boolean;
+  onPromote: (purl: string) => void;
+  onRemove: (purl: string) => void;
+  onAdd: (purl: string) => void;
+}) {
+  const t = theme.t;
+  const [draft, setDraft] = useState("");
+  const sourcedByPurl = new Map(sourced.map((s) => [s.purl, s]));
+  return (
+    <div style={{ marginTop: 14 }}>
+      <div
+        style={{
+          fontSize: 11,
+          fontWeight: 600,
+          marginBottom: 5,
+          letterSpacing: ".04em",
+          textTransform: "uppercase",
+          opacity: 0.7,
+        }}
+      >
+        Alternative PURLs
+      </div>
+      <div style={{ fontSize: 11, opacity: 0.55, marginBottom: 8 }}>
+        Same package in another ecosystem (e.g. pypi primary + github alt). Used
+        to broaden CVE matching across feeds.
+      </div>
+
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 6,
+          opacity: disabled ? 0.4 : 1,
+          pointerEvents: disabled ? "none" : "auto",
+        }}
+      >
+        {current.length === 0 && (
+          <div
+            style={{
+              fontSize: 12,
+              color: t.fg3,
+              fontStyle: "italic",
+              padding: "6px 0",
+            }}
+          >
+            No alternatives.
+          </div>
+        )}
+        {current.map((purl) => {
+          const meta = sourcedByPurl.get(purl);
+          return (
+            <div
+              key={purl}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                padding: "7px 10px",
+                background: t.surface,
+                border: `1px solid ${t.border}`,
+                borderRadius: 8,
+              }}
+            >
+              <PurlChip purl={purl} theme={theme} />
+              {meta && <ConfidenceBar score={meta.confidence} theme={theme} width={50} />}
+              {meta && <SourceTag source={meta.source} theme={theme} />}
+              <div style={{ flex: 1 }} />
+              <button
+                onClick={() => onPromote(purl)}
+                style={{
+                  background: "transparent",
+                  border: `1px solid ${t.border}`,
+                  borderRadius: 6,
+                  color: t.fg1,
+                  fontSize: 11,
+                  fontWeight: 600,
+                  padding: "3px 8px",
+                  cursor: "pointer",
+                }}
+              >
+                Make primary
+              </button>
+              <button
+                onClick={() => onRemove(purl)}
+                title="Remove"
+                style={{
+                  background: "transparent",
+                  border: `1px solid ${t.border}`,
+                  borderRadius: 6,
+                  color: t.fg2,
+                  width: 24,
+                  height: 24,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                }}
+              >
+                <Glyph name="close" size={11} />
+              </button>
+            </div>
+          );
+        })}
+
+        {/* Suggested but not currently chosen */}
+        {sourced
+          .filter((s) => s.purl !== primary && !current.includes(s.purl))
+          .map((s) => (
+            <div
+              key={s.purl}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                padding: "7px 10px",
+                background: t.surface2,
+                border: `1px dashed ${t.border}`,
+                borderRadius: 8,
+                opacity: 0.85,
+              }}
+            >
+              <PurlChip purl={s.purl} theme={theme} />
+              <ConfidenceBar score={s.confidence} theme={theme} width={50} />
+              <SourceTag source={s.source} theme={theme} />
+              <div style={{ flex: 1 }} />
+              <button
+                onClick={() => onAdd(s.purl)}
+                style={{
+                  background: "transparent",
+                  border: `1px solid ${t.border}`,
+                  borderRadius: 6,
+                  color: t.link,
+                  fontSize: 11,
+                  fontWeight: 600,
+                  padding: "3px 8px",
+                  cursor: "pointer",
+                }}
+              >
+                + Add
+              </button>
+            </div>
+          ))}
+
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (draft.trim()) {
+              onAdd(draft.trim());
+              setDraft("");
+            }
+          }}
+          style={{ display: "flex", gap: 6, marginTop: 4 }}
+        >
+          <input
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            placeholder="pkg:type/namespace/name"
+            style={{
+              flex: 1,
+              background: t.surface,
+              color: t.fg1,
+              border: `1px solid ${t.border}`,
+              borderRadius: 8,
+              padding: "6px 10px",
+              fontSize: 12,
+              fontFamily: "JetBrains Mono, monospace",
+              outline: "none",
+            }}
+          />
+          <button
+            type="submit"
+            disabled={!draft.trim().startsWith("pkg:")}
+            style={{
+              background: t.surface2,
+              border: `1px solid ${t.border}`,
+              borderRadius: 8,
+              color: t.fg1,
+              fontSize: 12,
+              fontWeight: 600,
+              padding: "0 12px",
+              cursor: draft.trim().startsWith("pkg:") ? "pointer" : "not-allowed",
+              opacity: draft.trim().startsWith("pkg:") ? 1 : 0.5,
+            }}
+          >
+            Add
+          </button>
+        </form>
+      </div>
+    </div>
+  );
 }
 
 function UrlRow({

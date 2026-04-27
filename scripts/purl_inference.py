@@ -249,17 +249,15 @@ def derive_recipe_context(
     return RecipeContext(conda_name=conda_name)
 
 
-def infer(
+def infer_all(
     urls: list[str], *, context: RecipeContext | None = None
-) -> PurlGuess | None:
-    """Best-effort PURL guess from source URLs + recipe context.
+) -> list[PurlGuess]:
+    """Return all candidate PURL guesses, ranked from most to least likely.
 
-    Strategy:
-    1. Run each URL guesser, collect all hits.
-    2. If a recipe-context ecosystem hint is set, prefer the matching guess
-       (and bump its confidence). If no URL matched the hinted ecosystem,
-       synthesise a hint-only guess (lower confidence).
-    3. Otherwise return the highest-confidence URL guess.
+    A package can legitimately carry several PURLs — e.g. numpy is both
+    ``pkg:pypi/numpy`` (in the PyPI security feed) and
+    ``pkg:github/numpy/numpy`` (in the GitHub advisory feed). Callers should
+    treat the first entry as primary and the rest as alternatives.
     """
     hits: list[PurlGuess] = []
     for url in urls:
@@ -271,20 +269,37 @@ def infer(
             if guess is not None:
                 hits.append(guess)
 
+    # Dedupe by PURL string, keeping the highest-confidence entry.
+    by_purl: dict[str, PurlGuess] = {}
+    for h in hits:
+        prior = by_purl.get(h.purl)
+        if prior is None or h.confidence > prior.confidence:
+            by_purl[h.purl] = h
+    deduped = list(by_purl.values())
+
+    # Tiered ranking: a recipe-context ecosystem hint forces that ecosystem
+    # to be primary (because that's the ecosystem CVE feeds index against).
+    # Other URL-only matches become alternatives, sorted by confidence.
     if context and context.ecosystem_hint:
-        matching = [h for h in hits if h.type == context.ecosystem_hint]
+        matching = [h for h in deduped if h.type == context.ecosystem_hint]
+        others = sorted(
+            (h for h in deduped if h.type != context.ecosystem_hint),
+            key=lambda h: h.confidence,
+            reverse=True,
+        )
         if matching:
-            best = max(matching, key=lambda h: h.confidence)
-            return PurlGuess(
-                purl=best.purl,
-                type=best.type,
-                namespace=best.namespace,
-                pkg_name=best.pkg_name,
-                confidence=min(0.99, best.confidence + 0.04),
-                source=f"{best.source}+recipe-deps",
+            primary = max(matching, key=lambda h: h.confidence)
+            boosted = PurlGuess(
+                purl=primary.purl,
+                type=primary.type,
+                namespace=primary.namespace,
+                pkg_name=primary.pkg_name,
+                confidence=min(0.99, primary.confidence + 0.04),
+                source=f"{primary.source}+recipe-deps",
             )
+            return [boosted] + [h for h in matching if h is not primary] + others
         if context.inferred_name:
-            return PurlGuess(
+            synth = PurlGuess(
                 purl=f"pkg:{context.ecosystem_hint}/{context.inferred_name}",
                 type=context.ecosystem_hint,
                 namespace=None,
@@ -292,10 +307,19 @@ def infer(
                 confidence=0.6,
                 source="recipe-deps",
             )
+            return [synth] + others
+        return others
 
-    if not hits:
-        return None
-    return max(hits, key=lambda h: h.confidence)
+    return sorted(deduped, key=lambda h: h.confidence, reverse=True)
+
+
+def infer(
+    urls: list[str], *, context: RecipeContext | None = None
+) -> PurlGuess | None:
+    """Best single PURL guess (the primary). See :func:`infer_all` for the
+    full candidate list."""
+    candidates = infer_all(urls, context=context)
+    return candidates[0] if candidates else None
 
 
 # Backwards-compat alias.

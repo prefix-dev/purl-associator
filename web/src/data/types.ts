@@ -5,6 +5,16 @@ export type AutoMapping = {
   pkg_name: string | null;
   confidence: number;
   sources: string[];
+  alternative_purls?: PurlAlternative[] | null;
+};
+
+export type PurlAlternative = {
+  purl: string;
+  type: string;
+  namespace: string | null;
+  pkg_name: string;
+  confidence: number;
+  source: string;
 };
 
 export type ManualOverride = {
@@ -12,6 +22,7 @@ export type ManualOverride = {
   type: string | null;
   namespace: string | null;
   pkg_name: string | null;
+  alternative_purls?: PurlAlternative[] | null;
   unmapped?: boolean;
   note?: string;
   approved_by?: string;
@@ -42,6 +53,7 @@ export type PackageEntry = {
   unmapped?: boolean;
   approved_by?: string;
   approved_at?: string;
+  alternative_purls?: PurlAlternative[] | null;
   /** the original auto guess, kept for diff display when an override exists */
   auto?: AutoMapping;
 };
@@ -61,6 +73,7 @@ export type Edit = {
   namespace: string;
   pkgName: string;
   purl: string;
+  alternative_purls: string[];
   unmapped: boolean;
   note: string;
   approved?: boolean;

@@ -37,7 +37,7 @@ from rich.progress import (
     TimeElapsedColumn,
 )
 
-from scripts.purl_inference import PurlGuess, derive_recipe_context, infer
+from scripts.purl_inference import PurlGuess, derive_recipe_context, infer_all
 
 app = typer.Typer(add_completion=False, help=__doc__)
 console = Console()
@@ -46,6 +46,16 @@ DEFAULT_PLATFORMS = ("linux-64", "noarch")
 DEFAULT_CHANNEL = "conda-forge"
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_OUT = ROOT / "mappings" / "auto.json"
+
+
+@dataclass
+class PurlAlternative:
+    purl: str
+    type: str
+    namespace: str | None
+    pkg_name: str
+    confidence: float
+    source: str
 
 
 @dataclass
@@ -66,6 +76,7 @@ class AutoEntry:
     recipe_url: str | None
     summary: str | None
     source_url: str | None = None
+    alternative_purls: list[dict] | None = None
     note: str | None = None
     fetched_at: str | None = None
 
@@ -290,10 +301,22 @@ async def _process_record(
         build_deps=facts.build_deps,
         noarch=facts.noarch,
     )
-    guess: PurlGuess | None = infer(candidate_urls, context=context)
+    candidates: list[PurlGuess] = infer_all(candidate_urls, context=context)
+    primary: PurlGuess | None = candidates[0] if candidates else None
+    alternates = [
+        {
+            "purl": c.purl,
+            "type": c.type,
+            "namespace": c.namespace,
+            "pkg_name": c.pkg_name,
+            "confidence": c.confidence,
+            "source": c.source,
+        }
+        for c in candidates[1:]
+    ]
 
     note: str | None = None
-    if guess is None:
+    if primary is None:
         note = "No automatic match — heuristics did not recognise any source URL."
 
     primary_source = next((u for u in facts.source_urls if u), None)
@@ -303,17 +326,18 @@ async def _process_record(
         build=record.build,
         subdir=record.subdir,
         url=url,
-        purl=guess.purl if guess else None,
-        type=guess.type if guess else None,
-        namespace=guess.namespace if guess else None,
-        pkg_name=guess.pkg_name if guess else None,
-        confidence=guess.confidence if guess else 0.0,
-        sources=[guess.source] if guess else [],
+        purl=primary.purl if primary else None,
+        type=primary.type if primary else None,
+        namespace=primary.namespace if primary else None,
+        pkg_name=primary.pkg_name if primary else None,
+        confidence=primary.confidence if primary else 0.0,
+        sources=[primary.source] if primary else [],
         homepage=homepage,
         repo=repo_url,
         recipe_url=f"https://github.com/conda-forge/{name}-feedstock/blob/main/recipe/meta.yaml",
         summary=facts.summary,
         source_url=primary_source,
+        alternative_purls=alternates if alternates else None,
         note=note,
         fetched_at=datetime.now(UTC).isoformat(timespec="seconds"),
     )

@@ -54,13 +54,15 @@ def main(
         }
         # remember the auto suggestion (for diff display)
         if name in auto_data.get("packages", {}):
+            a = auto_data["packages"][name]
             merged[name]["auto"] = {
-                "purl": auto_data["packages"][name].get("purl"),
-                "type": auto_data["packages"][name].get("type"),
-                "namespace": auto_data["packages"][name].get("namespace"),
-                "pkg_name": auto_data["packages"][name].get("pkg_name"),
-                "confidence": auto_data["packages"][name].get("confidence", 0.0),
-                "sources": auto_data["packages"][name].get("sources", []),
+                "purl": a.get("purl"),
+                "type": a.get("type"),
+                "namespace": a.get("namespace"),
+                "pkg_name": a.get("pkg_name"),
+                "confidence": a.get("confidence", 0.0),
+                "sources": a.get("sources", []),
+                "alternative_purls": a.get("alternative_purls"),
             }
 
     payload = {
