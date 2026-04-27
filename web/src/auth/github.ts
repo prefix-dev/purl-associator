@@ -82,6 +82,12 @@ export async function consumeOauthCallback(): Promise<string | null> {
   const state = params.get("state");
   if (!code) return null;
 
+  // Strip OAuth params from the URL FIRST, regardless of outcome. OAuth
+  // codes are single-use, so leaving them in the URL would have us re-try
+  // a dead code on every refresh.
+  const cleanUrl = `${location.origin}${location.pathname}`;
+  history.replaceState({}, "", cleanUrl);
+
   const expected = sessionStorage.getItem(STATE_KEY);
   if (expected && expected !== state) {
     throw new Error("OAuth state mismatch — possible CSRF, refusing to continue.");
@@ -106,10 +112,6 @@ export async function consumeOauthCallback(): Promise<string | null> {
     throw new Error(payload.error ?? "no access_token in response");
   }
   storeToken(payload.access_token);
-
-  // Strip OAuth params from the URL bar.
-  const cleanUrl = `${location.origin}${location.pathname}`;
-  history.replaceState({}, "", cleanUrl);
   return payload.access_token;
 }
 
