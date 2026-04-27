@@ -64,8 +64,15 @@ export function PRDrawer({
       if (e.unmapped) {
         lines.push(`- **${pkg.name}**: marked as no-PURL`);
       } else {
-        const before = pkg.auto?.purl ?? pkg.purl ?? "(none)";
-        lines.push(`- **${pkg.name}**: \`${before}\` → \`${e.purl}\``);
+        const purls = [e.purl, ...e.alternative_purls];
+        if (purls.length === 1) {
+          const before = pkg.auto?.purl ?? pkg.purl ?? "(none)";
+          lines.push(`- **${pkg.name}**: \`${before}\` → \`${e.purl}\``);
+        } else {
+          lines.push(
+            `- **${pkg.name}**: ${purls.length} PURLs — \`${e.purl}\` (primary), ${e.alternative_purls.map((p) => `\`${p}\``).join(", ")}`,
+          );
+        }
       }
       if (e.note) lines.push(`  - _${e.note}_`);
     }
@@ -209,8 +216,25 @@ export function PRDrawer({
                   {editEntries.map(([id, e]) => {
                     const pkg = packages.find((p) => p.name === id);
                     if (!pkg) return null;
-                    const before = pkg.auto?.purl ?? pkg.purl ?? "(none)";
-                    const after = e.unmapped ? "(unmapped)" : e.purl;
+
+                    // "Before" PURLs: whatever the package currently presents
+                    // — the auto guess plus its alternatives.
+                    const beforePurls: string[] = [];
+                    const beforePrimary = pkg.auto?.purl ?? pkg.purl;
+                    if (beforePrimary) beforePurls.push(beforePrimary);
+                    for (const alt of pkg.auto?.alternative_purls ??
+                      pkg.alternative_purls ??
+                      []) {
+                      if (alt.purl !== beforePrimary) beforePurls.push(alt.purl);
+                    }
+
+                    const afterPurls = e.unmapped
+                      ? ["(unmapped)"]
+                      : [e.purl, ...e.alternative_purls];
+
+                    const beforeSet = new Set(beforePurls);
+                    const afterSet = new Set(afterPurls);
+
                     return (
                       <div
                         key={id}
@@ -261,31 +285,85 @@ export function PRDrawer({
                             lineHeight: 1.6,
                           }}
                         >
-                          <div
-                            style={{
-                              color: theme.dark ? "#ff8e6a" : "#a8401b",
-                              background: theme.dark
-                                ? "rgba(255,142,106,.08)"
-                                : "#ffece5",
-                              padding: "2px 6px",
-                              borderRadius: 3,
-                            }}
-                          >
-                            <span style={{ opacity: 0.7 }}>−</span> {before}
-                          </div>
-                          <div
-                            style={{
-                              color: theme.dark ? "#9adf6d" : "#5b9b2c",
-                              background: theme.dark
-                                ? "rgba(154,223,109,.08)"
-                                : "#ecf5dc",
-                              padding: "2px 6px",
-                              borderRadius: 3,
-                              marginTop: 2,
-                            }}
-                          >
-                            <span style={{ opacity: 0.7 }}>+</span> {after}
-                          </div>
+                          {/* Removed: PURLs that were in the auto/old set
+                              but won't be in the new set. */}
+                          {beforePurls
+                            .filter((p) => !afterSet.has(p))
+                            .map((purl, i) => (
+                              <div
+                                key={`b-${i}`}
+                                style={{
+                                  color: theme.dark ? "#ff8e6a" : "#a8401b",
+                                  background: theme.dark
+                                    ? "rgba(255,142,106,.08)"
+                                    : "#ffece5",
+                                  padding: "2px 6px",
+                                  borderRadius: 3,
+                                  marginBottom: 2,
+                                }}
+                              >
+                                <span style={{ opacity: 0.7 }}>−</span> {purl}
+                              </div>
+                            ))}
+                          {beforePurls.length === 0 && !e.unmapped && (
+                            <div
+                              style={{
+                                color: theme.dark ? "#ff8e6a" : "#a8401b",
+                                background: theme.dark
+                                  ? "rgba(255,142,106,.08)"
+                                  : "#ffece5",
+                                padding: "2px 6px",
+                                borderRadius: 3,
+                                marginBottom: 2,
+                                opacity: 0.7,
+                                fontStyle: "italic",
+                              }}
+                            >
+                              <span style={{ opacity: 0.7 }}>−</span> (no
+                              previous mapping)
+                            </div>
+                          )}
+                          {/* Added / kept: each PURL in the new set with a
+                              role badge so it's obvious there are multiple. */}
+                          {afterPurls.map((purl, idx) => {
+                            const isNew = !beforeSet.has(purl);
+                            const isPrimary = idx === 0 && !e.unmapped;
+                            return (
+                              <div
+                                key={`a-${idx}`}
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 6,
+                                  color: theme.dark ? "#9adf6d" : "#5b9b2c",
+                                  background: theme.dark
+                                    ? "rgba(154,223,109,.08)"
+                                    : "#ecf5dc",
+                                  padding: "2px 6px",
+                                  borderRadius: 3,
+                                  marginTop: 2,
+                                  opacity: isNew ? 1 : 0.7,
+                                }}
+                              >
+                                <span style={{ opacity: 0.7 }}>+</span>
+                                <span>{purl}</span>
+                                {!e.unmapped && (
+                                  <span
+                                    style={{
+                                      fontSize: 9,
+                                      fontWeight: 700,
+                                      letterSpacing: ".06em",
+                                      textTransform: "uppercase",
+                                      color: t.fg3,
+                                      marginLeft: "auto",
+                                    }}
+                                  >
+                                    {isPrimary ? "primary" : "alt"}
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
                         {e.note && (
                           <div
