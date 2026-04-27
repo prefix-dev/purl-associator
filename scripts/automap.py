@@ -65,6 +65,7 @@ class AutoEntry:
     repo: str | None
     recipe_url: str | None
     summary: str | None
+    source_url: str | None = None
     note: str | None = None
     fetched_at: str | None = None
 
@@ -295,6 +296,7 @@ async def _process_record(
     if guess is None:
         note = "No automatic match — heuristics did not recognise any source URL."
 
+    primary_source = next((u for u in facts.source_urls if u), None)
     return AutoEntry(
         name=name,
         version=str(record.version),
@@ -311,6 +313,7 @@ async def _process_record(
         repo=repo_url,
         recipe_url=f"https://github.com/conda-forge/{name}-feedstock/blob/main/recipe/meta.yaml",
         summary=facts.summary,
+        source_url=primary_source,
         note=note,
         fetched_at=datetime.now(UTC).isoformat(timespec="seconds"),
     )

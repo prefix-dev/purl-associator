@@ -189,31 +189,26 @@ export function MappingEditor({
             <div
               style={{
                 display: "flex",
-                gap: 14,
-                marginTop: 8,
-                flexWrap: "wrap",
+                flexDirection: "column",
+                gap: 4,
+                marginTop: 10,
                 fontSize: 11.5,
               }}
             >
-              {pkg.homepage && (
-                <ExtLink href={pkg.homepage} theme={theme}>
-                  Homepage
-                </ExtLink>
+              {pkg.source_url && (
+                <UrlRow label="Source" url={pkg.source_url} theme={theme} />
               )}
-              {pkg.repo && (
-                <ExtLink href={pkg.repo} theme={theme}>
-                  Repository
-                </ExtLink>
+              {pkg.homepage && (
+                <UrlRow label="Homepage" url={pkg.homepage} theme={theme} />
+              )}
+              {pkg.repo && pkg.repo !== pkg.source_url && (
+                <UrlRow label="Repository" url={pkg.repo} theme={theme} />
               )}
               {pkg.recipe_url && (
-                <ExtLink href={pkg.recipe_url} theme={theme}>
-                  Recipe
-                </ExtLink>
+                <UrlRow label="Recipe" url={pkg.recipe_url} theme={theme} />
               )}
               {pkg.url && (
-                <ExtLink href={pkg.url} theme={theme}>
-                  conda artifact
-                </ExtLink>
+                <UrlRow label="Artifact" url={pkg.url} theme={theme} />
               )}
             </div>
           </div>
@@ -626,32 +621,58 @@ function selectStyle(theme: Theme) {
   } as const;
 }
 
-function ExtLink({
-  href,
+function UrlRow({
+  label,
+  url,
   theme,
-  children,
 }: {
-  href: string;
+  label: string;
+  url: string;
   theme: Theme;
-  children: ReactNode;
 }) {
+  const t = theme.t;
   return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noreferrer"
+    <div
       style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 4,
-        color: theme.t.link,
-        fontSize: 12,
-        fontWeight: 500,
-        textDecoration: "none",
+        display: "flex",
+        alignItems: "baseline",
+        gap: 8,
+        minWidth: 0,
+        fontSize: 11.5,
       }}
     >
-      <Glyph name="link" size={11} />
-      {children}
-    </a>
+      <span
+        style={{
+          fontSize: 10,
+          fontWeight: 600,
+          color: t.fg3,
+          letterSpacing: ".04em",
+          textTransform: "uppercase",
+          minWidth: 70,
+          flexShrink: 0,
+        }}
+      >
+        {label}
+      </span>
+      <a
+        href={url}
+        target="_blank"
+        rel="noreferrer"
+        title={url}
+        style={{
+          color: t.link,
+          fontFamily: "JetBrains Mono, monospace",
+          fontSize: 11.5,
+          textDecoration: "none",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+          minWidth: 0,
+          flex: 1,
+        }}
+      >
+        {url}
+      </a>
+    </div>
   );
 }

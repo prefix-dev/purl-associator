@@ -34,6 +34,7 @@ export type PackageEntry = {
   repo: string | null;
   recipe_url: string | null;
   summary: string | null;
+  source_url: string | null;
   note: string | null;
   fetched_at: string | null;
   status: "auto-unverified" | "verified" | "unmapped" | "edited";
