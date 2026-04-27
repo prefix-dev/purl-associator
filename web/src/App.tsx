@@ -6,9 +6,10 @@ import {
   loadStoredToken,
   logout,
 } from "./auth/github";
+import { BulkPanel } from "./components/BulkPanel";
 import { LoginModal } from "./components/LoginModal";
 import { MappingEditor } from "./components/MappingEditor";
-import { PackageList } from "./components/PackageList";
+import { PackageTable } from "./components/PackageTable";
 import { PRDrawer } from "./components/PRDrawer";
 import { Btn, Glyph, useTheme } from "./components/Primitives";
 import { config, repoFullName } from "./config";
@@ -20,7 +21,8 @@ export function App() {
   const [payload, setPayload] = useState<MappingsPayload | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [packages, setPackages] = useState<PackageEntry[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedSet, setSelectedSet] = useState<Set<string>>(new Set());
+  const [focusedId, setFocusedId] = useState<string | null>(null);
   const [edits, setEdits] = useState<Record<string, Edit>>({});
   const [q, setQ] = useState("");
   const [filters, setFilters] = useState({
@@ -45,7 +47,6 @@ export function App() {
       .catch((err) => setLoadError(err instanceof Error ? err.message : String(err)));
   }, []);
 
-  // Restore an existing session, or finish an OAuth callback.
   useEffect(() => {
     const stored = loadStoredToken();
     if (stored) {
@@ -73,29 +74,40 @@ export function App() {
     }
   }, []);
 
+  // Default: when packages first arrive, single-select the first row.
   useEffect(() => {
-    if (!selectedId && packages.length > 0) setSelectedId(packages[0].name);
-  }, [packages, selectedId]);
+    if (selectedSet.size === 0 && packages.length > 0 && focusedId === null) {
+      setSelectedSet(new Set([packages[0].name]));
+      setFocusedId(packages[0].name);
+    }
+  }, [packages, selectedSet.size, focusedId]);
 
-  const selectedPkg = useMemo(
-    () => (selectedId ? packages.find((p) => p.name === selectedId) ?? null : null),
-    [packages, selectedId],
+  const focusedPkg = useMemo(
+    () => (focusedId ? packages.find((p) => p.name === focusedId) ?? null : null),
+    [packages, focusedId],
   );
+
+  const selectedPackages = useMemo(
+    () => packages.filter((p) => selectedSet.has(p.name)),
+    [packages, selectedSet],
+  );
+
   const editsCount = Object.keys(edits).length;
   const isLoggedIn = Boolean(token && user);
+  const showBulk = selectedSet.size > 1;
 
   function handleEdit(newEdit: Edit): void {
     if (!isLoggedIn) {
       setLoginOpen(true);
       return;
     }
-    if (!selectedPkg) return;
-    const auto = selectedPkg.auto ?? {
-      purl: selectedPkg.purl,
-      type: selectedPkg.type,
-      namespace: selectedPkg.namespace,
-      pkg_name: selectedPkg.pkg_name,
-      alternative_purls: selectedPkg.alternative_purls,
+    if (!focusedPkg) return;
+    const auto = focusedPkg.auto ?? {
+      purl: focusedPkg.purl,
+      type: focusedPkg.type,
+      namespace: focusedPkg.namespace,
+      pkg_name: focusedPkg.pkg_name,
+      alternative_purls: focusedPkg.alternative_purls,
     };
     const autoAltSet = new Set(
       (auto.alternative_purls ?? []).map((a) => a.purl).sort(),
@@ -115,10 +127,31 @@ export function App() {
       !newEdit.note;
     setEdits((prev) => {
       const next = { ...prev };
-      if (isSame) delete next[selectedPkg.name];
-      else next[selectedPkg.name] = newEdit;
+      if (isSame) delete next[focusedPkg.name];
+      else next[focusedPkg.name] = newEdit;
       return next;
     });
+  }
+
+  function approveOne(p: PackageEntry): Edit | null {
+    const auto = p.auto ?? {
+      purl: p.purl,
+      type: p.type,
+      namespace: p.namespace,
+      pkg_name: p.pkg_name,
+      alternative_purls: p.alternative_purls,
+    };
+    if (!auto.purl) return null;
+    return {
+      purl: auto.purl,
+      type: auto.type ?? "pypi",
+      namespace: auto.namespace ?? "",
+      pkgName: auto.pkg_name ?? p.name,
+      alternative_purls: (auto.alternative_purls ?? []).map((a) => a.purl),
+      unmapped: false,
+      note: "",
+      approved: true,
+    };
   }
 
   function handleApprove(): void {
@@ -126,36 +159,54 @@ export function App() {
       setLoginOpen(true);
       return;
     }
-    if (!selectedPkg) return;
-    const auto = selectedPkg.auto ?? {
-      purl: selectedPkg.purl,
-      type: selectedPkg.type,
-      namespace: selectedPkg.namespace,
-      pkg_name: selectedPkg.pkg_name,
-      alternative_purls: selectedPkg.alternative_purls,
-    };
-    if (!auto.purl) return;
-    setEdits((prev) => ({
-      ...prev,
-      [selectedPkg.name]: {
-        purl: auto.purl ?? "",
-        type: auto.type ?? "pypi",
-        namespace: auto.namespace ?? "",
-        pkgName: auto.pkg_name ?? selectedPkg.name,
-        alternative_purls:
-          (auto.alternative_purls ?? []).map((a) => a.purl) ?? [],
-        unmapped: false,
-        note: "",
-        approved: true,
-      },
-    }));
+    if (!focusedPkg) return;
+    const e = approveOne(focusedPkg);
+    if (!e) return;
+    setEdits((prev) => ({ ...prev, [focusedPkg.name]: e }));
   }
 
   function handleResetAuto(): void {
-    if (!selectedPkg) return;
+    if (!focusedPkg) return;
     setEdits((prev) => {
       const next = { ...prev };
-      delete next[selectedPkg.name];
+      delete next[focusedPkg.name];
+      return next;
+    });
+  }
+
+  function handleBulkApprove(): void {
+    setEdits((prev) => {
+      const next = { ...prev };
+      for (const p of selectedPackages) {
+        const e = approveOne(p);
+        if (e) next[p.name] = e;
+      }
+      return next;
+    });
+  }
+
+  function handleBulkMarkUnmapped(): void {
+    setEdits((prev) => {
+      const next = { ...prev };
+      for (const p of selectedPackages) {
+        next[p.name] = {
+          purl: "",
+          type: p.type ?? "generic",
+          namespace: p.namespace ?? "",
+          pkgName: p.pkg_name ?? p.name,
+          alternative_purls: [],
+          unmapped: true,
+          note: "",
+        };
+      }
+      return next;
+    });
+  }
+
+  function handleBulkResetSelected(): void {
+    setEdits((prev) => {
+      const next = { ...prev };
+      for (const p of selectedPackages) delete next[p.name];
       return next;
     });
   }
@@ -364,14 +415,16 @@ export function App() {
       )}
 
       <div style={{ flex: 1, display: "flex", minHeight: 0 }}>
-        <div style={{ width: 380, flexShrink: 0 }}>
+        <div style={{ flex: "0 0 60%", minWidth: 0 }}>
           {payload ? (
-            <PackageList
+            <PackageTable
               theme={theme}
               packages={packages}
-              selectedId={selectedId}
-              onSelect={setSelectedId}
               edits={edits}
+              selectedSet={selectedSet}
+              setSelectedSet={setSelectedSet}
+              focusedId={focusedId}
+              setFocusedId={setFocusedId}
               q={q}
               setQ={setQ}
               filters={filters}
@@ -390,16 +443,33 @@ export function App() {
             </div>
           )}
         </div>
-        <MappingEditor
-          theme={theme}
-          pkg={selectedPkg}
-          edit={selectedPkg ? edits[selectedPkg.name] : undefined}
-          onEdit={handleEdit}
-          onApprove={handleApprove}
-          onResetAuto={handleResetAuto}
-          isLoggedIn={isLoggedIn}
-          onRequestLogin={() => setLoginOpen(true)}
-        />
+
+        <div style={{ flex: 1, minWidth: 0, display: "flex" }}>
+          {showBulk ? (
+            <BulkPanel
+              theme={theme}
+              selectedPackages={selectedPackages}
+              edits={edits}
+              isLoggedIn={isLoggedIn}
+              onRequestLogin={() => setLoginOpen(true)}
+              onApproveAll={handleBulkApprove}
+              onMarkUnmappedAll={handleBulkMarkUnmapped}
+              onResetSelected={handleBulkResetSelected}
+              onClearSelection={() => setSelectedSet(new Set())}
+            />
+          ) : (
+            <MappingEditor
+              theme={theme}
+              pkg={focusedPkg}
+              edit={focusedPkg ? edits[focusedPkg.name] : undefined}
+              onEdit={handleEdit}
+              onApprove={handleApprove}
+              onResetAuto={handleResetAuto}
+              isLoggedIn={isLoggedIn}
+              onRequestLogin={() => setLoginOpen(true)}
+            />
+          )}
+        </div>
       </div>
 
       {drawerOpen && (
@@ -416,7 +486,8 @@ export function App() {
           onRequestLogin={() => setLoginOpen(true)}
           user={user}
           onSelect={(id) => {
-            setSelectedId(id);
+            setSelectedSet(new Set([id]));
+            setFocusedId(id);
             setDrawerOpen(false);
           }}
           token={token}
