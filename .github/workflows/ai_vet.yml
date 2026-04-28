@@ -24,6 +24,14 @@ on:
         description: "Comma-separated package names (blank = all)"
         required: false
         default: ""
+      ai_batch_size:
+        description: "Packages per Haiku call"
+        required: false
+        default: "15"
+      commit_every:
+        description: "git push every N chunks (0 = only at end)"
+        required: false
+        default: "16"
   schedule:
     # Weekly full sweep in batches mode (50% off, async, runs over ~24h).
     - cron: "23 4 * * 1"
@@ -39,52 +47,79 @@ concurrency:
 jobs:
   ai-vet:
     runs-on: ubuntu-latest
-    # Batches can run for up to 24h; realtime should finish in minutes.
+    # Batches can run for up to 24h; realtime should finish in minutes-to-an-hour.
     timeout-minutes: 1440
     steps:
       - uses: actions/checkout@v6
+        with:
+          # Need full history so we can branch off main and push.
+          fetch-depth: 0
 
       - uses: prefix-dev/setup-pixi@v0.9.5
         with:
           pixi-version: latest
           cache: true
 
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Switch to ai-vet/refresh branch
+        run: |
+          set -euo pipefail
+          if git ls-remote --exit-code --heads origin ai-vet/refresh >/dev/null 2>&1; then
+            echo "Branch exists — checking out tracking branch"
+            git checkout -B ai-vet/refresh origin/ai-vet/refresh
+          else
+            echo "Creating branch from main"
+            git checkout -B ai-vet/refresh origin/main
+            git push -u origin ai-vet/refresh
+          fi
+
       - name: Run AI vet
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           set -euo pipefail
-          # Defaults differ between dispatch (with inputs) and cron (no inputs):
-          # dispatch defaults are encoded in the inputs above; cron uses these.
           MODE="${{ inputs.mode || 'batches' }}"
           LIMIT="${{ inputs.limit }}"
           ONLY="${{ inputs.only }}"
           SKIP_VETTED="${{ inputs.skip_vetted == 'false' && 'false' || 'true' }}"
+          AI_BATCH_SIZE="${{ inputs.ai_batch_size || '15' }}"
+          COMMIT_EVERY="${{ inputs.commit_every || '16' }}"
 
-          ARGS=(--mode "$MODE")
+          ARGS=(--mode "$MODE" --ai-batch-size "$AI_BATCH_SIZE" --commit-every "$COMMIT_EVERY")
           if [ -n "$LIMIT" ]; then ARGS+=(--limit "$LIMIT"); fi
           if [ -n "$ONLY" ]; then ARGS+=(--only "$ONLY"); fi
           if [ "$SKIP_VETTED" = "false" ]; then ARGS+=(--revet); fi
 
           pixi run python -m scripts.ai_vet "${ARGS[@]}"
 
-      - name: Open / update PR if vetting changed
-        uses: peter-evans/create-pull-request@v8
-        with:
-          add-paths: |
-            mappings/ai_vet.json
-          branch: ai-vet/refresh
-          base: main
-          title: "ai-vet: refresh AI verdicts on PURL mappings"
-          body: |
-            Pre-vetting of `mappings/auto.json` by Claude Haiku 4.5.
+      - name: Open PR if not already open
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          # Idempotent: only opens if not already open. The branch already has
+          # whatever commits the script pushed during the run.
+          if gh pr view ai-vet/refresh >/dev/null 2>&1; then
+            echo "PR already open — branch updates flow into it automatically."
+          else
+            gh pr create \
+              --base main \
+              --head ai-vet/refresh \
+              --title "ai-vet: refresh AI verdicts on PURL mappings" \
+              --body "$(cat <<'EOF'
+          Pre-vetting of `mappings/auto.json` by Claude Haiku 4.5.
 
-            For each package the model judges whether the auto-inferred PURL
-            is correct, suggesting an alternative when it disagrees. The
-            sidecar `mappings/ai_vet.json` is the only file changed — no
-            conflicts with `automap` PRs.
+          For each package the model judges whether the auto-inferred PURL
+          is correct, suggesting an alternative when it disagrees. Each run
+          writes a fresh per-run sidecar under `mappings/ai_vet/` so PRs
+          never conflict with `automap` refreshes.
 
-            Review the verdicts before merging; the SPA can surface them as
-            hints next to the human review UI.
-          commit-message: "ai-vet: refresh AI verdicts"
-          delete-branch: true
+          Commits land incrementally as the run progresses; review the diff
+          and merge when satisfied.
+          EOF
+          )"
+          fi
