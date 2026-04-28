@@ -6,6 +6,8 @@ import re
 from dataclasses import dataclass
 from urllib.parse import urlparse
 
+from packageurl import PackageURL
+
 
 @dataclass(frozen=True)
 class PurlGuess:
@@ -15,6 +17,13 @@ class PurlGuess:
     pkg_name: str
     confidence: float
     source: str  # which heuristic fired
+
+    def __post_init__(self) -> None:
+        # Single chokepoint: every PurlGuess emits a spec-normalized PURL,
+        # regardless of how the upstream heuristic built the string.
+        normalized = normalize_purl(self.purl)
+        if normalized != self.purl:
+            object.__setattr__(self, "purl", normalized)
 
 
 _PYPI_HOSTS = {
@@ -61,44 +70,47 @@ def normalize_pypi_name(name: str) -> str:
 
 
 def normalize_purl(purl: str) -> str:
-    """Apply type-specific name normalization to a PURL.
+    """Spec-compliant normalization via :mod:`packageurl`, with two layered
+    overrides where the library is more lenient than what we need:
 
-    Per the package-url spec (https://github.com/package-url/purl-spec/tree/main/types):
-    - pypi: lowercase + collapse runs of [-_.] to a single - (PEP 503)
-    - npm: lowercase (scope + name)
-    - github: lowercase (owner + repo)
-    - cargo, cran, gem, bioconductor: case-sensitive, no normalization
+    - **PyPI**: collapse runs of ``[-_.]`` to a single ``-`` (PEP 503). The
+      purl-spec only mandates ``_`` → ``-``; PEP 503 also collapses dots,
+      and PyPI itself treats ``foo.bar`` and ``foo-bar`` as the same project.
+    - **npm namespace**: lowercased. The library lowercases the npm *name*
+      but leaves the *namespace* mixed-case, even though the spec says the
+      npm namespace is case-insensitive.
+
+    Other types (cargo, cran, gem, bioconductor, github, …) are handled
+    fully by the library.
     """
-    if not purl.startswith("pkg:"):
-        return purl
-    body = purl[len("pkg:") :]
-    type_, slash, rest = body.partition("/")
-    if not slash:
-        return purl
-    # Split off qualifiers / subpath first (they always come after @version).
-    rest, sub_sep, sub_part = rest.partition("#")
-    rest, qual_sep, qual_part = rest.partition("?")
-    # @version is the LAST '@' — but for npm scoped names the FIRST '@' is the
-    # scope marker, not a version separator. Use rfind so we don't confuse it.
-    last_at = rest.rfind("@")
-    if last_at > 0:
-        head, ver = rest[:last_at], rest[last_at:]
-    else:
-        head, ver = rest, ""
-
-    if type_ == "pypi":
-        head = normalize_pypi_name(head)
-    elif type_ in {"npm", "github"}:
-        head = head.lower()
-    else:
+    try:
+        parsed = PackageURL.from_string(purl)
+    except ValueError:
         return purl
 
-    out = f"pkg:{type_}/{head}{ver}"
-    if qual_sep:
-        out = f"{out}?{qual_part}"
-    if sub_sep:
-        out = f"{out}#{sub_part}"
-    return out
+    if parsed.type == "pypi":
+        new_name = normalize_pypi_name(parsed.name)
+        if new_name != parsed.name:
+            parsed = PackageURL(
+                type=parsed.type,
+                name=new_name,
+                version=parsed.version,
+                qualifiers=parsed.qualifiers,
+                subpath=parsed.subpath,
+            )
+    elif parsed.type == "npm" and parsed.namespace:
+        new_ns = parsed.namespace.lower()
+        if new_ns != parsed.namespace:
+            parsed = PackageURL(
+                type=parsed.type,
+                namespace=new_ns,
+                name=parsed.name,
+                version=parsed.version,
+                qualifiers=parsed.qualifiers,
+                subpath=parsed.subpath,
+            )
+
+    return parsed.to_string()
 
 
 def guess_pypi(url: str) -> PurlGuess | None:
