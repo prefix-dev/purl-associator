@@ -43,6 +43,8 @@ import httpx
 import typer
 from rich.console import Console
 
+from scripts.purl_inference import normalize_purl
+
 app = typer.Typer(add_completion=False, help=__doc__)
 console = Console()
 
@@ -293,6 +295,9 @@ async def _vet_chunk(
             console.log(
                 f"[yellow]Echo mismatch (using position): {name!r} ↔ {v.get('package_name')!r}[/yellow]"
             )
+        suggested = v.get("suggested_purl")
+        if suggested:
+            suggested = normalize_purl(suggested)
         out.append(
             (
                 name,
@@ -302,7 +307,7 @@ async def _vet_chunk(
                     vetted_at=now,
                     model=MODEL,
                     verdict=v["verdict"],
-                    suggested_purl=v.get("suggested_purl"),
+                    suggested_purl=suggested,
                     reasoning=v["reasoning"],
                     primary_purl=entry.get("purl"),
                     primary_purl_status=statuses.get(name),
@@ -557,6 +562,9 @@ def _run_batches(
             v = by_name.get(name)
             if v is None:
                 continue
+            suggested = v.get("suggested_purl")
+            if suggested:
+                suggested = normalize_purl(suggested)
             state["entries"][name] = asdict(
                 VetResult(
                     package_version=entry.get("version", ""),
@@ -564,7 +572,7 @@ def _run_batches(
                     vetted_at=now,
                     model=MODEL,
                     verdict=v["verdict"],
-                    suggested_purl=v.get("suggested_purl"),
+                    suggested_purl=suggested,
                     reasoning=v["reasoning"],
                     primary_purl=entry.get("purl"),
                     primary_purl_status=statuses.get(name),

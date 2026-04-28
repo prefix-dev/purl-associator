@@ -51,6 +51,32 @@ def _strip_version_tail(stem: str) -> str:
     return re.sub(r"[-_]v?\d[\d.\w-]*$", "", stem)
 
 
+_PYPI_NORMALIZE_RE = re.compile(r"[-_.]+")
+
+
+def normalize_pypi_name(name: str) -> str:
+    """PEP 503 / purl-spec PyPI normalization: lowercase + collapse runs of
+    ``[-_.]`` to a single ``-``. ``Foo_Bar.Baz`` → ``foo-bar-baz``."""
+    return _PYPI_NORMALIZE_RE.sub("-", name).lower()
+
+
+def normalize_purl(purl: str) -> str:
+    """Apply type-specific name normalization to a PURL. Currently only PyPI
+    has spec-mandated normalization; other types pass through."""
+    if not purl.startswith("pkg:pypi/"):
+        return purl
+    body = purl[len("pkg:pypi/") :]
+    name, sep, tail = body.partition("@")
+    name, qsep, qual = name.partition("?")
+    name = normalize_pypi_name(name)
+    rebuilt = name
+    if qual:
+        rebuilt = f"{rebuilt}?{qual}"
+    if sep:
+        rebuilt = f"{rebuilt}@{tail}"
+    return f"pkg:pypi/{rebuilt}"
+
+
 def guess_pypi(url: str) -> PurlGuess | None:
     host = urlparse(url).netloc
     if host not in _PYPI_HOSTS:
@@ -58,19 +84,16 @@ def guess_pypi(url: str) -> PurlGuess | None:
     # pypi.org/project/<name>/...
     m = re.search(r"pypi\.org/(?:project|simple)/([^/]+)/", url)
     if m:
-        name = m.group(1)
-        return PurlGuess(
-            f"pkg:pypi/{name.lower()}", "pypi", None, name.lower(), 0.97, "recipe-source"
-        )
+        name = normalize_pypi_name(m.group(1))
+        return PurlGuess(f"pkg:pypi/{name}", "pypi", None, name, 0.97, "recipe-source")
     # files.pythonhosted.org/packages/.../<name>-<version>.tar.gz
     parsed = urlparse(url)
     leaf = parsed.path.rsplit("/", 1)[-1]
     stem = _strip_archive_suffix(leaf)
     name = _strip_version_tail(stem)
     if name:
-        return PurlGuess(
-            f"pkg:pypi/{name.lower()}", "pypi", None, name.lower(), 0.9, "recipe-source"
-        )
+        name = normalize_pypi_name(name)
+        return PurlGuess(f"pkg:pypi/{name}", "pypi", None, name, 0.9, "recipe-source")
     return None
 
 
@@ -230,7 +253,9 @@ _NPM_BUILD_SIGNALS = {"nodejs", "yarn", "pnpm"}
 def derive_recipe_context(
     *, conda_name: str, host_deps: list[str], build_deps: list[str], noarch: str | None
 ) -> RecipeContext:
-    deps_norm = {d.split()[0].split("=")[0].strip().lower() for d in host_deps + build_deps}
+    deps_norm = {
+        d.split()[0].split("=")[0].strip().lower() for d in host_deps + build_deps
+    }
 
     if conda_name.startswith("r-"):
         return RecipeContext(
@@ -324,9 +349,7 @@ def infer_all(
     return sorted(deduped, key=lambda h: h.confidence, reverse=True)
 
 
-def infer(
-    urls: list[str], *, context: RecipeContext | None = None
-) -> PurlGuess | None:
+def infer(urls: list[str], *, context: RecipeContext | None = None) -> PurlGuess | None:
     """Best single PURL guess (the primary). See :func:`infer_all` for the
     full candidate list."""
     candidates = infer_all(urls, context=context)

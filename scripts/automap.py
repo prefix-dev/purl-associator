@@ -111,7 +111,14 @@ def _stringify_dep(node: object) -> str | None:
         return node
     if isinstance(node, dict):
         # rattler-build pin form: {"pin_subpackage": "...", ...}
-        for key in ("if", "pin_subpackage", "pin_compatible", "compiler", "stdlib", "spec"):
+        for key in (
+            "if",
+            "pin_subpackage",
+            "pin_compatible",
+            "compiler",
+            "stdlib",
+            "spec",
+        ):
             if key in node:
                 value = node[key]
                 if isinstance(value, str):
@@ -347,7 +354,9 @@ async def _gather_records(
     *, channel: str, platforms: Iterable[str], names: Iterable[str] | None = None
 ) -> list[RepoDataRecord]:
     gateway = Gateway(
-        default_config=SourceConfig(sharded_enabled=True, cache_action="cache-or-fetch"),
+        default_config=SourceConfig(
+            sharded_enabled=True, cache_action="cache-or-fetch"
+        ),
         show_progress=False,
     )
     platform_objs = [Platform(p) for p in platforms]
@@ -418,9 +427,7 @@ def main(
         None, help="Comma-separated names to process (test runs)"
     ),
     parallel: int = typer.Option(20, help="parallel inflight recipe fetches"),
-    force: bool = typer.Option(
-        False, help="Re-fetch all packages, ignoring the cache"
-    ),
+    force: bool = typer.Option(False, help="Re-fetch all packages, ignoring the cache"),
 ) -> None:
     """Generate or refresh the auto mapping JSON."""
     asyncio.run(
@@ -490,9 +497,7 @@ async def _async_main(
 
             async def runner(record: RepoDataRecord) -> AutoEntry:
                 try:
-                    return await _process_record(
-                        client, record, semaphore=semaphore
-                    )
+                    return await _process_record(client, record, semaphore=semaphore)
                 except Exception as exc:  # noqa: BLE001
                     return AutoEntry(
                         name=record.name.normalized,
