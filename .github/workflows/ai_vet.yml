@@ -68,9 +68,15 @@ jobs:
       - name: Switch to ai-vet/refresh branch
         run: |
           set -euo pipefail
+          # Always run with main's latest code, but preserve data files
+          # accumulated on ai-vet/refresh from prior runs. Branch keeps its
+          # data; main's code/workflow updates land via merge.
           if git ls-remote --exit-code --heads origin ai-vet/refresh >/dev/null 2>&1; then
-            echo "Branch exists — checking out tracking branch"
+            echo "Branch exists — checking out and merging main"
             git checkout -B ai-vet/refresh origin/ai-vet/refresh
+            # Prefer main for any conflicting code/workflow files; data files
+            # under mappings/ai_vet/ are append-only so they won't conflict.
+            git merge origin/main --no-edit -X theirs
           else
             echo "Creating branch from main"
             git checkout -B ai-vet/refresh origin/main
