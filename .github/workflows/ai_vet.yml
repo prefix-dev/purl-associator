@@ -101,10 +101,11 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          # Idempotent: only opens if not already open. The branch already has
-          # whatever commits the script pushed during the run.
-          if gh pr view ai-vet/refresh >/dev/null 2>&1; then
-            echo "PR already open — branch updates flow into it automatically."
+          # Idempotent: only opens if there's no OPEN PR. (gh pr view also
+          # matches closed PRs on the same branch, so use list --state open.)
+          OPEN_PR=$(gh pr list --state open --head ai-vet/refresh --json number -q '.[].number' | head -n1)
+          if [ -n "$OPEN_PR" ]; then
+            echo "PR #$OPEN_PR already open — branch updates flow into it."
           else
             gh pr create \
               --base main \
