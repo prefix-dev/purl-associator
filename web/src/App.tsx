@@ -16,6 +16,8 @@ import { config, repoFullName } from "./config";
 import { loadMappings, packagesAsList } from "./data/loader";
 import type { Edit, GitHubUser, MappingsPayload, PackageEntry } from "./data/types";
 
+const EDITS_KEY = "purl-associator/staged_edits";
+
 export function App() {
   const theme = useTheme();
   const [payload, setPayload] = useState<MappingsPayload | null>(null);
@@ -46,6 +48,25 @@ export function App() {
       })
       .catch((err) => setLoadError(err instanceof Error ? err.message : String(err)));
   }, []);
+
+  // Persist staged edits across the OAuth full-page redirect (sessionStorage
+  // is per-tab and survives same-tab navigations).
+  useEffect(() => {
+    try {
+      const stored = sessionStorage.getItem(EDITS_KEY);
+      if (stored) setEdits(JSON.parse(stored));
+    } catch {
+      // ignore
+    }
+  }, []);
+  useEffect(() => {
+    try {
+      if (Object.keys(edits).length === 0) sessionStorage.removeItem(EDITS_KEY);
+      else sessionStorage.setItem(EDITS_KEY, JSON.stringify(edits));
+    } catch {
+      // ignore
+    }
+  }, [edits]);
 
   useEffect(() => {
     const stored = loadStoredToken();
@@ -97,10 +118,7 @@ export function App() {
   const showBulk = selectedSet.size > 1;
 
   function handleEdit(newEdit: Edit): void {
-    if (!isLoggedIn) {
-      setLoginOpen(true);
-      return;
-    }
+    if (!isLoggedIn) setLoginOpen(true);
     if (!focusedPkg) return;
     const auto = focusedPkg.auto ?? {
       purl: focusedPkg.purl,
@@ -155,10 +173,7 @@ export function App() {
   }
 
   function handleApprove(): void {
-    if (!isLoggedIn) {
-      setLoginOpen(true);
-      return;
-    }
+    if (!isLoggedIn) setLoginOpen(true);
     if (!focusedPkg) return;
     const e = approveOne(focusedPkg);
     if (!e) return;
