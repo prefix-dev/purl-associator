@@ -280,14 +280,18 @@ async def _vet_chunk(
         console.log(
             f"[yellow]Chunk size mismatch: sent {len(chunk)}, got {len(verdicts)} verdicts[/yellow]"
         )
+    # Empirically Haiku often returns the echo with the version glued on
+    # ("acpype v0.1.0" instead of "acpype"); we match by position anyway, so
+    # only log when the echo is plain wrong (not just version-suffixed).
     now = datetime.now(UTC).isoformat(timespec="seconds")
     out: list[tuple[str, VetResult]] = []
     for entry, v in zip(chunk, verdicts, strict=False):
         name = entry["name"]
-        echoed = v.get("package_name", "")
-        if echoed and echoed != name:
+        echoed = (v.get("package_name") or "").split()[0:1]
+        echoed_head = echoed[0] if echoed else ""
+        if echoed_head and echoed_head != name:
             console.log(
-                f"[yellow]Echo mismatch: expected {name!r}, got {echoed!r} — using position[/yellow]"
+                f"[yellow]Echo mismatch (using position): {name!r} ↔ {v.get('package_name')!r}[/yellow]"
             )
         out.append(
             (
