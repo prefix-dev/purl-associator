@@ -272,15 +272,23 @@ async def _vet_chunk(
         console.log(f"[red]Could not parse response for chunk of {len(chunk)}[/red]")
         return []
 
-    by_name = {v.get("package_name"): v for v in verdicts}
+    # Match by position (the schema preserves array order). package_name is a
+    # sanity-check echo, not a primary key — empirically the model sometimes
+    # leaves it blank or truncates it. If counts mismatch, drop down to
+    # whatever overlap we have.
+    if len(verdicts) != len(chunk):
+        console.log(
+            f"[yellow]Chunk size mismatch: sent {len(chunk)}, got {len(verdicts)} verdicts[/yellow]"
+        )
     now = datetime.now(UTC).isoformat(timespec="seconds")
     out: list[tuple[str, VetResult]] = []
-    for entry in chunk:
+    for entry, v in zip(chunk, verdicts, strict=False):
         name = entry["name"]
-        v = by_name.get(name)
-        if v is None:
-            console.log(f"[yellow]No verdict returned for {name}[/yellow]")
-            continue
+        echoed = v.get("package_name", "")
+        if echoed and echoed != name:
+            console.log(
+                f"[yellow]Echo mismatch: expected {name!r}, got {echoed!r} — using position[/yellow]"
+            )
         out.append(
             (
                 name,
