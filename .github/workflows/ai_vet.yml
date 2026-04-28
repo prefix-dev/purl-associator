@@ -1,0 +1,90 @@
+name: AI vet PURL mappings
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "API mode (realtime = fast/dispatch, batches = cheap/scheduled)"
+        required: false
+        default: "realtime"
+        type: choice
+        options:
+          - realtime
+          - batches
+      limit:
+        description: "Limit packages processed (blank = all)"
+        required: false
+        default: "200"
+      skip_vetted:
+        description: "Skip packages already vetted at the same version+build"
+        required: false
+        default: "true"
+        type: boolean
+      only:
+        description: "Comma-separated package names (blank = all)"
+        required: false
+        default: ""
+  schedule:
+    # Weekly full sweep in batches mode (50% off, async, runs over ~24h).
+    - cron: "23 4 * * 1"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: ai-vet
+  cancel-in-progress: false
+
+jobs:
+  ai-vet:
+    runs-on: ubuntu-latest
+    # Batches can run for up to 24h; realtime should finish in minutes.
+    timeout-minutes: 1440
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: prefix-dev/setup-pixi@v0.9.5
+        with:
+          pixi-version: latest
+          cache: true
+
+      - name: Run AI vet
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          set -euo pipefail
+          # Defaults differ between dispatch (with inputs) and cron (no inputs):
+          # dispatch defaults are encoded in the inputs above; cron uses these.
+          MODE="${{ inputs.mode || 'batches' }}"
+          LIMIT="${{ inputs.limit }}"
+          ONLY="${{ inputs.only }}"
+          SKIP_VETTED="${{ inputs.skip_vetted == 'false' && 'false' || 'true' }}"
+
+          ARGS=(--mode "$MODE")
+          if [ -n "$LIMIT" ]; then ARGS+=(--limit "$LIMIT"); fi
+          if [ -n "$ONLY" ]; then ARGS+=(--only "$ONLY"); fi
+          if [ "$SKIP_VETTED" = "false" ]; then ARGS+=(--revet); fi
+
+          pixi run python -m scripts.ai_vet "${ARGS[@]}"
+
+      - name: Open / update PR if vetting changed
+        uses: peter-evans/create-pull-request@v6
+        with:
+          add-paths: |
+            mappings/ai_vet.json
+          branch: ai-vet/refresh
+          base: main
+          title: "ai-vet: refresh AI verdicts on PURL mappings"
+          body: |
+            Pre-vetting of `mappings/auto.json` by Claude Haiku 4.5.
+
+            For each package the model judges whether the auto-inferred PURL
+            is correct, suggesting an alternative when it disagrees. The
+            sidecar `mappings/ai_vet.json` is the only file changed — no
+            conflicts with `automap` PRs.
+
+            Review the verdicts before merging; the SPA can surface them as
+            hints next to the human review UI.
+          commit-message: "ai-vet: refresh AI verdicts"
+          delete-branch: true
