@@ -140,6 +140,17 @@ def guess_cran(url: str) -> PurlGuess | None:
     parsed = urlparse(url)
     if parsed.netloc not in _CRAN_HOSTS:
         return None
+    # Homepage short-link: /package=NAME (or ?package=NAME)
+    m = re.search(r"package=([A-Za-z][A-Za-z0-9.]*)", parsed.path + "?" + parsed.query)
+    if m:
+        name = m.group(1)
+        return PurlGuess(f"pkg:cran/{name}", "cran", None, name, 0.92, "recipe-source")
+    # /web/packages/NAME/...
+    m = re.search(r"/web/packages/([A-Za-z][A-Za-z0-9.]*)", parsed.path)
+    if m:
+        name = m.group(1)
+        return PurlGuess(f"pkg:cran/{name}", "cran", None, name, 0.92, "recipe-source")
+    # /src/contrib/NAME_VERSION.tar.gz (also under /Archive/NAME/...)
     leaf = parsed.path.rsplit("/", 1)[-1]
     stem = _strip_archive_suffix(leaf)
     name = _strip_version_tail(stem)
