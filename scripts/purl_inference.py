@@ -61,20 +61,44 @@ def normalize_pypi_name(name: str) -> str:
 
 
 def normalize_purl(purl: str) -> str:
-    """Apply type-specific name normalization to a PURL. Currently only PyPI
-    has spec-mandated normalization; other types pass through."""
-    if not purl.startswith("pkg:pypi/"):
+    """Apply type-specific name normalization to a PURL.
+
+    Per the package-url spec (https://github.com/package-url/purl-spec/tree/main/types):
+    - pypi: lowercase + collapse runs of [-_.] to a single - (PEP 503)
+    - npm: lowercase (scope + name)
+    - github: lowercase (owner + repo)
+    - cargo, cran, gem, bioconductor: case-sensitive, no normalization
+    """
+    if not purl.startswith("pkg:"):
         return purl
-    body = purl[len("pkg:pypi/") :]
-    name, sep, tail = body.partition("@")
-    name, qsep, qual = name.partition("?")
-    name = normalize_pypi_name(name)
-    rebuilt = name
-    if qual:
-        rebuilt = f"{rebuilt}?{qual}"
-    if sep:
-        rebuilt = f"{rebuilt}@{tail}"
-    return f"pkg:pypi/{rebuilt}"
+    body = purl[len("pkg:") :]
+    type_, slash, rest = body.partition("/")
+    if not slash:
+        return purl
+    # Split off qualifiers / subpath first (they always come after @version).
+    rest, sub_sep, sub_part = rest.partition("#")
+    rest, qual_sep, qual_part = rest.partition("?")
+    # @version is the LAST '@' — but for npm scoped names the FIRST '@' is the
+    # scope marker, not a version separator. Use rfind so we don't confuse it.
+    last_at = rest.rfind("@")
+    if last_at > 0:
+        head, ver = rest[:last_at], rest[last_at:]
+    else:
+        head, ver = rest, ""
+
+    if type_ == "pypi":
+        head = normalize_pypi_name(head)
+    elif type_ in {"npm", "github"}:
+        head = head.lower()
+    else:
+        return purl
+
+    out = f"pkg:{type_}/{head}{ver}"
+    if qual_sep:
+        out = f"{out}?{qual_part}"
+    if sub_sep:
+        out = f"{out}#{sub_part}"
+    return out
 
 
 def guess_pypi(url: str) -> PurlGuess | None:
@@ -104,8 +128,8 @@ def guess_github(url: str) -> PurlGuess | None:
     parts = [p for p in parsed.path.split("/") if p]
     if len(parts) < 2:
         return None
-    owner, repo = parts[0], parts[1]
-    repo = repo.removesuffix(".git")
+    owner = parts[0].lower()
+    repo = parts[1].removesuffix(".git").lower()
     return PurlGuess(
         f"pkg:github/{owner}/{repo}",
         "github",
@@ -139,11 +163,11 @@ def guess_npm(url: str) -> PurlGuess | None:
     if not parts:
         return None
     if parts[0].startswith("@") and len(parts) >= 2:
-        scope, name = parts[0], parts[1]
+        scope, name = parts[0].lower(), parts[1].lower()
         return PurlGuess(
             f"pkg:npm/{scope}/{name}", "npm", scope, name, 0.95, "recipe-source"
         )
-    name = parts[0]
+    name = parts[0].lower()
     return PurlGuess(f"pkg:npm/{name}", "npm", None, name, 0.95, "recipe-source")
 
 
