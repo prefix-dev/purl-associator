@@ -11,6 +11,11 @@ on:
         description: "Comma-separated package names (blank = all)"
         required: false
         default: ""
+      force:
+        description: "Re-process even when (version, build) matches the cached entry"
+        required: false
+        default: "false"
+        type: boolean
   schedule:
     # Every 24 hours at 03:17 UTC. Off the hour to avoid the cron rush.
     - cron: "17 3 * * *"
@@ -40,6 +45,7 @@ jobs:
           ARGS=()
           if [ -n "${{ inputs.limit }}" ]; then ARGS+=(--limit "${{ inputs.limit }}"); fi
           if [ -n "${{ inputs.only }}" ]; then ARGS+=(--only "${{ inputs.only }}"); fi
+          if [ "${{ inputs.force }}" = "true" ]; then ARGS+=(--force); fi
           pixi run python -m scripts.automap "${ARGS[@]}"
 
       - name: Merge mappings for the SPA
