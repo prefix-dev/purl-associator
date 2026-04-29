@@ -37,7 +37,12 @@ from rich.progress import (
     TimeElapsedColumn,
 )
 
-from scripts.purl_inference import PurlGuess, derive_recipe_context, infer_all
+from scripts.purl_inference import (
+    PurlGuess,
+    derive_recipe_context,
+    infer_all,
+    recipe_context_hints,
+)
 
 app = typer.Typer(add_completion=False, help=__doc__)
 console = Console()
@@ -322,9 +327,13 @@ async def _process_record(
         for c in candidates[1:]
     ]
 
-    note: str | None = None
+    note_parts: list[str] = []
     if primary is None:
-        note = "No automatic match — heuristics did not recognise any source URL."
+        note_parts.append(
+            "No automatic match — heuristics did not recognise any source URL."
+        )
+    note_parts.extend(recipe_context_hints(context, primary.type if primary else None))
+    note: str | None = " ".join(note_parts) if note_parts else None
 
     primary_source = next((u for u in facts.source_urls if u), None)
     return AutoEntry(

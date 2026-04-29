@@ -324,6 +324,30 @@ def derive_recipe_context(
     return RecipeContext(conda_name=conda_name)
 
 
+_RECIPE_HINT_TEMPLATES = {
+    "pypi": "Recipe builds with Python packaging tooling — might be on PyPI as `pkg:pypi/{name}`.",
+    "cargo": "Recipe builds with Cargo — might be on crates.io as `pkg:cargo/{name}`.",
+    "npm": "Recipe builds with Node packaging tooling — might be on npm as `pkg:npm/{name}`.",
+    "cran": "Conda `r-` prefix suggests an R package on CRAN: `pkg:cran/{name}`.",
+    "bioconductor": "Conda `bioconductor-` prefix suggests a Bioconductor package: `pkg:bioconductor/{name}`.",
+}
+
+
+def recipe_context_hints(context: RecipeContext, primary_type: str | None) -> list[str]:
+    """Human-readable hints surfacing the recipe context. Suppressed when the
+    primary PURL already matches the inferred ecosystem so we don't bombard
+    a confirmed ``pkg:pypi/numpy`` with a redundant "might be on PyPI" note.
+    """
+    if not context.ecosystem_hint or not context.inferred_name:
+        return []
+    if primary_type == context.ecosystem_hint:
+        return []
+    template = _RECIPE_HINT_TEMPLATES.get(context.ecosystem_hint)
+    if not template:
+        return []
+    return [template.format(name=context.inferred_name)]
+
+
 def infer_all(
     urls: list[str], *, context: RecipeContext | None = None
 ) -> list[PurlGuess]:
