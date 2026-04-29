@@ -382,7 +382,11 @@ def infer_all(
                 confidence=0.6,
                 source="recipe-deps",
             )
-            return [synth] + others
+            # The synth is a soft signal — only "the recipe builds with pip,
+            # so it might be on PyPI". Don't let it override harder URL
+            # evidence; sort by confidence so e.g. a 0.85 github match wins
+            # primary while the synth stays as a low-confidence alt.
+            return sorted([synth] + others, key=lambda h: h.confidence, reverse=True)
         return others
 
     return sorted(deduped, key=lambda h: h.confidence, reverse=True)
