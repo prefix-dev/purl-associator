@@ -31,6 +31,9 @@ _PYPI_HOSTS = {
     "files.pythonhosted.org",
     "pypi.python.org",
     "pythonhosted.org",
+    # Legacy pypi.io alias still common in older conda-forge recipes; serves
+    # the same /packages/source/<initial>/<name>/<name>-<version>.<ext> layout.
+    "pypi.io",
 }
 _NPM_HOSTS = {"registry.npmjs.org"}
 _CARGO_HOSTS = {"crates.io", "static.crates.io"}
