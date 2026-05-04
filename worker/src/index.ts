@@ -31,23 +31,24 @@ type Env = {
   GITHUB_DEFAULT_BRANCH: string;
   /** Directory each PR drops a uniquely-named contribution file into. */
   GITHUB_CONTRIBUTIONS_DIR: string;
-
-  ALLOWED_ORIGINS: string;
 };
 
 // ---------- Common helpers ----------
 
 const UA = "purl-associator-worker";
 
-function corsHeaders(origin: string | null, env: Env): Headers {
-  const allowed = (env.ALLOWED_ORIGINS ?? "")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
+function corsHeaders(origin: string | null, _env: Env): Headers {
+  // The endpoints here are safe to expose cross-origin: /exchange relies on
+  // GitHub validating the OAuth code against the registered client_id +
+  // redirect URI, /api/submit requires a user-to-server token from this
+  // specific GitHub App, and neither path uses cookies. So echo whatever
+  // Origin the browser sent back instead of maintaining an allowlist.
   const headers = new Headers();
-  if (origin && (allowed.includes(origin) || allowed.includes("*"))) {
+  if (origin) {
     headers.set("Access-Control-Allow-Origin", origin);
     headers.set("Vary", "Origin");
+  } else {
+    headers.set("Access-Control-Allow-Origin", "*");
   }
   headers.set("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
   headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
