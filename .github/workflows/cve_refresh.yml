@@ -1,0 +1,81 @@
+name: Refresh CVE assignments
+
+on:
+  workflow_dispatch:
+    inputs:
+      only:
+        description: "Comma-separated package names (blank = all)"
+        required: false
+        default: ""
+      limit:
+        description: "Process at most N candidates (blank = no limit)"
+        required: false
+        default: ""
+      force_osv:
+        description: "Force re-download of OSV dumps"
+        required: false
+        default: "false"
+        type: boolean
+  schedule:
+    # Every 24 hours at 04:37 UTC — staggered off the automap run so the two
+    # PRs don't land on top of each other.
+    - cron: "37 4 * * *"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: cve-refresh
+  cancel-in-progress: false
+
+jobs:
+  cve-refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: prefix-dev/setup-pixi@v0.9.5
+        with:
+          pixi-version: latest
+          cache: true
+
+      - name: Refresh merged PURL mappings (input to the matcher)
+        run: pixi run python -m scripts.merge_mappings
+
+      - name: Match CVEs against conda-forge versions
+        run: |
+          set -euo pipefail
+          ARGS=()
+          if [ -n "${{ inputs.only }}" ]; then ARGS+=(--only "${{ inputs.only }}"); fi
+          if [ -n "${{ inputs.limit }}" ]; then ARGS+=(--limit "${{ inputs.limit }}"); fi
+          if [ "${{ inputs.force_osv }}" = "true" ]; then ARGS+=(--force-osv); fi
+          # When run with a subset, keep stale files around so reviewers don't
+          # lose unrelated packages between manual triggers.
+          if [ -n "${{ inputs.only }}" ] || [ -n "${{ inputs.limit }}" ]; then
+            ARGS+=(--no-clean-stale)
+          fi
+          pixi run python -m scripts.cve_match "${ARGS[@]}"
+
+      - name: Merge CVEs + reviewer contributions for the SPA
+        run: pixi run python -m scripts.merge_cves
+
+      - name: Open / update PR if anything changed
+        uses: peter-evans/create-pull-request@v8
+        with:
+          add-paths: |
+            mappings/cves/**
+            web/public/cves.json
+          branch: cves/refresh
+          base: main
+          title: "cves: refresh advisories"
+          body: |
+            Automated refresh of `mappings/cves/*.json` from the latest OSV
+            advisory dumps, intersected with the current conda-forge package
+            versions.
+
+            This PR is opened by the scheduled `cve-refresh` workflow. Review
+            the diff for new advisories, version-range changes, and merge to
+            publish.
+          commit-message: "cves: refresh advisories"
+          delete-branch: true

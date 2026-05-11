@@ -54,7 +54,9 @@ def _load_contributions(directory: Path) -> list[dict]:
     return entries
 
 
-def _apply_override(merged: dict[str, dict], name: str, override: dict, attribution: dict) -> None:
+def _apply_override(
+    merged: dict[str, dict], name: str, override: dict, attribution: dict
+) -> None:
     base = merged.get(name, {"name": name})
     merged[name] = {
         **base,

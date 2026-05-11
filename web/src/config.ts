@@ -13,6 +13,8 @@ export type RuntimeConfig = {
   defaultBranch: string;
   /** Optional: where mappings.json lives relative to the site root. */
   mappingsUrl: string;
+  /** Optional: where cves.json (per-advisory dataset) lives. */
+  cvesUrl: string;
   /** Cloudflare Worker URL handling GitHub OAuth code-exchange. */
   oauthWorkerUrl: string | null;
   /** OAuth app's public client_id. */
@@ -32,6 +34,7 @@ const fromEnv: Partial<RuntimeConfig> = {
   repoName: env.VITE_REPO_NAME,
   defaultBranch: env.VITE_REPO_BRANCH,
   mappingsUrl: env.VITE_MAPPINGS_URL,
+  cvesUrl: env.VITE_CVES_URL,
   oauthWorkerUrl: env.VITE_OAUTH_WORKER_URL,
   githubClientId: env.VITE_GITHUB_CLIENT_ID,
 };
@@ -43,6 +46,7 @@ export const config: RuntimeConfig = {
   repoName: injected.repoName ?? fromEnv.repoName ?? "purl-associator",
   defaultBranch: injected.defaultBranch ?? fromEnv.defaultBranch ?? "main",
   mappingsUrl: injected.mappingsUrl ?? fromEnv.mappingsUrl ?? "./mappings.json",
+  cvesUrl: injected.cvesUrl ?? fromEnv.cvesUrl ?? "./cves.json",
   oauthWorkerUrl: injected.oauthWorkerUrl ?? fromEnv.oauthWorkerUrl ?? null,
   githubClientId: injected.githubClientId ?? fromEnv.githubClientId ?? null,
 };

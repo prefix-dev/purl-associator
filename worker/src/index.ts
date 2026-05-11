@@ -29,8 +29,10 @@ type Env = {
   GITHUB_REPO_OWNER: string;
   GITHUB_REPO_NAME: string;
   GITHUB_DEFAULT_BRANCH: string;
-  /** Directory each PR drops a uniquely-named contribution file into. */
+  /** Directory each PURL-edit PR drops a uniquely-named contribution file into. */
   GITHUB_CONTRIBUTIONS_DIR: string;
+  /** Directory each CVE-review PR drops a uniquely-named contribution file into. */
+  GITHUB_CVE_CONTRIBUTIONS_DIR: string;
 };
 
 // ---------- Common helpers ----------
@@ -441,6 +443,191 @@ async function handleSubmit(request: Request, env: Env): Promise<Response> {
   }
 }
 
+// ---------- /api/submit-cves (apply CVE review edits, open PR) ----------
+
+type CveReviewPayload = {
+  status: "confirmed" | "rejected" | "not-applicable" | "needs-review";
+  note?: string;
+  version_overrides?: {
+    affected?: string[];
+    not_affected?: string[];
+  };
+};
+
+type CveSubmitBody = {
+  userToken: string;
+  /** Nested: { [conda_name]: { [advisory_id]: review } } */
+  reviews: Record<string, Record<string, CveReviewPayload>>;
+  title: string;
+  body: string;
+};
+
+function buildCveContributionFile(
+  reviews: CveSubmitBody["reviews"],
+  user: GhUser,
+  title: string,
+  timestamp: string,
+): string {
+  // Strip undefineds from the nested structure so the on-disk JSON is tidy
+  // (JSON.stringify already does this for top-level fields).
+  const tidy: Record<string, Record<string, unknown>> = {};
+  for (const [pkg, perAdv] of Object.entries(reviews)) {
+    tidy[pkg] = {};
+    for (const [advisoryId, review] of Object.entries(perAdv)) {
+      const out: Record<string, unknown> = { status: review.status };
+      if (review.note) out.note = review.note;
+      if (review.version_overrides) {
+        const vo: Record<string, unknown> = {};
+        if (
+          Array.isArray(review.version_overrides.affected) &&
+          review.version_overrides.affected.length > 0
+        ) {
+          vo.affected = review.version_overrides.affected;
+        }
+        if (
+          Array.isArray(review.version_overrides.not_affected) &&
+          review.version_overrides.not_affected.length > 0
+        ) {
+          vo.not_affected = review.version_overrides.not_affected;
+        }
+        if (Object.keys(vo).length > 0) out.version_overrides = vo;
+      }
+      tidy[pkg][advisoryId] = out;
+    }
+  }
+  const payload = {
+    schema_version: 1,
+    title,
+    author: user.login,
+    author_name: user.name ?? null,
+    timestamp,
+    reviews: tidy,
+  };
+  return JSON.stringify(payload, null, 2) + "\n";
+}
+
+function cveContributionFilename(user: GhUser, timestamp: string): string {
+  const tsSafe = timestamp.replace(/[:.]/g, "-");
+  const rand = Math.random().toString(36).slice(2, 7);
+  const userSafe = user.login.replace(/[^A-Za-z0-9._-]/g, "_");
+  return `${tsSafe}--${userSafe}--${rand}.json`;
+}
+
+async function handleSubmitCves(request: Request, env: Env): Promise<Response> {
+  const origin = request.headers.get("Origin");
+  let payload: CveSubmitBody;
+  try {
+    payload = (await request.json()) as CveSubmitBody;
+  } catch {
+    return json({ error: "invalid_json" }, { status: 400, origin, env });
+  }
+  if (
+    !payload.userToken ||
+    !payload.reviews ||
+    typeof payload.reviews !== "object"
+  ) {
+    return json({ error: "missing_fields" }, { status: 400, origin, env });
+  }
+  if (!env.GITHUB_APP_PRIVATE_KEY || !env.GITHUB_INSTALLATION_ID) {
+    return json({ error: "app_not_configured" }, { status: 500, origin, env });
+  }
+
+  // 1. Identify the user.
+  const userRes = await fetch("https://api.github.com/user", {
+    headers: {
+      Authorization: `Bearer ${payload.userToken}`,
+      Accept: "application/vnd.github+json",
+      "User-Agent": UA,
+    },
+  });
+  if (!userRes.ok) {
+    return json(
+      { error: "invalid_user_token", status: userRes.status },
+      { status: 401, origin, env },
+    );
+  }
+  const user = (await userRes.json()) as GhUser;
+
+  // 2. Installation token.
+  let installToken: string;
+  try {
+    installToken = await getInstallationToken(env);
+  } catch (err) {
+    return json(
+      { error: "installation_token_failed", detail: String(err) },
+      { status: 500, origin, env },
+    );
+  }
+
+  const owner = env.GITHUB_REPO_OWNER;
+  const repo = env.GITHUB_REPO_NAME;
+  const baseBranch = env.GITHUB_DEFAULT_BRANCH || "main";
+  const dir = (
+    env.GITHUB_CVE_CONTRIBUTIONS_DIR || "mappings/cve_contributions"
+  ).replace(/\/+$/, "");
+  const timestamp = new Date().toISOString();
+  const filename = cveContributionFilename(user, timestamp);
+  const path = `${dir}/${filename}`;
+  const branch = `cve-review/${user.login}-${Date.now().toString(36)}`;
+
+  try {
+    const ref = await ghApi<{ object: { sha: string } }>(
+      installToken,
+      `/repos/${owner}/${repo}/git/refs/heads/${baseBranch}`,
+    );
+    await ghApi(
+      installToken,
+      `/repos/${owner}/${repo}/git/refs`,
+      "POST",
+      { ref: `refs/heads/${branch}`, sha: ref.object.sha },
+    );
+
+    const newText = buildCveContributionFile(
+      payload.reviews,
+      user,
+      payload.title,
+      timestamp,
+    );
+    const email = user.email ?? `${user.login}@users.noreply.github.com`;
+    const authorBlock = { name: user.name ?? user.login, email };
+    await ghApi(
+      installToken,
+      `/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`,
+      "PUT",
+      {
+        message: payload.title || "cves: review",
+        content: b64encode(newText),
+        branch,
+        author: authorBlock,
+        committer: authorBlock,
+      },
+    );
+
+    const pr = await ghApi<{ number: number; html_url: string }>(
+      installToken,
+      `/repos/${owner}/${repo}/pulls`,
+      "POST",
+      {
+        title: payload.title || "Review CVE assignments",
+        head: branch,
+        base: baseBranch,
+        body: payload.body,
+        maintainer_can_modify: true,
+      },
+    );
+
+    return json(
+      { number: pr.number, html_url: pr.html_url, branch, file: path },
+      { status: 200, origin, env },
+    );
+  } catch (err) {
+    return json(
+      { error: "github_write_failed", detail: String(err) },
+      { status: 500, origin, env },
+    );
+  }
+}
+
 // ---------- Router ----------
 
 export default {
@@ -462,6 +649,9 @@ export default {
     }
     if (url.pathname === "/api/submit" && request.method === "POST") {
       return handleSubmit(request, env);
+    }
+    if (url.pathname === "/api/submit-cves" && request.method === "POST") {
+      return handleSubmitCves(request, env);
     }
     return json({ error: "not_found" }, { status: 404, origin, env });
   },

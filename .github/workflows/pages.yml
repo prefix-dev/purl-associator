@@ -35,6 +35,9 @@ jobs:
           mkdir -p web/public
           python3 scripts/merge_mappings.py
 
+      - name: Refresh served cves.json (per-package CVE files + contributions)
+        run: python3 scripts/merge_cves.py
+
       - name: Install web deps
         working-directory: web
         run: npm ci || npm install
