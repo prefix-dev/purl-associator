@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "package": "pytorch",
+  "purls": [
+    "pkg:pypi/pytorch"
+  ],
+  "generated_at": "2026-05-11T11:29:36+00:00",
+  "conda_versions_total": 27,
+  "advisories": [
+    {
+      "id": "GHSA-63cw-57p8-fm3p",
+      "primary_id": "CVE-2026-24747",
+      "aliases": [
+        "BIT-pytorch-2026-24747",
+        "CVE-2026-24747"
+      ],
+      "cve_ids": [
+        "CVE-2026-24747"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "pytorch",
+      "summary": "PyTorch Vulnerable to Remote Code Execution via Untrusted Checkpoint Files",
+      "details": "### Summary\n\nA vulnerability in PyTorch's `weights_only` unpickler allows an attacker to craft a malicious checkpoint file (`.pth`) that, when loaded with `torch.load(..., weights_only=True)`, can corrupt memory and potentially lead to arbitrary code execution.\n\n### Vulnerability Details\n\nThe `weights_only=True` unpickler failed to properly validate pickle opcodes and storage metadata, allowing:\n\n1. **Heap memory corruption** via `SETITEM`/`SETITEMS` opcodes applied to non-dictionary types\n2. **Storage size mismatch** between declared element count and actual data in the archive\n\n### Impact\n\nAn attacker who can convince a user to load a malicious checkpoint file may achieve arbitrary code execution in the context of the victim's process.\n\n\n# Credit\nJi'an Zhou",
+      "published": "2026-01-27T20:10:54Z",
+      "modified": "2026-02-03T03:04:39.703226Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/pytorch/pytorch/security/advisories/GHSA-63cw-57p8-fm3p"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-24747"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pytorch/pytorch/issues/163105"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/pytorch/pytorch"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pytorch/pytorch/163122/commit/954dc5183ee9205cbe79876ad05dd2d9ae752139"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pytorch/pytorch/releases/tag/v2.10.0"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-63cw-57p8-fm3p",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.10.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1.2",
+        "1.0.2"
+      ],
+      "affected_conda_versions": []
+    }
+  ]
+}
