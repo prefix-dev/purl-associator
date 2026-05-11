@@ -1,0 +1,2509 @@
+{
+  "schema_version": 1,
+  "package": "ipython",
+  "purls": [
+    "pkg:pypi/ipython"
+  ],
+  "generated_at": "2026-05-11T11:29:36+00:00",
+  "conda_versions_total": 126,
+  "advisories": [
+    {
+      "id": "GHSA-29gw-9793-fvw7",
+      "primary_id": "CVE-2023-24816",
+      "aliases": [
+        "CVE-2023-24816",
+        "PYSEC-2023-17"
+      ],
+      "cve_ids": [
+        "CVE-2023-24816"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "ipython",
+      "summary": "IPython vulnerable to command injection via set_term_title",
+      "details": "IPython provides an interactive Python shell and Jupyter kernel to use Python interactively. Versions prior to 8.10.0 are vulnerable to command injection in the `set_term_title` [function](https://github.com/ipython/ipython/blob/3f0bf05f072a91b2a3042d23ce250e5e906183fd/IPython/utils/terminal.py#L103-L117) under specific conditions. This has been patched in version 8.10.0.\n\n### Impact \nUsers are only vulnerable when calling this function in Windows in a Python environment where [ctypes](https://docs.python.org/3/library/ctypes.html) is not available. The dependency on ctypes in `IPython.utils._process_win32` prevents the vulnerable code from ever being reached (making it effectively dead code). However, as a library that could be used by another tool, `set_term_title` could introduce a vulnerability for dependencies. Currently `set_term_title` is only called with (semi-)trusted input that contain the current working directory of the current IPython session. If an attacker can control directory names, and manage to get a user to `cd` into this directory, then the attacker can execute arbitrary commands contained in the folder names.",
+      "published": "2023-02-10T19:55:53Z",
+      "modified": "2026-02-22T22:56:12.496538Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:L/AC:L/AT:P/PR:N/UI:P/VC:L/VI:L/VA:L/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:H/PR:N/UI:R/S:U/C:L/I:L/A:L"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:L/AC:L/AT:P/PR:N/UI:P/VC:L/VI:L/VA:L/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/ipython/ipython/security/advisories/GHSA-29gw-9793-fvw7"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2023-24816"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/ipython/ipython/commit/385d69325319a5972ee9b5983638e3617f21cb1f"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/ipython/ipython/commit/991849c247fc208628879e7ca2923b3c218a5a75"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/Carreau/ipython/blob/7557ade0ed927475d5ab5b573d0ea4febfb22683/docs/source/whatsnew/version8.rst#ipython-810"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/ipython/ipython"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/ipython/ipython/blob/3f0bf05f072a91b2a3042d23ce250e5e906183fd/IPython/utils/terminal.py#L103-L117"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/ipython/ipython/blob/56e6925dfa50e2c7f4a6471547b8176275db7c25/IPython/utils/_process_win32.py#L20"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/ipython/PYSEC-2023-17.yaml"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-29gw-9793-fvw7",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "8.10.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.10",
+        "0.10.1",
+        "0.10.2",
+        "0.11",
+        "0.12",
+        "0.12.1",
+        "0.13",
+        "0.13.1",
+        "0.13.2",
+        "0.6.10",
+        "0.6.11",
+        "0.6.12",
+        "0.6.13",
+        "0.6.14",
+        "0.6.15",
+        "0.6.4",
+        "0.6.5",
+        "0.6.6",
+        "0.6.7",
+        "0.6.8",
+        "0.6.9",
+        "0.7.0",
+        "0.7.1",
+        "0.7.1.fix1",
+        "0.7.2",
+        "0.7.3",
+        "0.7.4.svn.r2010",
+        "0.8.0",
+        "0.8.1",
+        "0.8.2",
+        "0.8.3",
+        "0.8.4",
+        "0.9",
+        "0.9.1",
+        "1.0.0",
+        "1.1.0",
+        "1.2.0",
+        "1.2.1",
+        "2.0.0",
+        "2.1.0",
+        "2.2.0",
+        "2.3.0",
+        "2.3.1",
+        "2.4.0",
+        "2.4.1",
+        "3.0.0",
+        "3.1.0",
+        "3.2.0",
+        "3.2.1",
+        "3.2.2",
+        "3.2.3",
+        "4.0.0",
+        "4.0.0-b1",
+        "4.0.0b1",
+        "4.0.1",
+        "4.0.2",
+        "4.0.3",
+        "4.1.0",
+        "4.1.0rc1",
+        "4.1.0rc2",
+        "4.1.1",
+        "4.1.2",
+        "4.2.0",
+        "4.2.1",
+        "5.0.0",
+        "5.0.0b1",
+        "5.0.0b2",
+        "5.0.0b3",
+        "5.0.0b4",
+        "5.0.0rc1",
+        "5.1.0",
+        "5.10.0",
+        "5.2.0",
+        "5.2.1",
+        "5.2.2",
+        "5.3.0",
+        "5.4.0",
+        "5.4.1",
+        "5.5.0",
+        "5.6.0",
+        "5.7.0",
+        "5.8.0",
+        "5.9.0",
+        "6.0.0",
+        "6.0.0rc1",
+        "6.1.0",
+        "6.2.0",
+        "6.2.1",
+        "6.3.0",
+        "6.3.1",
+        "6.4.0",
+        "6.5.0",
+        "7.0.0",
+        "7.0.0b1",
+        "7.0.0rc1",
+        "7.0.1",
+        "7.1.0",
+        "7.1.1",
+        "7.10.0",
+        "7.10.1",
+        "7.10.2",
+        "7.11.0",
+        "7.11.1",
+        "7.12.0",
+        "7.13.0",
+        "7.14.0",
+        "7.15.0",
+        "7.16.0",
+        "7.16.1",
+        "7.16.2",
+        "7.16.3",
+        "7.17.0",
+        "7.18.0",
+        "7.18.1",
+        "7.19.0",
+        "7.2.0",
+        "7.20.0",
+        "7.21.0",
+        "7.22.0",
+        "7.23.0",
+        "7.23.1",
+        "7.24.0",
+        "7.24.1",
+        "7.25.0",
+        "7.26.0",
+        "7.27.0",
+        "7.28.0",
+        "7.29.0",
+        "7.3.0",
+        "7.30.0",
+        "7.30.1",
+        "7.31.0",
+        "7.31.1",
+        "7.32.0",
+        "7.33.0",
+        "7.34.0",
+        "7.4.0",
+        "7.5.0",
+        "7.6.0",
+        "7.6.1",
+        "7.7.0",
+        "7.8.0",
+        "7.9.0",
+        "8.0.0",
+        "8.0.0a1",
+        "8.0.0b1",
+        "8.0.0rc1",
+        "8.0.1",
+        "8.1.0",
+        "8.1.1",
+        "8.2.0",
+        "8.3.0",
+        "8.4.0",
+        "8.5.0",
+        "8.6.0",
+        "8.7.0",
+        "8.8.0",
+        "8.9.0"
+      ],
+      "affected_conda_versions": [
+        "4.1.2",
+        "4.2.0",
+        "4.2.1",
+        "5.0.0",
+        "5.1.0",
+        "5.2.0",
+        "5.2.2",
+        "5.3.0",
+        "5.4.1",
+        "5.5.0",
+        "5.6.0",
+        "5.7.0",
+        "5.8.0",
+        "6.0.0",
+        "6.1.0",
+        "6.2.0",
+        "6.2.1",
+        "6.3.0",
+        "6.3.1",
+        "6.4.0",
+        "6.5.0",
+        "7.0.1",
+        "7.1.1",
+        "7.2.0",
+        "7.3.0",
+        "7.4.0",
+        "7.5.0",
+        "7.6.0",
+        "7.6.1",
+        "7.7.0",
+        "7.8.0",
+        "7.9.0",
+        "7.10.0",
+        "7.10.1",
+        "7.10.2",
+        "7.11.0",
+        "7.11.1",
+        "7.12.0",
+        "7.13.0",
+        "7.14.0",
+        "7.15.0",
+        "7.16.1",
+        "7.16.3",
+        "7.17.0",
+        "7.18.0",
+        "7.18.1",
+        "7.19.0",
+        "7.20.0",
+        "7.21.0",
+        "7.22.0",
+        "7.23.0",
+        "7.23.1",
+        "7.24.0",
+        "7.24.1",
+        "7.25.0",
+        "7.26.0",
+        "7.27.0",
+        "7.28.0",
+        "7.29.0",
+        "7.30.1",
+        "7.31.0",
+        "7.31.1",
+        "7.32.0",
+        "7.33.0",
+        "8.0.0",
+        "8.0.1",
+        "8.1.1",
+        "8.2.0",
+        "8.3.0",
+        "8.4.0",
+        "8.5.0",
+        "8.6.0",
+        "8.7.0",
+        "8.8.0",
+        "8.9.0"
+      ]
+    },
+    {
+      "id": "GHSA-pq7m-3gw7-gq5x",
+      "primary_id": "CVE-2022-21699",
+      "aliases": [
+        "CVE-2022-21699",
+        "PYSEC-2022-12"
+      ],
+      "cve_ids": [
+        "CVE-2022-21699"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "ipython",
+      "summary": "Execution with Unnecessary Privileges in ipython",
+      "details": "We\u2019d like to disclose an arbitrary code execution vulnerability in IPython that stems from IPython executing untrusted files in CWD. This vulnerability allows one user to run code as another.\n \nProof of concept\n\nUser1:\n```\nmkdir -m 777 /tmp/profile_default\nmkdir -m 777 /tmp/profile_default/startup\necho 'print(\"stealing your private secrets\")' > /tmp/profile_default/startup/foo.py\n```\n\nUser2:\n```\ncd /tmp\nipython\n```\n\n \n\nUser2 will see:\n```\nPython 3.9.7 (default, Oct 25 2021, 01:04:21)\nType 'copyright', 'credits' or 'license' for more information\nIPython 7.29.0 -- An enhanced Interactive Python. Type '?' for help.\nstealing your private secrets\n```\n\n\n## Patched release and documentation\n\nSee https://ipython.readthedocs.io/en/stable/whatsnew/version8.html#ipython-8-0-1-cve-2022-21699, \n\nVersion 8.0.1, 7.31.1 for current Python version are recommended. \nVersion 7.16.3 has also been published for Python 3.6 users, \nVersion 5.11 (source only, 5.x branch on github) for older Python versions.",
+      "published": "2022-01-21T18:55:30Z",
+      "modified": "2026-02-04T04:23:55.106894Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:A/VC:H/VI:H/VA:H/SC:H/SI:H/SA:H/E:P"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:R/S:C/C:H/I:H/A:H"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:A/VC:H/VI:H/VA:H/SC:H/SI:H/SA:H/E:P"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/ipython/ipython/security/advisories/GHSA-pq7m-3gw7-gq5x"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2022-21699"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/ipython/ipython/commit/46a51ed69cdf41b4333943d9ceeb945c4ede5668"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/ipython/ipython/commit/5fa1e409d2dc126c456510c16ece18e08b524e5b"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/ipython/ipython/commit/67ca2b3aa9039438e6f80e3fccca556f26100b4d"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/ipython/ipython/commit/a06ca837273271b4acb82c29be97c0b6d12a30ea"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/ipython/ipython"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/ipython/PYSEC-2022-12.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://ipython.readthedocs.io/en/stable/whatsnew/version8.html#ipython-8-0-1-cve-2022-21699"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2022/01/msg00021.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/CRQRTWHYXMLDJ572VGVUZMUPEOTPM3KB"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/DZ7LVZBB4D7KVSFNEQUBEHFO3JW6D2ZK"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-pq7m-3gw7-gq5x",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "5.11"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.10",
+        "0.10.1",
+        "0.10.2",
+        "0.11",
+        "0.12",
+        "0.12.1",
+        "0.13",
+        "0.13.1",
+        "0.13.2",
+        "0.6.10",
+        "0.6.11",
+        "0.6.12",
+        "0.6.13",
+        "0.6.14",
+        "0.6.15",
+        "0.6.4",
+        "0.6.5",
+        "0.6.6",
+        "0.6.7",
+        "0.6.8",
+        "0.6.9",
+        "0.7.0",
+        "0.7.1",
+        "0.7.1.fix1",
+        "0.7.2",
+        "0.7.3",
+        "0.7.4.svn.r2010",
+        "0.8.0",
+        "0.8.1",
+        "0.8.2",
+        "0.8.3",
+        "0.8.4",
+        "0.9",
+        "0.9.1",
+        "1.0.0",
+        "1.1.0",
+        "1.2.0",
+        "1.2.1",
+        "2.0.0",
+        "2.1.0",
+        "2.2.0",
+        "2.3.0",
+        "2.3.1",
+        "2.4.0",
+        "2.4.1",
+        "3.0.0",
+        "3.1.0",
+        "3.2.0",
+        "3.2.1",
+        "3.2.2",
+        "3.2.3",
+        "4.0.0",
+        "4.0.0-b1",
+        "4.0.0b1",
+        "4.0.1",
+        "4.0.2",
+        "4.0.3",
+        "4.1.0",
+        "4.1.0rc1",
+        "4.1.0rc2",
+        "4.1.1",
+        "4.1.2",
+        "4.2.0",
+        "4.2.1",
+        "5.0.0",
+        "5.0.0b1",
+        "5.0.0b2",
+        "5.0.0b3",
+        "5.0.0b4",
+        "5.0.0rc1",
+        "5.1.0",
+        "5.10.0",
+        "5.2.0",
+        "5.2.1",
+        "5.2.2",
+        "5.3.0",
+        "5.4.0",
+        "5.4.1",
+        "5.5.0",
+        "5.6.0",
+        "5.7.0",
+        "5.8.0",
+        "5.9.0"
+      ],
+      "affected_conda_versions": [
+        "4.1.2",
+        "4.2.0",
+        "4.2.1",
+        "5.0.0",
+        "5.1.0",
+        "5.2.0",
+        "5.2.2",
+        "5.3.0",
+        "5.4.1",
+        "5.5.0",
+        "5.6.0",
+        "5.7.0",
+        "5.8.0",
+        "6.0.0",
+        "6.1.0",
+        "6.2.0",
+        "6.2.1",
+        "6.3.0",
+        "6.3.1",
+        "6.4.0",
+        "6.5.0",
+        "7.0.1",
+        "7.1.1",
+        "7.2.0",
+        "7.3.0",
+        "7.4.0",
+        "7.5.0",
+        "7.6.0",
+        "7.6.1",
+        "7.7.0",
+        "7.8.0",
+        "7.9.0",
+        "7.10.0",
+        "7.10.1",
+        "7.10.2",
+        "7.11.0",
+        "7.11.1",
+        "7.12.0",
+        "7.13.0",
+        "7.14.0",
+        "7.15.0",
+        "7.16.1",
+        "7.17.0",
+        "7.18.0",
+        "7.18.1",
+        "7.19.0",
+        "7.20.0",
+        "7.21.0",
+        "7.22.0",
+        "7.23.0",
+        "7.23.1",
+        "7.24.0",
+        "7.24.1",
+        "7.25.0",
+        "7.26.0",
+        "7.27.0",
+        "7.28.0",
+        "7.29.0",
+        "7.30.1",
+        "7.31.0",
+        "8.0.0"
+      ]
+    },
+    {
+      "id": "PYSEC-2022-12",
+      "primary_id": "CVE-2022-21699",
+      "aliases": [
+        "CVE-2022-21699",
+        "GHSA-pq7m-3gw7-gq5x"
+      ],
+      "cve_ids": [
+        "CVE-2022-21699"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "ipython",
+      "summary": null,
+      "details": "IPython (Interactive Python) is a command shell for interactive computing in multiple programming languages, originally developed for the Python programming language. Affected versions are subject to an arbitrary code execution vulnerability achieved by not properly managing cross user temporary files. This vulnerability allows one user to run code as another on the same machine. All users are advised to upgrade.",
+      "published": "2022-01-19T22:15:00Z",
+      "modified": "2023-11-08T04:08:08.617915Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://ipython.readthedocs.io/en/stable/whatsnew/version8.html#ipython-8-0-1-cve-2022-21699"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/ipython/ipython/security/advisories/GHSA-pq7m-3gw7-gq5x"
+        },
+        {
+          "type": "FIX",
+          "url": "https://github.com/ipython/ipython/commit/46a51ed69cdf41b4333943d9ceeb945c4ede5668"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2022/01/msg00021.html"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2022-12",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "6.0.0rc1"
+            },
+            {
+              "introduced": "6.0.0"
+            },
+            {
+              "fixed": "7.16.3"
+            },
+            {
+              "introduced": "7.17.0"
+            },
+            {
+              "fixed": "7.31.1"
+            },
+            {
+              "introduced": "8.0.0"
+            },
+            {
+              "fixed": "8.0.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.10",
+        "0.10.1",
+        "0.10.2",
+        "0.11",
+        "0.12",
+        "0.12.1",
+        "0.13",
+        "0.13.1",
+        "0.13.2",
+        "0.6.10",
+        "0.6.11",
+        "0.6.12",
+        "0.6.13",
+        "0.6.14",
+        "0.6.15",
+        "0.6.4",
+        "0.6.5",
+        "0.6.6",
+        "0.6.7",
+        "0.6.8",
+        "0.6.9",
+        "0.7.0",
+        "0.7.1",
+        "0.7.1.fix1",
+        "0.7.2",
+        "0.7.3",
+        "0.7.4.svn.r2010",
+        "0.8.0",
+        "0.8.1",
+        "0.8.2",
+        "0.8.3",
+        "0.8.4",
+        "0.9",
+        "0.9.1",
+        "1.0.0",
+        "1.1.0",
+        "1.2.0",
+        "1.2.1",
+        "2.0.0",
+        "2.1.0",
+        "2.2.0",
+        "2.3.0",
+        "2.3.1",
+        "2.4.0",
+        "2.4.1",
+        "3.0.0",
+        "3.1.0",
+        "3.2.0",
+        "3.2.1",
+        "3.2.2",
+        "3.2.3",
+        "4.0.0",
+        "4.0.0-b1",
+        "4.0.0b1",
+        "4.0.1",
+        "4.0.2",
+        "4.0.3",
+        "4.1.0",
+        "4.1.0rc1",
+        "4.1.0rc2",
+        "4.1.1",
+        "4.1.2",
+        "4.2.0",
+        "4.2.1",
+        "5.0.0",
+        "5.0.0b1",
+        "5.0.0b2",
+        "5.0.0b3",
+        "5.0.0b4",
+        "5.0.0rc1",
+        "5.1.0",
+        "5.10.0",
+        "5.2.0",
+        "5.2.1",
+        "5.2.2",
+        "5.3.0",
+        "5.4.0",
+        "5.4.1",
+        "5.5.0",
+        "5.6.0",
+        "5.7.0",
+        "5.8.0",
+        "5.9.0",
+        "6.0.0",
+        "6.1.0",
+        "6.2.0",
+        "6.2.1",
+        "6.3.0",
+        "6.3.1",
+        "6.4.0",
+        "6.5.0",
+        "7.0.0",
+        "7.0.0b1",
+        "7.0.0rc1",
+        "7.0.1",
+        "7.1.0",
+        "7.1.1",
+        "7.10.0",
+        "7.10.1",
+        "7.10.2",
+        "7.11.0",
+        "7.11.1",
+        "7.12.0",
+        "7.13.0",
+        "7.14.0",
+        "7.15.0",
+        "7.16.0",
+        "7.16.1",
+        "7.16.2",
+        "7.17.0",
+        "7.18.0",
+        "7.18.1",
+        "7.19.0",
+        "7.2.0",
+        "7.20.0",
+        "7.21.0",
+        "7.22.0",
+        "7.23.0",
+        "7.23.1",
+        "7.24.0",
+        "7.24.1",
+        "7.25.0",
+        "7.26.0",
+        "7.27.0",
+        "7.28.0",
+        "7.29.0",
+        "7.3.0",
+        "7.30.0",
+        "7.30.1",
+        "7.31.0",
+        "7.4.0",
+        "7.5.0",
+        "7.6.0",
+        "7.6.1",
+        "7.7.0",
+        "7.8.0",
+        "7.9.0",
+        "8.0.0"
+      ],
+      "affected_conda_versions": [
+        "4.1.2",
+        "4.2.0",
+        "4.2.1",
+        "5.0.0",
+        "5.1.0",
+        "5.2.0",
+        "5.2.2",
+        "5.3.0",
+        "5.4.1",
+        "5.5.0",
+        "5.6.0",
+        "5.7.0",
+        "5.8.0",
+        "6.0.0",
+        "6.1.0",
+        "6.2.0",
+        "6.2.1",
+        "6.3.0",
+        "6.3.1",
+        "6.4.0",
+        "6.5.0",
+        "7.0.1",
+        "7.1.1",
+        "7.2.0",
+        "7.3.0",
+        "7.4.0",
+        "7.5.0",
+        "7.6.0",
+        "7.6.1",
+        "7.7.0",
+        "7.8.0",
+        "7.9.0",
+        "7.10.0",
+        "7.10.1",
+        "7.10.2",
+        "7.11.0",
+        "7.11.1",
+        "7.12.0",
+        "7.13.0",
+        "7.14.0",
+        "7.15.0",
+        "7.16.1",
+        "7.17.0",
+        "7.18.0",
+        "7.18.1",
+        "7.19.0",
+        "7.20.0",
+        "7.21.0",
+        "7.22.0",
+        "7.23.0",
+        "7.23.1",
+        "7.24.0",
+        "7.24.1",
+        "7.25.0",
+        "7.26.0",
+        "7.27.0",
+        "7.28.0",
+        "7.29.0",
+        "7.30.1",
+        "7.31.0",
+        "8.0.0"
+      ]
+    },
+    {
+      "id": "PYSEC-2023-17",
+      "primary_id": "CVE-2023-24816",
+      "aliases": [
+        "CVE-2023-24816",
+        "GHSA-29gw-9793-fvw7"
+      ],
+      "cve_ids": [
+        "CVE-2023-24816"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "ipython",
+      "summary": null,
+      "details": "IPython (Interactive Python) is a command shell for interactive computing in multiple programming languages, originally developed for the Python programming language. Versions prior to 8.1.0 are subject to a command injection vulnerability with very specific prerequisites. This vulnerability requires that the function `IPython.utils.terminal.set_term_title` be called on Windows in a Python environment where ctypes is not available. The dependency on `ctypes` in `IPython.utils._process_win32` prevents the vulnerable code from ever being reached in the ipython binary. However, as a library that could be used by another tool `set_term_title` could be called and hence introduce a vulnerability. Should an attacker get untrusted input to an instance of this function they would be able to inject shell commands as current process and limited to the scope of the current process. Users of ipython as a library are advised to upgrade. Users unable to upgrade should ensure that any calls to the `IPython.utils.terminal.set_term_title` function are done with trusted or filtered input.",
+      "published": "2023-02-10T20:15:00Z",
+      "modified": "2026-02-22T22:48:58.700525Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "REPORT",
+          "url": "https://github.com/ipython/ipython/blob/3f0bf05f072a91b2a3042d23ce250e5e906183fd/IPython/utils/terminal.py#L103-L117"
+        },
+        {
+          "type": "FIX",
+          "url": "https://github.com/ipython/ipython/commit/385d69325319a5972ee9b5983638e3617f21cb1f"
+        },
+        {
+          "type": "EVIDENCE",
+          "url": "https://github.com/ipython/ipython/security/advisories/GHSA-29gw-9793-fvw7"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/ipython/ipython/security/advisories/GHSA-29gw-9793-fvw7"
+        },
+        {
+          "type": "REPORT",
+          "url": "https://github.com/ipython/ipython/blob/56e6925dfa50e2c7f4a6471547b8176275db7c25/IPython/utils/_process_win32.py#L20"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2023-17",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "8.10.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.10",
+        "0.10.1",
+        "0.10.2",
+        "0.11",
+        "0.12",
+        "0.12.1",
+        "0.13",
+        "0.13.1",
+        "0.13.2",
+        "0.6.10",
+        "0.6.11",
+        "0.6.12",
+        "0.6.13",
+        "0.6.14",
+        "0.6.15",
+        "0.6.4",
+        "0.6.5",
+        "0.6.6",
+        "0.6.7",
+        "0.6.8",
+        "0.6.9",
+        "0.7.0",
+        "0.7.1",
+        "0.7.1.fix1",
+        "0.7.2",
+        "0.7.3",
+        "0.7.4.svn.r2010",
+        "0.8.0",
+        "0.8.1",
+        "0.8.2",
+        "0.8.3",
+        "0.8.4",
+        "0.9",
+        "0.9.1",
+        "1.0.0",
+        "1.1.0",
+        "1.2.0",
+        "1.2.1",
+        "2.0.0",
+        "2.1.0",
+        "2.2.0",
+        "2.3.0",
+        "2.3.1",
+        "2.4.0",
+        "2.4.1",
+        "3.0.0",
+        "3.1.0",
+        "3.2.0",
+        "3.2.1",
+        "3.2.2",
+        "3.2.3",
+        "4.0.0",
+        "4.0.0-b1",
+        "4.0.0b1",
+        "4.0.1",
+        "4.0.2",
+        "4.0.3",
+        "4.1.0",
+        "4.1.0rc1",
+        "4.1.0rc2",
+        "4.1.1",
+        "4.1.2",
+        "4.2.0",
+        "4.2.1",
+        "5.0.0",
+        "5.0.0b1",
+        "5.0.0b2",
+        "5.0.0b3",
+        "5.0.0b4",
+        "5.0.0rc1",
+        "5.1.0",
+        "5.10.0",
+        "5.2.0",
+        "5.2.1",
+        "5.2.2",
+        "5.3.0",
+        "5.4.0",
+        "5.4.1",
+        "5.5.0",
+        "5.6.0",
+        "5.7.0",
+        "5.8.0",
+        "5.9.0",
+        "6.0.0",
+        "6.0.0rc1",
+        "6.1.0",
+        "6.2.0",
+        "6.2.1",
+        "6.3.0",
+        "6.3.1",
+        "6.4.0",
+        "6.5.0",
+        "7.0.0",
+        "7.0.0b1",
+        "7.0.0rc1",
+        "7.0.1",
+        "7.1.0",
+        "7.1.1",
+        "7.10.0",
+        "7.10.1",
+        "7.10.2",
+        "7.11.0",
+        "7.11.1",
+        "7.12.0",
+        "7.13.0",
+        "7.14.0",
+        "7.15.0",
+        "7.16.0",
+        "7.16.1",
+        "7.16.2",
+        "7.16.3",
+        "7.17.0",
+        "7.18.0",
+        "7.18.1",
+        "7.19.0",
+        "7.2.0",
+        "7.20.0",
+        "7.21.0",
+        "7.22.0",
+        "7.23.0",
+        "7.23.1",
+        "7.24.0",
+        "7.24.1",
+        "7.25.0",
+        "7.26.0",
+        "7.27.0",
+        "7.28.0",
+        "7.29.0",
+        "7.3.0",
+        "7.30.0",
+        "7.30.1",
+        "7.31.0",
+        "7.31.1",
+        "7.32.0",
+        "7.33.0",
+        "7.34.0",
+        "7.4.0",
+        "7.5.0",
+        "7.6.0",
+        "7.6.1",
+        "7.7.0",
+        "7.8.0",
+        "7.9.0",
+        "8.0.0",
+        "8.0.0a1",
+        "8.0.0b1",
+        "8.0.0rc1",
+        "8.0.1",
+        "8.1.0",
+        "8.1.1",
+        "8.2.0",
+        "8.3.0",
+        "8.4.0",
+        "8.5.0",
+        "8.6.0",
+        "8.7.0",
+        "8.8.0",
+        "8.9.0"
+      ],
+      "affected_conda_versions": [
+        "4.1.2",
+        "4.2.0",
+        "4.2.1",
+        "5.0.0",
+        "5.1.0",
+        "5.2.0",
+        "5.2.2",
+        "5.3.0",
+        "5.4.1",
+        "5.5.0",
+        "5.6.0",
+        "5.7.0",
+        "5.8.0",
+        "6.0.0",
+        "6.1.0",
+        "6.2.0",
+        "6.2.1",
+        "6.3.0",
+        "6.3.1",
+        "6.4.0",
+        "6.5.0",
+        "7.0.1",
+        "7.1.1",
+        "7.2.0",
+        "7.3.0",
+        "7.4.0",
+        "7.5.0",
+        "7.6.0",
+        "7.6.1",
+        "7.7.0",
+        "7.8.0",
+        "7.9.0",
+        "7.10.0",
+        "7.10.1",
+        "7.10.2",
+        "7.11.0",
+        "7.11.1",
+        "7.12.0",
+        "7.13.0",
+        "7.14.0",
+        "7.15.0",
+        "7.16.1",
+        "7.16.3",
+        "7.17.0",
+        "7.18.0",
+        "7.18.1",
+        "7.19.0",
+        "7.20.0",
+        "7.21.0",
+        "7.22.0",
+        "7.23.0",
+        "7.23.1",
+        "7.24.0",
+        "7.24.1",
+        "7.25.0",
+        "7.26.0",
+        "7.27.0",
+        "7.28.0",
+        "7.29.0",
+        "7.30.1",
+        "7.31.0",
+        "7.31.1",
+        "7.32.0",
+        "7.33.0",
+        "8.0.0",
+        "8.0.1",
+        "8.1.1",
+        "8.2.0",
+        "8.3.0",
+        "8.4.0",
+        "8.5.0",
+        "8.6.0",
+        "8.7.0",
+        "8.8.0",
+        "8.9.0"
+      ]
+    },
+    {
+      "id": "GHSA-4vwq-x64q-j4cj",
+      "primary_id": "CVE-2015-6938",
+      "aliases": [
+        "CVE-2015-6938",
+        "PYSEC-2015-24",
+        "PYSEC-2015-26"
+      ],
+      "cve_ids": [
+        "CVE-2015-6938"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "ipython",
+      "summary": "Improper Neutralization of Input During Web Page Generation in Jupyter Notebook",
+      "details": "Cross-site scripting (XSS) vulnerability in the file browser in notebook/notebookapp.py in IPython Notebook before 3.2.2 and Jupyter Notebook 4.0.x before 4.0.5 allows remote attackers to inject arbitrary web script or HTML via a folder name.  NOTE: this was originally reported as a cross-site request forgery (CSRF) vulnerability, but this may be inaccurate.",
+      "published": "2022-05-14T02:04:49Z",
+      "modified": "2024-09-23T17:27:49.131389Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2015-6938"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/ipython/ipython/commit/3ab41641cf6fce3860c73d5cf4645aa12e1e5892"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyter/notebook/commit/35f32dd2da804d108a3a3585b69ec3295b2677ed"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyter/notebook/commit/dd9876381f0ef09873d8c5f6f2063269172331e3"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugzilla.redhat.com/show_bug.cgi?id=1259405"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/advisories/GHSA-4vwq-x64q-j4cj"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/ipython/PYSEC-2015-24.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/notebook/PYSEC-2015-26.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.fedoraproject.org/pipermail/package-announce/2015-September/166460.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.fedoraproject.org/pipermail/package-announce/2015-September/166471.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.fedoraproject.org/pipermail/package-announce/2015-September/167670.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-updates/2015-10/msg00016.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://seclists.org/oss-sec/2015/q3/474"
+        },
+        {
+          "type": "WEB",
+          "url": "http://seclists.org/oss-sec/2015/q3/544"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-4vwq-x64q-j4cj",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "3.2.2"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.10",
+        "0.10.1",
+        "0.10.2",
+        "0.11",
+        "0.12",
+        "0.12.1",
+        "0.13",
+        "0.13.1",
+        "0.13.2",
+        "0.6.10",
+        "0.6.11",
+        "0.6.12",
+        "0.6.13",
+        "0.6.14",
+        "0.6.15",
+        "0.6.4",
+        "0.6.5",
+        "0.6.6",
+        "0.6.7",
+        "0.6.8",
+        "0.6.9",
+        "0.7.0",
+        "0.7.1",
+        "0.7.1.fix1",
+        "0.7.2",
+        "0.7.3",
+        "0.7.4.svn.r2010",
+        "0.8.0",
+        "0.8.1",
+        "0.8.2",
+        "0.8.3",
+        "0.8.4",
+        "0.9",
+        "0.9.1",
+        "1.0.0",
+        "1.1.0",
+        "1.2.0",
+        "1.2.1",
+        "2.0.0",
+        "2.1.0",
+        "2.2.0",
+        "2.3.0",
+        "2.3.1",
+        "2.4.0",
+        "2.4.1",
+        "3.0.0",
+        "3.1.0",
+        "3.2.0",
+        "3.2.1"
+      ],
+      "affected_conda_versions": []
+    },
+    {
+      "id": "GHSA-66gw-5xpf-gfp5",
+      "primary_id": "CVE-2015-4707",
+      "aliases": [
+        "CVE-2015-4707",
+        "PYSEC-2017-46"
+      ],
+      "cve_ids": [
+        "CVE-2015-4707"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "ipython",
+      "summary": "Improper Neutralization of Input During Web Page Generation in IPython",
+      "details": "Cross-site scripting (XSS) vulnerability in IPython before 3.2 allows remote attackers to inject arbitrary web script or HTML via vectors involving JSON error messages and the /api/notebooks path.",
+      "published": "2022-05-13T01:31:05Z",
+      "modified": "2024-09-23T16:38:38.984670Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2015-4707"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/ipython/ipython/commit/7222bd53ad089a65fd610fab4626f9d0ab47dfce"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/ipython/ipython/commit/c2078a53543ed502efd968649fee1125e0eb549c"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugzilla.redhat.com/show_bug.cgi?id=1235688"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/advisories/GHSA-66gw-5xpf-gfp5"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/ipython/ipython"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/ipython/PYSEC-2017-46.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://ipython.org/ipython-doc/3/whatsnew/version3.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://web.archive.org/web/20200227150022/https://www.securityfocus.com/bid/75328"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2015/06/22/7"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-66gw-5xpf-gfp5",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "3.2.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.10",
+        "0.10.1",
+        "0.10.2",
+        "0.11",
+        "0.12",
+        "0.12.1",
+        "0.13",
+        "0.13.1",
+        "0.13.2",
+        "0.6.10",
+        "0.6.11",
+        "0.6.12",
+        "0.6.13",
+        "0.6.14",
+        "0.6.15",
+        "0.6.4",
+        "0.6.5",
+        "0.6.6",
+        "0.6.7",
+        "0.6.8",
+        "0.6.9",
+        "0.7.0",
+        "0.7.1",
+        "0.7.1.fix1",
+        "0.7.2",
+        "0.7.3",
+        "0.7.4.svn.r2010",
+        "0.8.0",
+        "0.8.1",
+        "0.8.2",
+        "0.8.3",
+        "0.8.4",
+        "0.9",
+        "0.9.1",
+        "1.0.0",
+        "1.1.0",
+        "1.2.0",
+        "1.2.1",
+        "2.0.0",
+        "2.1.0",
+        "2.2.0",
+        "2.3.0",
+        "2.3.1",
+        "2.4.0",
+        "2.4.1",
+        "3.0.0",
+        "3.1.0"
+      ],
+      "affected_conda_versions": []
+    },
+    {
+      "id": "GHSA-75cw-5cgv-g853",
+      "primary_id": "CVE-2014-3429",
+      "aliases": [
+        "CVE-2014-3429",
+        "PYSEC-2014-21"
+      ],
+      "cve_ids": [
+        "CVE-2014-3429"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "ipython",
+      "summary": "IPython Notebook vulnerable to improper validation of the origin of websocket requests ",
+      "details": "IPython Notebook 0.12 through 1.x before 1.2.0 does not validate the origin of websocket requests, which allows remote attackers to execute arbitrary code by leveraging knowledge of the kernel id and a crafted page.",
+      "published": "2022-05-14T02:05:20Z",
+      "modified": "2024-09-23T17:08:29.475348Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N/E:U"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N/E:U"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2014-3429"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/ipython/ipython/pull/4845"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/ipython/ipython/commit/e5b669ce4750d628dba383fd637dbde918ea15f5"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/mattvonrocketstein/ipython/commit/dd4135db9f42d196a46553310a8e63ff5658671d"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugzilla.redhat.com/show_bug.cgi?id=1119890"
+        },
+        {
+          "type": "WEB",
+          "url": "https://exchange.xforce.ibmcloud.com/vulnerabilities/94497"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/ipython/ipython"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/ipython/PYSEC-2014-21.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "http://advisories.mageia.org/MGASA-2014-0320.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lambdaops.com/cross-origin-websocket-hijacking-of-ipython"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-updates/2014-08/msg00039.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://permalink.gmane.org/gmane.comp.python.ipython.devel/13198"
+        },
+        {
+          "type": "WEB",
+          "url": "http://seclists.org/oss-sec/2014/q3/152"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-75cw-5cgv-g853",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0.12"
+            },
+            {
+              "fixed": "1.2.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.12",
+        "0.12.1",
+        "0.13",
+        "0.13.1",
+        "0.13.2",
+        "1.0.0",
+        "1.1.0"
+      ],
+      "affected_conda_versions": []
+    },
+    {
+      "id": "GHSA-7fc2-rm35-2pp7",
+      "primary_id": "CVE-2015-5607",
+      "aliases": [
+        "CVE-2015-5607",
+        "PYSEC-2017-47"
+      ],
+      "cve_ids": [
+        "CVE-2015-5607"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "ipython",
+      "summary": "IPython vulnerable to cross site request forgery (CSRF)",
+      "details": "IPython (Interactive Python) is a command shell. Cross-site request forgery in the REST API is possible in in IPython 2 and 3. Versions 2.4.1 and 3.2.3 contain patches.",
+      "published": "2022-05-17T00:35:13Z",
+      "modified": "2024-09-27T16:02:05.372096Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:A/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:A/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2015-5607"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/ipython/ipython/commit/1415a9710407e7c14900531813c15ba6165f0816"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/ipython/ipython/commit/a05fe052a18810e92d9be8c1185952c13fe4e5b0"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugzilla.redhat.com/show_bug.cgi?id=1243842"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/advisories/GHSA-7fc2-rm35-2pp7"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/ipython/ipython"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/ipython/PYSEC-2017-47.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.fedoraproject.org/pipermail/package-announce/2015-July/162671.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.fedoraproject.org/pipermail/package-announce/2015-July/162936.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2015/07/21/3"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-7fc2-rm35-2pp7",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0.12"
+            },
+            {
+              "fixed": "2.4.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.12",
+        "0.12.1",
+        "0.13",
+        "0.13.1",
+        "0.13.2",
+        "1.0.0",
+        "1.1.0",
+        "1.2.0",
+        "1.2.1",
+        "2.0.0",
+        "2.1.0",
+        "2.2.0",
+        "2.3.0",
+        "2.3.1",
+        "2.4.0"
+      ],
+      "affected_conda_versions": []
+    },
+    {
+      "id": "GHSA-92mr-v722-f48m",
+      "primary_id": "CVE-2015-7337",
+      "aliases": [
+        "CVE-2015-7337",
+        "PYSEC-2015-25",
+        "PYSEC-2015-27"
+      ],
+      "cve_ids": [
+        "CVE-2015-7337"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "ipython",
+      "summary": "Improper Input Validation in Jupyter Notebook",
+      "details": "The editor in IPython Notebook before 3.2.2 and Jupyter Notebook 4.0.x before 4.0.5 allows remote attackers to execute arbitrary JavaScript code via a crafted file, which triggers a redirect to files/, related to MIME types.",
+      "published": "2022-05-17T03:25:49Z",
+      "modified": "2024-09-20T22:11:36.501173Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2015-7337"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/ipython/ipython/commit/0a8096adf165e2465550bd5893d7e352544e5967"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyter/notebook/commit/9e63dd89b603dfbe3a7e774d8a962ee0fa30c0b5"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugzilla.redhat.com/show_bug.cgi?id=1264067"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/advisories/GHSA-92mr-v722-f48m"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/ipython/PYSEC-2015-25.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/notebook/PYSEC-2015-27.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.gentoo.org/glsa/201512-02"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.fedoraproject.org/pipermail/package-announce/2015-September/167670.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://seclists.org/oss-sec/2015/q3/558"
+        },
+        {
+          "type": "WEB",
+          "url": "http://seclists.org/oss-sec/2015/q3/634"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-92mr-v722-f48m",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "3.2.2"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.10",
+        "0.10.1",
+        "0.10.2",
+        "0.11",
+        "0.12",
+        "0.12.1",
+        "0.13",
+        "0.13.1",
+        "0.13.2",
+        "0.6.10",
+        "0.6.11",
+        "0.6.12",
+        "0.6.13",
+        "0.6.14",
+        "0.6.15",
+        "0.6.4",
+        "0.6.5",
+        "0.6.6",
+        "0.6.7",
+        "0.6.8",
+        "0.6.9",
+        "0.7.0",
+        "0.7.1",
+        "0.7.1.fix1",
+        "0.7.2",
+        "0.7.3",
+        "0.7.4.svn.r2010",
+        "0.8.0",
+        "0.8.1",
+        "0.8.2",
+        "0.8.3",
+        "0.8.4",
+        "0.9",
+        "0.9.1",
+        "1.0.0",
+        "1.1.0",
+        "1.2.0",
+        "1.2.1",
+        "2.0.0",
+        "2.1.0",
+        "2.2.0",
+        "2.3.0",
+        "2.3.1",
+        "2.4.0",
+        "2.4.1",
+        "3.0.0",
+        "3.1.0",
+        "3.2.0",
+        "3.2.1"
+      ],
+      "affected_conda_versions": []
+    },
+    {
+      "id": "GHSA-q326-jhw3-699g",
+      "primary_id": "CVE-2015-4706",
+      "aliases": [
+        "CVE-2015-4706",
+        "PYSEC-2017-45"
+      ],
+      "cve_ids": [
+        "CVE-2015-4706"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "ipython",
+      "summary": "Improper Neutralization of Input During Web Page Generation in IPython",
+      "details": "Cross-site scripting (XSS) vulnerability in IPython 3.x before 3.2 allows remote attackers to inject arbitrary web script or HTML via vectors involving JSON error messages and the /api/contents path.",
+      "published": "2022-05-17T00:36:05Z",
+      "modified": "2024-09-23T17:17:48.086526Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2015-4706"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/ipython/ipython/commit/7222bd53ad089a65fd610fab4626f9d0ab47dfce"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/ipython/ipython/commit/c2078a53543ed502efd968649fee1125e0eb549c"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugzilla.redhat.com/show_bug.cgi?id=1235688"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/advisories/GHSA-q326-jhw3-699g"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/ipython/ipython"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/ipython/PYSEC-2017-45.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://ipython.org/ipython-doc/3/whatsnew/version3.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://web.archive.org/web/20200516112656/http://www.securityfocus.com/bid/75328"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2015/06/22/7"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-q326-jhw3-699g",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "3.0.0"
+            },
+            {
+              "fixed": "3.2.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "3.0.0",
+        "3.1.0"
+      ],
+      "affected_conda_versions": []
+    },
+    {
+      "id": "PYSEC-2014-21",
+      "primary_id": "CVE-2014-3429",
+      "aliases": [
+        "CVE-2014-3429",
+        "GHSA-75cw-5cgv-g853"
+      ],
+      "cve_ids": [
+        "CVE-2014-3429"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "ipython",
+      "summary": null,
+      "details": "IPython Notebook 0.12 through 1.x before 1.2 does not validate the origin of websocket requests, which allows remote attackers to execute arbitrary code by leveraging knowledge of the kernel id and a crafted page.",
+      "published": "2014-08-07T11:13:00Z",
+      "modified": "2024-04-29T12:11:21.983385Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "http://lambdaops.com/cross-origin-websocket-hijacking-of-ipython"
+        },
+        {
+          "type": "WEB",
+          "url": "http://permalink.gmane.org/gmane.comp.python.ipython.devel/13198"
+        },
+        {
+          "type": "WEB",
+          "url": "http://seclists.org/oss-sec/2014/q3/152"
+        },
+        {
+          "type": "REPORT",
+          "url": "https://bugzilla.redhat.com/show_bug.cgi?id=1119890"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/ipython/ipython/pull/4845"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-updates/2014-08/msg00039.html"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "http://www.mandriva.com/security/advisories?name=MDVSA-2015:160"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "http://advisories.mageia.org/MGASA-2014-0320.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://exchange.xforce.ibmcloud.com/vulnerabilities/94497"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2014-21",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0.12"
+            },
+            {
+              "fixed": "1.2.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.12",
+        "0.12.1",
+        "0.13",
+        "0.13.1",
+        "0.13.2",
+        "1.0.0",
+        "1.1.0"
+      ],
+      "affected_conda_versions": []
+    },
+    {
+      "id": "PYSEC-2015-24",
+      "primary_id": "CVE-2015-6938",
+      "aliases": [
+        "CVE-2015-6938",
+        "GHSA-4vwq-x64q-j4cj",
+        "PYSEC-2015-26"
+      ],
+      "cve_ids": [
+        "CVE-2015-6938"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "ipython",
+      "summary": null,
+      "details": "Cross-site scripting (XSS) vulnerability in the file browser in notebook/notebookapp.py in IPython Notebook before 3.2.2 and Jupyter Notebook 4.0.x before 4.0.5 allows remote attackers to inject arbitrary web script or HTML via a folder name.  NOTE: this was originally reported as a cross-site request forgery (CSRF) vulnerability, but this may be inaccurate.",
+      "published": "2015-09-21T19:59:00Z",
+      "modified": "2023-11-08T03:57:59.449215Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "http://seclists.org/oss-sec/2015/q3/474"
+        },
+        {
+          "type": "FIX",
+          "url": "https://github.com/jupyter/notebook/commit/35f32dd2da804d108a3a3585b69ec3295b2677ed"
+        },
+        {
+          "type": "WEB",
+          "url": "http://seclists.org/oss-sec/2015/q3/544"
+        },
+        {
+          "type": "FIX",
+          "url": "https://github.com/ipython/ipython/commit/3ab41641cf6fce3860c73d5cf4645aa12e1e5892"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.fedoraproject.org/pipermail/package-announce/2015-September/166471.html"
+        },
+        {
+          "type": "FIX",
+          "url": "https://github.com/jupyter/notebook/commit/dd9876381f0ef09873d8c5f6f2063269172331e3"
+        },
+        {
+          "type": "REPORT",
+          "url": "https://bugzilla.redhat.com/show_bug.cgi?id=1259405"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.fedoraproject.org/pipermail/package-announce/2015-September/166460.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.fedoraproject.org/pipermail/package-announce/2015-September/167670.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-updates/2015-10/msg00016.html"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/advisories/GHSA-4vwq-x64q-j4cj"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2015-24",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "3.2.2"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.10",
+        "0.10.1",
+        "0.10.2",
+        "0.11",
+        "0.12",
+        "0.12.1",
+        "0.13",
+        "0.13.1",
+        "0.13.2",
+        "0.6.10",
+        "0.6.11",
+        "0.6.12",
+        "0.6.13",
+        "0.6.14",
+        "0.6.15",
+        "0.6.4",
+        "0.6.5",
+        "0.6.6",
+        "0.6.7",
+        "0.6.8",
+        "0.6.9",
+        "0.7.0",
+        "0.7.1",
+        "0.7.1.fix1",
+        "0.7.2",
+        "0.7.3",
+        "0.7.4.svn.r2010",
+        "0.8.0",
+        "0.8.1",
+        "0.8.2",
+        "0.8.3",
+        "0.8.4",
+        "0.9",
+        "0.9.1",
+        "1.0.0",
+        "1.1.0",
+        "1.2.0",
+        "1.2.1",
+        "2.0.0",
+        "2.1.0",
+        "2.2.0",
+        "2.3.0",
+        "2.3.1",
+        "2.4.0",
+        "2.4.1",
+        "3.0.0",
+        "3.1.0",
+        "3.2.0",
+        "3.2.1"
+      ],
+      "affected_conda_versions": []
+    },
+    {
+      "id": "PYSEC-2015-25",
+      "primary_id": "CVE-2015-7337",
+      "aliases": [
+        "CVE-2015-7337",
+        "GHSA-92mr-v722-f48m",
+        "PYSEC-2015-27"
+      ],
+      "cve_ids": [
+        "CVE-2015-7337"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "ipython",
+      "summary": null,
+      "details": "The editor in IPython Notebook before 3.2.2 and Jupyter Notebook 4.0.x before 4.0.5 allows remote attackers to execute arbitrary JavaScript code via a crafted file, which triggers a redirect to files/, related to MIME types.",
+      "published": "2015-09-29T19:59:00Z",
+      "modified": "2023-11-08T03:57:59.998735Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "FIX",
+          "url": "https://github.com/jupyter/notebook/commit/9e63dd89b603dfbe3a7e774d8a962ee0fa30c0b5"
+        },
+        {
+          "type": "FIX",
+          "url": "https://github.com/ipython/ipython/commit/0a8096adf165e2465550bd5893d7e352544e5967"
+        },
+        {
+          "type": "WEB",
+          "url": "http://seclists.org/oss-sec/2015/q3/558"
+        },
+        {
+          "type": "WEB",
+          "url": "http://seclists.org/oss-sec/2015/q3/634"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.fedoraproject.org/pipermail/package-announce/2015-September/167670.html"
+        },
+        {
+          "type": "REPORT",
+          "url": "https://bugzilla.redhat.com/show_bug.cgi?id=1264067"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://security.gentoo.org/glsa/201512-02"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/advisories/GHSA-92mr-v722-f48m"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2015-25",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "3.2.2"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.10",
+        "0.10.1",
+        "0.10.2",
+        "0.11",
+        "0.12",
+        "0.12.1",
+        "0.13",
+        "0.13.1",
+        "0.13.2",
+        "0.6.10",
+        "0.6.11",
+        "0.6.12",
+        "0.6.13",
+        "0.6.14",
+        "0.6.15",
+        "0.6.4",
+        "0.6.5",
+        "0.6.6",
+        "0.6.7",
+        "0.6.8",
+        "0.6.9",
+        "0.7.0",
+        "0.7.1",
+        "0.7.1.fix1",
+        "0.7.2",
+        "0.7.3",
+        "0.7.4.svn.r2010",
+        "0.8.0",
+        "0.8.1",
+        "0.8.2",
+        "0.8.3",
+        "0.8.4",
+        "0.9",
+        "0.9.1",
+        "1.0.0",
+        "1.1.0",
+        "1.2.0",
+        "1.2.1",
+        "2.0.0",
+        "2.1.0",
+        "2.2.0",
+        "2.3.0",
+        "2.3.1",
+        "2.4.0",
+        "2.4.1",
+        "3.0.0",
+        "3.1.0",
+        "3.2.0",
+        "3.2.1"
+      ],
+      "affected_conda_versions": []
+    },
+    {
+      "id": "PYSEC-2017-45",
+      "primary_id": "CVE-2015-4706",
+      "aliases": [
+        "CVE-2015-4706",
+        "GHSA-q326-jhw3-699g"
+      ],
+      "cve_ids": [
+        "CVE-2015-4706"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "ipython",
+      "summary": null,
+      "details": "Cross-site scripting (XSS) vulnerability in IPython 3.x before 3.2 allows remote attackers to inject arbitrary web script or HTML via vectors involving JSON error messages and the /api/contents path.",
+      "published": "2017-09-21T14:29:00Z",
+      "modified": "2023-11-08T03:57:55.658486Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://ipython.org/ipython-doc/3/whatsnew/version3.html"
+        },
+        {
+          "type": "FIX",
+          "url": "https://github.com/ipython/ipython/commit/c2078a53543ed502efd968649fee1125e0eb549c"
+        },
+        {
+          "type": "FIX",
+          "url": "https://github.com/ipython/ipython/commit/7222bd53ad089a65fd610fab4626f9d0ab47dfce"
+        },
+        {
+          "type": "REPORT",
+          "url": "https://bugzilla.redhat.com/show_bug.cgi?id=1235688"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2015/06/22/7"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.securityfocus.com/bid/75328"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/advisories/GHSA-q326-jhw3-699g"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2017-45",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "3.0.0"
+            },
+            {
+              "fixed": "3.2.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "3.0.0",
+        "3.1.0"
+      ],
+      "affected_conda_versions": []
+    },
+    {
+      "id": "PYSEC-2017-46",
+      "primary_id": "CVE-2015-4707",
+      "aliases": [
+        "CVE-2015-4707",
+        "GHSA-66gw-5xpf-gfp5"
+      ],
+      "cve_ids": [
+        "CVE-2015-4707"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "ipython",
+      "summary": null,
+      "details": "Cross-site scripting (XSS) vulnerability in IPython before 3.2 allows remote attackers to inject arbitrary web script or HTML via vectors involving JSON error messages and the /api/notebooks path.",
+      "published": "2017-09-20T18:29:00Z",
+      "modified": "2023-11-08T03:57:55.719283Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://ipython.org/ipython-doc/3/whatsnew/version3.html"
+        },
+        {
+          "type": "FIX",
+          "url": "https://github.com/ipython/ipython/commit/c2078a53543ed502efd968649fee1125e0eb549c"
+        },
+        {
+          "type": "FIX",
+          "url": "https://github.com/ipython/ipython/commit/7222bd53ad089a65fd610fab4626f9d0ab47dfce"
+        },
+        {
+          "type": "REPORT",
+          "url": "https://bugzilla.redhat.com/show_bug.cgi?id=1235688"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2015/06/22/7"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.securityfocus.com/bid/75328"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/advisories/GHSA-66gw-5xpf-gfp5"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2017-46",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "3.2.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.10",
+        "0.10.1",
+        "0.10.2",
+        "0.11",
+        "0.12",
+        "0.12.1",
+        "0.13",
+        "0.13.1",
+        "0.13.2",
+        "0.6.10",
+        "0.6.11",
+        "0.6.12",
+        "0.6.13",
+        "0.6.14",
+        "0.6.15",
+        "0.6.4",
+        "0.6.5",
+        "0.6.6",
+        "0.6.7",
+        "0.6.8",
+        "0.6.9",
+        "0.7.0",
+        "0.7.1",
+        "0.7.1.fix1",
+        "0.7.2",
+        "0.7.3",
+        "0.7.4.svn.r2010",
+        "0.8.0",
+        "0.8.1",
+        "0.8.2",
+        "0.8.3",
+        "0.8.4",
+        "0.9",
+        "0.9.1",
+        "1.0.0",
+        "1.1.0",
+        "1.2.0",
+        "1.2.1",
+        "2.0.0",
+        "2.1.0",
+        "2.2.0",
+        "2.3.0",
+        "2.3.1",
+        "2.4.0",
+        "2.4.1",
+        "3.0.0",
+        "3.1.0"
+      ],
+      "affected_conda_versions": []
+    },
+    {
+      "id": "PYSEC-2017-47",
+      "primary_id": "CVE-2015-5607",
+      "aliases": [
+        "CVE-2015-5607",
+        "GHSA-7fc2-rm35-2pp7"
+      ],
+      "cve_ids": [
+        "CVE-2015-5607"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "ipython",
+      "summary": null,
+      "details": "Cross-site request forgery in the REST API in IPython 2 and 3.",
+      "published": "2017-09-20T16:29:00Z",
+      "modified": "2023-11-08T03:57:58.412599Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "FIX",
+          "url": "https://github.com/ipython/ipython/commit/a05fe052a18810e92d9be8c1185952c13fe4e5b0"
+        },
+        {
+          "type": "FIX",
+          "url": "https://github.com/ipython/ipython/commit/1415a9710407e7c14900531813c15ba6165f0816"
+        },
+        {
+          "type": "REPORT",
+          "url": "https://bugzilla.redhat.com/show_bug.cgi?id=1243842"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2015/07/21/3"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.fedoraproject.org/pipermail/package-announce/2015-July/162936.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.fedoraproject.org/pipermail/package-announce/2015-July/162671.html"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/advisories/GHSA-7fc2-rm35-2pp7"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2017-47",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "3.2.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.10",
+        "0.10.1",
+        "0.10.2",
+        "0.11",
+        "0.12",
+        "0.12.1",
+        "0.13",
+        "0.13.1",
+        "0.13.2",
+        "0.6.10",
+        "0.6.11",
+        "0.6.12",
+        "0.6.13",
+        "0.6.14",
+        "0.6.15",
+        "0.6.4",
+        "0.6.5",
+        "0.6.6",
+        "0.6.7",
+        "0.6.8",
+        "0.6.9",
+        "0.7.0",
+        "0.7.1",
+        "0.7.1.fix1",
+        "0.7.2",
+        "0.7.3",
+        "0.7.4.svn.r2010",
+        "0.8.0",
+        "0.8.1",
+        "0.8.2",
+        "0.8.3",
+        "0.8.4",
+        "0.9",
+        "0.9.1",
+        "1.0.0",
+        "1.1.0",
+        "1.2.0",
+        "1.2.1",
+        "2.0.0",
+        "2.1.0",
+        "2.2.0",
+        "2.3.0",
+        "2.3.1",
+        "2.4.0",
+        "2.4.1",
+        "3.0.0",
+        "3.1.0",
+        "3.2.0"
+      ],
+      "affected_conda_versions": []
+    }
+  ]
+}
