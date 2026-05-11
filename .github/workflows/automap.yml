@@ -39,6 +39,14 @@ jobs:
           pixi-version: latest
           cache: true
 
+      - name: Snapshot baseline auto.json
+        # Capture HEAD's mappings before automap rewrites the file so the
+        # summary step can diff against it.
+        run: |
+          mkdir -p /tmp/automap_baseline
+          git show HEAD:mappings/auto.json > /tmp/automap_baseline/auto.json 2>/dev/null \
+            || echo '{"packages":{}}' > /tmp/automap_baseline/auto.json
+
       - name: Run automap
         run: |
           set -euo pipefail
@@ -51,6 +59,15 @@ jobs:
       - name: Merge mappings for the SPA
         run: pixi run python -m scripts.merge_mappings
 
+      - name: Generate PR body
+        run: |
+          pixi run python -m scripts.automap_summary \
+            --before /tmp/automap_baseline/auto.json \
+            --after mappings/auto.json \
+            > /tmp/automap_pr_body.md
+          echo "----- PR body preview -----"
+          cat /tmp/automap_pr_body.md
+
       - name: Open / update PR if mappings changed
         uses: peter-evans/create-pull-request@v8
         with:
@@ -60,11 +77,6 @@ jobs:
           branch: automap/refresh
           base: main
           title: "automap: refresh PURL mappings"
-          body: |
-            Automated refresh of `mappings/auto.json` from the latest
-            conda-forge package metadata.
-
-            This PR is opened by the scheduled `automap` workflow. Review the
-            diff for unexpected churn and merge to publish the new mappings.
+          body-path: /tmp/automap_pr_body.md
           commit-message: "automap: refresh PURL mappings"
           delete-branch: true

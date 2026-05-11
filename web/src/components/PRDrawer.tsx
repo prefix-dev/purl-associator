@@ -54,28 +54,108 @@ export function PRDrawer({
   const [committed, setCommitted] = useState<Committed | null>(null);
 
   function generateBody(): string {
-    const lines = [
-      "This PR updates PURL mappings for the following conda-forge packages:",
-      "",
-    ];
+    const lines: string[] = [];
+    // Headline summary: counts by transition so a reviewer can size up the
+    // PR at a glance before scrolling.
+    const stats = { approved: 0, overrode: 0, unmapped: 0, updated: 0 };
+    const bullets: string[] = [];
+
     for (const [id, e] of editEntries) {
       const pkg = packages.find((p) => p.name === id);
       if (!pkg) continue;
+
+      // "Before" = whatever the merged dataset currently shows for this
+      // package (the user is editing on top of that). The auto guess is
+      // kept as a secondary reference when the merged state is a manual
+      // override.
+      const beforePrimary = pkg.purl ?? null;
+      const beforeAlts = (pkg.alternative_purls ?? pkg.auto?.alternative_purls ?? [])
+        .map((a) => a.purl)
+        .filter((p) => p !== beforePrimary);
+      const beforeSet = new Set<string>();
+      if (beforePrimary) beforeSet.add(beforePrimary);
+      for (const a of beforeAlts) beforeSet.add(a);
+
+      const afterPrimary = e.unmapped ? null : e.purl || null;
+      const afterAlts = e.unmapped ? [] : e.alternative_purls;
+      const afterSet = new Set<string>();
+      if (afterPrimary) afterSet.add(afterPrimary);
+      for (const a of afterAlts) afterSet.add(a);
+
+      const added = [...afterSet].filter((p) => !beforeSet.has(p));
+      const removed = [...beforeSet].filter((p) => !afterSet.has(p));
+      const primaryChanged = (beforePrimary || "") !== (afterPrimary || "");
+      const matchesAuto =
+        !!pkg.auto?.purl && afterPrimary === pkg.auto.purl;
+
+      // Classify the transition for the headline counter and prefix tag.
+      let tag = "approved auto guess";
       if (e.unmapped) {
-        lines.push(`- **${pkg.name}**: marked as no-PURL`);
+        stats.unmapped++;
+        tag = "marked as no-PURL";
+      } else if (pkg.status === "verified" && (added.length || removed.length || primaryChanged)) {
+        stats.updated++;
+        tag = "updated verified mapping";
+      } else if (
+        pkg.auto?.purl &&
+        !matchesAuto &&
+        (added.length || removed.length || primaryChanged)
+      ) {
+        stats.overrode++;
+        tag = "overrode auto guess";
+      } else if (matchesAuto && (added.length || removed.length)) {
+        stats.updated++;
+        tag = "approved auto guess + added alternates";
       } else {
-        const purls = [e.purl, ...e.alternative_purls];
-        if (purls.length === 1) {
-          const before = pkg.auto?.purl ?? pkg.purl ?? "(none)";
-          lines.push(`- **${pkg.name}**: \`${before}\` → \`${e.purl}\``);
-        } else {
-          lines.push(
-            `- **${pkg.name}**: ${purls.length} PURLs — \`${e.purl}\` (primary), ${e.alternative_purls.map((p) => `\`${p}\``).join(", ")}`,
-          );
-        }
+        stats.approved++;
+        tag = "approved auto guess";
       }
-      if (e.note) lines.push(`  - _${e.note}_`);
+
+      const sourceUrl = pkg.repo || pkg.homepage || pkg.source_url || null;
+      const sourceSnippet = sourceUrl
+        ? ` · upstream: ${sourceUrl.replace(/^https?:\/\//, "")}`
+        : "";
+      bullets.push(
+        `- **${pkg.name}** v${pkg.version} — ${tag}${sourceSnippet}`,
+      );
+
+      // PURL diff: explicit -/+ lines with role (primary / alternative).
+      for (const purl of removed) {
+        bullets.push(`  - \`-\` \`${purl}\``);
+      }
+      for (const purl of added) {
+        const role =
+          purl === afterPrimary ? "primary" : "alternative";
+        bullets.push(`  - \`+\` \`${purl}\` (${role})`);
+      }
+      // Kept PURLs — only mention if the primary stayed the same and there
+      // are alternates; this is the noisiest line so cap to once per pkg.
+      const kept = [...afterSet].filter((p) => beforeSet.has(p));
+      if (kept.length > 0 && (added.length || removed.length)) {
+        const keptStr = kept
+          .map((p) => `\`${p}\`${p === afterPrimary ? " (primary)" : ""}`)
+          .join(", ");
+        bullets.push(`  - unchanged: ${keptStr}`);
+      }
+      if (e.unmapped) {
+        bullets.push(`  - now: _unmapped_`);
+      }
+      if (e.note) bullets.push(`  - _${e.note}_`);
     }
+
+    const total = editEntries.length;
+    const parts: string[] = [];
+    if (stats.approved) parts.push(`${stats.approved} approved`);
+    if (stats.overrode) parts.push(`${stats.overrode} overrode auto`);
+    if (stats.updated) parts.push(`${stats.updated} updated existing`);
+    if (stats.unmapped) parts.push(`${stats.unmapped} marked no-PURL`);
+
+    lines.push(
+      `This PR updates PURL mappings for **${total}** conda-forge package${total === 1 ? "" : "s"}` +
+        (parts.length ? ` — ${parts.join(", ")}.` : "."),
+    );
+    lines.push("");
+    lines.push(...bullets);
     return lines.join("\n");
   }
 

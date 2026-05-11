@@ -55,7 +55,7 @@ export function CvePRDrawer({
   const [committed, setCommitted] = useState<Committed | null>(null);
 
   function generateBody(): string {
-    // Group edits by package for a readable PR body.
+    // Group edits by package so the PR reads as "per-package review".
     const byPkg = new Map<string, [string, ReviewEdit][]>();
     for (const [key, edit] of editEntries) {
       const sep = key.indexOf("::");
@@ -64,26 +64,129 @@ export function CvePRDrawer({
       if (!byPkg.has(pkg)) byPkg.set(pkg, []);
       byPkg.get(pkg)!.push([advisoryId, edit]);
     }
-    const lines = ["This PR reviews CVE assignments for the following packages:", ""];
-    for (const [pkg, items] of [...byPkg.entries()].sort()) {
-      lines.push(`### ${pkg}`);
+
+    // Headline stats: status counts + how many advisories carry a version
+    // override. Reviewers reading the PR want both at a glance.
+    const stats = {
+      confirmed: 0,
+      rejected: 0,
+      notApplicable: 0,
+      needsReview: 0,
+    };
+    let versionOverrideCount = 0;
+    for (const [, edit] of editEntries) {
+      if (edit.status === "confirmed") stats.confirmed++;
+      else if (edit.status === "rejected") stats.rejected++;
+      else if (edit.status === "not-applicable") stats.notApplicable++;
+      else if (edit.status === "needs-review") stats.needsReview++;
+      if (
+        edit.version_overrides.affected.length > 0 ||
+        edit.version_overrides.not_affected.length > 0
+      ) {
+        versionOverrideCount++;
+      }
+    }
+
+    const lines: string[] = [];
+    const statBits: string[] = [];
+    if (stats.confirmed) statBits.push(`${stats.confirmed} confirmed`);
+    if (stats.rejected) statBits.push(`${stats.rejected} rejected`);
+    if (stats.notApplicable) statBits.push(`${stats.notApplicable} not-applicable`);
+    if (stats.needsReview) statBits.push(`${stats.needsReview} needs-review`);
+
+    const total = editEntries.length;
+    lines.push(
+      `This PR reviews **${total}** CVE assignment${total === 1 ? "" : "s"} ` +
+        `across ${byPkg.size} package${byPkg.size === 1 ? "" : "s"}` +
+        (statBits.length ? ` — ${statBits.join(", ")}.` : "."),
+    );
+    if (versionOverrideCount > 0) {
+      lines.push("");
+      lines.push(
+        `**${versionOverrideCount}** advisor${versionOverrideCount === 1 ? "y" : "ies"} carry manual version overrides.`,
+      );
+    }
+    lines.push("");
+
+    function severityText(score: string | null | undefined): string {
+      if (!score) return "";
+      const m = score.match(/(\d+\.\d+)/);
+      if (!m) return "";
+      const v = parseFloat(m[1]);
+      if (v >= 9.0) return ` · ${v.toFixed(1)} critical`;
+      if (v >= 7.0) return ` · ${v.toFixed(1)} high`;
+      if (v >= 4.0) return ` · ${v.toFixed(1)} medium`;
+      if (v > 0) return ` · ${v.toFixed(1)} low`;
+      return "";
+    }
+
+    // Cap each version-override list — full lists can run to hundreds.
+    function fmtVersions(versions: string[], cap = 12): string {
+      if (versions.length <= cap) return versions.map((v) => `\`${v}\``).join(", ");
+      const head = versions
+        .slice(0, cap)
+        .map((v) => `\`${v}\``)
+        .join(", ");
+      return `${head} _… +${versions.length - cap} more_`;
+    }
+
+    for (const [pkgName, items] of [...byPkg.entries()].sort()) {
+      const pkg = packages[pkgName];
+      const purl = pkg?.purls?.[0] || "";
+      lines.push(`### ${pkgName}${purl ? ` · \`${purl}\`` : ""}`);
+      lines.push("");
+
       for (const [advisoryId, edit] of items) {
-        const adv = packages[pkg]?.advisories.find((a) => a.id === advisoryId);
+        const adv = pkg?.advisories.find((a) => a.id === advisoryId);
         const label = adv?.primary_id || advisoryId;
         const status = STATUS_LABELS[edit.status] || edit.status;
-        lines.push(`- **${label}**: ${status}`);
-        if (edit.version_overrides.affected.length > 0) {
-          lines.push(`  - +affected: ${edit.version_overrides.affected.join(", ")}`);
+        const sev = severityText(adv?.severity?.score);
+        const prior = adv?.review;
+        const transition = prior && prior.status !== edit.status
+          ? ` (was: ${STATUS_LABELS[prior.status] || prior.status})`
+          : prior
+            ? " (re-affirming previous review)"
+            : "";
+
+        const headline = adv?.osv_url
+          ? `**[${label}](${adv.osv_url})**`
+          : `**${label}**`;
+
+        lines.push(`- ${headline}${sev} — status: \`${status}\`${transition}`);
+        if (adv?.summary) {
+          lines.push(`  - ${adv.summary}`);
+        }
+        const autoCount = adv?.affected_conda_versions?.length ?? 0;
+        if (autoCount > 0 || edit.version_overrides.affected.length > 0) {
+          const base = adv?.affected_conda_versions ?? [];
+          const after = new Set(base);
+          for (const v of edit.version_overrides.not_affected) after.delete(v);
+          for (const v of edit.version_overrides.affected) after.add(v);
+          if (after.size !== autoCount) {
+            lines.push(
+              `  - affected conda versions: **${autoCount}** auto → **${after.size}** after override`,
+            );
+          } else if (autoCount > 0) {
+            lines.push(`  - affected conda versions: ${autoCount}`);
+          }
         }
         if (edit.version_overrides.not_affected.length > 0) {
           lines.push(
-            `  - −not-affected: ${edit.version_overrides.not_affected.join(", ")}`,
+            `  - \`-\` not affected: ${fmtVersions(edit.version_overrides.not_affected)}`,
           );
         }
-        if (edit.note) lines.push(`  - _${edit.note}_`);
+        if (edit.version_overrides.affected.length > 0) {
+          lines.push(
+            `  - \`+\` newly marked affected: ${fmtVersions(edit.version_overrides.affected)}`,
+          );
+        }
+        if (edit.note) {
+          lines.push(`  - _${edit.note}_`);
+        }
       }
       lines.push("");
     }
+
     return lines.join("\n");
   }
 

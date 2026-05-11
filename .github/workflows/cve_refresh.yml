@@ -40,6 +40,19 @@ jobs:
           pixi-version: latest
           cache: true
 
+      - name: Snapshot baseline mappings/cves
+        # Materialise HEAD's per-package CVE files into a sibling dir so the
+        # summary step can diff against them after cve_match rewrites.
+        run: |
+          rm -rf /tmp/cves_baseline
+          mkdir -p /tmp/cves_baseline
+          git ls-tree -r HEAD --name-only mappings/cves \
+            | while read -r path; do
+                if [[ "$path" == mappings/cves/*.json ]]; then
+                  git show "HEAD:$path" > "/tmp/cves_baseline/$(basename "$path")"
+                fi
+              done
+
       - name: Refresh merged PURL mappings (input to the matcher)
         run: pixi run python -m scripts.merge_mappings
 
@@ -60,6 +73,15 @@ jobs:
       - name: Merge CVEs + reviewer contributions for the SPA
         run: pixi run python -m scripts.merge_cves
 
+      - name: Generate PR body
+        run: |
+          pixi run python -m scripts.cve_summary \
+            --before-dir /tmp/cves_baseline \
+            --after-dir mappings/cves \
+            > /tmp/cves_pr_body.md
+          echo "----- PR body preview -----"
+          cat /tmp/cves_pr_body.md
+
       - name: Open / update PR if anything changed
         uses: peter-evans/create-pull-request@v8
         with:
@@ -69,13 +91,6 @@ jobs:
           branch: cves/refresh
           base: main
           title: "cves: refresh advisories"
-          body: |
-            Automated refresh of `mappings/cves/*.json` from the latest OSV
-            advisory dumps, intersected with the current conda-forge package
-            versions.
-
-            This PR is opened by the scheduled `cve-refresh` workflow. Review
-            the diff for new advisories, version-range changes, and merge to
-            publish.
+          body-path: /tmp/cves_pr_body.md
           commit-message: "cves: refresh advisories"
           delete-branch: true
