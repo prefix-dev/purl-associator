@@ -1,0 +1,173 @@
+{
+  "schema_version": 1,
+  "package": "request",
+  "purls": [
+    "pkg:npm/request"
+  ],
+  "generated_at": "2026-05-18T06:01:40+00:00",
+  "conda_versions_total": 1,
+  "advisories": [
+    {
+      "id": "GHSA-p8p7-x288-28g6",
+      "primary_id": "CVE-2023-28155",
+      "aliases": [
+        "CVE-2023-28155"
+      ],
+      "cve_ids": [
+        "CVE-2023-28155"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "request",
+      "summary": "Server-Side Request Forgery in Request",
+      "details": "The `request` package through 2.88.2 for Node.js and the `@cypress/request` package prior to 3.0.0 allow a bypass of SSRF mitigations via an attacker-controller server that does a cross-protocol redirect (HTTP to HTTPS, or HTTPS to HTTP).\n\nNOTE: The `request` package is no longer supported by the maintainer.",
+      "published": "2023-03-16T15:30:19Z",
+      "modified": "2026-02-04T02:33:14.833967Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2023-28155"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/request/request/issues/3442"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/cypress-io/request/pull/28"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/github/advisory-database/pull/2500"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/request/request/pull/3444"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/cypress-io/request/commit/c5bcf21d40fb61feaff21a0e5a2b3934a440024f"
+        },
+        {
+          "type": "WEB",
+          "url": "https://doyensec.com/resources/Doyensec_Advisory_RequestSSRF_Q12023.pdf"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/cypress-io/request/blob/master/lib/redirect.js#L116"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/cypress-io/request/releases/tag/v3.0.0"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/request/request"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/request/request/blob/master/lib/redirect.js#L111"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.netapp.com/advisory/ntap-20230413-0007"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-p8p7-x288-28g6",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "last_affected": "2.88.2"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "2.83.1"
+      ]
+    },
+    {
+      "id": "GHSA-7xfp-9c55-5vqj",
+      "primary_id": "CVE-2017-16026",
+      "aliases": [
+        "CVE-2017-16026"
+      ],
+      "cve_ids": [
+        "CVE-2017-16026"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "request",
+      "summary": "Remote Memory Exposure in request",
+      "details": "Affected versions of `request` will disclose local system memory to remote systems in certain circumstances. When a multipart request is made, and the type of `body` is `number`, then a buffer of that size will be allocated and sent to the remote server as the body.\n\n## Proof of Concept\n\n```js\nvar request = require('request');\nvar http = require('http');\n\nvar serveFunction = function (req, res){\n\treq.on('data', function (data) {\n            console.log(data)\n        });\n\tres.end();\n};\nvar server = http.createServer(serveFunction);\nserver.listen(8000);\n\nrequest({\n\tmethod: \"POST\",\n\turi: 'http://localhost:8000',\n\tmultipart: [{body:500}]\n},function(err,res,body){});\n```\n\n\n## Recommendation\n\nUpdate to version 2.68.0 or later",
+      "published": "2018-11-09T17:44:01Z",
+      "modified": "2023-11-08T03:59:00.437371Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.0/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.0/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2017-16026"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/request/request/issues/1904"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/request/request/pull/2018"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/request/request/pull/2022"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/request/request/commit/29d81814bc16bc79cb112b4face8be6fc00061dd"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/request/request"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-7xfp-9c55-5vqj",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "2.49.0"
+            },
+            {
+              "fixed": "2.68.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": []
+    }
+  ]
+}

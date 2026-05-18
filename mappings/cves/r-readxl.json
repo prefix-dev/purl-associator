@@ -1,0 +1,207 @@
+{
+  "schema_version": 1,
+  "package": "r-readxl",
+  "purls": [
+    "pkg:cran/readxl"
+  ],
+  "generated_at": "2026-05-18T06:01:40+00:00",
+  "conda_versions_total": 12,
+  "advisories": [
+    {
+      "id": "RSEC-2023-0",
+      "primary_id": "RSEC-2023-0",
+      "aliases": [],
+      "cve_ids": [],
+      "ecosystem": "CRAN",
+      "upstream_name": "readxl",
+      "summary": "Out-of-bounds write and stack based buffer overflow vulnerabilities",
+      "details": "The readxl R package, versions 0.1.0 to 1.0.0, is vulnerable to multiple attack vectors due to the underlying use  of the libxls library. Several exploitable vulnerabilities have been identified in different functions of libxls versions 1.3.4 and 1.4. These include out-of-bounds write and stack based buffer overflow vulnerabilities in the xls_mergedCells and xls_getfcell functions respectively. Furthermore, integer overflow vulnerabilities exist in the xls_preparseWorkSheet and xls_appendSST functions when handling MULBLANK, MULRK records and a shared string table (SST). An additional out-of-bounds vulnerability has been identified in the xls_addCell function when it processes a formula record. All these vulnerabilities can lead to memory corruption, potentially resulting in remote code execution. The exploit is triggered when a specially crafted XLS file, possibly sent by an attacker, is processed by these vulnerable functions.",
+      "published": "2023-07-13T02:22:58.600Z",
+      "modified": "2025-05-19T19:43:47.107116Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://readxl.tidyverse.org/news/index.html#readxl-110"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tidyverse/readxl/issues/441"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tidyverse/readxl/pull/442"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security-tracker.debian.org/tracker/CVE-2017-2896"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.talosintelligence.com/vulnerability_reports/TALOS-2017-0403"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.talosintelligence.com/vulnerability_reports/TALOS-2017-0404"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.talosintelligence.com/vulnerability_reports/TALOS-2017-0426"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.talosintelligence.com/vulnerability_reports/TALOS-2017-0460"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.talosintelligence.com/vulnerability_reports/TALOS-2017-0461"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.talosintelligence.com/vulnerability_reports/TALOS-2017-0462"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.talosintelligence.com/vulnerability_reports/TALOS-2017-0463"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/evanmiller/libxls/issues/34"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/RSEC-2023-0",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0.1.0"
+            },
+            {
+              "fixed": "1.1.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1.0",
+        "0.1.1",
+        "1.0.0"
+      ],
+      "affected_conda_versions": [
+        "1.0.0"
+      ]
+    },
+    {
+      "id": "RSEC-2023-1",
+      "primary_id": "RSEC-2023-1",
+      "aliases": [],
+      "cve_ids": [],
+      "ecosystem": "CRAN",
+      "upstream_name": "readxl",
+      "summary": "Double-free and invalid free vulnerabilities",
+      "details": "The readxl R package has been found susceptible to vulnerabilities due to its dependency on libxls library version 1.4.0. Two distinct memory management issues were discovered in the read_MSAT and read_MSAT_body functions within the ole.c component of libxls. The first vulnerability is a double-free flaw in the read_MSAT function, which could be exploited by an attacker using a crafted file to cause a Denial of Service (DoS), resulting in an application crash. This vulnerability is different from CVE-2017-2897. The second vulnerability is an invalid free flaw in the read_MSAT_body function. This issue, stemming from inconsistent memory management in the ole2_read_header function, allows attackers to trigger a DoS, application crash, or possibly an unspecified impact through a specially crafted file.",
+      "published": "2023-07-13T02:37:06.600Z",
+      "modified": "2025-05-19T19:43:47.604636Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://readxl.tidyverse.org/news/index.html#readxl-130"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security-tracker.debian.org/tracker/CVE-2017-2896"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/evanmiller/libxls/issues/34"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/evanmiller/libxls/issues/35"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/RSEC-2023-1",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0.1.0"
+            },
+            {
+              "fixed": "1.3.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1.0",
+        "0.1.1",
+        "1.0.0",
+        "1.1.0",
+        "1.2.0"
+      ],
+      "affected_conda_versions": [
+        "1.0.0",
+        "1.1.0",
+        "1.2.0"
+      ]
+    },
+    {
+      "id": "RSEC-2023-2",
+      "primary_id": "RSEC-2023-2",
+      "aliases": [],
+      "cve_ids": [],
+      "ecosystem": "CRAN",
+      "upstream_name": "readxl",
+      "summary": "Denial of Service (DoS) vulnerability",
+      "details": "The readxl R package is exposed to a vulnerability owing to its underlying use of libxls library version 1.6.2. The vulnerability originates in the xls_getWorkSheet function within xls.c in libxls. Attackers can exploit this flaw by utilizing a specially crafted XLS file, leading to a Denial of Service (DoS) attack.",
+      "published": "2023-07-13T02:46:57.600Z",
+      "modified": "2025-05-19T19:43:47.991339Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/tidyverse/readxl/issues/679"
+        },
+        {
+          "type": "WEB",
+          "url": "https://readxl.tidyverse.org/news/index.html#readxl-142"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security-tracker.debian.org/tracker/source-package/r-cran-readxl"
+        },
+        {
+          "type": "WEB",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2021-27836"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/RSEC-2023-2",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "1.4.1"
+            },
+            {
+              "fixed": "1.4.2"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "1.4.1"
+      ],
+      "affected_conda_versions": [
+        "1.4.1"
+      ]
+    }
+  ]
+}

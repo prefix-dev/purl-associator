@@ -1,0 +1,3545 @@
+{
+  "schema_version": 1,
+  "package": "electron",
+  "purls": [
+    "pkg:npm/electron"
+  ],
+  "generated_at": "2026-05-18T06:01:40+00:00",
+  "conda_versions_total": 1,
+  "advisories": [
+    {
+      "id": "GHSA-3c8v-cfp5-9885",
+      "primary_id": "CVE-2026-34776",
+      "aliases": [
+        "CVE-2026-34776"
+      ],
+      "cve_ids": [
+        "CVE-2026-34776"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "Electron: Out-of-bounds read in second-instance IPC on macOS and Linux",
+      "details": "### Impact\nOn macOS and Linux, apps that call `app.requestSingleInstanceLock()` were vulnerable to an out-of-bounds heap read when parsing a crafted second-instance message. Leaked memory could be delivered to the app's `second-instance` event handler.\n\nThis issue is limited to processes running as the same user as the Electron app.\n\nApps that do not call `app.requestSingleInstanceLock()` are not affected. Windows is not affected by this issue.\n\n### Workarounds\nThere are no app side workarounds, developers must update to a patched version of Electron.\n\n### Fixed Versions\n* `41.0.0`\n* `40.8.1`\n* `39.8.1`\n* `38.8.6`\n\n### For more information\nIf there are any questions or comments about this advisory, please email [security@electronjs.org](mailto:security@electronjs.org)",
+      "published": "2026-04-03T02:43:59Z",
+      "modified": "2026-04-06T23:20:11.001628Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:N/A:L"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:N/A:L"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/security/advisories/GHSA-3c8v-cfp5-9885"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-34776"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/electron/electron"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-3c8v-cfp5-9885",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "38.8.6"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "1.6.15"
+      ]
+    },
+    {
+      "id": "GHSA-3p22-ghq8-v749",
+      "primary_id": "CVE-2022-21718",
+      "aliases": [
+        "CVE-2022-21718"
+      ],
+      "cve_ids": [
+        "CVE-2022-21718"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "Renderers can obtain access to random bluetooth device without permission in Electron",
+      "details": "### Impact\nThis vulnerability allows renderers to obtain access to a random bluetooth device via the [web bluetooth API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Bluetooth_API) if the app has not configured a custom `select-bluetooth-device` event handler.  The device that is accessed is random and the attacker would have no way of selecting a specific device.\n\nAll current stable versions of Electron are affected.\n\n### Patches\nThis has been patched and the following Electron versions contain the fix:\n* `17.0.0-alpha.6`\n* `16.0.6`\n* `15.3.5`\n* `14.2.4`\n* `13.6.6`\n\n### Workarounds\nAdding this code to your app can workaround the issue.\n\n```js\napp.on('web-contents-created', (event, webContents) => {\n  webContents.on('select-bluetooth-device', (event, devices, callback) => {\n    // Prevent default behavior\n    event.preventDefault();\n    // Cancel the request\n    callback('');\n  });\n});\n```\n\nFor more information\nIf you have any questions or comments about this advisory, email us at security@electronjs.org.",
+      "published": "2022-03-22T18:49:36Z",
+      "modified": "2023-11-08T04:08:09.293794Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:H/UI:R/S:C/C:L/I:N/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:H/UI:R/S:C/C:L/I:N/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/security/advisories/GHSA-3p22-ghq8-v749"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2022-21718"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/pull/32178"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/pull/32240"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/electron/electron"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-3p22-ghq8-v749",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "13.6.6"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "1.6.15"
+      ]
+    },
+    {
+      "id": "GHSA-4p4r-m79c-wq3v",
+      "primary_id": "CVE-2026-34767",
+      "aliases": [
+        "CVE-2026-34767"
+      ],
+      "cve_ids": [
+        "CVE-2026-34767"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "Electron: HTTP Response Header Injection in custom protocol handlers and webRequest",
+      "details": "### Impact\nApps that register custom protocol handlers via `protocol.handle()` / `protocol.registerSchemesAsPrivileged()` or modify response headers via `webRequest.onHeadersReceived` may be vulnerable to HTTP response header injection if attacker-controlled input is reflected into a response header name or value.\n\nAn attacker who can influence a header value may be able to inject additional response headers, affecting cookies, content security policy, or cross-origin access controls.\n\nApps that do not reflect external input into response headers are not affected.\n\n### Workarounds\nValidate or sanitize any untrusted input before including it in a response header name or value.\n\n### Fixed Versions\n* `41.0.3`\n* `40.8.3`\n* `39.8.3`\n* `38.8.6`\n\n### For more information\nIf there are any questions or comments about this advisory, send an email to [security@electronjs.org](mailto:security@electronjs.org)",
+      "published": "2026-04-03T02:37:24Z",
+      "modified": "2026-04-06T23:21:01.480605Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:H/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:H/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/security/advisories/GHSA-4p4r-m79c-wq3v"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-34767"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/electron/electron"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-4p4r-m79c-wq3v",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "38.8.6"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "1.6.15"
+      ]
+    },
+    {
+      "id": "GHSA-532v-xpq5-8h95",
+      "primary_id": "CVE-2026-34774",
+      "aliases": [
+        "CVE-2026-34774"
+      ],
+      "cve_ids": [
+        "CVE-2026-34774"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "Electron: Use-after-free in offscreen child window paint callback",
+      "details": "### Impact\nApps that use offscreen rendering and allow child windows via `window.open()` may be vulnerable to a use-after-free. If the parent offscreen `WebContents` is destroyed while a child window remains open, subsequent paint frames on the child dereference freed memory, which may lead to a crash or memory corruption.\n\nApps are only affected if they use offscreen rendering (`webPreferences.offscreen: true`) and their `setWindowOpenHandler` permits child windows. Apps that do not use offscreen rendering, or that deny child windows, are not affected.\n\n### Workarounds\nDeny child window creation from offscreen renderers in your `setWindowOpenHandler`, or ensure child windows are closed before the parent is destroyed.\n\n### Fixed Versions\n* `41.0.0`\n* `40.7.0`\n* `39.8.1`\n\n### For more information\nIf there are any questions or comments about this advisory, please email [security@electronjs.org](mailto:security@electronjs.org)",
+      "published": "2026-04-03T02:42:27Z",
+      "modified": "2026-04-06T23:19:58.922968Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/security/advisories/GHSA-532v-xpq5-8h95"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-34774"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/electron/electron"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-532v-xpq5-8h95",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "39.8.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "1.6.15"
+      ]
+    },
+    {
+      "id": "GHSA-5rqw-r77c-jp79",
+      "primary_id": "CVE-2026-34779",
+      "aliases": [
+        "CVE-2026-34779"
+      ],
+      "cve_ids": [
+        "CVE-2026-34779"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "Electron: AppleScript injection in app.moveToApplicationsFolder on macOS",
+      "details": "### Impact\nOn macOS, `app.moveToApplicationsFolder()` used an AppleScript fallback path that did not properly handle certain characters in the application bundle path. Under specific conditions, a crafted launch path could lead to arbitrary AppleScript execution when the user accepted the move-to-Applications prompt.\n\nApps are only affected if they call `app.moveToApplicationsFolder()`. Apps that do not use this API are not affected.\n\n### Workarounds\nThere are no app side workarounds, developers must update to a patched version of Electron.\n\n### Fixed Versions\n* `41.0.0-beta.8`\n* `40.8.0`\n* `39.8.1`\n* `38.8.6`\n\n### For more information\nIf there are any questions or comments about this advisory, please email [security@electronjs.org](mailto:security@electronjs.org)",
+      "published": "2026-04-03T02:46:16Z",
+      "modified": "2026-04-06T23:20:07.571377Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:L/AC:H/PR:N/UI:R/S:U/C:H/I:H/A:L"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:H/PR:N/UI:R/S:U/C:H/I:H/A:L"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/security/advisories/GHSA-5rqw-r77c-jp79"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-34779"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/electron/electron"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-5rqw-r77c-jp79",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "38.8.6"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "1.6.15"
+      ]
+    },
+    {
+      "id": "GHSA-6r2x-8pq8-9489",
+      "primary_id": "CVE-2024-46993",
+      "aliases": [
+        "CVE-2024-46993"
+      ],
+      "cve_ids": [
+        "CVE-2024-46993"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "Electron vulnerable to Heap Buffer Overflow in NativeImage",
+      "details": "### Impact\nThe `nativeImage.createFromPath()` and `nativeImage.createFromBuffer()` functions call a function downstream that is vulnerable to a heap buffer overflow. An Electron program that uses either of the affected functions is vulnerable to a buffer overflow if an attacker is in control of the image's height, width, and contents.\n\n### Workaround\nThere are no app-side workarounds for this issue. You must update your Electron version to be protected.\n\n### Patches\n\n- `v28.3.2`\n- `v29.3.3`\n- `v30.0.3`\n\n### For More Information\n\nIf you have any questions or comments about this advisory, email us at [security@electronjs.org](mailto:security@electronjs.org).",
+      "published": "2025-06-30T18:41:08Z",
+      "modified": "2025-07-01T13:13:25Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:L/AC:H/AT:N/PR:L/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N/E:U"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:L/AC:H/AT:N/PR:L/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N/E:U"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/security/advisories/GHSA-6r2x-8pq8-9489"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-46993"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/electron/electron"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-6r2x-8pq8-9489",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "28.3.2"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "1.6.15"
+      ]
+    },
+    {
+      "id": "GHSA-6vrv-94jv-crrg",
+      "primary_id": "CVE-2020-15096",
+      "aliases": [
+        "CVE-2020-15096"
+      ],
+      "cve_ids": [
+        "CVE-2020-15096"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "Context isolation bypass via Promise in Electron",
+      "details": "### Impact\nApps using `contextIsolation` are affected.\n\nThis is a context isolation bypass, meaning that code running in the main world context in the renderer can reach into the isolated Electron context and perform privileged actions.\n\n### Workarounds\nThere are no app-side workarounds, you must update your Electron version to be protected.\n\n### Fixed Versions\n* `9.0.0-beta.21`\n* `8.2.4`\n* `7.2.4`\n* `6.1.11`\n\n### For more information\nIf you have any questions or comments about this advisory:\n* Email us at [security@electronjs.org](mailto:security@electronjs.org)",
+      "published": "2020-07-07T00:01:05Z",
+      "modified": "2026-03-13T22:14:29.510812Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:C/C:N/I:H/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:C/C:N/I:H/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/security/advisories/GHSA-6vrv-94jv-crrg"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2020-15096"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.electronjs.org/releases/stable?page=3#release-notes-for-v824"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-6vrv-94jv-crrg",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "6.1.11"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "1.6.15"
+      ]
+    },
+    {
+      "id": "GHSA-77xc-hjv8-ww97",
+      "primary_id": "CVE-2022-29257",
+      "aliases": [
+        "CVE-2022-29257"
+      ],
+      "cve_ids": [
+        "CVE-2022-29257"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "AutoUpdater module fails to validate certain nested components of the bundle",
+      "details": "### Impact\nThis vulnerability allows attackers who have control over a given apps update server / update storage to serve maliciously crafted update packages that pass the code signing validation check but contain malicious code in some components.\n\nPlease note that this kind of attack would require **significant** privileges in your own auto updating infrastructure and the ease of that attack entirely depends on your infrastructure security.\n\n### Patches\nThis has been patched and the following Electron versions contain the fix:\n\n* `18.0.0-beta.6`\n* `17.2.0`\n* `16.2.0`\n* `15.5.0`\n\n### Workarounds\nThere are no workarounds for this issue, please update to a patched version of Electron.\n\n### For more information\nIf you have any questions or comments about this advisory, email us at [security@electronjs.org](mailto:security@electronjs.org)",
+      "published": "2022-06-16T23:18:47Z",
+      "modified": "2023-11-08T04:09:12.659514Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:H/PR:H/UI:N/S:U/C:H/I:H/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:H/UI:N/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/security/advisories/GHSA-77xc-hjv8-ww97"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2022-29257"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/electron/electron"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-77xc-hjv8-ww97",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "15.5.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "1.6.15"
+      ]
+    },
+    {
+      "id": "GHSA-7m48-wc93-9g85",
+      "primary_id": "CVE-2023-44402",
+      "aliases": [
+        "CVE-2023-44402"
+      ],
+      "cve_ids": [
+        "CVE-2023-44402"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "ASAR Integrity bypass via filetype confusion in electron",
+      "details": "### Impact\nThis only impacts apps that have the `embeddedAsarIntegrityValidation` and `onlyLoadAppFromAsar` [fuses](https://www.electronjs.org/docs/latest/tutorial/fuses) enabled.  Apps without these fuses enabled are not impacted.  This issue is specific to macOS as these fuses are only currently supported on macOS.\n\nSpecifically this issue can only be exploited if your app is launched from a filesystem the attacker has write access too.  i.e. the ability to edit files inside the `resources` folder in your app installation on Windows which these fuses are supposed to protect against.\n\n### Workarounds\nThere are no app side workarounds, you must update to a patched version of Electron.\n\n### Fixed Versions\n* `27.0.0-alpha.7`\n* `26.2.1`\n* `25.8.1`\n* `24.8.3`\n* `22.3.24`\n\n### For more information\nIf you have any questions or comments about this advisory, email us at [security@electronjs.org](mailto:security@electronjs.org)",
+      "published": "2023-12-01T21:32:06Z",
+      "modified": "2024-09-18T20:13:40Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:R/S:U/C:L/I:H/A:L"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:R/S:U/C:L/I:H/A:L"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/security/advisories/GHSA-7m48-wc93-9g85"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2023-44402"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/pull/39788"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/electron/electron"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.electronjs.org/docs/latest/tutorial/fuses"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-7m48-wc93-9g85",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "22.3.24"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "1.6.15"
+      ]
+    },
+    {
+      "id": "GHSA-7x97-j373-85x5",
+      "primary_id": "CVE-2023-39956",
+      "aliases": [
+        "CVE-2023-39956"
+      ],
+      "cve_ids": [
+        "CVE-2023-39956"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "Electron vulnerable to out-of-package code execution when launched with arbitrary cwd",
+      "details": "### Impact\nApps that are launched as command line executables are impacted.  E.g. if your app exposes itself in the path as `myapp --help`\n\nSpecifically this issue can only be exploited if the following conditions are met:\n* Your app is launched with an attacker-controlled working directory\n* The attacker has the ability to write files to that working directory\n\nThis makes the risk quite low, in fact normally issues of this kind are considered outside of our threat model as similar to Chromium we exclude [Physically Local Attacks](https://github.com/electron/electron/security/advisories/GHSA-7x97-j373-85x5#:~:text=Physically%20Local%20Attacks) but given the ability for this issue to bypass certain protections like ASAR Integrity it is being treated with higher importance.  Please bear this in mind when reporting similar issues in the future.\n\n### Workarounds\nThere are no app side workarounds, you must update to a patched version of Electron.\n\n### Fixed Versions\n* `26.0.0-beta.13`\n* `25.5.0`\n* `24.7.1`\n* `23.3.13`\n* `22.3.19`\n\n### For more information\nIf you have any questions or comments about this advisory, email us at [security@electronjs.org](mailto:security@electronjs.org)",
+      "published": "2023-09-06T19:51:33Z",
+      "modified": "2023-11-08T04:13:15.865796Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:R/S:U/C:L/I:H/A:L"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:R/S:U/C:L/I:H/A:L"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/security/advisories/GHSA-7x97-j373-85x5"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2023-39956"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/electron/electron"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-7x97-j373-85x5",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "22.3.19"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "1.6.15"
+      ]
+    },
+    {
+      "id": "GHSA-8337-3p73-46f4",
+      "primary_id": "CVE-2026-34771",
+      "aliases": [
+        "CVE-2026-34771"
+      ],
+      "cve_ids": [
+        "CVE-2026-34771"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "Electron: Use-after-free in WebContents fullscreen, pointer-lock, and keyboard-lock permission callbacks",
+      "details": "### Impact\nApps that register an asynchronous `session.setPermissionRequestHandler()` may be vulnerable to a use-after-free when handling fullscreen, pointer-lock, or keyboard-lock permission requests. If the requesting frame navigates or the window closes while the permission handler is pending, invoking the stored callback dereferences freed memory, which may lead to a crash or memory corruption.\n\nApps that do not set a permission request handler, or whose handler responds synchronously, are not affected.\n\n### Workarounds\nRespond to permission requests synchronously, or deny fullscreen, pointer-lock, and keyboard-lock requests if an asynchronous flow is required.\n\n### Fixed Versions\n* `41.0.0-beta.8`\n* `40.7.0`\n* `39.8.0`\n* `38.8.6`\n\n### For more information\nIf there are any questions or comments about this advisory, please email [security@electronjs.org](mailto:security@electronjs.org)",
+      "published": "2026-04-03T02:40:24Z",
+      "modified": "2026-04-06T23:18:52.586490Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:H/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/security/advisories/GHSA-8337-3p73-46f4"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-34771"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/electron/electron"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-8337-3p73-46f4",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "38.8.6"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "1.6.15"
+      ]
+    },
+    {
+      "id": "GHSA-9899-m83m-qhpj",
+      "primary_id": "CVE-2026-34766",
+      "aliases": [
+        "CVE-2026-34766"
+      ],
+      "cve_ids": [
+        "CVE-2026-34766"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "Electron: USB device selection not validated against filtered device list",
+      "details": "### Impact\nThe `select-usb-device` event callback did not validate the chosen device ID against the filtered list that was presented to the handler. An app whose handler could be influenced to select a device ID outside the filtered set would grant access to a device that did not match the renderer's requested `filters` or was listed in `exclusionFilters`.\n\nThe WebUSB security blocklist remained enforced regardless, so security-sensitive devices on the blocklist were not affected. The practical impact is limited to apps with unusual device-selection logic.\n\n### Workarounds\nThere are no app side workarounds, you must update to a patched version of Electron.\n\n### Fixed Versions\n* `41.0.0-beta.8`\n* `40.7.0`\n* `39.8.0`\n* `38.8.6`\n\n### For more information\nIf there are any questions or comments about this advisory, send an email to [security@electronjs.org](mailto:security@electronjs.org)",
+      "published": "2026-04-03T02:36:52Z",
+      "modified": "2026-04-06T23:18:50.163821Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:L/AC:H/PR:L/UI:R/S:U/C:L/I:L/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:H/PR:L/UI:R/S:U/C:L/I:L/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/security/advisories/GHSA-9899-m83m-qhpj"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-34766"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/electron/electron"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-9899-m83m-qhpj",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "38.8.6"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "1.6.15"
+      ]
+    },
+    {
+      "id": "GHSA-9w97-2464-8783",
+      "primary_id": "CVE-2026-34772",
+      "aliases": [
+        "CVE-2026-34772"
+      ],
+      "cve_ids": [
+        "CVE-2026-34772"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "Electron: Use-after-free in download save dialog callback",
+      "details": "### Impact\nApps that allow downloads and programmatically destroy sessions may be vulnerable to a use-after-free. If a session is torn down while a native save-file dialog is open for a download, dismissing the dialog dereferences freed memory, which may lead to a crash or memory corruption.\n\nApps that do not destroy sessions at runtime, or that do not permit downloads, are not affected.\n\n### Workarounds\nAvoid destroying sessions while a download save dialog may be open. Cancel pending downloads before session teardown.\n\n### Fixed Versions\n* `41.0.0-beta.7`\n* `40.7.0`\n* `39.8.0`\n* `38.8.6`\n\n### For more information\nIf there are any questions or comments about this advisory, please email [security@electronjs.org](mailto:security@electronjs.org)",
+      "published": "2026-04-03T02:41:23Z",
+      "modified": "2026-04-06T23:19:57.917173Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:L/AC:H/PR:N/UI:R/S:U/C:H/I:L/A:L"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:H/PR:N/UI:R/S:U/C:H/I:L/A:L"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/security/advisories/GHSA-9w97-2464-8783"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-34772"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/electron/electron"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-9w97-2464-8783",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "38.8.6"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "1.6.15"
+      ]
+    },
+    {
+      "id": "GHSA-9wfr-w7mm-pc7f",
+      "primary_id": "CVE-2026-34769",
+      "aliases": [
+        "CVE-2026-34769"
+      ],
+      "cve_ids": [
+        "CVE-2026-34769"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "Electron: Renderer command-line switch injection via undocumented commandLineSwitches webPreference",
+      "details": "### Impact\nAn undocumented `commandLineSwitches` webPreference allowed arbitrary switches to be appended to the renderer process command line. Apps that construct `webPreferences` by spreading untrusted configuration objects may inadvertently allow an attacker to inject switches that disable renderer sandboxing or web security controls.\n\nApps are only affected if they construct `webPreferences` from external or untrusted input without an allowlist. Apps that use a fixed, hardcoded `webPreferences` object are not affected.\n\n### Workarounds\nDo not spread untrusted input into `webPreferences`. Use an explicit allowlist of permitted preference keys when constructing `BrowserWindow` or `webContents` options from external configuration.\n\n### Fixed Versions\n* `41.0.0-beta.8`\n* `40.7.0`\n* `39.8.0`\n* `38.8.6`\n\n### For more information\nIf there are any questions or comments about this advisory, send an email to [security@electronjs.org](mailto:security@electronjs.org)",
+      "published": "2026-04-03T02:39:15Z",
+      "modified": "2026-04-06T23:19:40.585044Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:L/AC:H/PR:N/UI:R/S:C/C:H/I:H/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:H/PR:N/UI:R/S:C/C:H/I:H/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/security/advisories/GHSA-9wfr-w7mm-pc7f"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-34769"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/electron/electron"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-9wfr-w7mm-pc7f",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "38.8.6"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "1.6.15"
+      ]
+    },
+    {
+      "id": "GHSA-f37v-82c4-4x64",
+      "primary_id": "CVE-2026-34781",
+      "aliases": [
+        "CVE-2026-34781"
+      ],
+      "cve_ids": [
+        "CVE-2026-34781"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "Electron: Crash in clipboard.readImage() on malformed clipboard image data",
+      "details": "### Impact\nApps that call `clipboard.readImage()` may be vulnerable to a denial of service. If the system clipboard contains image data that fails to decode, the resulting null bitmap is passed unchecked to image construction, triggering a controlled abort and crashing the process.\n\nApps are only affected if they call `clipboard.readImage()`. Apps that do not read images from the clipboard are not affected. This issue does not allow memory corruption or code execution.\n\n### Workarounds\nValidate that the clipboard contains image data via `clipboard.availableFormats()` before calling `clipboard.readImage()`. Note this only narrows the window \u2014 upgrading to a fixed version is recommended.\n\n### Fixed Versions\n* `42.0.0-alpha.5`\n* `41.1.0`\n* `40.8.5`\n* `39.8.5`\n\n### For more information\nIf you have any questions or comments about this advisory, email us at [security@electronjs.org](mailto:security@electronjs.org)",
+      "published": "2026-04-07T15:52:28Z",
+      "modified": "2026-04-08T12:08:25.778807Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:R/S:U/C:N/I:N/A:L"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:R/S:U/C:N/I:N/A:L"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/security/advisories/GHSA-f37v-82c4-4x64"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-34781"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/pull/50475"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/commit/a48f03fb8d03933547281ddb2dbb6c6b9e705287"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/electron/electron"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/releases/tag/v39.8.5"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/releases/tag/v40.8.5"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/releases/tag/v41.1.0"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/releases/tag/v42.0.0-alpha.5"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-f37v-82c4-4x64",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "39.8.5"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "1.6.15"
+      ]
+    },
+    {
+      "id": "GHSA-f3pv-wv63-48x8",
+      "primary_id": "CVE-2026-34765",
+      "aliases": [
+        "CVE-2026-34765"
+      ],
+      "cve_ids": [
+        "CVE-2026-34765"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "Electron: Named window.open targets not scoped to the opener's browsing context",
+      "details": "### Impact\nWhen a renderer calls `window.open()` with a target name, Electron did not correctly scope the named-window lookup to the opener's browsing context group. A renderer could navigate an existing child window that was opened by a different, unrelated renderer if both used the same target name. If that existing child was created with more permissive `webPreferences` (via `setWindowOpenHandler`'s `overrideBrowserWindowOptions`), content loaded by the second renderer inherits those permissions.\n\nApps are only affected if they open multiple top-level windows with differing trust levels **and** use `setWindowOpenHandler` to grant child windows elevated `webPreferences` such as a privileged preload script. Apps that do not elevate child window privileges, or that use a single top-level window, are not affected.\n\nApps that additionally grant `nodeIntegration: true` or `sandbox: false` to child windows (contrary to the [security recommendations](https://www.electronjs.org/docs/latest/tutorial/security)) may be exposed to arbitrary code execution.\n\n### Workarounds\nDeny `window.open()` in renderers that load untrusted content by returning `{ action: 'deny' }` from `setWindowOpenHandler`. Avoid granting child windows more permissive `webPreferences` than their opener.\n\n### Fixed Versions\n* `42.0.0-alpha.5`\n* `41.1.0`\n* `40.8.5`\n* `39.8.5`\n\n### For more information\nIf you have any questions or comments about this advisory, email us at [security@electronjs.org](mailto:security@electronjs.org)",
+      "published": "2026-04-07T15:52:25Z",
+      "modified": "2026-04-08T12:08:27.365316Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:C/C:L/I:L/A:L"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:C/C:L/I:L/A:L"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/security/advisories/GHSA-f3pv-wv63-48x8"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-34765"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/electron/electron"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/releases/tag/v39.8.5"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/releases/tag/v40.8.5"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/releases/tag/v41.1.0"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/releases/tag/v42.0.0-alpha.5"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-f3pv-wv63-48x8",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "39.8.5"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "1.6.15"
+      ]
+    },
+    {
+      "id": "GHSA-f9mq-jph6-9mhm",
+      "primary_id": "CVE-2020-4075",
+      "aliases": [
+        "CVE-2020-4075"
+      ],
+      "cve_ids": [
+        "CVE-2020-4075"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "Arbitrary file read via window-open IPC in Electron",
+      "details": "### Impact\nThe vulnerability allows arbitrary local file read by defining unsafe window options on a child window opened via window.open.\n\n### Workarounds\nEnsure you are calling `event.preventDefault()` on all [`new-window`](https://electronjs.org/docs/api/web-contents#event-new-window) events where the `url` or `options` is not something you expect.\n\n### Fixed Versions\n* `9.0.0-beta.21`\n* `8.2.4`\n* `7.2.4`\n\n### For more information\nIf you have any questions or comments about this advisory:\n* Email us at [security@electronjs.org](mailto:security@electronjs.org)",
+      "published": "2020-07-07T00:01:13Z",
+      "modified": "2026-03-13T22:14:17.362269Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:C/C:H/I:N/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:C/C:H/I:N/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/security/advisories/GHSA-f9mq-jph6-9mhm"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2020-4075"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.electronjs.org/releases/stable?page=3#release-notes-for-v824"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-f9mq-jph6-9mhm",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "7.2.4"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "1.6.15"
+      ]
+    },
+    {
+      "id": "GHSA-fjqr-fx3f-g4rv",
+      "primary_id": "CVE-2018-1000118",
+      "aliases": [
+        "CVE-2018-1000118"
+      ],
+      "cve_ids": [
+        "CVE-2018-1000118"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "Electron protocol handler browser vulnerable to Command Injection",
+      "details": "Github Electron version Electron 1.8.2-beta.4 and earlier contains a Command Injection vulnerability in Protocol Handler that can result in command execute. This attack appear to be exploitable via the victim opening an electron protocol handler in their browser. This vulnerability appears to have been fixed in Electron 1.8.2-beta.5. This issue is due to an incomplete fix for CVE-2018-1000006, specifically the black list used was not case insensitive allowing an attacker to potentially bypass it.",
+      "published": "2018-03-26T16:41:20Z",
+      "modified": "2023-11-08T03:59:35.151472Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2018-1000118"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/commit/ce361a12e355f9e1e99c989f1ea056c9e502dbe7"
+        },
+        {
+          "type": "WEB",
+          "url": "https://electronjs.org/releases#1.8.2-beta.5"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/advisories/GHSA-fjqr-fx3f-g4rv"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-fjqr-fx3f-g4rv",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.8.2-beta5"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "1.6.15"
+      ]
+    },
+    {
+      "id": "GHSA-h9jc-284h-533g",
+      "primary_id": "CVE-2020-4077",
+      "aliases": [
+        "CVE-2020-4077"
+      ],
+      "cve_ids": [
+        "CVE-2020-4077"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "Context isolation bypass via contextBridge in Electron",
+      "details": "### Impact\nApps using both `contextIsolation` and `contextBridge` are affected.\n\nThis is a context isolation bypass, meaning that code running in the main world context in the renderer can reach into the isolated Electron context and perform privileged actions.\n\n### Workarounds\nThere are no app-side workarounds, you must update your Electron version to be protected.\n\n### Fixed Versions\n* `9.0.0-beta.21`\n* `8.2.4`\n* `7.2.4`\n\n### For more information\nIf you have any questions or comments about this advisory:\n* Email us at [security@electronjs.org](mailto:security@electronjs.org)",
+      "published": "2020-07-07T00:01:10Z",
+      "modified": "2026-03-13T22:00:51.040005Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:C/C:N/I:H/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:C/C:N/I:H/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/security/advisories/GHSA-h9jc-284h-533g"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2020-4077"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/commit/b8e347709245d2dc5640fbb3044d9b21b4eaa6b0"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.electronjs.org/releases/stable?page=3#release-notes-for-v824"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-h9jc-284h-533g",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "7.2.4"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "1.6.15"
+      ]
+    },
+    {
+      "id": "GHSA-hvf8-h2qh-37m9",
+      "primary_id": "CVE-2020-26272",
+      "aliases": [
+        "CVE-2020-26272"
+      ],
+      "cve_ids": [
+        "CVE-2020-26272"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "IPC messages delivered to the wrong frame in Electron",
+      "details": "### Impact\nIPC messages sent from the main process to a subframe in the renderer process, through `webContents.sendToFrame`, `event.reply` or when using the `remote` module, can in some cases be delivered to the wrong frame.\n\nIf your app does ANY of the following, then it is impacted by this issue:\n- Uses `remote`\n- Calls `webContents.sendToFrame`\n- Calls `event.reply` in an IPC message handler\n\n### Patches\nThis has been fixed in the following versions:\n\n- 9.4.0\n- 10.2.0\n- 11.1.0\n- 12.0.0-beta.9\n\n### Workarounds\nThere are no workarounds for this issue.\n\n### For more information\nIf you have any questions or comments about this advisory, email us at [security@electronjs.org](mailto:security@electronjs.org).",
+      "published": "2021-01-28T19:11:34Z",
+      "modified": "2026-03-13T22:15:54.497572Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:C/C:L/I:L/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:C/C:L/I:L/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/security/advisories/GHSA-hvf8-h2qh-37m9"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2020-26272"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/pull/26875"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/commit/07a1c2a3e5845901f7e2eda9506695be58edc73c"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/commit/0bbd268eb4caf35604443df5ff196980dd49e208"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/commit/36c695ce2a7e22c07fe1e30c61c00d20371daee2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/commit/429400040ecb16a21d19936658579e65a797e4cc"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/commit/5c8e7e8b7f485ceafa8b271086d7b87e1de9dedd"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/releases/tag/v9.4.0"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.electronjs.org/releases/stable?version=9#9.4.0"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-hvf8-h2qh-37m9",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "9.4.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "1.6.15"
+      ]
+    },
+    {
+      "id": "GHSA-jfqx-fxh3-c62j",
+      "primary_id": "CVE-2026-34768",
+      "aliases": [
+        "CVE-2026-34768"
+      ],
+      "cve_ids": [
+        "CVE-2026-34768"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "Electron: Unquoted executable path in app.setLoginItemSettings on Windows",
+      "details": "### Impact\nOn Windows, `app.setLoginItemSettings({openAtLogin: true})` wrote the executable path to the `Run` registry key without quoting. If the app is installed to a path containing spaces, an attacker with write access to an ancestor directory may be able to cause a different executable to run at login instead of the intended app.\n\nOn a default Windows install, standard system directories are protected against writes by standard users, so exploitation typically requires a non-standard install location.\n\n### Workarounds\nInstall the application to a path without spaces, or to a location where all ancestor directories are protected against unauthorized writes.\n\n### Fixed Versions\n* `41.0.0-beta.8`\n* `40.8.0`\n* `39.8.1`\n* `38.8.6`\n\n### For more information\nIf there are any questions or comments about this advisory, send an email to [security@electronjs.org](mailto:security@electronjs.org)",
+      "published": "2026-04-03T02:38:08Z",
+      "modified": "2026-04-06T23:19:48.346770Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:L/AC:H/PR:H/UI:N/S:U/C:L/I:L/A:L"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:H/PR:H/UI:N/S:U/C:L/I:L/A:L"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/security/advisories/GHSA-jfqx-fxh3-c62j"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-34768"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/electron/electron"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-jfqx-fxh3-c62j",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "38.8.6"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "1.6.15"
+      ]
+    },
+    {
+      "id": "GHSA-jjp3-mq3x-295m",
+      "primary_id": "CVE-2026-34770",
+      "aliases": [
+        "CVE-2026-34770"
+      ],
+      "cve_ids": [
+        "CVE-2026-34770"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "Electron: Use-after-free in PowerMonitor on Windows and macOS",
+      "details": "### Impact\nApps that use the `powerMonitor` module may be vulnerable to a use-after-free. After the native `PowerMonitor` object is garbage-collected, the associated OS-level resources (a message window on Windows, a shutdown handler on macOS) retain dangling references. A subsequent session-change event (Windows) or system shutdown (macOS) dereferences freed memory, which may lead to a crash or memory corruption.\n\nAll apps that access `powerMonitor` events (`suspend`, `resume`, `lock-screen`, etc.) are potentially affected. The issue is not directly renderer-controllable.\n\n### Workarounds\nThere are no app side workarounds, you must update to a patched version of Electron.\n\n### Fixed Versions\n* `41.0.0-beta.8`\n* `40.8.0`\n* `39.8.1`\n* `38.8.6`\n\n### For more information\nIf there are any questions or comments about this advisory, please email [security@electronjs.org](mailto:security@electronjs.org)",
+      "published": "2026-04-03T02:39:52Z",
+      "modified": "2026-04-06T23:20:13.797422Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:L/AC:H/PR:N/UI:R/S:U/C:H/I:H/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:H/PR:N/UI:R/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/security/advisories/GHSA-jjp3-mq3x-295m"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-34770"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/electron/electron"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-jjp3-mq3x-295m",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "38.8.6"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "1.6.15"
+      ]
+    },
+    {
+      "id": "GHSA-m93v-9qjc-3g79",
+      "primary_id": "CVE-2020-4076",
+      "aliases": [
+        "CVE-2020-4076"
+      ],
+      "cve_ids": [
+        "CVE-2020-4076"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "Context isolation bypass via leaked cross-context objects in Electron",
+      "details": "### Impact\nApps using `contextIsolation` are affected.\n\nThis is a context isolation bypass, meaning that code running in the main world context in the renderer can reach into the isolated Electron context and perform privileged actions.\n\n### Workarounds\nThere are no app-side workarounds, you must update your Electron version to be protected.\n\n### Fixed Versions\n* `9.0.0-beta.21`\n* `8.2.4`\n* `7.2.4`\n\n### Non-Impacted Versions\n* `9.0.0-beta.*`\n\n### For more information\nIf you have any questions or comments about this advisory:\n* Email us at [security@electronjs.org](mailto:security@electronjs.org)",
+      "published": "2020-07-07T00:01:07Z",
+      "modified": "2026-03-13T22:14:25.451842Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:L/AC:H/PR:N/UI:N/S:C/C:H/I:H/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:H/PR:N/UI:N/S:C/C:H/I:H/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/security/advisories/GHSA-m93v-9qjc-3g79"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2020-4076"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.electronjs.org/releases/stable?page=3#release-notes-for-v824"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-m93v-9qjc-3g79",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "7.2.4"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "1.6.15"
+      ]
+    },
+    {
+      "id": "GHSA-mpjm-v997-c4h4",
+      "primary_id": "CVE-2021-39184",
+      "aliases": [
+        "CVE-2021-39184"
+      ],
+      "cve_ids": [
+        "CVE-2021-39184"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "Electron's sandboxed renderers can obtain thumbnails of arbitrary files through the nativeImage API",
+      "details": "### Impact\nThis vulnerability allows a sandboxed renderer to request a \"thumbnail\" image of an arbitrary file on the user's system. The thumbnail can potentially include significant parts of the original file, including textual data in many cases.\n\nAll current stable versions of Electron are affected.\n\n### Patches\nThis was fixed with #30728, and the following Electron versions contain the fix:\n\n- 15.0.0-alpha.10\n- 14.0.0\n- 13.3.0\n- 12.1.0\n- 11.5.0\n\n### Workarounds\nIf your app enables `contextIsolation`, this vulnerability is significantly more difficult for an attacker to exploit.\n\nFurther, if your app does not depend on the `createThumbnailFromPath` API, then you can simply disable the functionality. In the main process, before the 'ready' event:\n```js\ndelete require('electron').nativeImage.createThumbnailFromPath\n```\n\n### For more information\nIf you have any questions or comments about this advisory, email us at [security@electronjs.org](mailto:security@electronjs.org).",
+      "published": "2021-10-12T21:59:13Z",
+      "modified": "2026-03-13T22:00:54.293012Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:C/C:H/I:N/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:C/C:H/I:N/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/security/advisories/GHSA-mpjm-v997-c4h4"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2021-39184"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/pull/30728"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/pull/30728/commits/8fed645bd671f359ee52d806c075ec4e07eda17f"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/electron/electron"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-mpjm-v997-c4h4",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "11.5.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "1.6.15"
+      ]
+    },
+    {
+      "id": "GHSA-mq8j-3h7h-p8g7",
+      "primary_id": "CVE-2022-29247",
+      "aliases": [
+        "CVE-2022-29247"
+      ],
+      "cve_ids": [
+        "CVE-2022-29247"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "Compromised child renderer processes could obtain IPC access without nodeIntegrationInSubFrames being enabled",
+      "details": "### Impact\nThis vulnerability allows a renderer with JS execution to obtain access to a new renderer process with `nodeIntegrationInSubFrames` enabled which in turn allows effective access to `ipcRenderer`.\n\nPlease note the misleadingly named `nodeIntegrationInSubFrames` option does not implicitly grant Node.js access rather it depends on the existing `sandbox` setting.  If your application is sandboxed then `nodeIntegrationInSubFrames` just gives access to the sandboxed renderer APIs (which includes `ipcRenderer`).\n\nIf your application then additionally exposes IPC messages without IPC `senderFrame` validation that perform privileged actions or return confidential data this access to `ipcRenderer` can in turn compromise your application / user even with the sandbox enabled.\n\n### Patches\nThis has been patched and the following Electron versions contain the fix:\n\n* `18.0.0-beta.6`\n* `17.2.0`\n* `16.2.6`\n* `15.5.5`\n\n### Workarounds\nEnsure that all IPC message handlers appropriately validate `senderFrame` as per our [security tutorial here](https://github.com/electron/electron/blob/main/docs/tutorial/security.md#17-validate-the-sender-of-all-ipc-messages).\n\n### For more information\n\nIf you have any questions or comments about this advisory, email us at [security@electronjs.org](mailto:security@electronjs.org).",
+      "published": "2022-06-16T23:14:33Z",
+      "modified": "2023-11-08T04:09:12.104708Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:H/PR:H/UI:N/S:U/C:L/I:N/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:H/UI:N/S:U/C:L/I:N/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/security/advisories/GHSA-mq8j-3h7h-p8g7"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2022-29247"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/electron/electron"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-mq8j-3h7h-p8g7",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "15.5.5"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "1.6.15"
+      ]
+    },
+    {
+      "id": "GHSA-mwmh-mq4g-g6gr",
+      "primary_id": "CVE-2026-34773",
+      "aliases": [
+        "CVE-2026-34773"
+      ],
+      "cve_ids": [
+        "CVE-2026-34773"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "Electron: Registry key path injection in app.setAsDefaultProtocolClient on Windows",
+      "details": "### Impact\nOn Windows, `app.setAsDefaultProtocolClient(protocol)` did not validate the protocol name before writing to the registry. Apps that pass untrusted input as the protocol name may allow an attacker to write to arbitrary subkeys under `HKCU\\Software\\Classes\\`, potentially hijacking existing protocol handlers.\n\nApps are only affected if they call `app.setAsDefaultProtocolClient()` with a protocol name derived from external or untrusted input. Apps that use a hardcoded protocol name are not affected.\n\n### Workarounds\nValidate the protocol name matches `/^[a-zA-Z][a-zA-Z0-9+.-]*$/` before passing it to `app.setAsDefaultProtocolClient()`.\n\n### Fixed Versions\n* `41.0.0`\n* `40.8.1`\n* `39.8.1`\n* `38.8.6`\n\n### For more information\nIf there are any questions or comments about this advisory, please email [security@electronjs.org](mailto:security@electronjs.org)",
+      "published": "2026-04-03T02:41:52Z",
+      "modified": "2026-04-06T23:18:42.129720Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:H/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:H/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/security/advisories/GHSA-mwmh-mq4g-g6gr"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-34773"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/electron/electron"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-mwmh-mq4g-g6gr",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "38.8.6"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "1.6.15"
+      ]
+    },
+    {
+      "id": "GHSA-p2jh-44qj-pf2v",
+      "primary_id": "CVE-2022-36077",
+      "aliases": [
+        "CVE-2022-36077"
+      ],
+      "cve_ids": [
+        "CVE-2022-36077"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "Exfiltration of hashed SMB credentials on Windows via file:// redirect",
+      "details": "### Impact\nWhen following a redirect, Electron delays a check for redirecting to file:// URLs from other schemes. The contents of the file is not available to the renderer following the redirect, but if the redirect target is a SMB URL such as `file://some.website.com/`, then in some cases, Windows will connect to that server and attempt NTLM authentication, which can include sending hashed credentials.\n\n### Patches\nThis issue has been fixed in all current stable versions of Electron. Specifically, these versions contain the fixes:\n\n- 21.0.0-beta.1\n- 20.0.1\n- 19.0.11\n- 18.3.7\n\nWe recommend all apps upgrade to the latest stable version of Electron.\n\n### Workarounds\nIf upgrading isn't possible, this issue can be addressed without upgrading by preventing redirects to file:// URLs in the `WebContents.on('will-redirect')` event, for all WebContents:\n\n```js\napp.on('web-contents-created', (e, webContents) => {\n  webContents.on('will-redirect', (e, url) => {\n    if (/^file:/.test(url)) e.preventDefault()\n  })\n})\n```\n\n### For more information\nIf you have any questions or comments about this advisory, email us at [security@electronjs.org](mailto:security@electronjs.org).\n\n### Credit\nThanks to user @coolcoolnoworries for reporting this issue.",
+      "published": "2022-11-10T12:38:57Z",
+      "modified": "2023-11-08T04:09:59.820649Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:C/C:L/I:N/A:L"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:C/C:L/I:N/A:L"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/security/advisories/GHSA-p2jh-44qj-pf2v"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2022-36077"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/electron/electron"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-p2jh-44qj-pf2v",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "18.3.7"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "1.6.15"
+      ]
+    },
+    {
+      "id": "GHSA-p7v2-p9m8-qqg7",
+      "primary_id": "CVE-2023-29198",
+      "aliases": [
+        "CVE-2023-29198"
+      ],
+      "cve_ids": [
+        "CVE-2023-29198"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "Electron context isolation bypass via nested unserializable return value",
+      "details": "### Impact\nApps using `contextIsolation` and `contextBridge` are affected.\n\nThis is a context isolation bypass, meaning that code running in the main world context in the renderer can reach into the isolated Electron context and perform privileged actions.\n\n### Workarounds\nThis issue is exploitable under either of two conditions:\n* If an API exposed to the main world via `contextBridge` can return an object or array that contains a JS object which cannot be serialized, for instance, a canvas rendering context. This would normally result in an exception being thrown `Error: object could not be cloned`.\n* If an API exposed to the main world via `contextBridge` has a return value that throws a user-generated exception while being sent over the bridge, for instance a dynamic getter property on an object that throws an error when being computed.\n\nThe app side workaround is to ensure that such a case is not possible. Ensure all values returned from a function exposed over the context bridge are [supported](https://www.electronjs.org/docs/latest/api/context-bridge#parameter--error--return-type-support) and that any objects returned from functions do not have dynamic getters that can throw exceptions.\n\nAuditing your exposed API is likely to be quite difficult so we strongly recommend you update to a patched version of Electron.\n\n### Fixed Versions\n* `25.0.0-alpha.2`\n* `24.0.1`\n* `23.2.3`\n* `22.3.6`\n\n### For more information\nIf you have any questions or comments about this advisory, email us at [security@electronjs.org](mailto:security@electronjs.org)",
+      "published": "2023-09-06T19:50:58Z",
+      "modified": "2023-11-08T04:12:17.150213Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:C/C:L/I:L/A:L"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:C/C:L/I:L/A:L"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/security/advisories/GHSA-p7v2-p9m8-qqg7"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2023-29198"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/electron/electron"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.electronjs.org/docs/latest/api/context-bridge#parameter--error--return-type-support"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-p7v2-p9m8-qqg7",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "22.3.6"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "1.6.15"
+      ]
+    },
+    {
+      "id": "GHSA-qqvq-6xgj-jw8g",
+      "primary_id": "CVE-2023-5217",
+      "aliases": [
+        "CVE-2023-5217"
+      ],
+      "cve_ids": [
+        "CVE-2023-5217"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "Electron affected by libvpx's heap buffer overflow in vp8 encoding",
+      "details": "Heap buffer overflow in vp8 encoding in libvpx in Google Chrome prior to 117.0.5938.132 and libvpx 1.13.1 allowed a remote attacker to potentially exploit heap corruption via a crafted HTML page.",
+      "published": "2023-09-28T18:30:45Z",
+      "modified": "2024-02-15T15:02:25Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2023-5217"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/pull/40022"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/pull/40023"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/pull/40024"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/pull/40025"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/pull/40026"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/webmproject/libvpx/commit/af6dedd715f4307669366944cca6e0417b290282"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/webmproject/libvpx/commit/3fbd1dca6a4d2dad332a2110d646e4ffef36d590"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/BCVSHVX2RFBU3RMCUFSATVQEJUFD4Q63"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/CWEJYS5NC7KVFYU3OAMPKQDYN6JQGVK6"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/TE7F54W5O5RS4ZMAAC7YK3CZWQXIDSKB"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/WTRUIS3564P7ZLM2S2IH4Y4KZ327LI4I"
+        },
+        {
+          "type": "WEB",
+          "url": "https://pastebin.com/TdkC4pDv"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security-tracker.debian.org/tracker/CVE-2023-5217"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.gentoo.org/glsa/202310-04"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.gentoo.org/glsa/202401-34"
+        },
+        {
+          "type": "WEB",
+          "url": "https://stackdiary.com/google-discloses-a-webm-vp8-bug-tracked-as-cve-2023-5217"
+        },
+        {
+          "type": "WEB",
+          "url": "https://support.apple.com/kb/HT213961"
+        },
+        {
+          "type": "WEB",
+          "url": "https://support.apple.com/kb/HT213972"
+        },
+        {
+          "type": "WEB",
+          "url": "https://twitter.com/maddiestone/status/1707163313711497266"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.debian.org/security/2023/dsa-5508"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.debian.org/security/2023/dsa-5509"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.debian.org/security/2023/dsa-5510"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.mozilla.org/en-US/security/advisories/mfsa2023-44"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.openwall.com/lists/oss-security/2023/09/28/5"
+        },
+        {
+          "type": "WEB",
+          "url": "https://arstechnica.com/security/2023/09/new-0-day-in-chrome-and-firefox-is-likely-to-plague-other-software"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugzilla.redhat.com/show_bug.cgi?id=2241191"
+        },
+        {
+          "type": "WEB",
+          "url": "https://chromereleases.googleblog.com/2023/09/stable-channel-update-for-desktop_27.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://crbug.com/1486441"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/electron/electron"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/releases/tag/v22.3.25"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/releases/tag/v24.8.5"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/releases/tag/v25.8.4"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/releases/tag/v26.2.4"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/releases/tag/v27.0.0-beta.8"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/webmproject/libvpx/releases/tag/v1.13.1"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/webmproject/libvpx/tags"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2023/09/msg00038.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2023/10/msg00001.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2023/10/msg00015.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/4MFWDFJSSIFKWKNOCTQCFUNZWAXUCSS4"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/55YVCZNAVY3Y5E4DWPWMX2SPKZ2E5SOV"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/AY642Z6JZODQJE7Z62CFREVUHEGCXGPD"
+        },
+        {
+          "type": "WEB",
+          "url": "http://seclists.org/fulldisclosure/2023/Oct/12"
+        },
+        {
+          "type": "WEB",
+          "url": "http://seclists.org/fulldisclosure/2023/Oct/16"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2023/09/28/5"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2023/09/28/6"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2023/09/29/1"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2023/09/29/11"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2023/09/29/12"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2023/09/29/14"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2023/09/29/2"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2023/09/29/7"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2023/09/29/9"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2023/09/30/1"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2023/09/30/2"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2023/09/30/3"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2023/09/30/4"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2023/09/30/5"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2023/10/01/1"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2023/10/01/2"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2023/10/01/5"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2023/10/02/6"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2023/10/03/11"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-qqvq-6xgj-jw8g",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "22.3.25"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "1.6.15"
+      ]
+    },
+    {
+      "id": "GHSA-r5p7-gp4j-qhrx",
+      "primary_id": "CVE-2026-34777",
+      "aliases": [
+        "CVE-2026-34777"
+      ],
+      "cve_ids": [
+        "CVE-2026-34777"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "Electron: Incorrect origin passed to permission request handler for iframe requests",
+      "details": "### Impact\nWhen an iframe requests `fullscreen`, `pointerLock`, `keyboardLock`, `openExternal`, or `media` permissions, the origin passed to `session.setPermissionRequestHandler()` was the top-level page's origin rather than the requesting iframe's origin. Apps that grant permissions based on the origin parameter or `webContents.getURL()` may inadvertently grant permissions to embedded third-party content.\n\nThe correct requesting URL remains available via `details.requestingUrl`. Apps that already check `details.requestingUrl` are not affected.\n\n### Workarounds\nIn your `setPermissionRequestHandler`, inspect `details.requestingUrl` rather than the origin parameter or `webContents.getURL()` when deciding whether to grant `fullscreen`, `pointerLock`, `keyboardLock`, `openExternal`, or `media` permissions.\n\n### Fixed Versions\n* `41.0.0`\n* `40.8.1`\n* `39.8.1`\n* `38.8.6`\n\n### For more information\nIf there are any questions or comments about this advisory, please email [security@electronjs.org](mailto:security@electronjs.org)",
+      "published": "2026-04-03T02:44:26Z",
+      "modified": "2026-04-06T23:18:50.776701Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/security/advisories/GHSA-r5p7-gp4j-qhrx"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-34777"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/electron/electron"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-r5p7-gp4j-qhrx",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "38.8.6"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "1.6.15"
+      ]
+    },
+    {
+      "id": "GHSA-vmqv-hx8q-j7mg",
+      "primary_id": "CVE-2025-55305",
+      "aliases": [
+        "CVE-2025-55305"
+      ],
+      "cve_ids": [
+        "CVE-2025-55305"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "Electron has ASAR Integrity Bypass via resource modification",
+      "details": "### Impact\nThis only impacts apps that have the `embeddedAsarIntegrityValidation` and `onlyLoadAppFromAsar` [fuses](https://www.electronjs.org/docs/latest/tutorial/fuses) enabled.  Apps without these fuses enabled are not impacted.\n\nSpecifically this issue can only be exploited if your app is launched from a filesystem the attacker has write access too.  i.e. the ability to edit files inside the `resources` folder in your app installation on Windows which these fuses are supposed to protect against.\n\n### Workarounds\nThere are no app side workarounds, you must update to a patched version of Electron.\n\n### Fixed Versions\n* `38.0.0-beta.6`\n* `37.3.1`\n* `36.8.1`\n* `35.7.5`\n\n### For more information\nIf you have any questions or comments about this advisory, email us at [security@electronjs.org](mailto:security@electronjs.org)",
+      "published": "2025-09-03T21:27:37Z",
+      "modified": "2025-09-05T16:10:10Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:R/S:U/C:L/I:H/A:L"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:R/S:U/C:L/I:H/A:L"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/security/advisories/GHSA-vmqv-hx8q-j7mg"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-55305"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/pull/48101"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/pull/48102"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/pull/48103"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/pull/48104"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/commit/23a02934510fcf951428e14573d9b2d2a3c4f28b"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/commit/2e5a0b7220ebf955c6785cc5adb2e2b1cf77dac1"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/commit/3f92511cdecc39f46b0e86cce40a0c691e301c9d"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/commit/fdf29ce83870109d403f5c23ae529dbd0e8f4fee"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/electron/electron"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-vmqv-hx8q-j7mg",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "35.7.5"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "1.6.15"
+      ]
+    },
+    {
+      "id": "GHSA-w222-53c6-c86p",
+      "primary_id": "CVE-2018-1000006",
+      "aliases": [
+        "CVE-2018-1000006"
+      ],
+      "cve_ids": [
+        "CVE-2018-1000006"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "Remote Code Execution in electron",
+      "details": "Affected versions of `electron` may be susceptible to a remote code execution flaw when certain conditions are met:\n1. The electron application is running on Windows.\n2. The electron application registers as the default handler for a protocol, such as `nodeapp://`.\n\nThis vulnerability is caused by a failure to sanitize additional arguments to chromium in the command line handler for Electron.\n\nMacOS and Linux are not vulnerable.\n\n\n## Recommendation\n\nUpdate electron to a version that is not vulnerable. If updating is not possible, the electron team has provided the following guidance:\n\n\nIf for some reason you are unable to upgrade your Electron version, you can append `--` as the last argument when calling `app.setAsDefaultProtocolClient`, which prevents Chromium from parsing further options. The double dash `--` signifies the end of command options, after which only positional parameters are accepted.\n```\napp.setAsDefaultProtocolClient(protocol, process.execPath, [\n  '--your-switches-here',\n  '--'\n])\n```",
+      "published": "2018-01-23T03:57:44Z",
+      "modified": "2023-11-08T03:59:33.174686Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2018-1000006"
+        },
+        {
+          "type": "WEB",
+          "url": "https://electronjs.org/blog/protocol-handler-fix"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/advisories/GHSA-w222-53c6-c86p"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/releases/tag/v1.8.2-beta.4"
+        },
+        {
+          "type": "WEB",
+          "url": "https://medium.com/@Wflki/exploiting-electron-rce-in-exodus-wallet-d9e6db13c374"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.exploit-db.com/exploits/43899"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.exploit-db.com/exploits/44357"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.npmjs.com/advisories/563"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.securityfocus.com/bid/102796"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-w222-53c6-c86p",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "1.7.0"
+            },
+            {
+              "fixed": "1.7.11"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "1.6.15"
+      ]
+    },
+    {
+      "id": "GHSA-xj5x-m3f3-5x3h",
+      "primary_id": "CVE-2026-34778",
+      "aliases": [
+        "CVE-2026-34778"
+      ],
+      "cve_ids": [
+        "CVE-2026-34778"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "Electron: Service worker can spoof executeJavaScript IPC replies",
+      "details": "### Impact\nA service worker running in a session could spoof reply messages on the internal IPC channel used by `webContents.executeJavaScript()` and related methods, causing the main-process promise to resolve with attacker-controlled data.\n\nApps are only affected if they have service workers registered and use the result of `webContents.executeJavaScript()` (or `webFrameMain.executeJavaScript()`) in security-sensitive decisions.\n\n### Workarounds\nDo not trust the return value of `webContents.executeJavaScript()` for security decisions. Use dedicated, validated IPC channels for security-relevant communication with renderers.\n\n### Fixed Versions\n* `41.0.0`\n* `40.8.1`\n* `39.8.1`\n* `38.8.6`\n\n### For more information\nIf there are any questions or comments about this advisory, please email [security@electronjs.org](mailto:security@electronjs.org)",
+      "published": "2026-04-03T02:44:59Z",
+      "modified": "2026-04-06T23:20:03.666450Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:L/I:H/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:L/I:H/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/security/advisories/GHSA-xj5x-m3f3-5x3h"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-34778"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/electron/electron"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-xj5x-m3f3-5x3h",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "38.8.6"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "1.6.15"
+      ]
+    },
+    {
+      "id": "GHSA-xwr5-m59h-vwqr",
+      "primary_id": "CVE-2026-34775",
+      "aliases": [
+        "CVE-2026-34775"
+      ],
+      "cve_ids": [
+        "CVE-2026-34775"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "Electron: nodeIntegrationInWorker not correctly scoped in shared renderer processes",
+      "details": "### Impact\nThe `nodeIntegrationInWorker` webPreference was not correctly scoped in all configurations. In certain process-sharing scenarios, workers spawned in frames configured with `nodeIntegrationInWorker: false` could still receive Node.js integration.\n\nApps are only affected if they enable `nodeIntegrationInWorker`. Apps that do not use `nodeIntegrationInWorker` are not affected.\n\n### Workarounds\nAvoid enabling `nodeIntegrationInWorker` in apps that also open child windows or embed content with differing webPreferences.\n\n### Fixed Versions\n* `41.0.0`\n* `40.8.4`\n* `39.8.4`\n* `38.8.6`\n\n### For more information\nIf there are any questions or comments about this advisory, please email [security@electronjs.org](mailto:security@electronjs.org)",
+      "published": "2026-04-03T02:43:05Z",
+      "modified": "2026-04-06T23:20:06.134110Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:H/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:H/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/security/advisories/GHSA-xwr5-m59h-vwqr"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-34775"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/electron/electron"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-xwr5-m59h-vwqr",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "38.8.6"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "1.6.15"
+      ]
+    },
+    {
+      "id": "GHSA-2q4g-w47c-4674",
+      "primary_id": "CVE-2020-15174",
+      "aliases": [
+        "CVE-2020-15174"
+      ],
+      "cve_ids": [
+        "CVE-2020-15174"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "Unpreventable top-level navigation",
+      "details": "### Impact\nThe `will-navigate` event that apps use to prevent navigations to unexpected destinations [as per our security recommendations](https://www.electronjs.org/docs/tutorial/security) can be bypassed when a sub-frame performs a top-frame navigation across sites.\n\n### Patches\n\n* `11.0.0-beta.1`\n* `10.0.1`\n* `9.3.0`\n* `8.5.1`\n\n### Workarounds\nSandbox all your iframes using the [`sandbox` attribute](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe#attr-sandbox).  This will prevent them creating top-frame navigations and is good practice anyway.\n\n### For more information\nIf you have any questions or comments about this advisory:\n\n* Email us at security@electronjs.org",
+      "published": "2020-10-06T14:24:04Z",
+      "modified": "2026-03-13T22:16:07.714555Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:C/C:N/I:H/A:L"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:C/C:N/I:H/A:L"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/security/advisories/GHSA-2q4g-w47c-4674"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2020-15174"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/commit/18613925610ba319da7f497b6deed85ad712c59b"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/electron/electron"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-2q4g-w47c-4674",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "8.0.0-beta.0"
+            },
+            {
+              "fixed": "8.5.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": []
+    },
+    {
+      "id": "GHSA-4w88-rjj3-x7wp",
+      "primary_id": "CVE-2017-16151",
+      "aliases": [
+        "CVE-2017-16151"
+      ],
+      "cve_ids": [
+        "CVE-2017-16151"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "Chromium Remote Code Execution in electron",
+      "details": "Affected versions of `ElectronJS` are susceptible to a remote code execution vulnerability that occurs when an affected application access remote content, even if the [sandbox option](https://electron.atom.io/docs/api/sandbox-option) is enabled.\n\n\n\n## Recommendation\n\nUpdate to electron version 1.7.8 or later.",
+      "published": "2018-07-24T20:04:23Z",
+      "modified": "2023-11-08T03:59:07.894384Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2017-16151"
+        },
+        {
+          "type": "WEB",
+          "url": "https://electron.atom.io/blog/2017/09/27/chromium-rce-vulnerability-fix"
+        },
+        {
+          "type": "WEB",
+          "url": "https://electronjs.org/blog/chromium-rce-vulnerability"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/advisories/GHSA-4w88-rjj3-x7wp"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.npmjs.com/advisories/539"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-4w88-rjj3-x7wp",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.6.14"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": []
+    },
+    {
+      "id": "GHSA-56pc-6jqp-xqj8",
+      "primary_id": "CVE-2020-15215",
+      "aliases": [
+        "CVE-2020-15215"
+      ],
+      "cve_ids": [
+        "CVE-2020-15215"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "Context isolation bypass in Electron",
+      "details": "### Impact\nApps using both `contextIsolation` and `sandbox: true` are affected.\nApps using both `contextIsolation` and `nativeWindowOpen: true` are affected.\n\nThis is a context isolation bypass, meaning that code running in the main world context in the renderer can reach into the isolated Electron context and perform privileged actions.\n\n### Workarounds\nThere are no app-side workarounds, you must update your Electron version to be protected.\n\n### Fixed Versions\n* `11.0.0-beta.6`\n* `10.1.2`\n* `9.3.1`\n* `8.5.2`\n\n### For more information\nIf you have any questions or comments about this advisory:\n* Email us at [security@electronjs.org](mailto:security@electronjs.org)",
+      "published": "2020-10-06T17:46:40Z",
+      "modified": "2026-03-13T22:14:28.320878Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:L/A:L"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:L/A:L"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/security/advisories/GHSA-56pc-6jqp-xqj8"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2020-15215"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-56pc-6jqp-xqj8",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "8.0.0-beta.0"
+            },
+            {
+              "fixed": "8.5.2"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": []
+    },
+    {
+      "id": "GHSA-6h98-cf9g-vmg2",
+      "primary_id": "CVE-2017-1000424",
+      "aliases": [
+        "CVE-2017-1000424"
+      ],
+      "cve_ids": [
+        "CVE-2017-1000424"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "Electron vulnerable to URL spoofing via PDFium",
+      "details": "Electron version 1.7.0 - 1.7.5 is vulnerable to a URL Spoofing problem when opening PDFs in PDFium resulting loading arbitrary PDFs that a hacker can control.",
+      "published": "2022-05-13T01:41:15Z",
+      "modified": "2023-11-08T03:58:46.245363Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:L/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:L/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2017-1000424"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/pull/10008"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/pull/10008/files"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/electron/electron"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/releases/tag/v1.7.6"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-6h98-cf9g-vmg2",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "1.7.0"
+            },
+            {
+              "fixed": "1.7.6"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": []
+    },
+    {
+      "id": "GHSA-7fv9-m79r-j9x8",
+      "primary_id": "CVE-2017-12581",
+      "aliases": [
+        "CVE-2017-12581"
+      ],
+      "cve_ids": [
+        "CVE-2017-12581"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "Electron vulnerable to remote command execution",
+      "details": "Electron before 1.6.8 allows remote command execution because of a `nodeIntegration` bypass vulnerability. This also affects all applications that bundle Electron code equivalent to 1.6.8 or earlier. Bypassing the Same Origin Policy (SOP) is a precondition; however, recent Electron versions do not have strict SOP enforcement. Combining an SOP bypass with a privileged URL internally used by Electron, it was possible to execute native Node.js primitives in order to run OS commands on the user's host. Specifically, a `chrome-devtools://devtools/bundled/inspector.html` window could be used to eval a Node.js `child_process.execFile` API call.",
+      "published": "2022-05-17T02:14:12Z",
+      "modified": "2023-11-08T03:58:52.151779Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.0/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.0/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2017-12581"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/commit/05b6d91bf4c1e0ee65eeef70cd5d1bd1df125644"
+        },
+        {
+          "type": "WEB",
+          "url": "https://blog.doyensec.com/2017/08/03/electron-framework-security.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://doyensec.com/resources/us-17-Carettoni-Electronegativity-A-Study-Of-Electron-Security.pdf"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/electron/electron"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-7fv9-m79r-j9x8",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.6.8"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": []
+    },
+    {
+      "id": "GHSA-8x5q-pvf5-64mp",
+      "primary_id": "CVE-2026-34764",
+      "aliases": [
+        "CVE-2026-34764"
+      ],
+      "cve_ids": [
+        "CVE-2026-34764"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "Electron: Use-after-free in offscreen shared texture release() callback",
+      "details": "### Impact\nApps that use offscreen rendering with GPU shared textures may be vulnerable to a use-after-free. Under certain conditions, the `release()` callback provided on a `paint` event texture can outlive its backing native state, and invoking it after that point dereferences freed memory in the main process, which may lead to a crash or memory corruption.\n\nApps are only affected if they use offscreen rendering with `webPreferences.offscreen: { useSharedTexture: true }`. Apps that do not enable shared-texture offscreen rendering are not affected.\n\n### Workarounds\nEnsure `texture.release()` is called promptly after the texture has been consumed, before the texture object becomes unreachable.\n\n### Fixed Versions\n* `42.0.0-alpha.5`\n* `41.1.0`\n* `40.8.5`\n* `39.8.5`\n\n### For more information\nIf there are any questions or comments about this advisory, send an email to [security@electronjs.org](mailto:security@electronjs.org)",
+      "published": "2026-04-03T21:52:33Z",
+      "modified": "2026-04-06T23:46:21.169796Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:N/I:N/A:L"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:N/I:N/A:L"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/security/advisories/GHSA-8x5q-pvf5-64mp"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-34764"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/electron/electron"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-8x5q-pvf5-64mp",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "33.0.0-alpha.1"
+            },
+            {
+              "fixed": "39.8.5"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": []
+    },
+    {
+      "id": "GHSA-8xwg-wv7v-4vqp",
+      "primary_id": "CVE-2018-1000136",
+      "aliases": [
+        "CVE-2018-1000136"
+      ],
+      "cve_ids": [
+        "CVE-2018-1000136"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "Electron Vulnerable to Code Execution by Re-Enabling Node.js Integration",
+      "details": "A vulnerability has been discovered which allows Node.js integration to be re-enabled in some Electron applications that disable it.\n\nFor the application to be impacted by this vulnerability it must meet all of these conditions\n\n- Runs on Electron 1.7, 1.8, or a 2.0.0-beta\n- Allows execution of arbitrary remote code\n- Disables Node.js integration\n- Does not explicitly declare webviewTag: false in its webPreferences\n- Does not enable the nativeWindowOption option\n- Does not intercept new-window events and manually override event.newGuest without using the supplied options tag\n\n\n## Recommendation\n\nUpdate to `electron` version 1.7.13, 1.8.4, or 2.0.0-beta.5 or later.\n\nIf you are unable to update your Electron version can mitigate the vulnerability with the following code.\n\n```js\napp.on('web-contents-created', (event, win) => {\n  win.on('new-window', (event, newURL, frameName, disposition,\n                        options, additionalFeatures) => {\n    if (!options.webPreferences) options.webPreferences = {};\n    options.webPreferences.nodeIntegration = false;\n    options.webPreferences.nodeIntegrationInWorker = false;\n    options.webPreferences.webviewTag = false;\n    delete options.webPreferences.preload;\n  })\n})\n\n// and *IF* you don't use WebViews at all,\n// you might also want\napp.on('web-contents-created', (event, win) => {\n  win.on('will-attach-webview', (event, webPreferences, params) => {\n    event.preventDefault();\n  })\n})\n```",
+      "published": "2018-03-26T16:41:17Z",
+      "modified": "2023-11-08T03:59:35.638763Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.0/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.0/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2018-1000136"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/pull/12271"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/pull/12292"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/pull/12294"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/commit/1a48ee28276e6588dbf4e70e58d78e7bfdc57043"
+        },
+        {
+          "type": "WEB",
+          "url": "https://electronjs.org/blog/webview-fix"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/electron/electron"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.electronjs.org/blog/webview-fix"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.npmjs.com/advisories/574"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.trustwave.com/Resources/SpiderLabs-Blog/CVE-2018-1000136---Electron-nodeIntegration-Bypass"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-8xwg-wv7v-4vqp",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "1.7.0"
+            },
+            {
+              "fixed": "1.7.13"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": []
+    },
+    {
+      "id": "GHSA-995f-9x5r-2rcj",
+      "primary_id": "CVE-2022-4135",
+      "aliases": [
+        "CVE-2022-4135"
+      ],
+      "cve_ids": [
+        "CVE-2022-4135"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "Heap buffer overflow in GPU",
+      "details": "Heap buffer overflow in GPU in Google Chrome prior to 107.0.5304.121 allowed a remote attacker who had compromised the renderer process to potentially perform a sandbox escape via a crafted HTML page. (Chromium security severity: High)",
+      "published": "2022-11-25T03:30:19Z",
+      "modified": "2023-11-08T04:10:29.740914Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:H/I:H/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:H/I:H/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2022-4135"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/pull/36444"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/pull/36447"
+        },
+        {
+          "type": "WEB",
+          "url": "https://chromereleases.googleblog.com/2022/11/stable-channel-update-for-desktop_24.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://crbug.com/1392715"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.gentoo.org/glsa/202305-10"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-995f-9x5r-2rcj",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "19.0.0"
+            },
+            {
+              "fixed": "19.1.8"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": []
+    },
+    {
+      "id": "GHSA-gvcj-pfq2-wxj7",
+      "primary_id": "CVE-2016-1202",
+      "aliases": [
+        "CVE-2016-1202"
+      ],
+      "cve_ids": [
+        "CVE-2016-1202"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "High severity vulnerability that affects electron",
+      "details": "Untrusted search path vulnerability in Atom Electron before 0.33.5 allows local users to gain privileges via a Trojan horse Node.js module in a parent directory of a directory named on a require line.",
+      "published": "2017-10-24T18:33:35Z",
+      "modified": "2023-11-08T03:58:22.066587Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.0/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.0/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2016-1202"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/pull/2976"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/commit/9a2e2b365d061ec10cd861391fd5b1344af7194d"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/advisories/GHSA-gvcj-pfq2-wxj7"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/electron/electron"
+        },
+        {
+          "type": "WEB",
+          "url": "http://jvn.jp/en/jp/JVN00324715/index.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://jvndb.jvn.jp/jvndb/JVNDB-2016-000054"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-gvcj-pfq2-wxj7",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "0.33.5"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": []
+    },
+    {
+      "id": "GHSA-gxh7-wv9q-fwfr",
+      "primary_id": "CVE-2023-23623",
+      "aliases": [
+        "CVE-2023-23623"
+      ],
+      "cve_ids": [
+        "CVE-2023-23623"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "Electron's Content-Secrity-Policy disabling eval not applied consistently in renderers with sandbox disabled",
+      "details": "### Impact\nA Content-Security-Policy that disables eval, specifically setting a `script-src` directive and _not_ providing `unsafe-eval` in that directive, is not respected in renderers that have sandbox and contextIsolation disabled.  i.e. `sandbox: false` and `contextIsolation: false` in the `webPreferences` object.\n\nThis resulted in incorrectly allowing usage of methods like `eval()` and `new Function`, which can result in an expanded attack surface.\n\n### Patches\nThis issue only ever affected the 22 and 23 major versions of Electron and has been fixed in the latest versions of those release lines. Specifically, these versions contain the fixes:\n\n- 22.0.1\n- 23.0.0-alpha.2\n\nWe recommend all apps upgrade to the latest stable version of Electron, especially if they use `sandbox: false` or `contextIsolation: false`.\n\n### Workarounds\nIf upgrading isn't possible, this issue can be addressed without upgrading by enabling at least one of `sandbox: true` or `contextIsolation: true` on all renderers.\n\n```js\nconst mainWindow = new BrowserWindow({\n  webPreferences: {\n    sandbox: true,\n  }\n});\n```\n\n### For more information\nIf you have any questions or comments about this advisory, email us at [security@electronjs.org](mailto:security@electronjs.org).\n\n### Credit\nThanks to user @andreasdj for reporting this issue.",
+      "published": "2023-09-06T18:42:17Z",
+      "modified": "2023-11-08T04:11:41.612026Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/security/advisories/GHSA-gxh7-wv9q-fwfr"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2023-23623"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/pull/36667"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/pull/36668"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/commit/9e7fbc7021d8d716c43782249a552e55289c35db"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/electron/electron"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/releases/tag/v22.0.1"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-gxh7-wv9q-fwfr",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "22.0.0-beta.1"
+            },
+            {
+              "fixed": "22.0.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": []
+    },
+    {
+      "id": "GHSA-hv9c-qwqg-qj3v",
+      "primary_id": "CVE-2018-15685",
+      "aliases": [
+        "CVE-2018-15685"
+      ],
+      "cve_ids": [
+        "CVE-2018-15685"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "Electron webPreferences vulnerability can be used to perform remote code execution",
+      "details": "GitHub Electron 1.7.15, 1.8.7, 2.0.7, and 3.0.0-beta.6, in certain scenarios involving IFRAME elements and \"nativeWindowOpen: true\" or \"sandbox: true\" options, is affected by a webPreferences vulnerability that can be leveraged to perform remote code execution.\n\nMore information to determine if you are impacted can be found on the [electron blog](https://electronjs.org/blog/web-preferences-fix).\n\n\n## Recommendation\n\nUpgrade Electron to >=3.0.0-beta.7, >=2.0.8, >=1.8.8, or >=1.7.16.",
+      "published": "2018-08-23T19:12:08Z",
+      "modified": "2023-11-08T03:59:57.849311Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.0/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.0/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2018-15685"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/commit/519a02d8d4d28e8a467acb40fb26172a80c9454f"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/commit/80221e52d93a96ea704cb6748ead669c55cff504"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/commit/bab968ca776be28791e4dddfd50c86bd5fae62fa"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/commit/ef0a6d9a1c96efc4657c6dd3a6624eba969f095b"
+        },
+        {
+          "type": "WEB",
+          "url": "https://electronjs.org/blog/web-preferences-fix"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/electron/electron"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.contrastsecurity.com/security-influencers/cve-2018-15685"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.exploit-db.com/exploits/45272"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.npmjs.com/advisories/732"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-hv9c-qwqg-qj3v",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "1.7.0"
+            },
+            {
+              "fixed": "1.7.16"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": []
+    },
+    {
+      "id": "GHSA-j7hp-h8jx-5ppr",
+      "primary_id": "CVE-2023-4863",
+      "aliases": [
+        "A-299477569",
+        "ASB-A-299477569",
+        "CVE-2023-4863",
+        "CVE-2023-5129",
+        "RUSTSEC-2023-0060",
+        "RUSTSEC-2023-0061"
+      ],
+      "cve_ids": [
+        "CVE-2023-4863",
+        "CVE-2023-5129"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "libwebp: OOB write in BuildHuffmanTable",
+      "details": "Heap buffer overflow in libwebp allow a remote attacker to perform an out of bounds memory write via a crafted HTML page.",
+      "published": "2023-09-12T15:30:20Z",
+      "modified": "2026-02-04T03:35:53.856889Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2023-4863"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/qnighy/libwebp-sys2-rs/pull/21"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/python-pillow/Pillow/pull/7395"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jaredforth/webp/pull/30"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/pull/39823"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/pull/39825"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/pull/39826"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/pull/39827"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/pull/39828"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/webmproject/libwebp/commit/902bc9190331343b2017211debcec8d2ab87e17a"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/qnighy/libwebp-sys2-rs/commit/4560c473a76ec8bd8c650f19ddf9d7a44f719f8b"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jaredforth/webp/commit/9d4c56e63abecc777df71c702503c3eaabd7dcbc"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.gentoo.org/glsa/202401-10"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.gentoo.org/glsa/202309-05"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security-tracker.debian.org/tracker/CVE-2023-4863"
+        },
+        {
+          "type": "WEB",
+          "url": "https://rustsec.org/advisories/RUSTSEC-2023-0061.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://rustsec.org/advisories/RUSTSEC-2023-0060.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://pillow.readthedocs.io/en/stable/releasenotes/10.0.1.html#security"
+        },
+        {
+          "type": "WEB",
+          "url": "https://news.ycombinator.com/item?id=37478403"
+        },
+        {
+          "type": "WEB",
+          "url": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2023-4863"
+        },
+        {
+          "type": "WEB",
+          "url": "https://adamcaudill.com/2023/09/14/whose-cve-is-it-anyway"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.netapp.com/advisory/ntap-20230929-0011"
+        },
+        {
+          "type": "WEB",
+          "url": "https://sethmlarson.dev/security-developer-in-residence-weekly-report-16"
+        },
+        {
+          "type": "WEB",
+          "url": "https://stackdiary.com/critical-vulnerability-in-webp-codec-cve-2023-4863"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.bentley.com/advisories/be-2023-0001"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.bleepingcomputer.com/news/google/google-fixes-another-chrome-zero-day-bug-exploited-in-attacks"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.debian.org/security/2023/dsa-5496"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.debian.org/security/2023/dsa-5497"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.debian.org/security/2023/dsa-5498"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.mozilla.org/en-US/security/advisories/mfsa2023-40"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.vicarius.io/vsociety/posts/zero-day-webp-vulnerability-cve-2023-4863"
+        },
+        {
+          "type": "WEB",
+          "url": "https://blog.isosceles.com/the-webp-0day"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugzilla.suse.com/show_bug.cgi?id=1215231"
+        },
+        {
+          "type": "WEB",
+          "url": "https://chromereleases.googleblog.com/2023/09/stable-channel-update-for-desktop_11.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://crbug.com/1479274"
+        },
+        {
+          "type": "WEB",
+          "url": "https://en.bandisoft.com/honeyview/history"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/ImageMagick/ImageMagick/discussions/6664"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/dlemstra/Magick.NET/releases/tag/13.3.0"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/webmproject/libwebp"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/webmproject/libwebp/releases/tag/v1.3.2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2023/09/msg00015.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2023/09/msg00016.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2023/09/msg00017.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/6T655QF7CQ3DYAMPFV7IECQYGDEUIVVT"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/FYYKLG6CRGEDTNRBSU26EEWAO6D6U645"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/KUQ7CTX3W372X3UY56VVNAHCH6H2F4X3"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/OZDGWWMJREPAGKWCJKSCM4WYLANSKIFX"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/PYZV7TMKF4QHZ54SFJX54BDN52VHGGCX"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/WHOLML7N2G5KCAZXFWC5IDFFHSQS5SDB"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/WTRUIS3564P7ZLM2S2IH4Y4KZ327LI4I"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2023/09/21/4"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2023/09/22/1"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2023/09/22/3"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2023/09/22/4"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2023/09/22/5"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2023/09/22/6"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2023/09/22/7"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2023/09/22/8"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2023/09/26/1"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2023/09/26/7"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2023/09/28/1"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2023/09/28/2"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2023/09/28/4"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-j7hp-h8jx-5ppr",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "22.0.0"
+            },
+            {
+              "fixed": "22.3.24"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": []
+    },
+    {
+      "id": "GHSA-jfqg-hf23-qpw2",
+      "primary_id": "CVE-2026-34780",
+      "aliases": [
+        "CVE-2026-34780"
+      ],
+      "cve_ids": [
+        "CVE-2026-34780"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "Electron: Context Isolation bypass via contextBridge VideoFrame transfer",
+      "details": "### Impact\nApps that pass `VideoFrame` objects (from the WebCodecs API) across the `contextBridge` are vulnerable to a context isolation bypass. An attacker who can execute JavaScript in the main world (for example, via XSS) can use a bridged `VideoFrame` to gain access to the isolated world, including any Node.js APIs exposed to the preload script.\n\nApps are only affected if a preload script returns, resolves, or passes a `VideoFrame` object to the main world via `contextBridge.exposeInMainWorld()`. Apps that do not bridge `VideoFrame` objects are not affected.\n\n### Workarounds\nDo not pass `VideoFrame` objects across `contextBridge`. If an app needs to transfer video frame data, serialize it to an `ArrayBuffer` or `ImageBitmap` before bridging.\n\n### Fixed Versions\n* `41.0.0-beta.8`\n* `40.7.0`\n* `39.8.0`\n\n### For more information\nIf there are any questions or comments about this advisory, please email [security@electronjs.org](mailto:security@electronjs.org)",
+      "published": "2026-04-03T02:46:56Z",
+      "modified": "2026-04-06T23:19:49.063150Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:C/C:H/I:H/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:C/C:H/I:H/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/security/advisories/GHSA-jfqg-hf23-qpw2"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-34780"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/electron/electron"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-jfqg-hf23-qpw2",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "39.0.0-alpha.1"
+            },
+            {
+              "fixed": "39.8.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": []
+    },
+    {
+      "id": "GHSA-xw5q-g62x-2qjc",
+      "primary_id": "CVE-2024-46992",
+      "aliases": [
+        "CVE-2024-46992"
+      ],
+      "cve_ids": [
+        "CVE-2024-46992"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "electron",
+      "summary": "electron ASAR Integrity bypass by just modifying the content",
+      "details": "electron's ASAR Integrity can be bypass by modifying the content.\n\n### Impact\nThis only impacts apps that have the `embeddedAsarIntegrityValidation` and `onlyLoadAppFromAsar` [fuses](https://www.electronjs.org/docs/latest/tutorial/fuses) enabled. Apps without these fuses enabled are not impacted. This issue is specific to Windows, apps using these fuses on macOS are unimpacted.\n\nSpecifically this issue can only be exploited if your app is launched from a filesystem the attacker has write access too. i.e. the ability to edit files inside the .app bundle on macOS which these fuses are supposed to protect against.\n\n### Workarounds\nThere are no app side workarounds, you must update to a patched version of Electron.\n\n### Fixed Versions\n* `30.0.5`\n* `31.0.0-beta.1`\n\n### For more information\nIf you have any questions or comments about this advisory, email us at [security@electronjs.org](mailto:security@electronjs.org)",
+      "published": "2025-06-30T17:54:11Z",
+      "modified": "2025-07-01T13:13:18Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/electron/electron/security/advisories/GHSA-xw5q-g62x-2qjc"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-46992"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/electron/electron"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.electronjs.org/docs/latest/tutorial/fuses"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-xw5q-g62x-2qjc",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "30.0.0-alpha.1"
+            },
+            {
+              "fixed": "30.0.5"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": []
+    }
+  ]
+}

@@ -1,0 +1,192 @@
+{
+  "schema_version": 1,
+  "package": "apache-airflow-providers-cncf-kubernetes",
+  "purls": [
+    "pkg:pypi/apache-airflow-providers-cncf-kubernetes"
+  ],
+  "generated_at": "2026-05-18T06:01:40+00:00",
+  "conda_versions_total": 92,
+  "advisories": [
+    {
+      "id": "GHSA-2rx4-9f5h-9gjf",
+      "primary_id": "CVE-2023-33234",
+      "aliases": [
+        "CVE-2023-33234"
+      ],
+      "cve_ids": [
+        "CVE-2023-33234"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "apache-airflow-providers-cncf-kubernetes",
+      "summary": "Apache Airflow CNCF Kubernetes Provider: KubernetesPodOperator RCE via connection configuration",
+      "details": "Arbitrary code execution in Apache Airflow CNCF Kubernetes provider version 5.0.0 allows user to change xcom sidecar image and resources via Airflow connection.\n\nIn order to exploit this weakness, a user would already need elevated permissions (Op or Admin) to change the connection object in this manner.\u00a0Operators should upgrade to provider version 7.0.0 which has removed the vulnerability.",
+      "published": "2023-07-06T21:15:06Z",
+      "modified": "2024-02-16T08:15:18.459761Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2023-33234"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/apache/airflow"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/n1vpgl6h2qsdm52o9m2tx1oo86tl4gnq"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-2rx4-9f5h-9gjf",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "5.0.0"
+            },
+            {
+              "fixed": "7.0.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "5.0.0",
+        "5.1.0",
+        "5.1.0rc1",
+        "5.1.0rc2",
+        "5.1.1",
+        "5.1.1rc1",
+        "5.2.0",
+        "5.2.0rc1",
+        "5.2.1",
+        "5.2.1rc1",
+        "5.2.2",
+        "5.2.2rc1",
+        "5.3.0",
+        "5.3.0rc1",
+        "6.0.0",
+        "6.0.0rc1",
+        "6.1.0",
+        "6.1.0rc1",
+        "6.2.0rc1",
+        "7.0.0rc2"
+      ],
+      "affected_conda_versions": [
+        "5.0.0",
+        "5.1.0",
+        "5.1.1",
+        "5.2.0",
+        "5.2.1",
+        "5.2.2",
+        "5.3.0",
+        "6.0.0",
+        "6.1.0"
+      ]
+    },
+    {
+      "id": "GHSA-mg2x-mggj-6955",
+      "primary_id": "CVE-2023-51702",
+      "aliases": [
+        "BIT-airflow-2023-51702",
+        "CVE-2023-51702"
+      ],
+      "cve_ids": [
+        "CVE-2023-51702"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "apache-airflow-providers-cncf-kubernetes",
+      "summary": "Apache Airflow CNCF Kubernetes provider, Apache Airflow: Kubernetes configuration file saved without encryption in the Metadata and logged as plain text in the Triggerer service",
+      "details": "Since version 5.2.0, when using deferrable mode with the path of a Kubernetes configuration file for authentication, the Airflow worker serializes this configuration file as a dictionary and sends it to the triggerer by storing it in metadata without any encryption. Additionally, if used with an Airflow version between 2.3.0 and 2.6.0, the configuration dictionary will be logged as plain text in the triggerer service without masking. This allows anyone with access to the metadata or triggerer log to obtain the configuration file and use it to access the Kubernetes cluster.\n\nThis behavior was changed in version 7.0.0, which stopped serializing the file contents and started providing the file path instead to read the contents into the trigger. Users are recommended to upgrade to version 7.0.0, which fixes this issue.",
+      "published": "2024-01-24T15:30:30Z",
+      "modified": "2024-02-16T08:23:48.327726Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2023-51702"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/apache/airflow/pull/29498"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/apache/airflow/pull/30110"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/apache/airflow/pull/36492"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/apache/airflow"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/89x3q6lz5pykrkr1fkr04k4rfn9pvnv9"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2024/01/24/3"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-mg2x-mggj-6955",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "5.2.0"
+            },
+            {
+              "fixed": "7.0.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "5.2.0",
+        "5.2.1",
+        "5.2.1rc1",
+        "5.2.2",
+        "5.2.2rc1",
+        "5.3.0",
+        "5.3.0rc1",
+        "6.0.0",
+        "6.0.0rc1",
+        "6.1.0",
+        "6.1.0rc1",
+        "6.2.0rc1",
+        "7.0.0rc2"
+      ],
+      "affected_conda_versions": [
+        "5.2.0",
+        "5.2.1",
+        "5.2.2",
+        "5.3.0",
+        "6.0.0",
+        "6.1.0"
+      ]
+    }
+  ]
+}

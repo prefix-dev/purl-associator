@@ -1,0 +1,325 @@
+{
+  "schema_version": 1,
+  "package": "scapy",
+  "purls": [
+    "pkg:pypi/scapy"
+  ],
+  "generated_at": "2026-05-18T06:01:40+00:00",
+  "conda_versions_total": 8,
+  "advisories": [
+    {
+      "id": "GHSA-cq46-m9x9-j8w2",
+      "primary_id": "GHSA-cq46-m9x9-j8w2",
+      "aliases": [],
+      "cve_ids": [],
+      "ecosystem": "PyPI",
+      "upstream_name": "scapy",
+      "summary": "Scapy Session Loading Vulnerable to Arbitrary Code Execution via Untrusted Pickle Deserialization",
+      "details": "### Summary\n\nAn unsafe deserialization vulnerability in Scapy <v2.7.0 allows attackers to execute arbitrary code **when a malicious session file is locally loaded via the `-s` option**. This requires convincing a user to manually load a malicious session file.\n\n---\n\n### Details\n\nScapy\u2019s interactive shell supports session loading using gzip-compressed pickle files:\n\n```bash\n./run_scapy -s <session_file.pkl.gz>\n```\n\nInternally, this triggers:\n\n```python\n# main.py\nSESSION = pickle.load(gzip.open(session_name, \"rb\"))\n```\n\nSince no validation or restriction is performed on the deserialized object, **any code embedded via `__reduce__()` will be executed immediately**. This makes it trivial for an attacker to drop a malicious `.pkl.gz` in a shared folder and have it executed by unsuspecting users.\n\nThe vulnerability exists in the `load_session` function, which deserializes data using `pickle.load()` on `.pkl.gz` files provided via the `-s` CLI flag or programmatically through `conf.session`.\n\n**Affected lines in source code**:\nhttps://github.com/secdev/scapy/blob/master/scapy/main.py#L569-L572\n\n```python\ntry:\n    s = pickle.load(gzip.open(fname, \"rb\"))\nexcept IOError:\n    try:\n        s = pickle.load(open(fname, \"rb\"))\n```\n\n### Impact\n\nThis is a classic deserialization vulnerability which leads to Code Execution (CE) when untrusted data is deserialized.\n\nAny user who can trick another user into loading a crafted `.pkl.gz` session file (e.g. via `-s` option) can execute arbitrary Python code.\n\n- **Vulnerability type:** Insecure deserialization (Python `pickle`)\n- **CWE**: [CWE-502: Deserialization of Untrusted Data](https://cwe.mitre.org/data/definitions/502.html)\n- **CVSS v4.0 Vector**: `CVSS:4.0/AV:L/AC:L/AT:P/PR:L/UI:A/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N`\n- **CVSS Score**: 5.4 (Medium)\n- **Impact:** Arbitrary Code Execution\n- **Attack vector:** Local or supply chain (malicious `.pkl.gz`)\n- **Affected users:** Any user who loads session files (even interactively)\n- **Affected version:** **Scapy v2.6.1**\n\n---\n\n### Mitigations\n\n- Do not use 'sessions' (the -s option when launching Scapy).\n- Use the Scapy 2.7.0+ where the session mechanism has been removed.",
+      "published": "2025-10-22T16:45:49Z",
+      "modified": "2025-10-23T20:17:37.620579Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:L/AC:L/AT:P/PR:L/UI:A/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:L/AC:L/AT:P/PR:L/UI:A/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/secdev/scapy/security/advisories/GHSA-cq46-m9x9-j8w2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/secdev/scapy/commit/13621d1145b3435e9d03caf20997107a84435c0b"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/secdev/scapy"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-cq46-m9x9-j8w2",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "last_affected": "2.6.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "2.2.0-dev",
+        "2.3.1",
+        "2.3.2",
+        "2.3.3",
+        "2.4.0",
+        "2.4.0rc3",
+        "2.4.0rc4",
+        "2.4.0rc5",
+        "2.4.1",
+        "2.4.2",
+        "2.4.3",
+        "2.4.3rc1",
+        "2.4.3rc2",
+        "2.4.3rc3",
+        "2.4.3rc4",
+        "2.4.4",
+        "2.4.4rc1",
+        "2.4.4rc2",
+        "2.4.5",
+        "2.4.5rc1",
+        "2.4rc2",
+        "2.5.0",
+        "2.5.0rc1",
+        "2.5.0rc2",
+        "2.5.0rc3",
+        "2.6.0",
+        "2.6.0rc1",
+        "2.6.0rc2",
+        "2.6.1"
+      ],
+      "affected_conda_versions": [
+        "2.4.3rc2",
+        "2.4.3",
+        "2.4.4",
+        "2.4.5",
+        "2.5.0",
+        "2.6.0",
+        "2.6.1"
+      ]
+    },
+    {
+      "id": "GHSA-mpf2-q34c-fc6j",
+      "primary_id": "CVE-2019-1010142",
+      "aliases": [
+        "CVE-2019-1010142",
+        "PYSEC-2019-120"
+      ],
+      "cve_ids": [
+        "CVE-2019-1010142"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "scapy",
+      "summary": "Infinite Loop in scapy",
+      "details": "scapy is affected by a Denial of Service vulnerability resulting in an infinite loop and resource consumption rendering the program unresponsive. The component is: `_RADIUSAttrPacketListField.getfield(self..)`. The attack vector is over the network or in a pcap. both work.",
+      "published": "2019-07-22T14:53:58Z",
+      "modified": "2024-10-22T17:15:41.958674Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2019-1010142"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/secdev/scapy/pull/1409"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/secdev/scapy/pull/1409/files#diff-441eff981e466959968111fc6314fe93L1058"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/scapy/PYSEC-2019-120.yaml"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/secdev/scapy"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/42NRPMC3NS2QVFNIXYP6WV2T3LMLLY7E"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/T46XW4S5BCA3VV3JT3C5Q6LBEXSIACLN"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.imperva.com/blog/scapy-sploit-python-network-tool-is-vulnerable-to-denial-of-service-dos-attack-cve-pending"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-mpf2-q34c-fc6j",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "2.4-rc1"
+            },
+            {
+              "fixed": "2.4.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "2.4.0",
+        "2.4.0rc3",
+        "2.4.0rc4",
+        "2.4.0rc5",
+        "2.4rc2"
+      ],
+      "affected_conda_versions": []
+    },
+    {
+      "id": "PYSEC-2019-120",
+      "primary_id": "CVE-2019-1010142",
+      "aliases": [
+        "CVE-2019-1010142",
+        "GHSA-mpf2-q34c-fc6j"
+      ],
+      "cve_ids": [
+        "CVE-2019-1010142"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "scapy",
+      "summary": null,
+      "details": "scapy 2.4.0 is affected by: Denial of Service. The impact is: infinite loop, resource consumption and program unresponsive. The component is: _RADIUSAttrPacketListField.getfield(self..). The attack vector is: over the network or in a pcap. both work.",
+      "published": "2019-07-19T16:15:00Z",
+      "modified": "2023-11-08T04:00:40.784299Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/secdev/scapy/pull/1409/files#diff-441eff981e466959968111fc6314fe93L1058"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/secdev/scapy/pull/1409"
+        },
+        {
+          "type": "ARTICLE",
+          "url": "https://www.imperva.com/blog/scapy-sploit-python-network-tool-is-vulnerable-to-denial-of-service-dos-attack-cve-pending/"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.securityfocus.com/bid/106674"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/T46XW4S5BCA3VV3JT3C5Q6LBEXSIACLN/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/42NRPMC3NS2QVFNIXYP6WV2T3LMLLY7E/"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/advisories/GHSA-mpf2-q34c-fc6j"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2019-120",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.4.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "2.2.0-dev",
+        "2.3.1",
+        "2.3.2",
+        "2.3.3",
+        "2.4rc2",
+        "2.4.0rc3",
+        "2.4.0rc4",
+        "2.4.0rc5",
+        "2.4.0"
+      ],
+      "affected_conda_versions": []
+    },
+    {
+      "id": "PYSEC-2019-50",
+      "primary_id": "PYSEC-2019-50",
+      "aliases": [],
+      "cve_ids": [],
+      "ecosystem": "PyPI",
+      "upstream_name": "scapy",
+      "summary": null,
+      "details": "scapy 2.4.0 is affected by: Denial of Service. The impact is: infinite loop, resource consumption and program unresponsive. The component is: _RADIUSAttrPacketListField.getfield(self..). The attack vector is: over the network or in a pcap. both work.",
+      "published": "2019-07-19T16:15:00Z",
+      "modified": "2023-03-14T07:01:09.355485Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/secdev/scapy/pull/1409/files#diff-441eff981e466959968111fc6314fe93L1058"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/secdev/scapy/pull/1409"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.imperva.com/blog/scapy-sploit-python-network-tool-is-vulnerable-to-denial-of-service-dos-attack-cve-pending/"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.securityfocus.com/bid/106674"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/T46XW4S5BCA3VV3JT3C5Q6LBEXSIACLN/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/42NRPMC3NS2QVFNIXYP6WV2T3LMLLY7E/"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2019-50",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.4.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "2.2.0-dev",
+        "2.3.1",
+        "2.3.2",
+        "2.3.3",
+        "2.4rc2",
+        "2.4.0rc3",
+        "2.4.0rc4",
+        "2.4.0rc5",
+        "2.4.0"
+      ],
+      "affected_conda_versions": []
+    }
+  ]
+}

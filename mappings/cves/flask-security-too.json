@@ -1,0 +1,774 @@
+{
+  "schema_version": 1,
+  "package": "flask-security-too",
+  "purls": [
+    "pkg:pypi/flask-security-too"
+  ],
+  "generated_at": "2026-05-18T06:01:40+00:00",
+  "conda_versions_total": 27,
+  "advisories": [
+    {
+      "id": "GHSA-672h-6x89-76m5",
+      "primary_id": "CVE-2023-49438",
+      "aliases": [
+        "CVE-2023-49438",
+        "PYSEC-2023-248"
+      ],
+      "cve_ids": [
+        "CVE-2023-49438"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "flask-security-too",
+      "summary": "Open redirect vulnerability in Flask-Security-Too",
+      "details": "An open redirect vulnerability in the python package Flask-Security-Too <=5.3.2 allows attackers to redirect unsuspecting users to malicious sites via a crafted URL by abusing the ?next parameter on the /login and /register routes.\n\nFlask-Security-Too contains logic to validate that the URL specified within the next parameter is either relative or has the same network location as the requesting URL in an attempt to prevent open redirections. Previously known examples that bypassed the validation logic such as `https://example/login?next=\\\\\\\\\\\\github.com` were patched in version 4.1.0\n\nHowever, examples such as `https://example/login?next=/\\\\github.com` and `https://example/login?next=\\\\/github.com` were discovered due to how web browsers normalize slashes in URLs, which makes the package vulnerable through version <=5.3.2\n\nAdditionally, with Werkzeug >=2.1.0 the autocorrect_location_header configuration was changed to False - which means that location headers in redirects are relative by default. Thus, this issue may impact applications that were previously not impacted, if they are using Werkzeug >=2.1.0 as the WSGI layer.",
+      "published": "2023-12-27T00:30:25Z",
+      "modified": "2024-09-20T18:01:48.769927Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2023-49438"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/Flask-Middleware/flask-security/commit/8b5abc4d4db9926a3d76b34b8b03255effb5e712"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/Flask-Middleware/flask-security"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/brandon-t-elliott/CVE-2023-49438"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/flask-security-too/PYSEC-2023-248.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/6HCYH377TPUMUHELPI36PDS2ZM4VFIXM"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-672h-6x89-76m5",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "5.3.3"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "3.0.1",
+        "3.0.1rc1",
+        "3.0.1rc2",
+        "3.0.1rc3",
+        "3.0.2",
+        "3.1.0rc1",
+        "3.2.0",
+        "3.2.0rc1",
+        "3.2.0rc3",
+        "3.2.0rc4",
+        "3.3.0",
+        "3.3.0rc1",
+        "3.3.0rc2",
+        "3.3.0rc3",
+        "3.3.1",
+        "3.3.2",
+        "3.3.3",
+        "3.4.0",
+        "3.4.1",
+        "3.4.2",
+        "3.4.3",
+        "3.4.4",
+        "3.4.5",
+        "4.0.0",
+        "4.0.0rc1",
+        "4.0.0rc2",
+        "4.0.1",
+        "4.1.0",
+        "4.1.1",
+        "4.1.2",
+        "4.1.3",
+        "4.1.4",
+        "4.1.5",
+        "4.1.6",
+        "5.0.0",
+        "5.0.1",
+        "5.0.2",
+        "5.1.0",
+        "5.1.1",
+        "5.1.2",
+        "5.2.0",
+        "5.3.0",
+        "5.3.1",
+        "5.3.2"
+      ],
+      "affected_conda_versions": [
+        "3.4.3",
+        "3.4.4",
+        "3.4.5",
+        "4.0.0",
+        "4.0.1",
+        "4.1.0",
+        "4.1.1",
+        "4.1.2",
+        "4.1.3",
+        "4.1.4",
+        "4.1.5",
+        "5.0.0",
+        "5.0.1",
+        "5.0.2",
+        "5.1.1",
+        "5.1.2",
+        "5.2.0",
+        "5.3.0",
+        "5.3.1",
+        "5.3.2"
+      ]
+    },
+    {
+      "id": "GHSA-6qmf-fj6m-686c",
+      "primary_id": "CVE-2021-32618",
+      "aliases": [
+        "CVE-2021-32618",
+        "PYSEC-2021-123"
+      ],
+      "cve_ids": [
+        "CVE-2021-32618"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "flask-security-too",
+      "summary": "Open Redirect in Flask-Security-Too",
+      "details": "### Impact\nFlask-Security allows redirects after many successful views (e.g. /login) by honoring the ?next query param. There is code in FS to validate that the url specified in the next parameter is either relative OR has the same netloc (network location) as the requesting  URL.\n\nThis check utilizes Pythons urlsplit library. However many browsers are very lenient on the kind of URL they accept and 'fill in the blanks' when presented with a possibly incomplete URL. As a concrete example - setting http://login?next=\\\\\\github.com\nwill pass FS's relative URL check however many browsers will gladly convert this to http://github.com. Thus an attacker could send such a link to an unwitting user, using a legitimate site and have it redirect to whatever site they want.\n\nThis is considered a low severity due to the fact that if Werkzeug by default ALWAYS ensures that the Location header is absolute - thus making this attack vector mute. It is possible for application writers to modify this default behavior by setting the 'autocorrect_location_header=False` which would then open up their application to this attack.\n\n### Patches\nNo patches as this time\n\n### Workarounds\nIf using Werkzeug, make sure to use the default Location header setting. If you can't - then use@app.after_request and write your own validation of the Location header if it is set.\n\n### References\nNo.\n\n### For more information\nIf you have any questions or comments about this advisory follow: https://github.com/Flask-Middleware/flask-security/issues/486\n\nThanks to Claroty (2021-0141) and @snoopysecurity for providing details and proof of concept.\n",
+      "published": "2021-05-17T20:51:27Z",
+      "modified": "2024-09-20T21:25:44.564354Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:A/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:N/I:L/A:N"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:A/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2021-32618"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/Flask-Middleware/flask-security/commit/e39bb04615050448c1b8ba4caa7dacc0edd3e405"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/Flask-Middleware/flask-security"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/flask-security-too/PYSEC-2021-123.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://web.archive.org/web/20210517211717/https://github.com/Flask-Middleware/flask-security/issues/486"
+        },
+        {
+          "type": "WEB",
+          "url": "https://web.archive.org/web/20211207121851/https://github.com/Flask-Middleware/flask-security/security/advisories/GHSA-6qmf-fj6m-686c"
+        },
+        {
+          "type": "WEB",
+          "url": "https://web.archive.org/web/20220410062740/https://github.com/Flask-Middleware/flask-security/pull/489"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-6qmf-fj6m-686c",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "4.1.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "3.0.1",
+        "3.0.1rc1",
+        "3.0.1rc2",
+        "3.0.1rc3",
+        "3.0.2",
+        "3.1.0rc1",
+        "3.2.0",
+        "3.2.0rc1",
+        "3.2.0rc3",
+        "3.2.0rc4",
+        "3.3.0",
+        "3.3.0rc1",
+        "3.3.0rc2",
+        "3.3.0rc3",
+        "3.3.1",
+        "3.3.2",
+        "3.3.3",
+        "3.4.0",
+        "3.4.1",
+        "3.4.2",
+        "3.4.3",
+        "3.4.4",
+        "3.4.5",
+        "4.0.0",
+        "4.0.0rc1",
+        "4.0.0rc2",
+        "4.0.1"
+      ],
+      "affected_conda_versions": [
+        "3.4.3",
+        "3.4.4",
+        "3.4.5",
+        "4.0.0",
+        "4.0.1"
+      ]
+    },
+    {
+      "id": "GHSA-fxq4-r6mr-9x64",
+      "primary_id": "GHSA-fxq4-r6mr-9x64",
+      "aliases": [],
+      "cve_ids": [],
+      "ecosystem": "PyPI",
+      "upstream_name": "flask-security-too",
+      "summary": "CSRF Vuln can expose user's QRcode",
+      "details": "### Impact\nWhen a user is setting up two-factor authentication using an authenticator app, a QRcode is generated and made available via a GET request to /tf-qrcode. Since GETs do not have any CSRF protection, it is possible a malicious 3rd party could access the QRcode and therefore gain access to two-factor authentication codes. Note that the /tf-qrcode endpoint is ONLY accessible while the user is initially setting up their device. Once setup is complete, there is no vulnerability.\n\n### Patches\nThis is fixed in the upcoming 4.0.0 release.\n\n### Workarounds\nYou can provide your own URL for fetching the QRcode by defining SECURITY_TWO_FACTOR_QRCODE_URL and providing your own implementation (that presumably required a POST with CSRF protection). This would require changing the two-factor setup template as well.\n\n### References\nNone.\n\n### For more information\nIf you have any questions or comments about this advisory:\n* Read this pull request: #423",
+      "published": "2021-04-08T16:46:00Z",
+      "modified": "2024-12-02T05:34:30.141378Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/Flask-Middleware/flask-security/security/advisories/GHSA-fxq4-r6mr-9x64"
+        },
+        {
+          "type": "WEB",
+          "url": "https://pypi.org/project/Flask-Security-Too"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-fxq4-r6mr-9x64",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "3.2.0"
+            },
+            {
+              "fixed": "3.4.5"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "3.2.0",
+        "3.3.0",
+        "3.3.0rc1",
+        "3.3.0rc2",
+        "3.3.0rc3",
+        "3.3.1",
+        "3.3.2",
+        "3.3.3",
+        "3.4.0",
+        "3.4.1",
+        "3.4.2",
+        "3.4.3",
+        "3.4.4"
+      ],
+      "affected_conda_versions": [
+        "3.4.3",
+        "3.4.4"
+      ]
+    },
+    {
+      "id": "GHSA-gxjj-f44v-qm94",
+      "primary_id": "GHSA-gxjj-f44v-qm94",
+      "aliases": [],
+      "cve_ids": [],
+      "ecosystem": "PyPI",
+      "upstream_name": "flask-security-too",
+      "summary": "Open Redirect in Flask-Security-Too",
+      "details": "# Withdrawn\n\nDuplicate of GHSA-6qmf-fj6m-686c\n\n# Original description\n\nFlask-Security-Too allows redirects after many successful views (e.g. /login) by honoring the ?next query param. There is code in FS to validate that the url specified in the next parameter is either relative OR has the same netloc (network location) as the requesting URL.\n\nThis check utilizes Pythons urlsplit library. However many browsers are very lenient on the kind of URL they accept and 'fill in the blanks' when presented with a possibly incomplete URL. As a concrete example - setting http://login?next=\\\\\\github.com\nwill pass FS's relative URL check however many browsers will gladly convert this to http://github.com. Thus an attacker could send such a link to an unwitting user, using a legitimate site and have it redirect to whatever site they want.\n\nThis is considered a low severity due to the fact that if Werkzeug is used (which is very common with Flask applications) as the WSGI layer, it by default ALWAYS ensures that the Location header is absolute - thus making this attack vector mute. It is possible for application writers to modify this default behavior by setting the 'autocorrect_location_header=False`.",
+      "published": "2021-12-14T18:14:04Z",
+      "modified": "2024-12-02T05:38:56.441145Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:N/I:L/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:N/I:L/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/Flask-Middleware/flask-security/security/advisories/GHSA-6qmf-fj6m-686c"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2021-32618"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/Flask-Middleware/flask-security/issues/486"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-gxjj-f44v-qm94",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "last_affected": "4.0.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "3.0.1",
+        "3.0.1rc1",
+        "3.0.1rc2",
+        "3.0.1rc3",
+        "3.0.2",
+        "3.1.0rc1",
+        "3.2.0",
+        "3.2.0rc1",
+        "3.2.0rc3",
+        "3.2.0rc4",
+        "3.3.0",
+        "3.3.0rc1",
+        "3.3.0rc2",
+        "3.3.0rc3",
+        "3.3.1",
+        "3.3.2",
+        "3.3.3",
+        "3.4.0",
+        "3.4.1",
+        "3.4.2",
+        "3.4.3",
+        "3.4.4",
+        "3.4.5",
+        "4.0.0",
+        "4.0.0rc1",
+        "4.0.0rc2",
+        "4.0.1"
+      ],
+      "affected_conda_versions": [
+        "3.4.3",
+        "3.4.4",
+        "3.4.5",
+        "4.0.0",
+        "4.0.1"
+      ]
+    },
+    {
+      "id": "GHSA-hh7m-rx4f-4vpv",
+      "primary_id": "CVE-2021-21241",
+      "aliases": [
+        "CVE-2021-21241",
+        "PYSEC-2021-91"
+      ],
+      "cve_ids": [
+        "CVE-2021-21241"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "flask-security-too",
+      "summary": "CSRF can expose users authentication token",
+      "details": "### Issue\nThe  /login and /change endpoints can return the authenticated user's authentication token in response to a GET request. Since GET requests aren't protected with a CSRF token, this could lead to a malicious 3rd party site acquiring the authentication token.\n\n### Patches\nVersion 3.4.5 and soon to be released 4.0.0 are patched.\n\n### Workarounds\nIf you aren't using authentication tokens - you can set the SECURITY_TOKEN_MAX_AGE to \"0\" (seconds) which should make the token unusable.\n\n### References\nNone",
+      "published": "2021-01-11T20:38:28Z",
+      "modified": "2026-03-13T22:16:07.774320Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:H/VI:N/VA:N/SC:H/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:H/I:N/A:N"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:H/VI:N/VA:N/SC:H/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2021-21241"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/flask-security-too/PYSEC-2021-91.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://pypi.org/project/Flask-Security-Too"
+        },
+        {
+          "type": "WEB",
+          "url": "https://web.archive.org/web/20210118165844/https://github.com/Flask-Middleware/flask-security/releases/tag/3.4.5"
+        },
+        {
+          "type": "WEB",
+          "url": "https://web.archive.org/web/20210118165958/https://github.com/Flask-Middleware/flask-security/commit/6d50ee9169acf813257c37b75babe9c28e83542a"
+        },
+        {
+          "type": "WEB",
+          "url": "https://web.archive.org/web/20210118170445/https://github.com/Flask-Middleware/flask-security/commit/61d313150b5f620d0b800896c4f2199005e84b1f"
+        },
+        {
+          "type": "WEB",
+          "url": "https://web.archive.org/web/20210118170502/https://github.com/Flask-Middleware/flask-security/security/advisories/GHSA-hh7m-rx4f-4vpv"
+        },
+        {
+          "type": "WEB",
+          "url": "https://web.archive.org/web/20211207005640/https://github.com/Flask-Middleware/flask-security/pull/422"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-hh7m-rx4f-4vpv",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "3.3.0"
+            },
+            {
+              "fixed": "3.4.5"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "3.3.0",
+        "3.3.1",
+        "3.3.2",
+        "3.3.3",
+        "3.4.0",
+        "3.4.1",
+        "3.4.2",
+        "3.4.3",
+        "3.4.4"
+      ],
+      "affected_conda_versions": [
+        "3.4.3",
+        "3.4.4"
+      ]
+    },
+    {
+      "id": "PYSEC-2021-123",
+      "primary_id": "CVE-2021-32618",
+      "aliases": [
+        "CVE-2021-32618",
+        "GHSA-6qmf-fj6m-686c"
+      ],
+      "cve_ids": [
+        "CVE-2021-32618"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "flask-security-too",
+      "summary": null,
+      "details": "The Python \"Flask-Security-Too\" package is used for adding security features to your Flask application. It is an is an independently maintained version of Flask-Security based on the 3.0.0 version of Flask-Security. All versions of Flask-Security-Too allow redirects after many successful views (e.g. /login) by honoring the ?next query param. There is code in FS to validate that the url specified in the next parameter is either relative OR has the same netloc (network location) as the requesting URL. This check utilizes Pythons urlsplit library. However many browsers are very lenient on the kind of URL they accept and 'fill in the blanks' when presented with a possibly incomplete URL. As a concrete example - setting http://login?next=\\\\\\github.com will pass FS's relative URL check however many browsers will gladly convert this to http://github.com. Thus an attacker could send such a link to an unwitting user, using a legitimate site and have it redirect to whatever site they want. This is considered a low severity due to the fact that if Werkzeug is used (which is very common with Flask applications) as the WSGI layer, it by default ALWAYS ensures that the Location header is absolute - thus making this attack vector mute. It is possible for application writers to modify this default behavior by setting the `autocorrect_location_header=False`.",
+      "published": "2021-05-17T18:15:00Z",
+      "modified": "2023-11-08T04:05:54.497333Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "REPORT",
+          "url": "https://github.com/Flask-Middleware/flask-security/issues/486"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/Flask-Middleware/flask-security/security/advisories/GHSA-6qmf-fj6m-686c"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2021-123",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "4.1.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "3.0.1",
+        "3.0.1rc1",
+        "3.0.1rc2",
+        "3.0.1rc3",
+        "3.0.2",
+        "3.1.0rc1",
+        "3.2.0",
+        "3.2.0rc1",
+        "3.2.0rc3",
+        "3.2.0rc4",
+        "3.3.0",
+        "3.3.0rc1",
+        "3.3.0rc2",
+        "3.3.0rc3",
+        "3.3.1",
+        "3.3.2",
+        "3.3.3",
+        "3.4.0",
+        "3.4.1",
+        "3.4.2",
+        "3.4.3",
+        "3.4.4",
+        "3.4.5",
+        "4.0.0",
+        "4.0.0rc1",
+        "4.0.0rc2",
+        "4.0.1"
+      ],
+      "affected_conda_versions": [
+        "3.4.3",
+        "3.4.4",
+        "3.4.5",
+        "4.0.0",
+        "4.0.1"
+      ]
+    },
+    {
+      "id": "PYSEC-2021-91",
+      "primary_id": "CVE-2021-21241",
+      "aliases": [
+        "CVE-2021-21241",
+        "GHSA-hh7m-rx4f-4vpv"
+      ],
+      "cve_ids": [
+        "CVE-2021-21241"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "flask-security-too",
+      "summary": null,
+      "details": "The Python \"Flask-Security-Too\" package is used for adding security features to your Flask application. It is an is a independently maintained version of Flask-Security based on the 3.0.0 version of Flask-Security. In Flask-Security-Too from version 3.3.0 and before version 3.4.5, the /login and /change endpoints can return the authenticated user's authentication token in response to a GET request. Since GET requests aren't protected with a CSRF token, this could lead to a malicious 3rd party site acquiring the authentication token. Version 3.4.5 and version 4.0.0 are patched. As a workaround, if you aren't using authentication tokens - you can set the SECURITY_TOKEN_MAX_AGE to \"0\" (seconds) which should make the token unusable.",
+      "published": "2021-01-11T21:15:00Z",
+      "modified": "2023-11-08T04:04:39.251638Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/Flask-Middleware/flask-security/releases/tag/3.4.5"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://pypi.org/project/Flask-Security-Too"
+        },
+        {
+          "type": "FIX",
+          "url": "https://github.com/Flask-Middleware/flask-security/commit/61d313150b5f620d0b800896c4f2199005e84b1f"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/Flask-Middleware/flask-security/security/advisories/GHSA-hh7m-rx4f-4vpv"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/Flask-Middleware/flask-security/pull/422"
+        },
+        {
+          "type": "FIX",
+          "url": "https://github.com/Flask-Middleware/flask-security/commit/6d50ee9169acf813257c37b75babe9c28e83542a"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2021-91",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "3.3.0"
+            },
+            {
+              "fixed": "3.4.5"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "3.3.0",
+        "3.3.1",
+        "3.3.2",
+        "3.3.3",
+        "3.4.0",
+        "3.4.1",
+        "3.4.2",
+        "3.4.3",
+        "3.4.4"
+      ],
+      "affected_conda_versions": [
+        "3.4.3",
+        "3.4.4"
+      ]
+    },
+    {
+      "id": "PYSEC-2023-248",
+      "primary_id": "CVE-2023-49438",
+      "aliases": [
+        "CVE-2023-49438",
+        "GHSA-672h-6x89-76m5"
+      ],
+      "cve_ids": [
+        "CVE-2023-49438"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "flask-security-too",
+      "summary": null,
+      "details": "An open redirect vulnerability in the python package Flask-Security-Too <=5.3.2 allows attackers to redirect unsuspecting users to malicious sites via a crafted URL by abusing the ?next parameter on the /login and /register routes.",
+      "published": "2023-12-26T22:15:00Z",
+      "modified": "2024-01-17T11:41:30.955752Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/Flask-Middleware/flask-security"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/brandon-t-elliott/CVE-2023-49438"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/6HCYH377TPUMUHELPI36PDS2ZM4VFIXM/"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2023-248",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "5.3.3"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "3.0.1",
+        "3.0.1rc1",
+        "3.0.1rc2",
+        "3.0.1rc3",
+        "3.0.2",
+        "3.1.0rc1",
+        "3.2.0",
+        "3.2.0rc1",
+        "3.2.0rc3",
+        "3.2.0rc4",
+        "3.3.0",
+        "3.3.0rc1",
+        "3.3.0rc2",
+        "3.3.0rc3",
+        "3.3.1",
+        "3.3.2",
+        "3.3.3",
+        "3.4.0",
+        "3.4.1",
+        "3.4.2",
+        "3.4.3",
+        "3.4.4",
+        "3.4.5",
+        "4.0.0",
+        "4.0.0rc1",
+        "4.0.0rc2",
+        "4.0.1",
+        "4.1.0",
+        "4.1.1",
+        "4.1.2",
+        "4.1.3",
+        "4.1.4",
+        "4.1.5",
+        "4.1.6",
+        "5.0.0",
+        "5.0.1",
+        "5.0.2",
+        "5.1.0",
+        "5.1.1",
+        "5.1.2",
+        "5.2.0",
+        "5.3.0",
+        "5.3.1",
+        "5.3.2"
+      ],
+      "affected_conda_versions": [
+        "3.4.3",
+        "3.4.4",
+        "3.4.5",
+        "4.0.0",
+        "4.0.1",
+        "4.1.0",
+        "4.1.1",
+        "4.1.2",
+        "4.1.3",
+        "4.1.4",
+        "4.1.5",
+        "5.0.0",
+        "5.0.1",
+        "5.0.2",
+        "5.1.1",
+        "5.1.2",
+        "5.2.0",
+        "5.3.0",
+        "5.3.1",
+        "5.3.2"
+      ]
+    }
+  ]
+}

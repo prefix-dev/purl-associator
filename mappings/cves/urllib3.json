@@ -4,7 +4,7 @@
   "purls": [
     "pkg:pypi/urllib3"
   ],
-  "generated_at": "2026-05-11T08:49:10+00:00",
+  "generated_at": "2026-05-18T06:01:40+00:00",
   "conda_versions_total": 62,
   "advisories": [
     {
@@ -1373,6 +1373,76 @@
       ]
     },
     {
+      "id": "GHSA-mf9v-mfxr-j63j",
+      "primary_id": "CVE-2026-44432",
+      "aliases": [
+        "CVE-2026-44432"
+      ],
+      "cve_ids": [
+        "CVE-2026-44432"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "urllib3",
+      "summary": "urllib3: Decompression-bomb safeguards bypassed in parts of the streaming API",
+      "details": "### Impact\n\nurllib3's [streaming API](https://urllib3.readthedocs.io/en/2.7.0/advanced-usage.html#streaming-and-i-o) is designed for the efficient handling of large HTTP responses by reading the content in chunks, rather than loading the entire response body into memory at once.\n\nurllib3 can perform decompression based on the HTTP `Content-Encoding` header (e.g., `gzip`, `deflate`, `br`, or `zstd`). When using the streaming API since version 2.6.0, the library decompresses only the necessary bytes, enabling partial content consumption.\n\nHowever, urllib3 before version 2.7.0 could still decompress the whole response instead of the requested portion in two cases:\n1. During the second `HTTPResponse.read(amt=N)` call when the response was decompressed using the official [Brotli](https://pypi.org/project/brotli/) library.\n2. When `HTTPResponse.drain_conn()` was called after the response had been read and decompressed partially (compression algorithm did not matter here).\n\nThese issues could cause urllib3 to fully decode a small amount of highly compressed data in a single operation. This could result in excessive resource consumption (high CPU usage and massive memory allocation for the decompressed data; CWE-409) on the client side.\n\n\n### Affected usages\n\nApplications and libraries using urllib3 versions earlier than 2.7.0 may be affected when streaming compressed responses from untrusted sources in either of these cases, unless decompression is explicitly disabled:\n\n1. A response encoded with `br` is read incrementally with at least two `HTTPResponse.read(amt=N)` or `HTTPResponse.stream(amt=N)` calls while using the official [Brotli](https://pypi.org/project/brotli/) library.\n2. `HTTPResponse.drain_conn()` is called after response decompression has already started.\n\n\n### Remediation\n\nUpgrade to at least urllib3 version 2.7.0 in which the library:\n1. Is more efficient for reads with Brotli.\n2. Always skips decompression for `HTTPResponse.drain_conn()`.\n\nIf upgrading is not immediately possible, the following workarounds may reduce exposure in specific cases:\n1. For the Brotli-specific issue only, switch from [brotli](https://pypi.org/project/brotli/) to [brotlicffi](https://pypi.org/project/brotlicffi/) until you can upgrade urllib3; the official Brotli package is affected because of https://github.com/google/brotli/issues/1396.\n2. If your code explicitly calls `HTTPResponse.drain_conn()`, call `HTTPResponse.close()` instead when connection reuse is not important.\n\n\n### Credits\n\nThe Brotli-specific issue was reported by @kimkou2024.\n`HTTPResponse.drain_conn()` inefficiency was reported by @Cycloctane.",
+      "published": "2026-05-11T14:51:45Z",
+      "modified": "2026-05-14T20:51:57.253969Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/urllib3/urllib3/security/advisories/GHSA-mf9v-mfxr-j63j"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-44432"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/urllib3/urllib3"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-mf9v-mfxr-j63j",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "2.6.0"
+            },
+            {
+              "fixed": "2.7.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "2.6.0",
+        "2.6.1",
+        "2.6.2",
+        "2.6.3"
+      ],
+      "affected_conda_versions": [
+        "2.6.0",
+        "2.6.1",
+        "2.6.2",
+        "2.6.3"
+      ]
+    },
+    {
       "id": "GHSA-mh33-7rrq-662w",
       "primary_id": "CVE-2019-11324",
       "aliases": [
@@ -1885,6 +1955,186 @@
         "1.26.2",
         "1.26.3",
         "1.26.4"
+      ]
+    },
+    {
+      "id": "GHSA-qccp-gfcp-xxvc",
+      "primary_id": "CVE-2026-44431",
+      "aliases": [
+        "CVE-2026-44431"
+      ],
+      "cve_ids": [
+        "CVE-2026-44431"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "urllib3",
+      "summary": "urllib3: Sensitive headers forwarded across origins in proxied low-level redirects",
+      "details": "### Impact\n\nWhen following cross-origin redirects for requests made using urllib3\u2019s high-level APIs, such as `urllib3.request()`, `PoolManager.request()`, and `ProxyManager.request()`, sensitive headers \u2014 `Authorization`, `Cookie`, and `Proxy-Authorization` (defined in `Retry.DEFAULT_REMOVE_HEADERS_ON_REDIRECT`) \u2014 are stripped by default, as expected.\n\nHowever, cross-origin redirects followed from the low-level API via `ProxyManager.connection_from_url().urlopen(..., assert_same_host=False)` still forward these sensitive headers.\n\n### Affected usage\n\nApplications and libraries using urllib3 versions earlier than 2.7.0 may be affected if they allow cross-origin redirects while making requests through `HTTPConnection.urlopen()` instances created via `ProxyManager.connection_from_url()`.\n\n### Remediation\n\nUpgrade to urllib3 version 2.7.0 or later, in which sensitive headers are stripped from redirects followed by `HTTPConnection`.\n\nIf upgrading is not immediately possible, avoid using this low-level redirect flow for cross-origin redirects. If appropriate for your use case, switch to `ProxyManager.request()`.",
+      "published": "2026-05-11T14:51:20Z",
+      "modified": "2026-05-14T20:52:16.468619Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:H/AT:P/PR:N/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:H/AT:P/PR:N/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/urllib3/urllib3/security/advisories/GHSA-qccp-gfcp-xxvc"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-44431"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/urllib3/urllib3"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-qccp-gfcp-xxvc",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "1.23"
+            },
+            {
+              "fixed": "2.7.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "1.23",
+        "1.24",
+        "1.24.1",
+        "1.24.2",
+        "1.24.3",
+        "1.25",
+        "1.25.1",
+        "1.25.10",
+        "1.25.11",
+        "1.25.2",
+        "1.25.3",
+        "1.25.4",
+        "1.25.5",
+        "1.25.6",
+        "1.25.7",
+        "1.25.8",
+        "1.25.9",
+        "1.26.0",
+        "1.26.1",
+        "1.26.10",
+        "1.26.11",
+        "1.26.12",
+        "1.26.13",
+        "1.26.14",
+        "1.26.15",
+        "1.26.16",
+        "1.26.17",
+        "1.26.18",
+        "1.26.19",
+        "1.26.2",
+        "1.26.20",
+        "1.26.3",
+        "1.26.4",
+        "1.26.5",
+        "1.26.6",
+        "1.26.7",
+        "1.26.8",
+        "1.26.9",
+        "2.0.0",
+        "2.0.0a1",
+        "2.0.0a2",
+        "2.0.0a3",
+        "2.0.0a4",
+        "2.0.1",
+        "2.0.2",
+        "2.0.3",
+        "2.0.4",
+        "2.0.5",
+        "2.0.6",
+        "2.0.7",
+        "2.1.0",
+        "2.2.0",
+        "2.2.1",
+        "2.2.2",
+        "2.2.3",
+        "2.3.0",
+        "2.4.0",
+        "2.5.0",
+        "2.6.0",
+        "2.6.1",
+        "2.6.2",
+        "2.6.3"
+      ],
+      "affected_conda_versions": [
+        "1.23",
+        "1.24",
+        "1.24.1",
+        "1.24.2",
+        "1.24.3",
+        "1.25",
+        "1.25.1",
+        "1.25.2",
+        "1.25.3",
+        "1.25.5",
+        "1.25.6",
+        "1.25.7",
+        "1.25.8",
+        "1.25.9",
+        "1.25.10",
+        "1.25.11",
+        "1.26.0",
+        "1.26.1",
+        "1.26.2",
+        "1.26.3",
+        "1.26.4",
+        "1.26.5",
+        "1.26.6",
+        "1.26.7",
+        "1.26.8",
+        "1.26.9",
+        "1.26.10",
+        "1.26.11",
+        "1.26.13",
+        "1.26.14",
+        "1.26.15",
+        "1.26.16",
+        "1.26.17",
+        "1.26.18",
+        "1.26.19",
+        "1.26.20",
+        "2.0.0",
+        "2.0.1",
+        "2.0.2",
+        "2.0.3",
+        "2.0.4",
+        "2.0.5",
+        "2.0.6",
+        "2.0.7",
+        "2.1.0",
+        "2.2.0",
+        "2.2.1",
+        "2.2.2",
+        "2.2.3",
+        "2.3.0",
+        "2.4.0",
+        "2.5.0",
+        "2.6.0",
+        "2.6.1",
+        "2.6.2",
+        "2.6.3"
       ]
     },
     {

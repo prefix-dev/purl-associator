@@ -1,0 +1,372 @@
+{
+  "schema_version": 1,
+  "package": "spotipy",
+  "purls": [
+    "pkg:pypi/spotipy"
+  ],
+  "generated_at": "2026-05-18T06:01:40+00:00",
+  "conda_versions_total": 10,
+  "advisories": [
+    {
+      "id": "GHSA-pwhh-q4h6-w599",
+      "primary_id": "CVE-2025-27154",
+      "aliases": [
+        "CVE-2025-27154"
+      ],
+      "cve_ids": [
+        "CVE-2025-27154"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "spotipy",
+      "summary": "Spotipy's cache file, containing spotify auth token, is created with overly broad permissions",
+      "details": "### Summary\n\nThe `CacheHandler` class creates a cache file to store the auth token here: https://github.com/spotipy-dev/spotipy/blob/master/spotipy/cache_handler.py#L93-L98\n\nThe file created has `rw-r--r--` (644) permissions by default, when it could be locked down to `rw-------` (600) permissions. I think `600` is a sensible default.\n\n![image](https://github.com/user-attachments/assets/0b7ebbc1-a27a-4528-ab6a-135c7886766a)\n\n### Details\n\nThis leads to overly broad exposure of the spotify auth token. If this token can be read by an attacker (another user on the machine, or a process running as another user), it can be used to perform administrative actions on the Spotify account, depending on the scope granted to the token.\n\n### PoC\n\nRun an application that uses spotipy with client creation like this:\n\n```python\nfrom pathlib import Path\nimport spotipy\nfrom os import getenv\n\ndef create_spotify_client(client_id: str, client_secret: str) -> spotipy.Spotify:\n    \"\"\"Create and return an authenticated Spotify client.\n\n    Args:\n        client_id: Spotify API client ID\n        client_secret: Spotify API client secret\n\n    Returns:\n        An authenticated Spotify client instance\n    \"\"\"\n    cache_path = Path.home() / \".cache\" / \"spotify-backup/.auth_cache\"\n    cache_path.parent.mkdir(parents=True, exist_ok=True)\n    cache_handler = spotipy.cache_handler.CacheFileHandler(cache_path=str(cache_path))\n\n    client = spotipy.Spotify(\n        auth_manager=spotipy.oauth2.SpotifyOAuth(\n            client_id=client_id,\n            client_secret=client_secret,\n            redirect_uri=\"http://localhost:8000/callback\",\n            cache_handler=cache_handler,\n            scope=[\n                \"user-library-read\",\n                \"playlist-read-private\",\n                \"playlist-read-collaborative\",\n            ],\n        )\n    )\n\n    return client\n\ncreate_spotify_client()\n```\n\nAnd then check the file permissions on the cache file that was created with:\n\n```bash\n$ ls -la ~/.cache/spotify-backup/.auth_cache`\n.rw-r--r--. alichtman alichtman 562 B Thu Feb 20 02:12:33 2025 \uf016 /home/alichtman/.cache/spotify-backup/.auth_cache\n```\n\nIf this issue is combined with another misconfiguration, like having `o+r` permissions set on your home directory, an attacker will be able to read this file and steal this auth token.\n\nGood defense in depth would be to restrict read permissions on this cache file that contains an auth token\n\n### Impact\n\nPotential exposure of Spotify auth token to other users with access to the machine. A worst case scenario is if the token is granted all permissions, and can be used to do any of:\n\n- exfiltrate spotify likes / saved playlists\n- delete your content\n- modify your content w/o your permission\n\nIf someone were to discover an RCE in Spotify that you could trigger on a machine by having a song played (or song metadata parsed or something), this auth token could maybe be used to add a song to a playlist, or control playback (allowing further exploitation).",
+      "published": "2025-02-28T02:34:38Z",
+      "modified": "2025-02-28T03:12:14.312209Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:L/UI:N/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:L/UI:N/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/spotipy-dev/spotipy/security/advisories/GHSA-pwhh-q4h6-w599"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-27154"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/spotipy-dev/spotipy/commit/1ca453f6ef87a2a9e9876f52b6cb38d13532ccf2"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/spotipy-dev/spotipy"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/spotipy-dev/spotipy/blob/master/spotipy/cache_handler.py#L93-L98"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/spotipy-dev/spotipy/releases/tag/2.25.1"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-pwhh-q4h6-w599",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.25.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1",
+        "0.2",
+        "2.0.1",
+        "2.0.2",
+        "2.1.0",
+        "2.10.0",
+        "2.11.0",
+        "2.11.1",
+        "2.11.2",
+        "2.12.0",
+        "2.13.0",
+        "2.14.0",
+        "2.15.0",
+        "2.16.0",
+        "2.16.1",
+        "2.17.0",
+        "2.17.1",
+        "2.18.0",
+        "2.19.0",
+        "2.19.0rc1",
+        "2.2.0",
+        "2.20.0",
+        "2.21.0",
+        "2.22.0",
+        "2.22.1",
+        "2.23.0",
+        "2.24.0",
+        "2.25.0",
+        "2.3.0",
+        "2.3.2",
+        "2.3.3",
+        "2.3.4",
+        "2.3.5",
+        "2.3.6",
+        "2.3.7",
+        "2.3.8",
+        "2.4.0",
+        "2.4.1",
+        "2.4.2",
+        "2.4.3",
+        "2.4.4",
+        "2.5.0",
+        "2.6.0",
+        "2.6.1",
+        "2.6.2",
+        "2.6.3",
+        "2.7.0",
+        "2.7.1",
+        "2.8.0",
+        "2.9.0"
+      ],
+      "affected_conda_versions": [
+        "2.16.1",
+        "2.17.0",
+        "2.17.1",
+        "2.19.0",
+        "2.20.0",
+        "2.22.0",
+        "2.22.1",
+        "2.23.0",
+        "2.25.0"
+      ]
+    },
+    {
+      "id": "GHSA-q764-g6fm-555v",
+      "primary_id": "CVE-2023-23608",
+      "aliases": [
+        "CVE-2023-23608"
+      ],
+      "cve_ids": [
+        "CVE-2023-23608"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "spotipy",
+      "summary": "Path traversal in spotipy",
+      "details": "### Summary\nIf a malicious URI is passed to the library, the library can be tricked into performing an operation on a different API endpoint than intended.\n\n### Details\nThe [code Spotipy uses to parse URIs and URLs ](https://github.com/spotipy-dev/spotipy/blob/master/spotipy/client.py#L1942) accepts user data too liberally which allows a malicious user to insert arbitrary characters into the path that is used for API requests. Because it is possible to include `..`, an attacker can redirect for example a track lookup via `spotifyApi.track()` to an arbitrary API endpoint like playlists, but this is possible for other endpoints as well.\n\nBefore the security advisory feature was enabled on GitHub, I was already in contact with St\u00e9phane Bruckert via e-mail, and he asked me to look into a potential fix. \n\nMy recommendation is to perform stricter parsing of URLs and URIs, which I implemented in the patch included at the end of the report. If you prefer, I can also invite you to a private fork of the repository.\n\n### Impact\nThe impact of this vulnerability depends heavily on what operations a client application performs when it handles a URI from a user and how it uses the responses it receives from the API.\n",
+      "published": "2023-01-23T22:05:11Z",
+      "modified": "2023-11-08T04:11:40.872655Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:L/A:L"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:L/A:L"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/spotipy-dev/spotipy/security/advisories/GHSA-q764-g6fm-555v"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2023-23608"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/spotipy-dev/spotipy"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-q764-g6fm-555v",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.22.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1",
+        "0.2",
+        "2.0.1",
+        "2.0.2",
+        "2.1.0",
+        "2.10.0",
+        "2.11.0",
+        "2.11.1",
+        "2.11.2",
+        "2.12.0",
+        "2.13.0",
+        "2.14.0",
+        "2.15.0",
+        "2.16.0",
+        "2.16.1",
+        "2.17.0",
+        "2.17.1",
+        "2.18.0",
+        "2.19.0",
+        "2.19.0rc1",
+        "2.2.0",
+        "2.20.0",
+        "2.21.0",
+        "2.22.0",
+        "2.3.0",
+        "2.3.2",
+        "2.3.3",
+        "2.3.4",
+        "2.3.5",
+        "2.3.6",
+        "2.3.7",
+        "2.3.8",
+        "2.4.0",
+        "2.4.1",
+        "2.4.2",
+        "2.4.3",
+        "2.4.4",
+        "2.5.0",
+        "2.6.0",
+        "2.6.1",
+        "2.6.2",
+        "2.6.3",
+        "2.7.0",
+        "2.7.1",
+        "2.8.0",
+        "2.9.0"
+      ],
+      "affected_conda_versions": [
+        "2.16.1",
+        "2.17.0",
+        "2.17.1",
+        "2.19.0",
+        "2.20.0",
+        "2.22.0"
+      ]
+    },
+    {
+      "id": "GHSA-r77h-rpp9-w2xm",
+      "primary_id": "CVE-2025-66040",
+      "aliases": [
+        "CVE-2025-66040"
+      ],
+      "cve_ids": [
+        "CVE-2025-66040"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "spotipy",
+      "summary": "Spotipy has a XSS vulnerability in its OAuth callback server",
+      "details": "### Summary\nXSS vulnerability in OAuth callback server allows JavaScript injection through unsanitized error parameter. Attackers can execute arbitrary JavaScript in the user's browser during OAuth authentication.\n\n\n### Details\n**Vulnerable Code:** `spotipy/oauth2.py` lines 1238-1274 (RequestHandler.do_GET)\n\n**The Problem:**\nDuring OAuth flow, spotipy starts a local HTTP server to receive callbacks. The server reflects the `error` URL parameter directly into HTML without sanitization.\n\n**Vulnerable code at line 1255:**\n```python\nstatus = f\"failed ({self.server.error})\"\n```\n\n**Then embedded in HTML at line 1265:**\n```python\nself._write(f\"\"\"<html>\n<body>\n<h1>Authentication status: {status}</h1>\n</body>\n</html>\"\"\")\n```\n\nThe `error` parameter comes from URL parsing (lines 388-393) without HTML escaping, allowing script injection.\n\n**Attack Flow:**\n1. User starts OAuth authentication \u2192 local server runs on `http://127.0.0.1:8080`\n2. Attacker crafts malicious URL: `http://127.0.0.1:8080/?error=<script>alert(1)</script>&state=x`\n3. User visits URL \u2192 JavaScript executes in localhost origin\n\n\n### PoC\n\n**Simple Python Test:**\n```python\n#!/usr/bin/env python3\n# poc_xss.py - Demonstrates XSS in spotipy OAuth callback\n\nimport requests\nfrom spotipy.oauth2 import start_local_http_server\nimport threading\nimport time\n\n# Start vulnerable server in background\ndef start_server():\n    server = start_local_http_server(8080)\n    server.handle_request()\n\nthread = threading.Thread(target=start_server, daemon=True)\nthread.start()\ntime.sleep(2)\n\n# Send XSS payload\npayload = '<script>alert(\"XSS\")</script>'\nurl = f'http://127.0.0.1:8080/?error={payload}&state=test'\n\nresponse = requests.get(url)\nprint(f\"Status: {response.status_code}\")\nprint(f\"\\nHTML Response:\\n{response.text}\")\n\n# Check if vulnerable\nif payload in response.text:\n    print(f\"\\n[!] VULNERABLE: Payload '{payload}' reflected without escaping!\")\nelse:\n    print(\"\\n[+] Safe: Payload was sanitized\")\n```\n\n**Run it:**\n```bash\npip install spotipy requests\npython3 poc_xss.py\n```\n\n**Output shows:**\n```\nStatus: 200\nHTML Response:\n<html>\n<body>\n<h1>Authentication status: failed (<script>alert(\"XSS\")</script>)</h1>\n</body>\n</html>\n\n[!] VULNERABLE: Payload '<script>alert(\"XSS\")</script>' reflected without escaping!\n```\n\n**The Proof:**\n- Expected (safe): `&lt;script&gt;alert(\"XSS\")&lt;/script&gt;`\n- Actual (vulnerable): `<script>alert(\"XSS\")</script>`\n- The script tags are NOT escaped \u2192 XSS confirmed\n\n### Impact\n\n**Vulnerability Type:** Cross-Site Scripting (XSS) - CWE-79\n\n**Affected Users:** Anyone using spotipy's OAuth flow with localhost redirect URIs\n\n**Attack Complexity:** Medium-High\n- Requires timing (during brief OAuth window)\n- Localhost-only (127.0.0.1)\n- Requires user interaction (click malicious link)\n\n**Potential Impact:**\n- Execute JavaScript in localhost origin\n- Access other localhost services (port scanning, API calls)\n- Steal data from local web applications\n- Extract OAuth tokens from browser storage\n- Bypass CSRF protections on localhost endpoints\n\n**CVSS 3.1 Score:** 4.2 (Medium)\n- Attack Vector: Local\n- Attack Complexity: High\n- Privileges Required: None\n- User Interaction: Required\n- Scope: Unchanged\n- Confidentiality/Integrity: Low\n\n\n**Recommended Fix:**\n```python\nimport html\n\n# Line 1255 - apply HTML escaping\nif self.server.error:\n    status = f\"failed ({html.escape(str(self.server.error))})\"\n```",
+      "published": "2025-12-01T19:07:26Z",
+      "modified": "2025-12-01T19:36:24.885838Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:L/AC:H/PR:N/UI:R/S:U/C:L/I:L/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:H/PR:N/UI:R/S:U/C:L/I:L/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/spotipy-dev/spotipy/security/advisories/GHSA-r77h-rpp9-w2xm"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-66040"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/spotipy-dev/spotipy/commit/880b92d7243dcf2b83bf31dc365a858d8b5e6767"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/spotipy-dev/spotipy"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-r77h-rpp9-w2xm",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.25.2"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1",
+        "0.2",
+        "2.0.1",
+        "2.0.2",
+        "2.1.0",
+        "2.10.0",
+        "2.11.0",
+        "2.11.1",
+        "2.11.2",
+        "2.12.0",
+        "2.13.0",
+        "2.14.0",
+        "2.15.0",
+        "2.16.0",
+        "2.16.1",
+        "2.17.0",
+        "2.17.1",
+        "2.18.0",
+        "2.19.0",
+        "2.19.0rc1",
+        "2.2.0",
+        "2.20.0",
+        "2.21.0",
+        "2.22.0",
+        "2.22.1",
+        "2.23.0",
+        "2.24.0",
+        "2.25.0",
+        "2.25.1",
+        "2.3.0",
+        "2.3.2",
+        "2.3.3",
+        "2.3.4",
+        "2.3.5",
+        "2.3.6",
+        "2.3.7",
+        "2.3.8",
+        "2.4.0",
+        "2.4.1",
+        "2.4.2",
+        "2.4.3",
+        "2.4.4",
+        "2.5.0",
+        "2.6.0",
+        "2.6.1",
+        "2.6.2",
+        "2.6.3",
+        "2.7.0",
+        "2.7.1",
+        "2.8.0",
+        "2.9.0"
+      ],
+      "affected_conda_versions": [
+        "2.16.1",
+        "2.17.0",
+        "2.17.1",
+        "2.19.0",
+        "2.20.0",
+        "2.22.0",
+        "2.22.1",
+        "2.23.0",
+        "2.25.0"
+      ]
+    }
+  ]
+}

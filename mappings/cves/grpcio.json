@@ -1,0 +1,740 @@
+{
+  "schema_version": 1,
+  "package": "grpcio",
+  "purls": [
+    "pkg:pypi/grpcio"
+  ],
+  "generated_at": "2026-05-18T06:01:40+00:00",
+  "conda_versions_total": 77,
+  "advisories": [
+    {
+      "id": "GHSA-496j-2rq6-j6cc",
+      "primary_id": "CVE-2023-33953",
+      "aliases": [
+        "CVE-2023-33953"
+      ],
+      "cve_ids": [
+        "CVE-2023-33953"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "grpcio",
+      "summary": "Excessive Iteration in gRPC",
+      "details": "gRPC contains a vulnerability that allows hpack table accounting errors could lead to unwanted disconnects between clients and servers in exceptional cases/\u00a0Three vectors were found that allow the following DOS attacks:\n\n- Unbounded memory buffering in the HPACK parser\n- Unbounded CPU consumption in the HPACK parser\n\nThe unbounded CPU consumption is down to a copy that occurred per-input-block in the parser, and because that could be unbounded due to the memory copy bug we end up with an O(n^2) parsing loop, with n selected by the client.\n\nThe unbounded memory buffering bugs:\n\n- The header size limit check was behind the string reading code, so we needed to first buffer up to a 4 gigabyte string before rejecting it as longer than 8 or 16kb.\n- HPACK varints have an encoding quirk whereby an infinite number of 0\u2019s can be added at the start of an integer. gRPC\u2019s hpack parser needed to read all of them before concluding a parse.\n- gRPC\u2019s metadata overflow check was performed per frame, so that the following sequence of frames could cause infinite buffering: HEADERS: containing a: 1 CONTINUATION: containing a: 2 CONTINUATION: containing a: 3 etc\u2026",
+      "published": "2023-08-09T15:30:15Z",
+      "modified": "2024-07-30T21:46:22.811443Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2023-33953"
+        },
+        {
+          "type": "WEB",
+          "url": "https://cloud.google.com/support/bulletins#gcp-2023-022"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/advisories/GHSA-496j-2rq6-j6cc"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/rubysec/ruby-advisory-db/blob/master/gems/grpc/CVE-2023-33953.yml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.snyk.io/vuln/SNYK-RUBY-GRPC-5834442"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-496j-2rq6-j6cc",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.53.2"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.10.0a0",
+        "0.11.0b0",
+        "0.11.0b1",
+        "0.12.0b0",
+        "0.12.0b8",
+        "0.13.0",
+        "0.13.1",
+        "0.13.1rc1",
+        "0.14.0",
+        "0.14.0rc1",
+        "0.15.0",
+        "0.3.0",
+        "0.4.0",
+        "0.4.0a0",
+        "0.4.0a1",
+        "0.4.0a13",
+        "0.4.0a14",
+        "0.4.0a2",
+        "0.4.0a3",
+        "0.4.0a4",
+        "0.4.0a5",
+        "0.4.0a6",
+        "0.4.0a7",
+        "0.4.0a8",
+        "0.5.0a0",
+        "0.5.0a1",
+        "0.5.0a2",
+        "0.9.0a0",
+        "0.9.0a1",
+        "1.0.0",
+        "1.0.0rc1",
+        "1.0.0rc2",
+        "1.0.1",
+        "1.0.1rc1",
+        "1.0.2",
+        "1.0.3",
+        "1.0.4",
+        "1.1.0",
+        "1.1.3",
+        "1.10.0",
+        "1.10.0rc2",
+        "1.10.1",
+        "1.10.1rc1",
+        "1.10.1rc2",
+        "1.11.0",
+        "1.11.0rc1",
+        "1.11.0rc2",
+        "1.11.1",
+        "1.11.1rc1",
+        "1.12.0",
+        "1.12.0rc1",
+        "1.12.1",
+        "1.13.0",
+        "1.13.0rc1",
+        "1.13.0rc2",
+        "1.13.0rc3",
+        "1.14.0",
+        "1.14.0rc1",
+        "1.14.0rc2",
+        "1.14.1",
+        "1.14.2",
+        "1.14.2rc1",
+        "1.15.0",
+        "1.15.0rc1",
+        "1.16.0",
+        "1.16.0rc1",
+        "1.16.1",
+        "1.17.0",
+        "1.17.1",
+        "1.18.0",
+        "1.19.0",
+        "1.2.0",
+        "1.2.1",
+        "1.20.0",
+        "1.20.0rc1",
+        "1.20.0rc2",
+        "1.20.0rc3",
+        "1.20.1",
+        "1.21.0rc1",
+        "1.21.1",
+        "1.21.1rc1",
+        "1.22.0",
+        "1.22.0rc1",
+        "1.22.1",
+        "1.23.0",
+        "1.23.0rc1",
+        "1.23.1",
+        "1.24.0",
+        "1.24.0rc1",
+        "1.24.1",
+        "1.24.3",
+        "1.25.0",
+        "1.25.0rc1",
+        "1.26.0",
+        "1.26.0rc1",
+        "1.27.0rc1",
+        "1.27.0rc2",
+        "1.27.1",
+        "1.27.2",
+        "1.28.0rc1",
+        "1.28.0rc2",
+        "1.28.1",
+        "1.29.0",
+        "1.3.0",
+        "1.3.3",
+        "1.3.5",
+        "1.30.0",
+        "1.31.0",
+        "1.32.0",
+        "1.33.1",
+        "1.33.2",
+        "1.34.0",
+        "1.34.0rc1",
+        "1.34.1",
+        "1.35.0",
+        "1.35.0rc1",
+        "1.36.0",
+        "1.36.0rc1",
+        "1.36.1",
+        "1.37.0",
+        "1.37.0rc1",
+        "1.37.1",
+        "1.38.0",
+        "1.38.0rc1",
+        "1.38.1",
+        "1.39.0",
+        "1.39.0rc1",
+        "1.4.0",
+        "1.40.0",
+        "1.40.0rc1",
+        "1.41.0",
+        "1.41.0rc2",
+        "1.41.1",
+        "1.42.0",
+        "1.42.0rc1",
+        "1.43.0",
+        "1.43.0rc1",
+        "1.44.0",
+        "1.44.0rc1",
+        "1.44.0rc2",
+        "1.45.0",
+        "1.45.0rc1",
+        "1.46.0",
+        "1.46.0rc1",
+        "1.46.0rc2",
+        "1.46.1",
+        "1.46.3",
+        "1.46.5",
+        "1.47.0",
+        "1.47.0rc1",
+        "1.47.2",
+        "1.47.5",
+        "1.48.0",
+        "1.48.0rc1",
+        "1.48.1",
+        "1.48.2",
+        "1.49.0",
+        "1.49.0rc1",
+        "1.49.0rc3",
+        "1.49.1",
+        "1.50.0",
+        "1.50.0rc1",
+        "1.51.0",
+        "1.51.0rc1",
+        "1.51.1",
+        "1.51.3",
+        "1.52.0",
+        "1.52.0rc1",
+        "1.53.0",
+        "1.53.0rc2",
+        "1.53.1",
+        "1.6.0",
+        "1.6.3",
+        "1.7.0",
+        "1.7.3",
+        "1.8.1",
+        "1.8.2",
+        "1.8.3",
+        "1.8.4",
+        "1.8.6",
+        "1.9.0",
+        "1.9.0rc1",
+        "1.9.0rc2",
+        "1.9.0rc3",
+        "1.9.1"
+      ],
+      "affected_conda_versions": [
+        "1.14.1",
+        "1.16.0",
+        "1.22.0",
+        "1.23.0",
+        "1.27.2",
+        "1.30.0",
+        "1.31.0",
+        "1.32.0",
+        "1.33.1",
+        "1.33.2",
+        "1.34.0",
+        "1.34.1",
+        "1.35.0",
+        "1.36.0",
+        "1.36.1",
+        "1.37.0",
+        "1.37.1",
+        "1.38.0",
+        "1.38.1",
+        "1.39.0",
+        "1.40.0",
+        "1.41.0",
+        "1.41.1",
+        "1.42.0",
+        "1.43.0",
+        "1.44.0",
+        "1.45.0",
+        "1.46.0",
+        "1.46.1",
+        "1.46.3",
+        "1.47.0",
+        "1.48.0",
+        "1.48.1",
+        "1.49.1",
+        "1.51.1",
+        "1.52.0",
+        "1.54.0",
+        "1.54.2",
+        "1.55.0",
+        "1.56.0"
+      ]
+    },
+    {
+      "id": "GHSA-6628-q6j9-w8vg",
+      "primary_id": "CVE-2023-1428",
+      "aliases": [
+        "CVE-2023-1428"
+      ],
+      "cve_ids": [
+        "CVE-2023-1428"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "grpcio",
+      "summary": "gRPC Reachable Assertion issue",
+      "details": "There exists an vulnerability causing an abort() to be called in gRPC.\u00a0\nThe following headers cause gRPC's C++ implementation to abort() when called via http2:\n\nte: x (x != trailers)\n\n:scheme: x (x != http, https)\n\ngrpclb_client_stats: x (x == anything)\n\nOn top of sending one of those headers, a later header must be sent that gets the total header size past 8KB. We recommend upgrading past git commit\u00a02485fa94bd8a723e5c977d55a3ce10b301b437f8 or v1.53 and above.",
+      "published": "2023-07-06T21:15:08Z",
+      "modified": "2026-02-04T04:40:16.870169Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2023-1428"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/grpc/grpc/issues/33463"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/grpc/grpc/commit/2485fa94bd8a723e5c977d55a3ce10b301b437f8"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/rubysec/ruby-advisory-db/blob/master/gems/grpc/CVE-2023-1428.yml"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-6628-q6j9-w8vg",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "1.51.0"
+            },
+            {
+              "fixed": "1.53.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "1.51.0",
+        "1.51.1",
+        "1.51.3",
+        "1.52.0",
+        "1.52.0rc1",
+        "1.53.0rc2"
+      ],
+      "affected_conda_versions": [
+        "1.51.1",
+        "1.52.0"
+      ]
+    },
+    {
+      "id": "GHSA-9hxf-ppjv-w6rq",
+      "primary_id": "CVE-2023-32732",
+      "aliases": [
+        "CVE-2023-32732"
+      ],
+      "cve_ids": [
+        "CVE-2023-32732"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "grpcio",
+      "summary": "gRPC connection termination issue",
+      "details": "gRPC contains a vulnerability whereby a client can cause a termination of connection between a HTTP2 proxy and a gRPC server: a base64 encoding error for `-bin` suffixed headers will result in a disconnection by the gRPC server, but is typically allowed by HTTP2 proxies. We recommend upgrading beyond the commit in\u00a0https://github.com/grpc/grpc/pull/32309.",
+      "published": "2023-07-06T21:15:08Z",
+      "modified": "2026-02-04T02:34:11.036304Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2023-32732"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/grpc/grpc/pull/32309"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/grpc/grpc/commit/29d8beee0ac2555773b2a2dda5601c74a95d6c10"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/grpc/grpc/commit/65a2a895afaf1d2072447b9baf246374b182a946"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/grpc/grpc/releases/tag/v1.53.1"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/grpc/grpc/releases/tag/v1.54.2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/rubysec/ruby-advisory-db/blob/master/gems/grpc/CVE-2023-32732.yml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/37IDNVY5AWVH7JDMM2SDTL24ZPPZJNSY"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/VWE44J5FG7THHL7XVEVTNIGEYBNKJBLL"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-9hxf-ppjv-w6rq",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "1.53.0"
+            },
+            {
+              "fixed": "1.53.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "1.53.0"
+      ],
+      "affected_conda_versions": [
+        "1.54.0"
+      ]
+    },
+    {
+      "id": "GHSA-cfgp-2977-2fmm",
+      "primary_id": "CVE-2023-32731",
+      "aliases": [
+        "CVE-2023-32731"
+      ],
+      "cve_ids": [
+        "CVE-2023-32731"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "grpcio",
+      "summary": "Connection confusion in gRPC",
+      "details": "When gRPC HTTP2 stack raised a header size exceeded error, it skipped parsing the rest of the HPACK frame. This caused any HPACK table mutations to also be skipped, resulting in a desynchronization of HPACK tables between sender and receiver. If leveraged, say, between a proxy and a backend, this could lead to requests from the proxy being interpreted as containing headers from different proxy clients - leading to an information leak that can be used for privilege escalation or data exfiltration.",
+      "published": "2023-07-05T19:12:51Z",
+      "modified": "2026-02-04T03:28:56.461554Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2023-32731"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/grpc/grpc/issues/33463"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/grpc/grpc/pull/32309"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/grpc/grpc/pull/33005"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/grpc/grpc/commit/29d8beee0ac2555773b2a2dda5601c74a95d6c10"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/grpc/grpc/commit/65a2a895afaf1d2072447b9baf246374b182a946"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/grpc/grpc/releases/tag/v1.53.1"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/grpc/grpc/releases/tag/v1.54.2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/rubysec/ruby-advisory-db/blob/master/gems/grpc/CVE-2023-32731.yml"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-cfgp-2977-2fmm",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "1.53.0"
+            },
+            {
+              "fixed": "1.53.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "1.53.0"
+      ],
+      "affected_conda_versions": [
+        "1.54.0"
+      ]
+    },
+    {
+      "id": "GHSA-p25m-jpj4-qcrr",
+      "primary_id": "CVE-2023-4785",
+      "aliases": [
+        "CVE-2023-4785"
+      ],
+      "cve_ids": [
+        "CVE-2023-4785"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "grpcio",
+      "summary": "Denial of Service Vulnerability in gRPC TCP Server (Posix-compatible platforms)",
+      "details": "Lack of error handling in the TCP server in Google's gRPC starting version 1.23 on posix-compatible platforms (ex. Linux) allows an attacker to cause a denial of service by initiating a significant number of connections with the server. Note that gRPC C++ Python, and Ruby are affected, but gRPC Java, and Go are NOT affected.\u00a0",
+      "published": "2023-09-13T18:31:26Z",
+      "modified": "2026-02-04T02:19:45.028795Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2023-4785"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/grpc/grpc/pull/33656"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/grpc/grpc/pull/33667"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/grpc/grpc/pull/33669"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/grpc/grpc/pull/33670"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/grpc/grpc/pull/33672"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/rubysec/ruby-advisory-db/blob/master/gems/grpc/CVE-2023-4785.yml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://groups.google.com/g/grpc-io/c/LlLkB1CeE4U"
+        },
+        {
+          "type": "WEB",
+          "url": "https://rubygems.org/gems/grpc/versions/1.53.2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://rubygems.org/gems/grpc/versions/1.54.3"
+        },
+        {
+          "type": "WEB",
+          "url": "https://rubygems.org/gems/grpc/versions/1.55.3"
+        },
+        {
+          "type": "WEB",
+          "url": "https://rubygems.org/gems/grpc/versions/1.56.2"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-p25m-jpj4-qcrr",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "1.55.0"
+            },
+            {
+              "fixed": "1.55.3"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "1.55.0"
+      ],
+      "affected_conda_versions": [
+        "1.54.0",
+        "1.54.2",
+        "1.55.0"
+      ]
+    },
+    {
+      "id": "PYSEC-2017-101",
+      "primary_id": "CVE-2017-8359",
+      "aliases": [
+        "CVE-2017-8359"
+      ],
+      "cve_ids": [
+        "CVE-2017-8359"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "grpcio",
+      "summary": null,
+      "details": "Google gRPC before 2017-03-29 has an out-of-bounds write caused by a heap-based use-after-free related to the grpc_call_destroy function in core/lib/surface/call.c.",
+      "published": "2017-04-30T17:59:00Z",
+      "modified": "2023-11-08T03:59:27.803334Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/grpc/grpc/pull/10353"
+        },
+        {
+          "type": "FIX",
+          "url": "https://github.com/grpc/grpc/commit/6544a2d5d9ecdb64214da1d228886a7d15bbf5c7"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=726"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.securityfocus.com/bid/98280"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://pypi.org/project/grpcio"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2017-8359"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2017-101",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.3.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.10.0a0",
+        "0.11.0b0",
+        "0.11.0b1",
+        "0.12.0b0",
+        "0.12.0b8",
+        "0.13.0",
+        "0.13.1",
+        "0.13.1rc1",
+        "0.14.0",
+        "0.14.0rc1",
+        "0.15.0",
+        "0.3.0",
+        "0.4.0",
+        "0.4.0a0",
+        "0.4.0a1",
+        "0.4.0a13",
+        "0.4.0a14",
+        "0.4.0a2",
+        "0.4.0a3",
+        "0.4.0a4",
+        "0.4.0a5",
+        "0.4.0a6",
+        "0.4.0a7",
+        "0.4.0a8",
+        "0.5.0a0",
+        "0.5.0a1",
+        "0.5.0a2",
+        "0.9.0a0",
+        "0.9.0a1",
+        "1.0.0",
+        "1.0.0rc1",
+        "1.0.0rc2",
+        "1.0.1",
+        "1.0.1rc1",
+        "1.0.2",
+        "1.0.3",
+        "1.0.4",
+        "1.1.0",
+        "1.1.3",
+        "1.2.0",
+        "1.2.1"
+      ],
+      "affected_conda_versions": []
+    }
+  ]
+}

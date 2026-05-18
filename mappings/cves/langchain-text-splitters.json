@@ -1,0 +1,216 @@
+{
+  "schema_version": 1,
+  "package": "langchain-text-splitters",
+  "purls": [
+    "pkg:pypi/langchain-text-splitters"
+  ],
+  "generated_at": "2026-05-18T06:01:40+00:00",
+  "conda_versions_total": 22,
+  "advisories": [
+    {
+      "id": "GHSA-fv5p-p927-qmxr",
+      "primary_id": "CVE-2026-41481",
+      "aliases": [
+        "CVE-2026-41481"
+      ],
+      "cve_ids": [
+        "CVE-2026-41481"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "langchain-text-splitters",
+      "summary": "LangChain Text Splitters: HTMLHeaderTextSplitter.split_text_from_url SSRF Redirect Bypass",
+      "details": "## Summary\n\n`HTMLHeaderTextSplitter.split_text_from_url()` validated the initial URL using `validate_safe_url()` but then performed the fetch with `requests.get()` with redirects enabled (the default). Because redirect targets were not revalidated, a URL pointing to an attacker-controlled server could redirect to internal, localhost, or cloud metadata endpoints, bypassing SSRF protections.\n\nThe response body is parsed and returned as `Document` objects to the calling application code. Whether this constitutes a data exfiltration path depends on the application: if it exposes Document contents (or derivatives) back to the requester who supplied the URL, sensitive data from internal endpoints could be leaked. Applications that store or process Documents internally without returning raw content to the requester are not directly exposed to data exfiltration through this issue.\n\n## Affected versions\n\n- `langchain-text-splitters` < 1.1.2\n\n## Patched versions\n\n- `langchain-text-splitters` >= 1.1.2 (requires `langchain-core` >= 1.2.31)\n\n## Affected code\n\n**File:** `libs/text-splitters/langchain_text_splitters/html.py` \u2014 `split_text_from_url()`\n\nThe vulnerable pattern validated the URL once then fetched with redirects enabled:\n\n```python\nvalidate_safe_url(url, allow_private=False, allow_http=True)\nresponse = requests.get(url, timeout=timeout, **kwargs)\n```\n\n## Attack scenario\n\n1. A developer passes external URLs to `split_text_from_url()`, relying on its\n   built-in `validate_safe_url()` check to block requests to internal networks.\n2. An attacker supplies a URL pointing to a public host they control. The URL\n   passes `validate_safe_url()` (public hostname, public IP).\n3. The attacker's server responds with a `302` redirect to an internal endpoint\n   (e.g., an unauthenticated internal admin API, or a cloud instance metadata\n   service that does not require request headers \u2014 such as AWS IMDSv1).\n4. `requests.get()` follows the redirect automatically. The redirect target is\n   **not** revalidated.\n5. The response body is parsed and returned as `Document` objects to the\n   application.\n\n**Notes:**\n\n- The core issue is a bypass of an explicitly provided SSRF protection.\n  `split_text_from_url()` included `validate_safe_url()` specifically to be\n  safe with untrusted URLs \u2014 the redirect loophole defeated that guarantee.\n- Cloud metadata endpoints that require special headers (AWS IMDSv2, GCP, Azure)\n  are not reachable through this bug because the attacker does not control\n  request headers. AWS IMDSv1, which requires no headers, is reachable.\n- Data exfiltration requires the application to return Document contents to the\n  party that supplied the URL. The SSRF itself \u2014 forcing the server to issue a\n  request to an internal endpoint \u2014 does not require this.\n\n## Fix\n\nThe fix replaces `requests.get()` with an SSRF-safe httpx transport (`SSRFSafeSyncTransport` from `langchain-core`) that validates DNS results and pins connections to validated IPs on every request, including redirect targets, eliminating redirect-based bypasses.\n\nAdditionally, `split_text_from_url()` has been deprecated. Users should fetch HTML content themselves and pass it to `split_text()` directly.",
+      "published": "2026-04-16T22:53:32Z",
+      "modified": "2026-05-06T20:14:18.530607774Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:N/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:N/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/langchain-ai/langchain/security/advisories/GHSA-fv5p-p927-qmxr"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-41481"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/langchain-ai/langchain"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-fv5p-p927-qmxr",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.1.2"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.0.1",
+        "0.0.2",
+        "0.2.0",
+        "0.2.1",
+        "0.2.2",
+        "0.2.4",
+        "0.3.0",
+        "0.3.0.dev0",
+        "0.3.0.dev1",
+        "0.3.1",
+        "0.3.10",
+        "0.3.11",
+        "0.3.2",
+        "0.3.3",
+        "0.3.4",
+        "0.3.5",
+        "0.3.6",
+        "0.3.6rc1",
+        "0.3.6rc2",
+        "0.3.7",
+        "0.3.8",
+        "0.3.9",
+        "1.0.0",
+        "1.0.0a1",
+        "1.1.0",
+        "1.1.1"
+      ],
+      "affected_conda_versions": [
+        "0.0.1",
+        "0.0.2",
+        "0.2.0",
+        "0.2.1",
+        "0.2.2",
+        "0.2.4",
+        "0.3.0",
+        "0.3.1",
+        "0.3.2",
+        "0.3.3",
+        "0.3.4",
+        "0.3.5",
+        "0.3.6",
+        "0.3.7",
+        "0.3.8",
+        "0.3.9",
+        "0.3.10",
+        "0.3.11",
+        "1.0.0",
+        "1.1.0",
+        "1.1.1"
+      ]
+    },
+    {
+      "id": "GHSA-m42m-m8cr-8m58",
+      "primary_id": "CVE-2025-6985",
+      "aliases": [
+        "CVE-2025-6985"
+      ],
+      "cve_ids": [
+        "CVE-2025-6985"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "langchain-text-splitters",
+      "summary": "LangChain Text Splitters is vulnerable to XML External Entity (XXE) attacks due to unsafe XSLT parsing",
+      "details": "The HTMLSectionSplitter class in langchain-text-splitters is vulnerable to XML External Entity (XXE) attacks due to unsafe XSLT parsing. This vulnerability arises because the class allows the use of arbitrary XSLT stylesheets, which are parsed using lxml.etree.parse() and lxml.etree.XSLT() without any hardening measures. In lxml versions up to 4.9.x, external entities are resolved by default, allowing attackers to read arbitrary local files or perform outbound HTTP(S) fetches. In lxml versions 5.0 and above, while entity expansion is disabled, the XSLT document() function can still read any URI unless XSLTAccessControl is applied. This vulnerability allows remote attackers to gain read-only access to any file the LangChain process can reach, including sensitive files such as SSH keys, environment files, source code, or cloud metadata. No authentication, special privileges, or user interaction are required, and the issue is exploitable in default deployments that enable custom XSLT.",
+      "published": "2025-10-06T18:31:07Z",
+      "modified": "2026-02-04T03:26:48.627970Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-6985"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/langchain-ai/langchain/pull/31819"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/langchain-ai/langchain/commit/43eef435505a1c907227b724c0c760ad5fc01790"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/langchain-ai/langchain"
+        },
+        {
+          "type": "WEB",
+          "url": "https://huntr.com/bounties/cf78abbb-df3b-43de-b6ee-132b73ff8331"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-m42m-m8cr-8m58",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "0.3.9"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.0.1",
+        "0.0.2",
+        "0.2.0",
+        "0.2.1",
+        "0.2.2",
+        "0.2.4",
+        "0.3.0",
+        "0.3.0.dev0",
+        "0.3.0.dev1",
+        "0.3.1",
+        "0.3.2",
+        "0.3.3",
+        "0.3.4",
+        "0.3.5",
+        "0.3.6",
+        "0.3.6rc1",
+        "0.3.6rc2",
+        "0.3.7",
+        "0.3.8"
+      ],
+      "affected_conda_versions": [
+        "0.0.1",
+        "0.0.2",
+        "0.2.0",
+        "0.2.1",
+        "0.2.2",
+        "0.2.4",
+        "0.3.0",
+        "0.3.1",
+        "0.3.2",
+        "0.3.3",
+        "0.3.4",
+        "0.3.5",
+        "0.3.6",
+        "0.3.7",
+        "0.3.8"
+      ]
+    }
+  ]
+}

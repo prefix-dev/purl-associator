@@ -1,0 +1,4205 @@
+{
+  "schema_version": 1,
+  "package": "notebook",
+  "purls": [
+    "pkg:pypi/notebook"
+  ],
+  "generated_at": "2026-05-18T06:01:40+00:00",
+  "conda_versions_total": 97,
+  "advisories": [
+    {
+      "id": "GHSA-3p4q-x8f3-p7vq",
+      "primary_id": "CVE-2018-19352",
+      "aliases": [
+        "CVE-2018-19352",
+        "PYSEC-2018-18"
+      ],
+      "cve_ids": [
+        "CVE-2018-19352"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "notebook",
+      "summary": "Jupyter Notebook XSS via directory name",
+      "details": "Jupyter Notebook before 5.7.2 allows XSS via a crafted directory name because notebook/static/tree/js/notebooklist.js handles certain URLs unsafely.",
+      "published": "2018-11-21T22:19:22Z",
+      "modified": "2024-09-27T20:01:01.276812Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:A/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:A/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2018-19352"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyter/notebook/commit/288b73e1edbf527740e273fcc69b889460871648"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/jupyter/notebook"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyter/notebook/blob/master/docs/source/changelog.rst"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/notebook/PYSEC-2018-18.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://pypi.org/project/notebook/#history"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-3p4q-x8f3-p7vq",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "5.7.2"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.0.0",
+        "4.0.0",
+        "4.0.1",
+        "4.0.2",
+        "4.0.4",
+        "4.0.5",
+        "4.0.6",
+        "4.1.0",
+        "4.2.0",
+        "4.2.0b1",
+        "4.2.1",
+        "4.2.2",
+        "4.2.3",
+        "4.3.0",
+        "4.3.1",
+        "4.3.2",
+        "4.4.0",
+        "4.4.1",
+        "5.0.0",
+        "5.0.0b1",
+        "5.0.0b2",
+        "5.0.0rc1",
+        "5.0.0rc2",
+        "5.1.0",
+        "5.1.0rc1",
+        "5.1.0rc2",
+        "5.1.0rc3",
+        "5.2.0",
+        "5.2.0rc1",
+        "5.2.1",
+        "5.2.1rc1",
+        "5.2.2",
+        "5.3.0",
+        "5.3.0rc1",
+        "5.3.1",
+        "5.4.0",
+        "5.4.1",
+        "5.5.0",
+        "5.5.0rc1",
+        "5.6.0",
+        "5.6.0rc1",
+        "5.7.0",
+        "5.7.1"
+      ],
+      "affected_conda_versions": [
+        "4.1.0",
+        "4.2.0",
+        "4.2.1",
+        "4.2.2",
+        "4.2.3",
+        "4.3.1",
+        "4.3.2",
+        "4.4.1",
+        "5.0.0",
+        "5.1.0",
+        "5.2.0",
+        "5.2.1",
+        "5.2.2",
+        "5.3.1",
+        "5.4.0",
+        "5.4.1",
+        "5.5.0",
+        "5.6.0",
+        "5.7.0",
+        "5.7.1"
+      ]
+    },
+    {
+      "id": "GHSA-44cc-43rp-5947",
+      "primary_id": "CVE-2024-22421",
+      "aliases": [
+        "BIT-jupyter-base-notebook-2024-22421",
+        "BIT-jupyter-notebook-2024-22421",
+        "BIT-jupyterlab-2024-22421",
+        "CVE-2024-22421"
+      ],
+      "cve_ids": [
+        "CVE-2024-22421"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "notebook",
+      "summary": "JupyterLab vulnerable to potential authentication and CSRF tokens leak",
+      "details": "### Impact\nUsers of JupyterLab who click on a malicious link may get their `Authorization` and `XSRFToken` tokens exposed to a third party when running an older `jupyter-server` version.\n\n### Patches\nJupyterLab 4.1.0b2, 4.0.11, and 3.6.7 were patched.\n\n### Workarounds\nNo workaround has been identified, however users should ensure to upgrade `jupyter-server` to version 2.7.2 or newer which includes a redirect vulnerability fix.\n\n### References\n\nVulnerability reported by user @davwwwx via the [bug bounty program](https://app.intigriti.com/programs/jupyter/jupyter/detail) [sponsored by the European Commission](https://commission.europa.eu/news/european-commissions-open-source-programme-office-starts-bug-bounties-2022-01-19_en) and hosted on the [Intigriti platform](https://www.intigriti.com/).\n",
+      "published": "2024-01-19T20:28:10Z",
+      "modified": "2024-02-20T05:34:26.989923Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:L/A:L"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:L/A:L"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyterlab/jupyterlab/security/advisories/GHSA-44cc-43rp-5947"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-22421"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyterlab/jupyterlab/commit/19bd9b96cb2e77170a67e43121637d0b5619e8c6"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyterlab/jupyterlab/commit/1ef7a4fa0202ebdf663e1cc0b45c8813a34a0b96"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyterlab/jupyterlab/commit/fccd83dc4441da0384ee3fd1322c3b2d9ad4caaa"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/jupyterlab/jupyterlab"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/UQJKNRDRFMKGVRIYNNN6CKMNJDNYWO2H"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-44cc-43rp-5947",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "7.0.0"
+            },
+            {
+              "fixed": "7.0.7"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "7.0.0",
+        "7.0.1",
+        "7.0.2",
+        "7.0.3",
+        "7.0.4",
+        "7.0.5",
+        "7.0.6"
+      ],
+      "affected_conda_versions": [
+        "7.0.0",
+        "7.0.1",
+        "7.0.2",
+        "7.0.3",
+        "7.0.4",
+        "7.0.5",
+        "7.0.6"
+      ]
+    },
+    {
+      "id": "GHSA-4952-p58q-6crx",
+      "primary_id": "CVE-2021-32797",
+      "aliases": [
+        "BIT-jupyterlab-2021-32797",
+        "CVE-2021-32797",
+        "PYSEC-2021-130"
+      ],
+      "cve_ids": [
+        "CVE-2021-32797"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "notebook",
+      "summary": "JupyterLab: XSS due to lack of sanitization of the action attribute of an html <form>",
+      "details": "### Impact\n\nUntrusted notebook can execute code on load. This is a remote code execution, but requires user action to open a notebook.\n\n### Patches\n\nPatched in the following versions: 3.1.4, 3.0.17, 2.3.2, 2.2.10, 1.2.21.\n\n### References\n\n[OWASP Page on Restricting Form Submissions](https://cheatsheetseries.owasp.org/cheatsheets/Content_Security_Policy_Cheat_Sheet.html)\n\n### For more information\n\nIf you have any questions or comments about this advisory, or vulnerabilities to report, please email our security list security@ipython.org.\n\nCredit: Guillaume Jeanne from Google\n",
+      "published": "2021-08-23T19:40:22Z",
+      "modified": "2026-03-13T22:15:49.778586Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:N/VI:N/VA:N/SC:H/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:H/I:N/A:N"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:N/VI:N/VA:N/SC:H/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/google/security-research/security/advisories/GHSA-c469-p3jp-2vhx"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyterlab/jupyterlab/security/advisories/GHSA-4952-p58q-6crx"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2021-32797"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyterlab/jupyterlab/commit/504825938c0abfa2fb8ff8d529308830a5ae42ed"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/jupyterlab/PYSEC-2021-130.yaml"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-4952-p58q-6crx",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "5.7.11"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.0.0",
+        "4.0.0",
+        "4.0.1",
+        "4.0.2",
+        "4.0.4",
+        "4.0.5",
+        "4.0.6",
+        "4.1.0",
+        "4.2.0",
+        "4.2.0b1",
+        "4.2.1",
+        "4.2.2",
+        "4.2.3",
+        "4.3.0",
+        "4.3.1",
+        "4.3.2",
+        "4.4.0",
+        "4.4.1",
+        "5.0.0",
+        "5.0.0b1",
+        "5.0.0b2",
+        "5.0.0rc1",
+        "5.0.0rc2",
+        "5.1.0",
+        "5.1.0rc1",
+        "5.1.0rc2",
+        "5.1.0rc3",
+        "5.2.0",
+        "5.2.0rc1",
+        "5.2.1",
+        "5.2.1rc1",
+        "5.2.2",
+        "5.3.0",
+        "5.3.0rc1",
+        "5.3.1",
+        "5.4.0",
+        "5.4.1",
+        "5.5.0",
+        "5.5.0rc1",
+        "5.6.0",
+        "5.6.0rc1",
+        "5.7.0",
+        "5.7.1",
+        "5.7.10",
+        "5.7.2",
+        "5.7.3",
+        "5.7.4",
+        "5.7.5",
+        "5.7.6",
+        "5.7.8",
+        "5.7.9"
+      ],
+      "affected_conda_versions": [
+        "4.1.0",
+        "4.2.0",
+        "4.2.1",
+        "4.2.2",
+        "4.2.3",
+        "4.3.1",
+        "4.3.2",
+        "4.4.1",
+        "5.0.0",
+        "5.1.0",
+        "5.2.0",
+        "5.2.1",
+        "5.2.2",
+        "5.3.1",
+        "5.4.0",
+        "5.4.1",
+        "5.5.0",
+        "5.6.0",
+        "5.7.0",
+        "5.7.1",
+        "5.7.2",
+        "5.7.4",
+        "5.7.5",
+        "5.7.6",
+        "5.7.8",
+        "5.7.9",
+        "5.7.10",
+        "6.0.0",
+        "6.0.1",
+        "6.0.2",
+        "6.0.3",
+        "6.1.0",
+        "6.1.1",
+        "6.1.2",
+        "6.1.3",
+        "6.1.4",
+        "6.1.5",
+        "6.1.6",
+        "6.2.0",
+        "6.3.0",
+        "6.4.0"
+      ]
+    },
+    {
+      "id": "GHSA-49qr-xh3w-h436",
+      "primary_id": "CVE-2018-19351",
+      "aliases": [
+        "CVE-2018-19351",
+        "PYSEC-2018-17"
+      ],
+      "cve_ids": [
+        "CVE-2018-19351"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "notebook",
+      "summary": "Jupyter Notebook XSS via untrusted notebooks",
+      "details": "Jupyter Notebook before 5.7.1 allows XSS via an untrusted notebook because nbconvert responses are considered to have the same origin as the notebook server. In other words, nbconvert endpoints can execute JavaScript with access to the server API. In notebook/nbconvert/handlers.py, NbconvertFileHandler and NbconvertPostHandler do not set a Content Security Policy to prevent this.",
+      "published": "2018-11-21T22:15:47Z",
+      "modified": "2024-09-27T20:02:15.103252Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:A/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:A/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2018-19351"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyter/notebook/commit/107a89fce5f413fb5728c1c5d2c7788e1fb17491"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/jupyter/notebook"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyter/notebook/blob/master/docs/source/changelog.rst"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/notebook/PYSEC-2018-17.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://groups.google.com/forum/#!topic/jupyter/hWzu2BSsplY"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2020/11/msg00033.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://pypi.org/project/notebook/#history"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-49qr-xh3w-h436",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "5.7.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.0.0",
+        "4.0.0",
+        "4.0.1",
+        "4.0.2",
+        "4.0.4",
+        "4.0.5",
+        "4.0.6",
+        "4.1.0",
+        "4.2.0",
+        "4.2.0b1",
+        "4.2.1",
+        "4.2.2",
+        "4.2.3",
+        "4.3.0",
+        "4.3.1",
+        "4.3.2",
+        "4.4.0",
+        "4.4.1",
+        "5.0.0",
+        "5.0.0b1",
+        "5.0.0b2",
+        "5.0.0rc1",
+        "5.0.0rc2",
+        "5.1.0",
+        "5.1.0rc1",
+        "5.1.0rc2",
+        "5.1.0rc3",
+        "5.2.0",
+        "5.2.0rc1",
+        "5.2.1",
+        "5.2.1rc1",
+        "5.2.2",
+        "5.3.0",
+        "5.3.0rc1",
+        "5.3.1",
+        "5.4.0",
+        "5.4.1",
+        "5.5.0",
+        "5.5.0rc1",
+        "5.6.0",
+        "5.6.0rc1",
+        "5.7.0"
+      ],
+      "affected_conda_versions": [
+        "4.1.0",
+        "4.2.0",
+        "4.2.1",
+        "4.2.2",
+        "4.2.3",
+        "4.3.1",
+        "4.3.2",
+        "4.4.1",
+        "5.0.0",
+        "5.1.0",
+        "5.2.0",
+        "5.2.1",
+        "5.2.2",
+        "5.3.1",
+        "5.4.0",
+        "5.4.1",
+        "5.5.0",
+        "5.6.0",
+        "5.7.0"
+      ]
+    },
+    {
+      "id": "GHSA-4m77-cmpx-vjc4",
+      "primary_id": "CVE-2024-22420",
+      "aliases": [
+        "BIT-jupyter-base-notebook-2024-22420",
+        "BIT-jupyter-notebook-2024-22420",
+        "BIT-jupyterlab-2024-22420",
+        "CVE-2024-22420"
+      ],
+      "cve_ids": [
+        "CVE-2024-22420"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "notebook",
+      "summary": "JupyterLab vulnerable to SXSS in Markdown Preview",
+      "details": "### Impact\n\nThe vulnerability depends on user interaction by opening a malicious notebook with Markdown cells, or Markdown file using JupyterLab preview feature.\n\nA malicious user can access any data that the attacked user has access to as well as perform arbitrary requests acting as the attacked user.\n\n### Patches\n\nJupyterLab v4.0.11 was patched.\n\n### Workarounds\n\nUsers can either disable the table of contents extension by running:\n\n```bash\njupyter labextension disable @jupyterlab/toc-extension:registry\n```\n\n### References\n\nVulnerability reported via the [bug bounty program](https://app.intigriti.com/programs/jupyter/jupyter/detail) [sponsored by the European Commission](https://commission.europa.eu/news/european-commissions-open-source-programme-office-starts-bug-bounties-2022-01-19_en) and hosted on the [Intigriti platform](https://www.intigriti.com/).\n",
+      "published": "2024-01-19T20:24:09Z",
+      "modified": "2024-02-20T05:42:53.319596Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:N/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:N/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyterlab/jupyterlab/security/advisories/GHSA-4m77-cmpx-vjc4"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-22420"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyterlab/jupyterlab/commit/dda0033cd49449572d077bbecd33b18d8d05f48a"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyterlab/jupyterlab/commit/e1b3aabab603878e46add445a3114e838411d2df"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/jupyterlab/jupyterlab"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/UQJKNRDRFMKGVRIYNNN6CKMNJDNYWO2H"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-4m77-cmpx-vjc4",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "7.0.0"
+            },
+            {
+              "fixed": "7.0.7"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "7.0.0",
+        "7.0.1",
+        "7.0.2",
+        "7.0.3",
+        "7.0.4",
+        "7.0.5",
+        "7.0.6"
+      ],
+      "affected_conda_versions": [
+        "7.0.0",
+        "7.0.1",
+        "7.0.2",
+        "7.0.3",
+        "7.0.4",
+        "7.0.5",
+        "7.0.6"
+      ]
+    },
+    {
+      "id": "GHSA-6cwv-x26c-w2q4",
+      "primary_id": "CVE-2018-8768",
+      "aliases": [
+        "CVE-2018-8768",
+        "PYSEC-2018-57"
+      ],
+      "cve_ids": [
+        "CVE-2018-8768"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "notebook",
+      "summary": "Jupyter Notebook file bypasses sanitization, executes JavaScript",
+      "details": "In Jupyter Notebook before 5.4.1, a maliciously forged notebook file can bypass sanitization to execute JavaScript in the notebook context. Specifically, invalid HTML is 'fixed' by jQuery after sanitization, making it dangerous.",
+      "published": "2018-07-12T12:00:00Z",
+      "modified": "2024-12-07T05:39:53.498610Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:A/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.0/AV:L/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:A/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2018-8768"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/jupyter/notebook"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/notebook/PYSEC-2018-57.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2020/11/msg00033.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://openwall.com/lists/oss-security/2018/03/15/2"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-6cwv-x26c-w2q4",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "5.4.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.0.0",
+        "4.0.0",
+        "4.0.1",
+        "4.0.2",
+        "4.0.4",
+        "4.0.5",
+        "4.0.6",
+        "4.1.0",
+        "4.2.0",
+        "4.2.0b1",
+        "4.2.1",
+        "4.2.2",
+        "4.2.3",
+        "4.3.0",
+        "4.3.1",
+        "4.3.2",
+        "4.4.0",
+        "4.4.1",
+        "5.0.0",
+        "5.0.0b1",
+        "5.0.0b2",
+        "5.0.0rc1",
+        "5.0.0rc2",
+        "5.1.0",
+        "5.1.0rc1",
+        "5.1.0rc2",
+        "5.1.0rc3",
+        "5.2.0",
+        "5.2.0rc1",
+        "5.2.1",
+        "5.2.1rc1",
+        "5.2.2",
+        "5.3.0",
+        "5.3.0rc1",
+        "5.3.1",
+        "5.4.0"
+      ],
+      "affected_conda_versions": [
+        "4.1.0",
+        "4.2.0",
+        "4.2.1",
+        "4.2.2",
+        "4.2.3",
+        "4.3.1",
+        "4.3.2",
+        "4.4.1",
+        "5.0.0",
+        "5.1.0",
+        "5.2.0",
+        "5.2.1",
+        "5.2.2",
+        "5.3.1",
+        "5.4.0"
+      ]
+    },
+    {
+      "id": "GHSA-9q39-rmj3-p4r2",
+      "primary_id": "CVE-2024-43805",
+      "aliases": [
+        "BIT-jupyter-base-notebook-2024-43805",
+        "BIT-jupyter-notebook-2024-43805",
+        "BIT-jupyterlab-2024-43805",
+        "CVE-2024-43805"
+      ],
+      "cve_ids": [
+        "CVE-2024-43805"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "notebook",
+      "summary": "HTML injection in Jupyter Notebook and JupyterLab leading to DOM Clobbering",
+      "details": "### Impact\n\nThe vulnerability depends on user interaction by opening a malicious notebook with Markdown cells, or Markdown file using JupyterLab preview feature.\n\nA malicious user can access any data that the attacked user has access to as well as perform arbitrary requests acting as the attacked user.\n\n### Patches\n\nJupyterLab v3.6.8, v4.2.5 and Jupyter Notebook v7.2.2 were patched.\n\n### Workarounds\n\nThere is no workaround for the underlying DOM Clobbering susceptibility. However, select plugins can be disabled on deployments which cannot update in a timely fashion to minimise the risk. These are:\n- `@jupyterlab/mathjax-extension:plugin` - users will loose ability to preview mathematical equations \n- `@jupyterlab/markdownviewer-extension:plugin` - users will loose ability to open Markdown previews\n- `@jupyterlab/mathjax2-extension:plugin` (if installed with optional `jupyterlab-mathjax2` package) - an older version of the mathjax plugin for JupyterLab 4.x\n\nTo disable these extensions run:\n\n```bash\njupyter labextension disable @jupyterlab/markdownviewer-extension:plugin\njupyter labextension disable @jupyterlab/mathjax-extension:plugin\njupyter labextension disable @jupyterlab/mathjax2-extension:plugin\n```\n\nTo confirm that the plugins were disabled run:\n\n```bash\njupyter labextension list\n```\n\n### References\n\nNone\n\n### Notes\n\nThis change has a potential to break rendering of some markdown. There is a setting in Sanitizer which allows to revert to the previous sanitizer settings (`allowNamedProperties`).",
+      "published": "2024-08-29T17:55:53Z",
+      "modified": "2024-08-30T08:11:56.824277Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:L/VA:L/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:L/A:L"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:L/VA:L/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyterlab/jupyterlab/security/advisories/GHSA-9q39-rmj3-p4r2"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-43805"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyterlab/jupyterlab/commit/06ad9de836f155add7d3d651ef936cc4c5ea8093"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyterlab/jupyterlab/commit/88e24baac551196f9cb3de16bd060a7ab1597674"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/jupyterlab/jupyterlab"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-9q39-rmj3-p4r2",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "7.0.0"
+            },
+            {
+              "fixed": "7.2.2"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "7.0.0",
+        "7.0.1",
+        "7.0.2",
+        "7.0.3",
+        "7.0.4",
+        "7.0.5",
+        "7.0.6",
+        "7.0.7",
+        "7.0.8",
+        "7.1.0",
+        "7.1.0a0",
+        "7.1.0a1",
+        "7.1.0a2",
+        "7.1.0b0",
+        "7.1.0rc0",
+        "7.1.0rc1",
+        "7.1.1",
+        "7.1.2",
+        "7.1.3",
+        "7.2.0",
+        "7.2.0a0",
+        "7.2.0b0",
+        "7.2.0b1",
+        "7.2.0rc0",
+        "7.2.0rc1",
+        "7.2.1"
+      ],
+      "affected_conda_versions": [
+        "7.0.0",
+        "7.0.1",
+        "7.0.2",
+        "7.0.3",
+        "7.0.4",
+        "7.0.5",
+        "7.0.6",
+        "7.0.7",
+        "7.0.8",
+        "7.1.0",
+        "7.1.1",
+        "7.1.2",
+        "7.1.3",
+        "7.2.0",
+        "7.2.1"
+      ]
+    },
+    {
+      "id": "GHSA-c7vm-f5p4-8fqh",
+      "primary_id": "CVE-2020-26215",
+      "aliases": [
+        "BIT-jupyter-base-notebook-2020-26215",
+        "BIT-jupyter-notebook-2020-26215",
+        "CVE-2020-26215",
+        "PYSEC-2020-215"
+      ],
+      "cve_ids": [
+        "CVE-2020-26215"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "notebook",
+      "summary": "Open redirect in Jupyter Notebook",
+      "details": "### Impact\n_What kind of vulnerability is it? Who is impacted?_\n\nOpen redirect vulnerability - a maliciously crafted link to a notebook server could redirect the browser to a different website.\n\nAll notebook servers are technically affected, however, these maliciously crafted links can only be reasonably made for known notebook server hosts. A link to your notebook server may *appear* safe, but ultimately redirect to a spoofed server on the public internet.\n\n### Patches\n\n_Has the problem been patched? What versions should users upgrade to?_\n\nPatched in notebook 6.1.5\n\n\n### References\n\n[OWASP page on open redirects](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html)\n\n### For more information\n\nIf you have any questions or comments about this advisory, or vulnerabilities to report, please email our security list [security@ipython.org](mailto:security@ipython.org).\n\nCredit: zhuonan li of Alibaba Application Security Team",
+      "published": "2020-11-18T21:06:36Z",
+      "modified": "2026-03-13T22:15:03.897641Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:H/AT:N/PR:L/UI:A/VC:N/VI:N/VA:N/SC:N/SI:L/SA:L"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:L/UI:R/S:C/C:N/I:L/A:L"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:H/AT:N/PR:L/UI:A/VC:N/VI:N/VA:N/SC:N/SI:L/SA:L"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyter/notebook/security/advisories/GHSA-c7vm-f5p4-8fqh"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2020-26215"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyter/notebook/commit/3cec4bbe21756de9f0c4bccf18cf61d840314d74"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/jupyter/notebook"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/notebook/PYSEC-2020-215.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2020/12/msg00004.html"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-c7vm-f5p4-8fqh",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "6.1.5"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.0.0",
+        "4.0.0",
+        "4.0.1",
+        "4.0.2",
+        "4.0.4",
+        "4.0.5",
+        "4.0.6",
+        "4.1.0",
+        "4.2.0",
+        "4.2.0b1",
+        "4.2.1",
+        "4.2.2",
+        "4.2.3",
+        "4.3.0",
+        "4.3.1",
+        "4.3.2",
+        "4.4.0",
+        "4.4.1",
+        "5.0.0",
+        "5.0.0b1",
+        "5.0.0b2",
+        "5.0.0rc1",
+        "5.0.0rc2",
+        "5.1.0",
+        "5.1.0rc1",
+        "5.1.0rc2",
+        "5.1.0rc3",
+        "5.2.0",
+        "5.2.0rc1",
+        "5.2.1",
+        "5.2.1rc1",
+        "5.2.2",
+        "5.3.0",
+        "5.3.0rc1",
+        "5.3.1",
+        "5.4.0",
+        "5.4.1",
+        "5.5.0",
+        "5.5.0rc1",
+        "5.6.0",
+        "5.6.0rc1",
+        "5.7.0",
+        "5.7.1",
+        "5.7.10",
+        "5.7.11",
+        "5.7.12",
+        "5.7.13",
+        "5.7.14",
+        "5.7.14a0",
+        "5.7.15",
+        "5.7.16",
+        "5.7.2",
+        "5.7.3",
+        "5.7.4",
+        "5.7.5",
+        "5.7.6",
+        "5.7.8",
+        "5.7.9",
+        "6.0.0",
+        "6.0.0rc1",
+        "6.0.1",
+        "6.0.2",
+        "6.0.3",
+        "6.1.0",
+        "6.1.0rc1",
+        "6.1.1",
+        "6.1.2",
+        "6.1.3",
+        "6.1.4"
+      ],
+      "affected_conda_versions": [
+        "4.1.0",
+        "4.2.0",
+        "4.2.1",
+        "4.2.2",
+        "4.2.3",
+        "4.3.1",
+        "4.3.2",
+        "4.4.1",
+        "5.0.0",
+        "5.1.0",
+        "5.2.0",
+        "5.2.1",
+        "5.2.2",
+        "5.3.1",
+        "5.4.0",
+        "5.4.1",
+        "5.5.0",
+        "5.6.0",
+        "5.7.0",
+        "5.7.1",
+        "5.7.2",
+        "5.7.4",
+        "5.7.5",
+        "5.7.6",
+        "5.7.8",
+        "5.7.9",
+        "5.7.10",
+        "5.7.11",
+        "6.0.0",
+        "6.0.1",
+        "6.0.2",
+        "6.0.3",
+        "6.1.0",
+        "6.1.1",
+        "6.1.2",
+        "6.1.3",
+        "6.1.4"
+      ]
+    },
+    {
+      "id": "GHSA-hhx8-cr55-qcxx",
+      "primary_id": "CVE-2019-9644",
+      "aliases": [
+        "CVE-2019-9644",
+        "PYSEC-2019-159"
+      ],
+      "cve_ids": [
+        "CVE-2019-9644"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "notebook",
+      "summary": "Improper Neutralization of Input During Web Page Generation in Jupyter Notebook",
+      "details": "An XSSI (cross-site inclusion) vulnerability in Jupyter Notebook before 5.7.6 allows inclusion of resources on malicious pages when visited by users who are authenticated with a Jupyter server. Access to the content of resources has been demonstrated with Internet Explorer through capturing of error messages, though not reproduced with other browsers. This occurs because Internet Explorer's error messages can include the content of any invalid JavaScript that was encountered.",
+      "published": "2022-05-14T01:10:43Z",
+      "modified": "2024-09-26T16:24:36.494583Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:A/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:N"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:A/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2019-9644"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/jupyter/notebook"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyter/notebook/compare/f3f00df...05aa4b2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/notebook/PYSEC-2019-159.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/UP5RLEES2JBBNSNLBR65XM6PCD4EMF7D"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/VMDPJBVXOVO6LYGAT46VZNHH6JKSCURO"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-hhx8-cr55-qcxx",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "5.7.6"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.0.0",
+        "4.0.0",
+        "4.0.1",
+        "4.0.2",
+        "4.0.4",
+        "4.0.5",
+        "4.0.6",
+        "4.1.0",
+        "4.2.0",
+        "4.2.0b1",
+        "4.2.1",
+        "4.2.2",
+        "4.2.3",
+        "4.3.0",
+        "4.3.1",
+        "4.3.2",
+        "4.4.0",
+        "4.4.1",
+        "5.0.0",
+        "5.0.0b1",
+        "5.0.0b2",
+        "5.0.0rc1",
+        "5.0.0rc2",
+        "5.1.0",
+        "5.1.0rc1",
+        "5.1.0rc2",
+        "5.1.0rc3",
+        "5.2.0",
+        "5.2.0rc1",
+        "5.2.1",
+        "5.2.1rc1",
+        "5.2.2",
+        "5.3.0",
+        "5.3.0rc1",
+        "5.3.1",
+        "5.4.0",
+        "5.4.1",
+        "5.5.0",
+        "5.5.0rc1",
+        "5.6.0",
+        "5.6.0rc1",
+        "5.7.0",
+        "5.7.1",
+        "5.7.2",
+        "5.7.3",
+        "5.7.4",
+        "5.7.5"
+      ],
+      "affected_conda_versions": [
+        "4.1.0",
+        "4.2.0",
+        "4.2.1",
+        "4.2.2",
+        "4.2.3",
+        "4.3.1",
+        "4.3.2",
+        "4.4.1",
+        "5.0.0",
+        "5.1.0",
+        "5.2.0",
+        "5.2.1",
+        "5.2.2",
+        "5.3.1",
+        "5.4.0",
+        "5.4.1",
+        "5.5.0",
+        "5.6.0",
+        "5.7.0",
+        "5.7.1",
+        "5.7.2",
+        "5.7.4",
+        "5.7.5"
+      ]
+    },
+    {
+      "id": "GHSA-hwvq-6gjx-j797",
+      "primary_id": "CVE-2021-32798",
+      "aliases": [
+        "BIT-jupyter-base-notebook-2021-32798",
+        "BIT-jupyter-notebook-2021-32798",
+        "CVE-2021-32798",
+        "PYSEC-2021-118"
+      ],
+      "cve_ids": [
+        "CVE-2021-32798"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "notebook",
+      "summary": "Special Element Injection in notebook",
+      "details": "### Impact\n\nUntrusted notebook can execute code on load. This is a remote code execution, but requires user action to open a notebook.\n\n### Patches\n\n5.7.11, 6.4.1\n\n### References\n\n[OWASP Page on Injection Prevention](https://cheatsheetseries.owasp.org/cheatsheets/Injection_Prevention_Cheat_Sheet.html#injection-prevention-rules)\n\n### For more information\n\nIf you have any questions or comments about this advisory, or vulnerabilities to report, please email our security list security@ipython.org.\n\nCredit: Guillaume Jeanne from Google\n\n\n### Example:\n\nA notebook with the following content in a cell and it would display an alert when opened for the first time in Notebook (in an untrusted state):\n\n```\n{ \"cell_type\": \"code\", \"execution_count\": 0, \"metadata\": {}, \"outputs\": [ { \"data\": { \"text/html\": [ \"<select><iframe></select><img src=x: onerror=alert('xss')>\\n\"], \"text/plain\": [] }, \"metadata\": {}, \"output_type\": \"display_data\" } ], \"source\": [ \"\" ] }\n````",
+      "published": "2021-08-23T19:40:38Z",
+      "modified": "2026-03-13T22:15:42.943072Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:N/SC:H/SI:H/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:N"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:N/SC:H/SI:H/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyter/notebook/security/advisories/GHSA-hwvq-6gjx-j797"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2021-32798"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyter/notebook/commit/79fc76e890a8ec42f73a3d009e44ef84c14ef0d5"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/jupyter/notebook"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/notebook/PYSEC-2021-118.yaml"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-hwvq-6gjx-j797",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "5.7.11"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.0.0",
+        "4.0.0",
+        "4.0.1",
+        "4.0.2",
+        "4.0.4",
+        "4.0.5",
+        "4.0.6",
+        "4.1.0",
+        "4.2.0",
+        "4.2.0b1",
+        "4.2.1",
+        "4.2.2",
+        "4.2.3",
+        "4.3.0",
+        "4.3.1",
+        "4.3.2",
+        "4.4.0",
+        "4.4.1",
+        "5.0.0",
+        "5.0.0b1",
+        "5.0.0b2",
+        "5.0.0rc1",
+        "5.0.0rc2",
+        "5.1.0",
+        "5.1.0rc1",
+        "5.1.0rc2",
+        "5.1.0rc3",
+        "5.2.0",
+        "5.2.0rc1",
+        "5.2.1",
+        "5.2.1rc1",
+        "5.2.2",
+        "5.3.0",
+        "5.3.0rc1",
+        "5.3.1",
+        "5.4.0",
+        "5.4.1",
+        "5.5.0",
+        "5.5.0rc1",
+        "5.6.0",
+        "5.6.0rc1",
+        "5.7.0",
+        "5.7.1",
+        "5.7.10",
+        "5.7.2",
+        "5.7.3",
+        "5.7.4",
+        "5.7.5",
+        "5.7.6",
+        "5.7.8",
+        "5.7.9"
+      ],
+      "affected_conda_versions": [
+        "4.1.0",
+        "4.2.0",
+        "4.2.1",
+        "4.2.2",
+        "4.2.3",
+        "4.3.1",
+        "4.3.2",
+        "4.4.1",
+        "5.0.0",
+        "5.1.0",
+        "5.2.0",
+        "5.2.1",
+        "5.2.2",
+        "5.3.1",
+        "5.4.0",
+        "5.4.1",
+        "5.5.0",
+        "5.6.0",
+        "5.7.0",
+        "5.7.1",
+        "5.7.2",
+        "5.7.4",
+        "5.7.5",
+        "5.7.6",
+        "5.7.8",
+        "5.7.9",
+        "5.7.10",
+        "6.0.0",
+        "6.0.1",
+        "6.0.2",
+        "6.0.3",
+        "6.1.0",
+        "6.1.1",
+        "6.1.2",
+        "6.1.3",
+        "6.1.4",
+        "6.1.5",
+        "6.1.6",
+        "6.2.0",
+        "6.3.0",
+        "6.4.0"
+      ]
+    },
+    {
+      "id": "GHSA-jqwc-jm56-wcwj",
+      "primary_id": "CVE-2018-21030",
+      "aliases": [
+        "CVE-2018-21030",
+        "PYSEC-2019-157"
+      ],
+      "cve_ids": [
+        "CVE-2018-21030"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "notebook",
+      "summary": "Cross-site scripting in Jupyter Notebook",
+      "details": "Jupyter Notebook before 5.5.0 does not use a CSP header to treat served files as belonging to a separate origin. Thus, for example, an XSS payload can be placed in an SVG document.",
+      "published": "2019-11-08T17:07:42Z",
+      "modified": "2024-10-07T15:12:51.790482Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2018-21030"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyter/notebook/pull/3341"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyter/notebook/commit/e321c80776542b8d6f3411af16f9e21e51e27687"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/advisories/GHSA-jqwc-jm56-wcwj"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/jupyter/notebook"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyter/notebook/releases/tag/5.5.0"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/notebook/PYSEC-2019-157.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2020/11/msg00033.html"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-jqwc-jm56-wcwj",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "5.5.0rc1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.0.0",
+        "4.0.0",
+        "4.0.1",
+        "4.0.2",
+        "4.0.4",
+        "4.0.5",
+        "4.0.6",
+        "4.1.0",
+        "4.2.0",
+        "4.2.0b1",
+        "4.2.1",
+        "4.2.2",
+        "4.2.3",
+        "4.3.0",
+        "4.3.1",
+        "4.3.2",
+        "4.4.0",
+        "4.4.1",
+        "5.0.0",
+        "5.0.0b1",
+        "5.0.0b2",
+        "5.0.0rc1",
+        "5.0.0rc2",
+        "5.1.0",
+        "5.1.0rc1",
+        "5.1.0rc2",
+        "5.1.0rc3",
+        "5.2.0",
+        "5.2.0rc1",
+        "5.2.1",
+        "5.2.1rc1",
+        "5.2.2",
+        "5.3.0",
+        "5.3.0rc1",
+        "5.3.1",
+        "5.4.0",
+        "5.4.1"
+      ],
+      "affected_conda_versions": [
+        "4.1.0",
+        "4.2.0",
+        "4.2.1",
+        "4.2.2",
+        "4.2.3",
+        "4.3.1",
+        "4.3.2",
+        "4.4.1",
+        "5.0.0",
+        "5.1.0",
+        "5.2.0",
+        "5.2.1",
+        "5.2.2",
+        "5.3.1",
+        "5.4.0",
+        "5.4.1"
+      ]
+    },
+    {
+      "id": "GHSA-m87f-39q9-6f55",
+      "primary_id": "CVE-2022-24758",
+      "aliases": [
+        "BIT-jupyter-base-notebook-2022-24758",
+        "BIT-jupyter-notebook-2022-24758",
+        "CVE-2022-24758",
+        "PYSEC-2022-180"
+      ],
+      "cve_ids": [
+        "CVE-2022-24758"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "notebook",
+      "summary": "Sensitive Auth & Cookie data stored in Jupyter server logs",
+      "details": "Anytime a 5xx error is triggered, the auth cookie and other header values are recorded in Jupyter server logs by default. Considering these logs do not require root access, an attacker can monitor these logs, steal sensitive auth/cookie information, and gain access to the Jupyter server.\n\nUpgrade to notebook version 6.4.10\n\n### For more information\n\nIf you have any questions or comments about this advisory, or vulnerabilities to report, please email our security list [security@ipython.org](mailto:security@ipython.org).\n\nCredit: @3coins for reporting. Thank you!\n\n",
+      "published": "2022-04-05T17:47:26Z",
+      "modified": "2023-12-06T01:02:05.124487Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyter/notebook/security/advisories/GHSA-m87f-39q9-6f55"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2022-24758"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/jupyter/notebook"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/notebook/PYSEC-2022-180.yaml"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-m87f-39q9-6f55",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "6.4.10"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.0.0",
+        "4.0.0",
+        "4.0.1",
+        "4.0.2",
+        "4.0.4",
+        "4.0.5",
+        "4.0.6",
+        "4.1.0",
+        "4.2.0",
+        "4.2.0b1",
+        "4.2.1",
+        "4.2.2",
+        "4.2.3",
+        "4.3.0",
+        "4.3.1",
+        "4.3.2",
+        "4.4.0",
+        "4.4.1",
+        "5.0.0",
+        "5.0.0b1",
+        "5.0.0b2",
+        "5.0.0rc1",
+        "5.0.0rc2",
+        "5.1.0",
+        "5.1.0rc1",
+        "5.1.0rc2",
+        "5.1.0rc3",
+        "5.2.0",
+        "5.2.0rc1",
+        "5.2.1",
+        "5.2.1rc1",
+        "5.2.2",
+        "5.3.0",
+        "5.3.0rc1",
+        "5.3.1",
+        "5.4.0",
+        "5.4.1",
+        "5.5.0",
+        "5.5.0rc1",
+        "5.6.0",
+        "5.6.0rc1",
+        "5.7.0",
+        "5.7.1",
+        "5.7.10",
+        "5.7.11",
+        "5.7.12",
+        "5.7.13",
+        "5.7.14",
+        "5.7.14a0",
+        "5.7.15",
+        "5.7.16",
+        "5.7.2",
+        "5.7.3",
+        "5.7.4",
+        "5.7.5",
+        "5.7.6",
+        "5.7.8",
+        "5.7.9",
+        "6.0.0",
+        "6.0.0rc1",
+        "6.0.1",
+        "6.0.2",
+        "6.0.3",
+        "6.1.0",
+        "6.1.0rc1",
+        "6.1.1",
+        "6.1.2",
+        "6.1.3",
+        "6.1.4",
+        "6.1.5",
+        "6.1.6",
+        "6.2.0",
+        "6.3.0",
+        "6.4.0",
+        "6.4.0a0",
+        "6.4.0a1",
+        "6.4.0rc0",
+        "6.4.1",
+        "6.4.2",
+        "6.4.3",
+        "6.4.4",
+        "6.4.5",
+        "6.4.6",
+        "6.4.7",
+        "6.4.8",
+        "6.4.9"
+      ],
+      "affected_conda_versions": [
+        "4.1.0",
+        "4.2.0",
+        "4.2.1",
+        "4.2.2",
+        "4.2.3",
+        "4.3.1",
+        "4.3.2",
+        "4.4.1",
+        "5.0.0",
+        "5.1.0",
+        "5.2.0",
+        "5.2.1",
+        "5.2.2",
+        "5.3.1",
+        "5.4.0",
+        "5.4.1",
+        "5.5.0",
+        "5.6.0",
+        "5.7.0",
+        "5.7.1",
+        "5.7.2",
+        "5.7.4",
+        "5.7.5",
+        "5.7.6",
+        "5.7.8",
+        "5.7.9",
+        "5.7.10",
+        "5.7.11",
+        "6.0.0",
+        "6.0.1",
+        "6.0.2",
+        "6.0.3",
+        "6.1.0",
+        "6.1.1",
+        "6.1.2",
+        "6.1.3",
+        "6.1.4",
+        "6.1.5",
+        "6.1.6",
+        "6.2.0",
+        "6.3.0",
+        "6.4.0",
+        "6.4.1",
+        "6.4.2",
+        "6.4.3",
+        "6.4.4",
+        "6.4.5",
+        "6.4.6",
+        "6.4.7",
+        "6.4.8",
+        "6.4.9"
+      ]
+    },
+    {
+      "id": "GHSA-mqcg-5x36-vfcg",
+      "primary_id": "CVE-2026-42557",
+      "aliases": [
+        "BIT-jupyter-base-notebook-2026-42557",
+        "BIT-jupyter-notebook-2026-42557",
+        "BIT-jupyterlab-2026-42557",
+        "CVE-2026-42557"
+      ],
+      "cve_ids": [
+        "CVE-2026-42557"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "notebook",
+      "summary": "JupyterLab's command linker attributes in HTML enable one-click command execution from untrusted content",
+      "details": "JupyterLab's HTML sanitizer allowlists `data-commandlinker-command` and `data-commandlinker-args` on `button` elements, while `CommandLinker` listens for all click events on `document.body` and executes the named command without checking whether the element came from trusted JupyterLab UI. A notebook with a pre-saved HTML cell output containing a deceptive button can trigger arbitrary JupyterLab commands - including arbitrary code execution - on a single user click, without any code being submitted for execution by the user.\n\n### Impact\n\nAn attacker who shares a notebook or a Markdown file - via email, GitHub, or a Binder link - can invoke an arbitrary command upon a single click by the victim. The button can be rendered inside the output area and be visually indistinguishable from a legitimate widget. No kernel needs to start; the HTML output is stored in the notebook file and displayed immediately on open.\n\n#### Single-click impact\n\nAn attacker convincing the victim to click on a single button or link can:\n- execute arbitrary code in the available kernels,\n- delete files leading to information loss; in principle the loss could be unrecoverable, depending on server configuration and attack complexity,\n- open multiple kernels/terminals at once, or create multiple files at once, putting significant stress on the server and thus deny availability for other users when using standalone multi-tenant jupyter-server deployment, and to a lesser degree impact availability on JupyterHub deployments.\n\nThe arbitrary code execution will be immediately visible to the user; and can be halted by the timely user intervention. The deletion of files can be silent and go unnoticed for some time.\n\n#### Multi-click attacks\n\nAn attacker who convinces the victim to click on multiple buttons in specific order and to grant access to clipboard (or in scenarios where the user already granted keyboard access) can obtain full access to the terminal and execute arbitrary commands in the environment with access scope that might exceed that of available kernels. Only users of Chromium-based browsers are susceptible to this expanded variant of the attack.\n\nThe execution of commands in the terminal would be immediately visible to the user.\n\n#### Impact of third-party extensions\n\nThe impact described above assumes a plain JupyterLab/Notebook installation. In environments with frontend extensions that contribute additional commands the attack surface is increased by the functionality covered by these commands.\n\n### Patches\n\nJupyterLab 4.5.7\n\n### Workarounds\n\nNo workarounds are available for end-users.\n\nDownstream applications inheriting from `JupyterFrontEnd` or `JupyterLab` can effectively disable the `CommandLinker` by passing `commandLinker: new CommandLinker({ commands: new CommandRegistry() })` option in the initialization options.\n\n### Hardening\n\nThe patched versions include a toggle to disable the command linker functionality altogether, for example via `overrides.json`:\n\n```json\n{\n  \"@jupyterlab/apputils-extension:sanitizer\": {\n    \"allowCommandLinker\": false\n  }\n}\n```\n\n### Resources\n\n- https://jupyterlab.readthedocs.io/en/latest/user/commands.html#commands-in-markdown-files",
+      "published": "2026-05-06T21:43:44Z",
+      "modified": "2026-05-15T11:11:10.345567780Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:A/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:A/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyterlab/jupyterlab/security/advisories/GHSA-mqcg-5x36-vfcg"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-42557"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/jupyterlab/jupyterlab"
+        },
+        {
+          "type": "WEB",
+          "url": "https://jupyterlab.readthedocs.io/en/latest/user/commands.html#commands-in-markdown-files"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-mqcg-5x36-vfcg",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "7.0.0"
+            },
+            {
+              "fixed": "7.5.6"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "7.0.0",
+        "7.0.1",
+        "7.0.2",
+        "7.0.3",
+        "7.0.4",
+        "7.0.5",
+        "7.0.6",
+        "7.0.7",
+        "7.0.8",
+        "7.1.0",
+        "7.1.0a0",
+        "7.1.0a1",
+        "7.1.0a2",
+        "7.1.0b0",
+        "7.1.0rc0",
+        "7.1.0rc1",
+        "7.1.1",
+        "7.1.2",
+        "7.1.3",
+        "7.2.0",
+        "7.2.0a0",
+        "7.2.0b0",
+        "7.2.0b1",
+        "7.2.0rc0",
+        "7.2.0rc1",
+        "7.2.1",
+        "7.2.2",
+        "7.2.3",
+        "7.3.0",
+        "7.3.0a0",
+        "7.3.0a1",
+        "7.3.0b0",
+        "7.3.0b1",
+        "7.3.0b2",
+        "7.3.0rc0",
+        "7.3.1",
+        "7.3.2",
+        "7.3.3",
+        "7.4.0",
+        "7.4.0a0",
+        "7.4.0a1",
+        "7.4.0a2",
+        "7.4.0a3",
+        "7.4.0b0",
+        "7.4.0b1",
+        "7.4.0b2",
+        "7.4.0b3",
+        "7.4.0rc0",
+        "7.4.1",
+        "7.4.2",
+        "7.4.3",
+        "7.4.4",
+        "7.4.5",
+        "7.4.6",
+        "7.4.7",
+        "7.5.0",
+        "7.5.0a0",
+        "7.5.0a1",
+        "7.5.0a2",
+        "7.5.0a3",
+        "7.5.0b0",
+        "7.5.0b1",
+        "7.5.0rc0",
+        "7.5.0rc1",
+        "7.5.1",
+        "7.5.2",
+        "7.5.3",
+        "7.5.4",
+        "7.5.5"
+      ],
+      "affected_conda_versions": [
+        "7.0.0",
+        "7.0.1",
+        "7.0.2",
+        "7.0.3",
+        "7.0.4",
+        "7.0.5",
+        "7.0.6",
+        "7.0.7",
+        "7.0.8",
+        "7.1.0",
+        "7.1.1",
+        "7.1.2",
+        "7.1.3",
+        "7.2.0",
+        "7.2.1",
+        "7.2.2",
+        "7.3.0",
+        "7.3.1",
+        "7.3.2",
+        "7.3.3",
+        "7.4.0",
+        "7.4.1",
+        "7.4.2",
+        "7.4.3",
+        "7.4.4",
+        "7.4.5",
+        "7.4.6",
+        "7.4.7",
+        "7.5.0",
+        "7.5.1",
+        "7.5.2",
+        "7.5.3",
+        "7.5.4",
+        "7.5.5"
+      ]
+    },
+    {
+      "id": "GHSA-rch3-82jr-f9w9",
+      "primary_id": "CVE-2026-40171",
+      "aliases": [
+        "BIT-jupyter-base-notebook-2026-40171",
+        "BIT-jupyter-notebook-2026-40171",
+        "BIT-jupyterlab-2026-40171",
+        "CVE-2026-40171"
+      ],
+      "cve_ids": [
+        "CVE-2026-40171"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "notebook",
+      "summary": "Jupyter Notebook Vulnerable to Authentication Token Theft via CommandLinker XSS",
+      "details": "### Impact\n\nA stored Cross-Site Scripting (XSS) vulnerability in Jupyter Notebook allows attackers to steal authentication tokens from users who open malicious notebook files and interact with elements that the attacker can make look indistinguishable from legitimate controls (single click interaction).\n\nThe vulnerability enables complete account takeover through the Jupyter REST API, allowing the attacker to:\n1. Read all files\n2. Modify/create files\n3. Access running kernels and execute arbitrary code\n4. Create terminals for shell access\n\n### Patches\n\nJupyter Notebook 7.5.6 and JupyterLab 4.5.7 include patches for this vulnerability.\n\n### Workarounds\n\nThe help extension can be disabled via CLI:\n\n```\njupyter labextension disable @jupyter-notebook/help-extension\njupyter labextension disable @jupyterlab/help-extension\n```\n\n### Hardening\n\nThe patched versions include a toggle to disable the command linker functionality altogether, for example via `overrides.json`:\n\n```json\n{\n  \"@jupyterlab/apputils-extension:sanitizer\": {\n    \"allowCommandLinker\": false\n  }\n}\n```\n\n### Resources\n\n- https://jupyterlab.readthedocs.io/en/latest/user/commands.html#commands-in-markdown-output-and-files\n\n### Acknowledgments\n\nReported by Daniel Teixeira - NVIDIA AI Red Team",
+      "published": "2026-04-30T17:25:47Z",
+      "modified": "2026-05-11T08:11:06.895404690Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:H/UI:A/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:H/UI:A/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyter/notebook/security/advisories/GHSA-rch3-82jr-f9w9"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-40171"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/jupyter/notebook"
+        },
+        {
+          "type": "WEB",
+          "url": "https://jupyterlab.readthedocs.io/en/latest/user/commands.html#commands-in-markdown-output-and-files"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-rch3-82jr-f9w9",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "7.0.0"
+            },
+            {
+              "fixed": "7.5.6"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "7.0.0",
+        "7.0.1",
+        "7.0.2",
+        "7.0.3",
+        "7.0.4",
+        "7.0.5",
+        "7.0.6",
+        "7.0.7",
+        "7.0.8",
+        "7.1.0",
+        "7.1.0a0",
+        "7.1.0a1",
+        "7.1.0a2",
+        "7.1.0b0",
+        "7.1.0rc0",
+        "7.1.0rc1",
+        "7.1.1",
+        "7.1.2",
+        "7.1.3",
+        "7.2.0",
+        "7.2.0a0",
+        "7.2.0b0",
+        "7.2.0b1",
+        "7.2.0rc0",
+        "7.2.0rc1",
+        "7.2.1",
+        "7.2.2",
+        "7.2.3",
+        "7.3.0",
+        "7.3.0a0",
+        "7.3.0a1",
+        "7.3.0b0",
+        "7.3.0b1",
+        "7.3.0b2",
+        "7.3.0rc0",
+        "7.3.1",
+        "7.3.2",
+        "7.3.3",
+        "7.4.0",
+        "7.4.0a0",
+        "7.4.0a1",
+        "7.4.0a2",
+        "7.4.0a3",
+        "7.4.0b0",
+        "7.4.0b1",
+        "7.4.0b2",
+        "7.4.0b3",
+        "7.4.0rc0",
+        "7.4.1",
+        "7.4.2",
+        "7.4.3",
+        "7.4.4",
+        "7.4.5",
+        "7.4.6",
+        "7.4.7",
+        "7.5.0",
+        "7.5.0a0",
+        "7.5.0a1",
+        "7.5.0a2",
+        "7.5.0a3",
+        "7.5.0b0",
+        "7.5.0b1",
+        "7.5.0rc0",
+        "7.5.0rc1",
+        "7.5.1",
+        "7.5.2",
+        "7.5.3",
+        "7.5.4",
+        "7.5.5"
+      ],
+      "affected_conda_versions": [
+        "7.0.0",
+        "7.0.1",
+        "7.0.2",
+        "7.0.3",
+        "7.0.4",
+        "7.0.5",
+        "7.0.6",
+        "7.0.7",
+        "7.0.8",
+        "7.1.0",
+        "7.1.1",
+        "7.1.2",
+        "7.1.3",
+        "7.2.0",
+        "7.2.1",
+        "7.2.2",
+        "7.3.0",
+        "7.3.1",
+        "7.3.2",
+        "7.3.3",
+        "7.4.0",
+        "7.4.1",
+        "7.4.2",
+        "7.4.3",
+        "7.4.4",
+        "7.4.5",
+        "7.4.6",
+        "7.4.7",
+        "7.5.0",
+        "7.5.1",
+        "7.5.2",
+        "7.5.3",
+        "7.5.4",
+        "7.5.5"
+      ]
+    },
+    {
+      "id": "GHSA-rcx2-m7jp-p9wj",
+      "primary_id": "CVE-2019-10856",
+      "aliases": [
+        "CVE-2019-10856",
+        "PYSEC-2019-158"
+      ],
+      "cve_ids": [
+        "CVE-2019-10856"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "notebook",
+      "summary": "Jupyter Notebook open redirect vulnerability",
+      "details": "In Jupyter Notebook before 5.7.8, an open redirect can occur via an empty netloc. This issue exists because of an incomplete fix for CVE-2019-10255.",
+      "published": "2019-04-09T19:47:27Z",
+      "modified": "2024-09-26T14:43:51.423817Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2019-10856"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyter/notebook/commit/979e0bd15e794ceb00cc63737fcd5fd9addc4a99"
+        },
+        {
+          "type": "WEB",
+          "url": "https://blog.jupyter.org/open-redirect-vulnerability-in-jupyter-jupyterhub-adf43583f1e4"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/jupyter/notebook"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyter/notebook/compare/16cf97c...b8e30ea"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/notebook/PYSEC-2019-158.yaml"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-rcx2-m7jp-p9wj",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "5.7.8"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.0.0",
+        "4.0.0",
+        "4.0.1",
+        "4.0.2",
+        "4.0.4",
+        "4.0.5",
+        "4.0.6",
+        "4.1.0",
+        "4.2.0",
+        "4.2.0b1",
+        "4.2.1",
+        "4.2.2",
+        "4.2.3",
+        "4.3.0",
+        "4.3.1",
+        "4.3.2",
+        "4.4.0",
+        "4.4.1",
+        "5.0.0",
+        "5.0.0b1",
+        "5.0.0b2",
+        "5.0.0rc1",
+        "5.0.0rc2",
+        "5.1.0",
+        "5.1.0rc1",
+        "5.1.0rc2",
+        "5.1.0rc3",
+        "5.2.0",
+        "5.2.0rc1",
+        "5.2.1",
+        "5.2.1rc1",
+        "5.2.2",
+        "5.3.0",
+        "5.3.0rc1",
+        "5.3.1",
+        "5.4.0",
+        "5.4.1",
+        "5.5.0",
+        "5.5.0rc1",
+        "5.6.0",
+        "5.6.0rc1",
+        "5.7.0",
+        "5.7.1",
+        "5.7.2",
+        "5.7.3",
+        "5.7.4",
+        "5.7.5",
+        "5.7.6"
+      ],
+      "affected_conda_versions": [
+        "4.1.0",
+        "4.2.0",
+        "4.2.1",
+        "4.2.2",
+        "4.2.3",
+        "4.3.1",
+        "4.3.2",
+        "4.4.1",
+        "5.0.0",
+        "5.1.0",
+        "5.2.0",
+        "5.2.1",
+        "5.2.2",
+        "5.3.1",
+        "5.4.0",
+        "5.4.1",
+        "5.5.0",
+        "5.6.0",
+        "5.7.0",
+        "5.7.1",
+        "5.7.2",
+        "5.7.4",
+        "5.7.5",
+        "5.7.6"
+      ]
+    },
+    {
+      "id": "GHSA-rv62-4pmj-xw6h",
+      "primary_id": "CVE-2019-10255",
+      "aliases": [
+        "CVE-2019-10255"
+      ],
+      "cve_ids": [
+        "CVE-2019-10255"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "notebook",
+      "summary": "Open Redirect vulnerability in jupyterhub and notebook",
+      "details": "An Open Redirect vulnerability for all browsers in Jupyter Notebook before 5.7.8 and some browsers (Chrome, Firefox) in JupyterHub before 0.9.6 allows crafted links to the login page, which will redirect to a malicious site after successful login. Servers running on a base_url prefix are not affected.",
+      "published": "2019-04-02T15:46:54Z",
+      "modified": "2024-02-18T05:19:56.879961Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2019-10255"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyter/notebook/commit/08c4c898182edbe97aadef1815cce50448f975cb"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyter/notebook/commit/70fe9f0ddb3023162ece21fbb77d5564306b913b"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyter/notebook/commit/d65328d4841892b412aef9015165db1eb029a8ed"
+        },
+        {
+          "type": "WEB",
+          "url": "https://blog.jupyter.org/open-redirect-vulnerability-in-jupyter-jupyterhub-adf43583f1e4"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/advisories/GHSA-rv62-4pmj-xw6h"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/jupyter/notebook"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyter/notebook/compare/05aa4b2...16cf97c"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/UP5RLEES2JBBNSNLBR65XM6PCD4EMF7D"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/VMDPJBVXOVO6LYGAT46VZNHH6JKSCURO"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-rv62-4pmj-xw6h",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "5.7.8"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.0.0",
+        "4.0.0",
+        "4.0.1",
+        "4.0.2",
+        "4.0.4",
+        "4.0.5",
+        "4.0.6",
+        "4.1.0",
+        "4.2.0",
+        "4.2.0b1",
+        "4.2.1",
+        "4.2.2",
+        "4.2.3",
+        "4.3.0",
+        "4.3.1",
+        "4.3.2",
+        "4.4.0",
+        "4.4.1",
+        "5.0.0",
+        "5.0.0b1",
+        "5.0.0b2",
+        "5.0.0rc1",
+        "5.0.0rc2",
+        "5.1.0",
+        "5.1.0rc1",
+        "5.1.0rc2",
+        "5.1.0rc3",
+        "5.2.0",
+        "5.2.0rc1",
+        "5.2.1",
+        "5.2.1rc1",
+        "5.2.2",
+        "5.3.0",
+        "5.3.0rc1",
+        "5.3.1",
+        "5.4.0",
+        "5.4.1",
+        "5.5.0",
+        "5.5.0rc1",
+        "5.6.0",
+        "5.6.0rc1",
+        "5.7.0",
+        "5.7.1",
+        "5.7.2",
+        "5.7.3",
+        "5.7.4",
+        "5.7.5",
+        "5.7.6"
+      ],
+      "affected_conda_versions": [
+        "4.1.0",
+        "4.2.0",
+        "4.2.1",
+        "4.2.2",
+        "4.2.3",
+        "4.3.1",
+        "4.3.2",
+        "4.4.1",
+        "5.0.0",
+        "5.1.0",
+        "5.2.0",
+        "5.2.1",
+        "5.2.2",
+        "5.3.1",
+        "5.4.0",
+        "5.4.1",
+        "5.5.0",
+        "5.6.0",
+        "5.7.0",
+        "5.7.1",
+        "5.7.2",
+        "5.7.4",
+        "5.7.5",
+        "5.7.6"
+      ]
+    },
+    {
+      "id": "GHSA-v7vq-3x77-87vg",
+      "primary_id": "CVE-2022-29238",
+      "aliases": [
+        "BIT-jupyter-base-notebook-2022-29238",
+        "BIT-jupyter-notebook-2022-29238",
+        "CVE-2022-29238",
+        "PYSEC-2022-212"
+      ],
+      "cve_ids": [
+        "CVE-2022-29238"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "notebook",
+      "summary": "Token bruteforcing.",
+      "details": "### Impact\n_What kind of vulnerability is it? Who is impacted?_\n\nAuthenticated requests to the notebook server with `ContentsManager.allow_hidden = False` only prevented listing the contents of hidden directories, not accessing individual hidden files or files in hidden directories (i.e. hidden files were 'hidden' but not 'inaccessible'). This could lead to notebook configurations allowing authenticated access to files that may reasonably be expected to be disallowed.\n\nBecause fully authenticated requests are required, this is of relatively low impact. But if a server's root directory contains sensitive files whose only protection from the server is being hidden (e.g. `~/.ssh` while serving $HOME), then any authenticated requests could access files if their names are guessable. Such contexts also necessarily have full access to the server and therefore execution permissions, which also generally grants access to all the same files. So this does not generally result in any privilege escalation or increase in information access, only an additional, unintended _means_ by which the files could be accessed.\n\n### Patches\n_Has the problem been patched? What versions should users upgrade to?_\n\nnotebook 6.4.12\n\n### Workarounds\n_Is there a way for users to fix or remediate the vulnerability without upgrading?_\n\n- Do not run the notebook server in a directory with hidden files, use subdirectories\n- Use a custom ContentsManager with additional checks for `self.is_hidden(path)` prior to completing actions\n\n### References\n_Are there any links users can visit to find out more?_\n\n### For more information\nIf you have any questions or comments about this advisory:\n* Open an issue in [example link to repo](http://example.com)\n* Email us at [example email address](mailto:example@example.com)\n",
+      "published": "2022-06-16T23:10:10Z",
+      "modified": "2023-12-06T01:02:14.974061Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:N/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:N/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyter/notebook/security/advisories/GHSA-v7vq-3x77-87vg"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2022-29238"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/jupyter/notebook"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/notebook/PYSEC-2022-212.yaml"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-v7vq-3x77-87vg",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "6.4.12"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.0.0",
+        "4.0.0",
+        "4.0.1",
+        "4.0.2",
+        "4.0.4",
+        "4.0.5",
+        "4.0.6",
+        "4.1.0",
+        "4.2.0",
+        "4.2.0b1",
+        "4.2.1",
+        "4.2.2",
+        "4.2.3",
+        "4.3.0",
+        "4.3.1",
+        "4.3.2",
+        "4.4.0",
+        "4.4.1",
+        "5.0.0",
+        "5.0.0b1",
+        "5.0.0b2",
+        "5.0.0rc1",
+        "5.0.0rc2",
+        "5.1.0",
+        "5.1.0rc1",
+        "5.1.0rc2",
+        "5.1.0rc3",
+        "5.2.0",
+        "5.2.0rc1",
+        "5.2.1",
+        "5.2.1rc1",
+        "5.2.2",
+        "5.3.0",
+        "5.3.0rc1",
+        "5.3.1",
+        "5.4.0",
+        "5.4.1",
+        "5.5.0",
+        "5.5.0rc1",
+        "5.6.0",
+        "5.6.0rc1",
+        "5.7.0",
+        "5.7.1",
+        "5.7.10",
+        "5.7.11",
+        "5.7.12",
+        "5.7.13",
+        "5.7.14",
+        "5.7.14a0",
+        "5.7.15",
+        "5.7.16",
+        "5.7.2",
+        "5.7.3",
+        "5.7.4",
+        "5.7.5",
+        "5.7.6",
+        "5.7.8",
+        "5.7.9",
+        "6.0.0",
+        "6.0.0rc1",
+        "6.0.1",
+        "6.0.2",
+        "6.0.3",
+        "6.1.0",
+        "6.1.0rc1",
+        "6.1.1",
+        "6.1.2",
+        "6.1.3",
+        "6.1.4",
+        "6.1.5",
+        "6.1.6",
+        "6.2.0",
+        "6.3.0",
+        "6.4.0",
+        "6.4.0a0",
+        "6.4.0a1",
+        "6.4.0rc0",
+        "6.4.1",
+        "6.4.10",
+        "6.4.11",
+        "6.4.2",
+        "6.4.3",
+        "6.4.4",
+        "6.4.5",
+        "6.4.6",
+        "6.4.7",
+        "6.4.8",
+        "6.4.9"
+      ],
+      "affected_conda_versions": [
+        "4.1.0",
+        "4.2.0",
+        "4.2.1",
+        "4.2.2",
+        "4.2.3",
+        "4.3.1",
+        "4.3.2",
+        "4.4.1",
+        "5.0.0",
+        "5.1.0",
+        "5.2.0",
+        "5.2.1",
+        "5.2.2",
+        "5.3.1",
+        "5.4.0",
+        "5.4.1",
+        "5.5.0",
+        "5.6.0",
+        "5.7.0",
+        "5.7.1",
+        "5.7.2",
+        "5.7.4",
+        "5.7.5",
+        "5.7.6",
+        "5.7.8",
+        "5.7.9",
+        "5.7.10",
+        "5.7.11",
+        "6.0.0",
+        "6.0.1",
+        "6.0.2",
+        "6.0.3",
+        "6.1.0",
+        "6.1.1",
+        "6.1.2",
+        "6.1.3",
+        "6.1.4",
+        "6.1.5",
+        "6.1.6",
+        "6.2.0",
+        "6.3.0",
+        "6.4.0",
+        "6.4.1",
+        "6.4.2",
+        "6.4.3",
+        "6.4.4",
+        "6.4.5",
+        "6.4.6",
+        "6.4.7",
+        "6.4.8",
+        "6.4.9",
+        "6.4.10",
+        "6.4.11"
+      ]
+    },
+    {
+      "id": "PYSEC-2018-17",
+      "primary_id": "CVE-2018-19351",
+      "aliases": [
+        "CVE-2018-19351",
+        "GHSA-49qr-xh3w-h436"
+      ],
+      "cve_ids": [
+        "CVE-2018-19351"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "notebook",
+      "summary": null,
+      "details": "Jupyter Notebook before 5.7.1 allows XSS via an untrusted notebook because nbconvert responses are considered to have the same origin as the notebook server. In other words, nbconvert endpoints can execute JavaScript with access to the server API. In notebook/nbconvert/handlers.py, NbconvertFileHandler and NbconvertPostHandler do not set a Content Security Policy to prevent this.",
+      "published": "2018-11-18T17:29:00Z",
+      "modified": "2023-11-08T04:00:07.633078Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "PACKAGE",
+          "url": "https://pypi.org/project/notebook/#history"
+        },
+        {
+          "type": "WEB",
+          "url": "https://groups.google.com/forum/#!topic/jupyter/hWzu2BSsplY"
+        },
+        {
+          "type": "FIX",
+          "url": "https://github.com/jupyter/notebook/commit/107a89fce5f413fb5728c1c5d2c7788e1fb17491"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyter/notebook/blob/master/docs/source/changelog.rst"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2020/11/msg00033.html"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/advisories/GHSA-49qr-xh3w-h436"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2018-17",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "5.7.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.0.0",
+        "4.0.0",
+        "4.0.1",
+        "4.0.2",
+        "4.0.4",
+        "4.0.5",
+        "4.0.6",
+        "4.1.0",
+        "4.2.0",
+        "4.2.0b1",
+        "4.2.1",
+        "4.2.2",
+        "4.2.3",
+        "4.3.0",
+        "4.3.1",
+        "4.3.2",
+        "4.4.0",
+        "4.4.1",
+        "5.0.0",
+        "5.0.0b1",
+        "5.0.0b2",
+        "5.0.0rc1",
+        "5.0.0rc2",
+        "5.1.0",
+        "5.1.0rc1",
+        "5.1.0rc2",
+        "5.1.0rc3",
+        "5.2.0",
+        "5.2.0rc1",
+        "5.2.1",
+        "5.2.1rc1",
+        "5.2.2",
+        "5.3.0",
+        "5.3.0rc1",
+        "5.3.1",
+        "5.4.0",
+        "5.4.1",
+        "5.5.0",
+        "5.5.0rc1",
+        "5.6.0",
+        "5.6.0rc1",
+        "5.7.0"
+      ],
+      "affected_conda_versions": [
+        "4.1.0",
+        "4.2.0",
+        "4.2.1",
+        "4.2.2",
+        "4.2.3",
+        "4.3.1",
+        "4.3.2",
+        "4.4.1",
+        "5.0.0",
+        "5.1.0",
+        "5.2.0",
+        "5.2.1",
+        "5.2.2",
+        "5.3.1",
+        "5.4.0",
+        "5.4.1",
+        "5.5.0",
+        "5.6.0",
+        "5.7.0"
+      ]
+    },
+    {
+      "id": "PYSEC-2018-18",
+      "primary_id": "CVE-2018-19352",
+      "aliases": [
+        "CVE-2018-19352",
+        "GHSA-3p4q-x8f3-p7vq"
+      ],
+      "cve_ids": [
+        "CVE-2018-19352"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "notebook",
+      "summary": null,
+      "details": "Jupyter Notebook before 5.7.2 allows XSS via a crafted directory name because notebook/static/tree/js/notebooklist.js handles certain URLs unsafely.",
+      "published": "2018-11-18T17:29:00Z",
+      "modified": "2023-11-08T04:00:07.695509Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "PACKAGE",
+          "url": "https://pypi.org/project/notebook/#history"
+        },
+        {
+          "type": "FIX",
+          "url": "https://github.com/jupyter/notebook/commit/288b73e1edbf527740e273fcc69b889460871648"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyter/notebook/blob/master/docs/source/changelog.rst"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/advisories/GHSA-3p4q-x8f3-p7vq"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2018-18",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "5.7.2"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.0.0",
+        "4.0.0",
+        "4.0.1",
+        "4.0.2",
+        "4.0.4",
+        "4.0.5",
+        "4.0.6",
+        "4.1.0",
+        "4.2.0",
+        "4.2.0b1",
+        "4.2.1",
+        "4.2.2",
+        "4.2.3",
+        "4.3.0",
+        "4.3.1",
+        "4.3.2",
+        "4.4.0",
+        "4.4.1",
+        "5.0.0",
+        "5.0.0b1",
+        "5.0.0b2",
+        "5.0.0rc1",
+        "5.0.0rc2",
+        "5.1.0",
+        "5.1.0rc1",
+        "5.1.0rc2",
+        "5.1.0rc3",
+        "5.2.0",
+        "5.2.0rc1",
+        "5.2.1",
+        "5.2.1rc1",
+        "5.2.2",
+        "5.3.0",
+        "5.3.0rc1",
+        "5.3.1",
+        "5.4.0",
+        "5.4.1",
+        "5.5.0",
+        "5.5.0rc1",
+        "5.6.0",
+        "5.6.0rc1",
+        "5.7.0",
+        "5.7.1"
+      ],
+      "affected_conda_versions": [
+        "4.1.0",
+        "4.2.0",
+        "4.2.1",
+        "4.2.2",
+        "4.2.3",
+        "4.3.1",
+        "4.3.2",
+        "4.4.1",
+        "5.0.0",
+        "5.1.0",
+        "5.2.0",
+        "5.2.1",
+        "5.2.2",
+        "5.3.1",
+        "5.4.0",
+        "5.4.1",
+        "5.5.0",
+        "5.6.0",
+        "5.7.0",
+        "5.7.1"
+      ]
+    },
+    {
+      "id": "PYSEC-2018-57",
+      "primary_id": "CVE-2018-8768",
+      "aliases": [
+        "CVE-2018-8768",
+        "GHSA-6cwv-x26c-w2q4"
+      ],
+      "cve_ids": [
+        "CVE-2018-8768"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "notebook",
+      "summary": null,
+      "details": "In Jupyter Notebook before 5.4.1, a maliciously forged notebook file can bypass sanitization to execute JavaScript in the notebook context. Specifically, invalid HTML is 'fixed' by jQuery after sanitization, making it dangerous.",
+      "published": "2018-03-18T06:29:00Z",
+      "modified": "2023-11-08T04:00:29.830061Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "http://openwall.com/lists/oss-security/2018/03/15/2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2020/11/msg00033.html"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/advisories/GHSA-6cwv-x26c-w2q4"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2018-57",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "5.4.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.0.0",
+        "4.0.0",
+        "4.0.1",
+        "4.0.2",
+        "4.0.4",
+        "4.0.5",
+        "4.0.6",
+        "4.1.0",
+        "4.2.0",
+        "4.2.0b1",
+        "4.2.1",
+        "4.2.2",
+        "4.2.3",
+        "4.3.0",
+        "4.3.1",
+        "4.3.2",
+        "4.4.0",
+        "4.4.1",
+        "5.0.0",
+        "5.0.0b1",
+        "5.0.0b2",
+        "5.0.0rc1",
+        "5.0.0rc2",
+        "5.1.0",
+        "5.1.0rc1",
+        "5.1.0rc2",
+        "5.1.0rc3",
+        "5.2.0",
+        "5.2.0rc1",
+        "5.2.1",
+        "5.2.1rc1",
+        "5.2.2",
+        "5.3.0",
+        "5.3.0rc1",
+        "5.3.1",
+        "5.4.0"
+      ],
+      "affected_conda_versions": [
+        "4.1.0",
+        "4.2.0",
+        "4.2.1",
+        "4.2.2",
+        "4.2.3",
+        "4.3.1",
+        "4.3.2",
+        "4.4.1",
+        "5.0.0",
+        "5.1.0",
+        "5.2.0",
+        "5.2.1",
+        "5.2.2",
+        "5.3.1",
+        "5.4.0"
+      ]
+    },
+    {
+      "id": "PYSEC-2019-157",
+      "primary_id": "CVE-2018-21030",
+      "aliases": [
+        "CVE-2018-21030",
+        "GHSA-jqwc-jm56-wcwj"
+      ],
+      "cve_ids": [
+        "CVE-2018-21030"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "notebook",
+      "summary": null,
+      "details": "Jupyter Notebook before 5.5.0 does not use a CSP header to treat served files as belonging to a separate origin. Thus, for example, an XSS payload can be placed in an SVG document.",
+      "published": "2019-10-31T15:15:00Z",
+      "modified": "2023-11-08T04:00:14.113021Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyter/notebook/releases/tag/5.5.0"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyter/notebook/pull/3341"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2020/11/msg00033.html"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/advisories/GHSA-jqwc-jm56-wcwj"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2019-157",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "5.5.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.0.0",
+        "4.0.0",
+        "4.0.1",
+        "4.0.2",
+        "4.0.4",
+        "4.0.5",
+        "4.0.6",
+        "4.1.0",
+        "4.2.0",
+        "4.2.0b1",
+        "4.2.1",
+        "4.2.2",
+        "4.2.3",
+        "4.3.0",
+        "4.3.1",
+        "4.3.2",
+        "4.4.0",
+        "4.4.1",
+        "5.0.0",
+        "5.0.0b1",
+        "5.0.0b2",
+        "5.0.0rc1",
+        "5.0.0rc2",
+        "5.1.0",
+        "5.1.0rc1",
+        "5.1.0rc2",
+        "5.1.0rc3",
+        "5.2.0",
+        "5.2.0rc1",
+        "5.2.1",
+        "5.2.1rc1",
+        "5.2.2",
+        "5.3.0",
+        "5.3.0rc1",
+        "5.3.1",
+        "5.4.0",
+        "5.4.1",
+        "5.5.0rc1"
+      ],
+      "affected_conda_versions": [
+        "4.1.0",
+        "4.2.0",
+        "4.2.1",
+        "4.2.2",
+        "4.2.3",
+        "4.3.1",
+        "4.3.2",
+        "4.4.1",
+        "5.0.0",
+        "5.1.0",
+        "5.2.0",
+        "5.2.1",
+        "5.2.2",
+        "5.3.1",
+        "5.4.0",
+        "5.4.1"
+      ]
+    },
+    {
+      "id": "PYSEC-2019-158",
+      "primary_id": "CVE-2019-10856",
+      "aliases": [
+        "CVE-2019-10856",
+        "GHSA-rcx2-m7jp-p9wj"
+      ],
+      "cve_ids": [
+        "CVE-2019-10856"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "notebook",
+      "summary": null,
+      "details": "In Jupyter Notebook before 5.7.8, an open redirect can occur via an empty netloc. This issue exists because of an incomplete fix for CVE-2019-10255.",
+      "published": "2019-04-04T16:29:00Z",
+      "modified": "2023-11-08T04:00:58.335604Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyter/notebook/compare/16cf97c...b8e30ea"
+        },
+        {
+          "type": "ARTICLE",
+          "url": "https://blog.jupyter.org/open-redirect-vulnerability-in-jupyter-jupyterhub-adf43583f1e4"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/advisories/GHSA-rcx2-m7jp-p9wj"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2019-158",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "5.7.8"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.0.0",
+        "4.0.0",
+        "4.0.1",
+        "4.0.2",
+        "4.0.4",
+        "4.0.5",
+        "4.0.6",
+        "4.1.0",
+        "4.2.0",
+        "4.2.0b1",
+        "4.2.1",
+        "4.2.2",
+        "4.2.3",
+        "4.3.0",
+        "4.3.1",
+        "4.3.2",
+        "4.4.0",
+        "4.4.1",
+        "5.0.0",
+        "5.0.0b1",
+        "5.0.0b2",
+        "5.0.0rc1",
+        "5.0.0rc2",
+        "5.1.0",
+        "5.1.0rc1",
+        "5.1.0rc2",
+        "5.1.0rc3",
+        "5.2.0",
+        "5.2.0rc1",
+        "5.2.1",
+        "5.2.1rc1",
+        "5.2.2",
+        "5.3.0",
+        "5.3.0rc1",
+        "5.3.1",
+        "5.4.0",
+        "5.4.1",
+        "5.5.0",
+        "5.5.0rc1",
+        "5.6.0",
+        "5.6.0rc1",
+        "5.7.0",
+        "5.7.1",
+        "5.7.2",
+        "5.7.3",
+        "5.7.4",
+        "5.7.5",
+        "5.7.6"
+      ],
+      "affected_conda_versions": [
+        "4.1.0",
+        "4.2.0",
+        "4.2.1",
+        "4.2.2",
+        "4.2.3",
+        "4.3.1",
+        "4.3.2",
+        "4.4.1",
+        "5.0.0",
+        "5.1.0",
+        "5.2.0",
+        "5.2.1",
+        "5.2.2",
+        "5.3.1",
+        "5.4.0",
+        "5.4.1",
+        "5.5.0",
+        "5.6.0",
+        "5.7.0",
+        "5.7.1",
+        "5.7.2",
+        "5.7.4",
+        "5.7.5",
+        "5.7.6"
+      ]
+    },
+    {
+      "id": "PYSEC-2019-159",
+      "primary_id": "CVE-2019-9644",
+      "aliases": [
+        "CVE-2019-9644",
+        "GHSA-hhx8-cr55-qcxx"
+      ],
+      "cve_ids": [
+        "CVE-2019-9644"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "notebook",
+      "summary": null,
+      "details": "An XSSI (cross-site inclusion) vulnerability in Jupyter Notebook before 5.7.6 allows inclusion of resources on malicious pages when visited by users who are authenticated with a Jupyter server. Access to the content of resources has been demonstrated with Internet Explorer through capturing of error messages, though not reproduced with other browsers. This occurs because Internet Explorer's error messages can include the content of any invalid JavaScript that was encountered.",
+      "published": "2019-03-12T09:29:00Z",
+      "modified": "2023-11-08T04:01:47.346563Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyter/notebook/compare/f3f00df...05aa4b2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/UP5RLEES2JBBNSNLBR65XM6PCD4EMF7D/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/VMDPJBVXOVO6LYGAT46VZNHH6JKSCURO/"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2019-159",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "5.7.6"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.0.0",
+        "4.0.0",
+        "4.0.1",
+        "4.0.2",
+        "4.0.4",
+        "4.0.5",
+        "4.0.6",
+        "4.1.0",
+        "4.2.0",
+        "4.2.0b1",
+        "4.2.1",
+        "4.2.2",
+        "4.2.3",
+        "4.3.0",
+        "4.3.1",
+        "4.3.2",
+        "4.4.0",
+        "4.4.1",
+        "5.0.0",
+        "5.0.0b1",
+        "5.0.0b2",
+        "5.0.0rc1",
+        "5.0.0rc2",
+        "5.1.0",
+        "5.1.0rc1",
+        "5.1.0rc2",
+        "5.1.0rc3",
+        "5.2.0",
+        "5.2.0rc1",
+        "5.2.1",
+        "5.2.1rc1",
+        "5.2.2",
+        "5.3.0",
+        "5.3.0rc1",
+        "5.3.1",
+        "5.4.0",
+        "5.4.1",
+        "5.5.0",
+        "5.5.0rc1",
+        "5.6.0",
+        "5.6.0rc1",
+        "5.7.0",
+        "5.7.1",
+        "5.7.2",
+        "5.7.3",
+        "5.7.4",
+        "5.7.5"
+      ],
+      "affected_conda_versions": [
+        "4.1.0",
+        "4.2.0",
+        "4.2.1",
+        "4.2.2",
+        "4.2.3",
+        "4.3.1",
+        "4.3.2",
+        "4.4.1",
+        "5.0.0",
+        "5.1.0",
+        "5.2.0",
+        "5.2.1",
+        "5.2.2",
+        "5.3.1",
+        "5.4.0",
+        "5.4.1",
+        "5.5.0",
+        "5.6.0",
+        "5.7.0",
+        "5.7.1",
+        "5.7.2",
+        "5.7.4",
+        "5.7.5"
+      ]
+    },
+    {
+      "id": "PYSEC-2020-215",
+      "primary_id": "CVE-2020-26215",
+      "aliases": [
+        "BIT-jupyter-base-notebook-2020-26215",
+        "BIT-jupyter-notebook-2020-26215",
+        "CVE-2020-26215",
+        "GHSA-c7vm-f5p4-8fqh"
+      ],
+      "cve_ids": [
+        "CVE-2020-26215"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "notebook",
+      "summary": null,
+      "details": "Jupyter Notebook before version 6.1.5 has an Open redirect vulnerability. A maliciously crafted link to a notebook server could redirect the browser to a different website. All notebook servers are technically affected, however, these maliciously crafted links can only be reasonably made for known notebook server hosts. A link to your notebook server may appear safe, but ultimately redirect to a spoofed server on the public internet. The issue is patched in version 6.1.5.",
+      "published": "2020-11-18T22:15:00Z",
+      "modified": "2025-10-09T07:06:38.322155Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/jupyter/notebook/security/advisories/GHSA-c7vm-f5p4-8fqh"
+        },
+        {
+          "type": "FIX",
+          "url": "https://github.com/jupyter/notebook/commit/3cec4bbe21756de9f0c4bccf18cf61d840314d74"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2020/12/msg00004.html"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2020-215",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "6.1.5"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.0.0",
+        "4.0.0",
+        "4.0.1",
+        "4.0.2",
+        "4.0.4",
+        "4.0.5",
+        "4.0.6",
+        "4.1.0",
+        "4.2.0",
+        "4.2.0b1",
+        "4.2.1",
+        "4.2.2",
+        "4.2.3",
+        "4.3.0",
+        "4.3.1",
+        "4.3.2",
+        "4.4.0",
+        "4.4.1",
+        "5.0.0",
+        "5.0.0b1",
+        "5.0.0b2",
+        "5.0.0rc1",
+        "5.0.0rc2",
+        "5.1.0",
+        "5.1.0rc1",
+        "5.1.0rc2",
+        "5.1.0rc3",
+        "5.2.0",
+        "5.2.0rc1",
+        "5.2.1",
+        "5.2.1rc1",
+        "5.2.2",
+        "5.3.0",
+        "5.3.0rc1",
+        "5.3.1",
+        "5.4.0",
+        "5.4.1",
+        "5.5.0",
+        "5.5.0rc1",
+        "5.6.0",
+        "5.6.0rc1",
+        "5.7.0",
+        "5.7.1",
+        "5.7.10",
+        "5.7.2",
+        "5.7.3",
+        "5.7.4",
+        "5.7.5",
+        "5.7.6",
+        "5.7.8",
+        "5.7.9",
+        "6.0.0",
+        "6.0.0rc1",
+        "6.0.1",
+        "6.0.2",
+        "6.0.3",
+        "6.1.0",
+        "6.1.0rc1",
+        "6.1.1",
+        "6.1.2",
+        "6.1.3",
+        "6.1.4",
+        "5.7.11",
+        "5.7.12",
+        "5.7.13",
+        "5.7.14",
+        "5.7.14a0",
+        "5.7.15",
+        "5.7.16"
+      ],
+      "affected_conda_versions": [
+        "4.1.0",
+        "4.2.0",
+        "4.2.1",
+        "4.2.2",
+        "4.2.3",
+        "4.3.1",
+        "4.3.2",
+        "4.4.1",
+        "5.0.0",
+        "5.1.0",
+        "5.2.0",
+        "5.2.1",
+        "5.2.2",
+        "5.3.1",
+        "5.4.0",
+        "5.4.1",
+        "5.5.0",
+        "5.6.0",
+        "5.7.0",
+        "5.7.1",
+        "5.7.2",
+        "5.7.4",
+        "5.7.5",
+        "5.7.6",
+        "5.7.8",
+        "5.7.9",
+        "5.7.10",
+        "5.7.11",
+        "6.0.0",
+        "6.0.1",
+        "6.0.2",
+        "6.0.3",
+        "6.1.0",
+        "6.1.1",
+        "6.1.2",
+        "6.1.3",
+        "6.1.4"
+      ]
+    },
+    {
+      "id": "PYSEC-2021-118",
+      "primary_id": "CVE-2021-32798",
+      "aliases": [
+        "BIT-jupyter-base-notebook-2021-32798",
+        "BIT-jupyter-notebook-2021-32798",
+        "CVE-2021-32798",
+        "GHSA-hwvq-6gjx-j797"
+      ],
+      "cve_ids": [
+        "CVE-2021-32798"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "notebook",
+      "summary": null,
+      "details": "The Jupyter notebook is a web-based notebook environment for interactive computing. In affected versions untrusted notebook can execute code on load. Jupyter Notebook uses a deprecated version of Google Caja to sanitize user inputs. A public Caja bypass can be used to trigger an XSS when a victim opens a malicious ipynb document in Jupyter Notebook. The XSS allows an attacker to execute arbitrary code on the victim computer using Jupyter APIs.",
+      "published": "2021-08-09T21:15:00Z",
+      "modified": "2023-12-06T01:01:15.856930Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/jupyter/notebook/security/advisories/GHSA-hwvq-6gjx-j797"
+        },
+        {
+          "type": "FIX",
+          "url": "https://github.com/jupyter/notebook/commit/79fc76e890a8ec42f73a3d009e44ef84c14ef0d5"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2021-118",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "5.7.0"
+            },
+            {
+              "fixed": "5.7.11"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "5.7.0",
+        "5.7.1",
+        "5.7.10",
+        "5.7.2",
+        "5.7.3",
+        "5.7.4",
+        "5.7.5",
+        "5.7.6",
+        "5.7.8",
+        "5.7.9"
+      ],
+      "affected_conda_versions": [
+        "5.7.0",
+        "5.7.1",
+        "5.7.2",
+        "5.7.4",
+        "5.7.5",
+        "5.7.6",
+        "5.7.8",
+        "5.7.9",
+        "5.7.10"
+      ]
+    },
+    {
+      "id": "PYSEC-2022-180",
+      "primary_id": "CVE-2022-24758",
+      "aliases": [
+        "BIT-jupyter-base-notebook-2022-24758",
+        "BIT-jupyter-notebook-2022-24758",
+        "CVE-2022-24758",
+        "GHSA-m87f-39q9-6f55"
+      ],
+      "cve_ids": [
+        "CVE-2022-24758"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "notebook",
+      "summary": null,
+      "details": "The Jupyter notebook is a web-based notebook environment for interactive computing. Prior to version 6.4.9, unauthorized actors can access sensitive information from server logs. Anytime a 5xx error is triggered, the auth cookie and other header values are recorded in Jupyter server logs by default. Considering these logs do not require root access, an attacker can monitor these logs, steal sensitive auth/cookie information, and gain access to the Jupyter server. Jupyter notebook version 6.4.x contains a patch for this issue. There are currently no known workarounds.",
+      "published": "2022-03-31T23:15:00Z",
+      "modified": "2025-10-09T08:23:18.533185Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/jupyter/notebook/security/advisories/GHSA-m87f-39q9-6f55"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2022-180",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "6.4.10"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.0.0",
+        "4.0.0",
+        "4.0.1",
+        "4.0.2",
+        "4.0.4",
+        "4.0.5",
+        "4.0.6",
+        "4.1.0",
+        "4.2.0",
+        "4.2.0b1",
+        "4.2.1",
+        "4.2.2",
+        "4.2.3",
+        "4.3.0",
+        "4.3.1",
+        "4.3.2",
+        "4.4.0",
+        "4.4.1",
+        "5.0.0",
+        "5.0.0b1",
+        "5.0.0b2",
+        "5.0.0rc1",
+        "5.0.0rc2",
+        "5.1.0",
+        "5.1.0rc1",
+        "5.1.0rc2",
+        "5.1.0rc3",
+        "5.2.0",
+        "5.2.0rc1",
+        "5.2.1",
+        "5.2.1rc1",
+        "5.2.2",
+        "5.3.0",
+        "5.3.0rc1",
+        "5.3.1",
+        "5.4.0",
+        "5.4.1",
+        "5.5.0",
+        "5.5.0rc1",
+        "5.6.0",
+        "5.6.0rc1",
+        "5.7.0",
+        "5.7.1",
+        "5.7.10",
+        "5.7.11",
+        "5.7.12",
+        "5.7.13",
+        "5.7.2",
+        "5.7.3",
+        "5.7.4",
+        "5.7.5",
+        "5.7.6",
+        "5.7.8",
+        "5.7.9",
+        "6.0.0",
+        "6.0.0rc1",
+        "6.0.1",
+        "6.0.2",
+        "6.0.3",
+        "6.1.0",
+        "6.1.0rc1",
+        "6.1.1",
+        "6.1.2",
+        "6.1.3",
+        "6.1.4",
+        "6.1.5",
+        "6.1.6",
+        "6.2.0",
+        "6.3.0",
+        "6.4.0",
+        "6.4.0a0",
+        "6.4.0a1",
+        "6.4.0rc0",
+        "6.4.1",
+        "6.4.2",
+        "6.4.3",
+        "6.4.4",
+        "6.4.5",
+        "6.4.6",
+        "6.4.7",
+        "6.4.8",
+        "6.4.9",
+        "5.7.14",
+        "5.7.14a0",
+        "5.7.15",
+        "5.7.16"
+      ],
+      "affected_conda_versions": [
+        "4.1.0",
+        "4.2.0",
+        "4.2.1",
+        "4.2.2",
+        "4.2.3",
+        "4.3.1",
+        "4.3.2",
+        "4.4.1",
+        "5.0.0",
+        "5.1.0",
+        "5.2.0",
+        "5.2.1",
+        "5.2.2",
+        "5.3.1",
+        "5.4.0",
+        "5.4.1",
+        "5.5.0",
+        "5.6.0",
+        "5.7.0",
+        "5.7.1",
+        "5.7.2",
+        "5.7.4",
+        "5.7.5",
+        "5.7.6",
+        "5.7.8",
+        "5.7.9",
+        "5.7.10",
+        "5.7.11",
+        "6.0.0",
+        "6.0.1",
+        "6.0.2",
+        "6.0.3",
+        "6.1.0",
+        "6.1.1",
+        "6.1.2",
+        "6.1.3",
+        "6.1.4",
+        "6.1.5",
+        "6.1.6",
+        "6.2.0",
+        "6.3.0",
+        "6.4.0",
+        "6.4.1",
+        "6.4.2",
+        "6.4.3",
+        "6.4.4",
+        "6.4.5",
+        "6.4.6",
+        "6.4.7",
+        "6.4.8",
+        "6.4.9"
+      ]
+    },
+    {
+      "id": "PYSEC-2022-212",
+      "primary_id": "CVE-2022-29238",
+      "aliases": [
+        "BIT-jupyter-base-notebook-2022-29238",
+        "BIT-jupyter-notebook-2022-29238",
+        "CVE-2022-29238",
+        "GHSA-v7vq-3x77-87vg"
+      ],
+      "cve_ids": [
+        "CVE-2022-29238"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "notebook",
+      "summary": null,
+      "details": "Jupyter Notebook is a web-based notebook environment for interactive computing. Prior to version 6.4.12, authenticated requests to the notebook server with `ContentsManager.allow_hidden = False` only prevented listing the contents of hidden directories, not accessing individual hidden files or files in hidden directories (i.e. hidden files were 'hidden' but not 'inaccessible'). This could lead to notebook configurations allowing authenticated access to files that may reasonably be expected to be disallowed. Because fully authenticated requests are required, this is of relatively low impact. But if a server's root directory contains sensitive files whose only protection from the server is being hidden (e.g. `~/.ssh` while serving $HOME), then any authenticated requests could access files if their names are guessable. Such contexts also necessarily have full access to the server and therefore execution permissions, which also generally grants access to all the same files. So this does not generally result in any privilege escalation or increase in information access, only an additional, unintended means by which the files could be accessed. Version 6.4.12 contains a patch for this issue. There are currently no known workarounds.",
+      "published": "2022-06-14T18:15:00Z",
+      "modified": "2025-10-09T08:23:33.049617Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/jupyter/notebook/security/advisories/GHSA-v7vq-3x77-87vg"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2022-212",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "6.4.12"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.0.0",
+        "4.0.0",
+        "4.0.1",
+        "4.0.2",
+        "4.0.4",
+        "4.0.5",
+        "4.0.6",
+        "4.1.0",
+        "4.2.0",
+        "4.2.0b1",
+        "4.2.1",
+        "4.2.2",
+        "4.2.3",
+        "4.3.0",
+        "4.3.1",
+        "4.3.2",
+        "4.4.0",
+        "4.4.1",
+        "5.0.0",
+        "5.0.0b1",
+        "5.0.0b2",
+        "5.0.0rc1",
+        "5.0.0rc2",
+        "5.1.0",
+        "5.1.0rc1",
+        "5.1.0rc2",
+        "5.1.0rc3",
+        "5.2.0",
+        "5.2.0rc1",
+        "5.2.1",
+        "5.2.1rc1",
+        "5.2.2",
+        "5.3.0",
+        "5.3.0rc1",
+        "5.3.1",
+        "5.4.0",
+        "5.4.1",
+        "5.5.0",
+        "5.5.0rc1",
+        "5.6.0",
+        "5.6.0rc1",
+        "5.7.0",
+        "5.7.1",
+        "5.7.10",
+        "5.7.11",
+        "5.7.12",
+        "5.7.13",
+        "5.7.2",
+        "5.7.3",
+        "5.7.4",
+        "5.7.5",
+        "5.7.6",
+        "5.7.8",
+        "5.7.9",
+        "6.0.0",
+        "6.0.0rc1",
+        "6.0.1",
+        "6.0.2",
+        "6.0.3",
+        "6.1.0",
+        "6.1.0rc1",
+        "6.1.1",
+        "6.1.2",
+        "6.1.3",
+        "6.1.4",
+        "6.1.5",
+        "6.1.6",
+        "6.2.0",
+        "6.3.0",
+        "6.4.0",
+        "6.4.0a0",
+        "6.4.0a1",
+        "6.4.0rc0",
+        "6.4.1",
+        "6.4.10",
+        "6.4.11",
+        "6.4.2",
+        "6.4.3",
+        "6.4.4",
+        "6.4.5",
+        "6.4.6",
+        "6.4.7",
+        "6.4.8",
+        "6.4.9",
+        "5.7.14a0",
+        "5.7.14",
+        "5.7.15",
+        "5.7.16"
+      ],
+      "affected_conda_versions": [
+        "4.1.0",
+        "4.2.0",
+        "4.2.1",
+        "4.2.2",
+        "4.2.3",
+        "4.3.1",
+        "4.3.2",
+        "4.4.1",
+        "5.0.0",
+        "5.1.0",
+        "5.2.0",
+        "5.2.1",
+        "5.2.2",
+        "5.3.1",
+        "5.4.0",
+        "5.4.1",
+        "5.5.0",
+        "5.6.0",
+        "5.7.0",
+        "5.7.1",
+        "5.7.2",
+        "5.7.4",
+        "5.7.5",
+        "5.7.6",
+        "5.7.8",
+        "5.7.9",
+        "5.7.10",
+        "5.7.11",
+        "6.0.0",
+        "6.0.1",
+        "6.0.2",
+        "6.0.3",
+        "6.1.0",
+        "6.1.1",
+        "6.1.2",
+        "6.1.3",
+        "6.1.4",
+        "6.1.5",
+        "6.1.6",
+        "6.2.0",
+        "6.3.0",
+        "6.4.0",
+        "6.4.1",
+        "6.4.2",
+        "6.4.3",
+        "6.4.4",
+        "6.4.5",
+        "6.4.6",
+        "6.4.7",
+        "6.4.8",
+        "6.4.9",
+        "6.4.10",
+        "6.4.11"
+      ]
+    },
+    {
+      "id": "GHSA-4vwq-x64q-j4cj",
+      "primary_id": "CVE-2015-6938",
+      "aliases": [
+        "CVE-2015-6938",
+        "PYSEC-2015-24",
+        "PYSEC-2015-26"
+      ],
+      "cve_ids": [
+        "CVE-2015-6938"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "notebook",
+      "summary": "Improper Neutralization of Input During Web Page Generation in Jupyter Notebook",
+      "details": "Cross-site scripting (XSS) vulnerability in the file browser in notebook/notebookapp.py in IPython Notebook before 3.2.2 and Jupyter Notebook 4.0.x before 4.0.5 allows remote attackers to inject arbitrary web script or HTML via a folder name.  NOTE: this was originally reported as a cross-site request forgery (CSRF) vulnerability, but this may be inaccurate.",
+      "published": "2022-05-14T02:04:49Z",
+      "modified": "2024-09-23T17:27:49.131389Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2015-6938"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/ipython/ipython/commit/3ab41641cf6fce3860c73d5cf4645aa12e1e5892"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyter/notebook/commit/35f32dd2da804d108a3a3585b69ec3295b2677ed"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyter/notebook/commit/dd9876381f0ef09873d8c5f6f2063269172331e3"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugzilla.redhat.com/show_bug.cgi?id=1259405"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/advisories/GHSA-4vwq-x64q-j4cj"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/ipython/PYSEC-2015-24.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/notebook/PYSEC-2015-26.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.fedoraproject.org/pipermail/package-announce/2015-September/166460.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.fedoraproject.org/pipermail/package-announce/2015-September/166471.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.fedoraproject.org/pipermail/package-announce/2015-September/167670.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-updates/2015-10/msg00016.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://seclists.org/oss-sec/2015/q3/474"
+        },
+        {
+          "type": "WEB",
+          "url": "http://seclists.org/oss-sec/2015/q3/544"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-4vwq-x64q-j4cj",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "4.0.0"
+            },
+            {
+              "fixed": "4.0.5"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "4.0.0",
+        "4.0.1",
+        "4.0.2",
+        "4.0.4"
+      ],
+      "affected_conda_versions": []
+    },
+    {
+      "id": "GHSA-92mr-v722-f48m",
+      "primary_id": "CVE-2015-7337",
+      "aliases": [
+        "CVE-2015-7337",
+        "PYSEC-2015-25",
+        "PYSEC-2015-27"
+      ],
+      "cve_ids": [
+        "CVE-2015-7337"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "notebook",
+      "summary": "Improper Input Validation in Jupyter Notebook",
+      "details": "The editor in IPython Notebook before 3.2.2 and Jupyter Notebook 4.0.x before 4.0.5 allows remote attackers to execute arbitrary JavaScript code via a crafted file, which triggers a redirect to files/, related to MIME types.",
+      "published": "2022-05-17T03:25:49Z",
+      "modified": "2024-09-20T22:11:36.501173Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2015-7337"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/ipython/ipython/commit/0a8096adf165e2465550bd5893d7e352544e5967"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyter/notebook/commit/9e63dd89b603dfbe3a7e774d8a962ee0fa30c0b5"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugzilla.redhat.com/show_bug.cgi?id=1264067"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/advisories/GHSA-92mr-v722-f48m"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/ipython/PYSEC-2015-25.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/notebook/PYSEC-2015-27.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.gentoo.org/glsa/201512-02"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.fedoraproject.org/pipermail/package-announce/2015-September/167670.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://seclists.org/oss-sec/2015/q3/558"
+        },
+        {
+          "type": "WEB",
+          "url": "http://seclists.org/oss-sec/2015/q3/634"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-92mr-v722-f48m",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "4.0.0"
+            },
+            {
+              "fixed": "4.0.5"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "4.0.0",
+        "4.0.1",
+        "4.0.2",
+        "4.0.4"
+      ],
+      "affected_conda_versions": []
+    },
+    {
+      "id": "PYSEC-2015-26",
+      "primary_id": "CVE-2015-6938",
+      "aliases": [
+        "CVE-2015-6938",
+        "GHSA-4vwq-x64q-j4cj",
+        "PYSEC-2015-24"
+      ],
+      "cve_ids": [
+        "CVE-2015-6938"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "notebook",
+      "summary": null,
+      "details": "Cross-site scripting (XSS) vulnerability in the file browser in notebook/notebookapp.py in IPython Notebook before 3.2.2 and Jupyter Notebook 4.0.x before 4.0.5 allows remote attackers to inject arbitrary web script or HTML via a folder name.  NOTE: this was originally reported as a cross-site request forgery (CSRF) vulnerability, but this may be inaccurate.",
+      "published": "2015-09-21T19:59:00Z",
+      "modified": "2023-11-08T03:57:59.449215Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "http://seclists.org/oss-sec/2015/q3/474"
+        },
+        {
+          "type": "FIX",
+          "url": "https://github.com/jupyter/notebook/commit/35f32dd2da804d108a3a3585b69ec3295b2677ed"
+        },
+        {
+          "type": "WEB",
+          "url": "http://seclists.org/oss-sec/2015/q3/544"
+        },
+        {
+          "type": "FIX",
+          "url": "https://github.com/ipython/ipython/commit/3ab41641cf6fce3860c73d5cf4645aa12e1e5892"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.fedoraproject.org/pipermail/package-announce/2015-September/166471.html"
+        },
+        {
+          "type": "FIX",
+          "url": "https://github.com/jupyter/notebook/commit/dd9876381f0ef09873d8c5f6f2063269172331e3"
+        },
+        {
+          "type": "REPORT",
+          "url": "https://bugzilla.redhat.com/show_bug.cgi?id=1259405"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.fedoraproject.org/pipermail/package-announce/2015-September/166460.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.fedoraproject.org/pipermail/package-announce/2015-September/167670.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-updates/2015-10/msg00016.html"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2015-26",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "4.0.0"
+            },
+            {
+              "fixed": "4.0.5"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "4.0.0",
+        "4.0.1",
+        "4.0.2",
+        "4.0.4"
+      ],
+      "affected_conda_versions": []
+    },
+    {
+      "id": "PYSEC-2015-27",
+      "primary_id": "CVE-2015-7337",
+      "aliases": [
+        "CVE-2015-7337",
+        "GHSA-92mr-v722-f48m",
+        "PYSEC-2015-25"
+      ],
+      "cve_ids": [
+        "CVE-2015-7337"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "notebook",
+      "summary": null,
+      "details": "The editor in IPython Notebook before 3.2.2 and Jupyter Notebook 4.0.x before 4.0.5 allows remote attackers to execute arbitrary JavaScript code via a crafted file, which triggers a redirect to files/, related to MIME types.",
+      "published": "2015-09-29T19:59:00Z",
+      "modified": "2023-11-08T03:57:59.998735Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "FIX",
+          "url": "https://github.com/jupyter/notebook/commit/9e63dd89b603dfbe3a7e774d8a962ee0fa30c0b5"
+        },
+        {
+          "type": "FIX",
+          "url": "https://github.com/ipython/ipython/commit/0a8096adf165e2465550bd5893d7e352544e5967"
+        },
+        {
+          "type": "WEB",
+          "url": "http://seclists.org/oss-sec/2015/q3/558"
+        },
+        {
+          "type": "WEB",
+          "url": "http://seclists.org/oss-sec/2015/q3/634"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.fedoraproject.org/pipermail/package-announce/2015-September/167670.html"
+        },
+        {
+          "type": "REPORT",
+          "url": "https://bugzilla.redhat.com/show_bug.cgi?id=1264067"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://security.gentoo.org/glsa/201512-02"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2015-27",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "4.0.0"
+            },
+            {
+              "fixed": "4.0.5"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "4.0.0",
+        "4.0.1",
+        "4.0.2",
+        "4.0.4"
+      ],
+      "affected_conda_versions": []
+    }
+  ]
+}

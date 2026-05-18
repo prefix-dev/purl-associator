@@ -1,0 +1,154 @@
+{
+  "schema_version": 1,
+  "package": "kedro-datasets",
+  "purls": [
+    "pkg:pypi/kedro-datasets"
+  ],
+  "generated_at": "2026-05-18T06:01:40+00:00",
+  "conda_versions_total": 29,
+  "advisories": [
+    {
+      "id": "GHSA-cjg8-h5qc-hrjv",
+      "primary_id": "CVE-2026-35492",
+      "aliases": [
+        "CVE-2026-35492"
+      ],
+      "cve_ids": [
+        "CVE-2026-35492"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "kedro-datasets",
+      "summary": "kedro-datasets has a path traversal vulnerability in PartitionedDataset that allows arbitrary file write",
+      "details": "### Impact\n\nPartitionedDataset in kedro-datasets was vulnerable to path traversal. Partition IDs were concatenated directly with the dataset base path without validation. An attacker or malicious input containing .. components in a partition ID could cause files to be written outside the configured dataset directory, potentially overwriting arbitrary files on the filesystem.\nUsers of PartitionedDataset with any storage backend (local filesystem, S3, GCS, etc.) are affected.\n\n### Patches\nYes. The vulnerability has been patched in kedro-datasets version 9.3.0.\nUsers should upgrade to kedro-datasets >= 9.3.0. The fix normalizes constructed paths using `posixpath.normpath` and validates that the resolved path remains within the dataset base directory before use, raising a `DatasetError` if the path escapes the base directory.\n\n### Workarounds\nUsers who cannot upgrade should validate partition IDs before passing them to PartitionedDataset, ensuring they do not contain `..` path components.\n\n### References\nFix: https://github.com/kedro-org/kedro-plugins/pull/1346\nReport: https://github.com/kedro-org/kedro/issues/5452",
+      "published": "2026-04-06T17:55:14Z",
+      "modified": "2026-04-07T22:21:26.822972Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/kedro-org/kedro-plugins/security/advisories/GHSA-cjg8-h5qc-hrjv"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-35492"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/kedro-org/kedro/issues/5452"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/kedro-org/kedro-plugins/pull/1346"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/kedro-org/kedro-plugins/commit/65115f76b872217317734b6bde8927170c98fc4b"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/kedro-org/kedro-plugins"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/kedro-org/kedro-plugins/releases/tag/kedro-datasets-9.3.0"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-cjg8-h5qc-hrjv",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "9.3.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.0.1",
+        "0.0.2",
+        "0.0.3",
+        "0.0.4",
+        "0.0.5",
+        "0.0.6",
+        "0.0.7",
+        "1.0.0",
+        "1.0.1",
+        "1.0.2",
+        "1.1.0",
+        "1.1.1",
+        "1.2.0",
+        "1.3.0",
+        "1.4.0",
+        "1.4.1",
+        "1.4.2",
+        "1.5.0",
+        "1.5.1",
+        "1.5.2",
+        "1.5.3",
+        "1.6.0",
+        "1.7.0",
+        "1.7.1",
+        "1.8.0",
+        "2.0.0",
+        "2.1.0",
+        "3.0.0",
+        "3.0.1",
+        "4.0.0",
+        "4.1.0",
+        "5.0.0",
+        "5.1.0",
+        "6.0.0",
+        "7.0.0",
+        "8.0.0",
+        "8.1.0",
+        "9.0.0",
+        "9.1.0",
+        "9.1.1",
+        "9.2.0"
+      ],
+      "affected_conda_versions": [
+        "1.3.0",
+        "1.4.0",
+        "1.4.1",
+        "1.4.2",
+        "1.5.0",
+        "1.5.1",
+        "1.5.2",
+        "1.5.3",
+        "1.6.0",
+        "1.7.0",
+        "1.7.1",
+        "1.8.0",
+        "2.0.0",
+        "2.1.0",
+        "3.0.0",
+        "3.0.1",
+        "4.0.0",
+        "4.1.0",
+        "5.0.0",
+        "5.1.0",
+        "6.0.0",
+        "7.0.0",
+        "8.0.0",
+        "8.1.0",
+        "9.0.0",
+        "9.1.0",
+        "9.1.1",
+        "9.2.0"
+      ]
+    }
+  ]
+}

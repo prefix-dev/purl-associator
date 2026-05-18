@@ -1,0 +1,1201 @@
+{
+  "schema_version": 1,
+  "package": "rb-bundler",
+  "purls": [
+    "pkg:gem/bundler"
+  ],
+  "generated_at": "2026-05-18T06:01:40+00:00",
+  "conda_versions_total": 3,
+  "advisories": [
+    {
+      "id": "GHSA-fj7f-vq84-fh43",
+      "primary_id": "CVE-2021-43809",
+      "aliases": [
+        "CVE-2021-43809"
+      ],
+      "cve_ids": [
+        "CVE-2021-43809"
+      ],
+      "ecosystem": "RubyGems",
+      "upstream_name": "bundler",
+      "summary": "Local Code Execution through Argument Injection via dash leading git url parameter in Gemfile.",
+      "details": "In `bundler` versions before 2.2.33, when working with untrusted and apparently harmless `Gemfile`'s, it is not expected that they lead to execution of external code, unless that's explicit in the ruby code inside the `Gemfile` itself. However, if the `Gemfile` includes `gem` entries that use the `git` option with invalid, but seemingly harmless, values with a leading dash, this can be false.\n\nTo handle dependencies that come from a Git repository instead of a registry, Bundler uses various commands, such as `git clone`. These commands are being constructed using user input (e.g. the repository URL). When building the\ncommands, Bundler versions before 2.2.33 correctly avoid Command Injection vulnerabilities by passing an array of arguments instead of a command string. However, there is the possibility that a user input starts with a dash (`-`) and is therefore treated as an optional argument instead of a positional one. This can lead to Code Execution because some of the commands have options that can be leveraged to run arbitrary executables.\n\nSince this value comes from the `Gemfile` file, it can contain any character, including a leading dash.\n\n### Exploitation\n\nTo exploit this vulnerability, an attacker has to craft a directory containing a `Gemfile` file that declares a dependency that is located in a Git repository. This dependency has to have a Git URL in the form of `-u./payload`. This URL\nwill be used to construct a Git clone command but will be interpreted as the [upload-pack](https://git-scm.com/docs/git-clone#Documentation/git-clone.txt--ultupload-packgt) argument. Then this directory needs to be shared with the victim, who then needs to run a command that evaluates the Gemfile, such as `bundle lock`, inside.\n\n### Impact\n\nThis vulnerability can lead to Arbitrary Code Execution, which could potentially lead to the takeover of the system. However, as explained above, the exploitability is very low, because it requires a lot of user interaction. It still could put developers at risk when dealing with untrusted files in a way they think is safe, because the exploit still works when the victim tries to make sure nothing can happen, e.g. by manually reviewing the `Gemfile` (although they would need the weird URL with a leading dash to not raise any flags).\n\nThis kind of attack vector [has been used in the past](https://www.cnbc.com/2021/01/26/north-korean-hackers-targeting-security-researchers-on-twitter.html) to target security researchers by sending them projects to collaborate on.\n\n### Patches\n\nBundler 2.2.33 has patched this problem by inserting `--` as an argument before any positional arguments to those Git commands that were affected by this issue.\n\n### Workarounds\n\nRegardless of whether users can upgrade or not, they should review any untrustred `Gemfile`'s before running any `bundler` commands that may read them, since they can contain arbitrary ruby code.\n\n### References\n\nhttps://cwe.mitre.org/data/definitions/88.html",
+      "published": "2021-12-08T19:51:36Z",
+      "modified": "2026-03-13T22:00:54.526949Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:L/AC:H/PR:L/UI:R/S:U/C:H/I:H/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:H/PR:L/UI:R/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/rubygems/rubygems/security/advisories/GHSA-fj7f-vq84-fh43"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2021-43809"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/rubygems/rubygems/pull/5142"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/rubygems/rubygems/commit/0fad1ccfe9dd7a3c5b82c1496df3c2b4842870d3"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/rubygems/rubygems/commit/a4f2f8ac17e6ce81c689527a8b6f14381060d95f"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/rubygems/rubygems"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/rubysec/ruby-advisory-db/blob/master/gems/bundler/CVE-2021-43809.yml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2025/05/msg00015.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.sonarsource.com/blog/securing-developer-tools-package-managers"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-fj7f-vq84-fh43",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.2.33"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.3.0",
+        "0.3.1",
+        "0.4.0",
+        "0.4.1",
+        "0.5.0",
+        "0.6.0",
+        "0.7.0",
+        "0.7.1",
+        "0.7.2",
+        "0.7.3.pre",
+        "0.7.3.pre2",
+        "0.8.0",
+        "0.8.1",
+        "0.9.0",
+        "0.9.0.pre1",
+        "0.9.0.pre2",
+        "0.9.0.pre3",
+        "0.9.0.pre4",
+        "0.9.0.pre5",
+        "0.9.1",
+        "0.9.1.pre1",
+        "0.9.10",
+        "0.9.11",
+        "0.9.12",
+        "0.9.13",
+        "0.9.14",
+        "0.9.15",
+        "0.9.16",
+        "0.9.17",
+        "0.9.18",
+        "0.9.19",
+        "0.9.2",
+        "0.9.20",
+        "0.9.21",
+        "0.9.22",
+        "0.9.23",
+        "0.9.24",
+        "0.9.25",
+        "0.9.26",
+        "0.9.3",
+        "0.9.4",
+        "0.9.5",
+        "0.9.6",
+        "0.9.7",
+        "0.9.8",
+        "0.9.9",
+        "1.0.0",
+        "1.0.0.beta.1",
+        "1.0.0.beta.10",
+        "1.0.0.beta.2",
+        "1.0.0.beta.3",
+        "1.0.0.beta.4",
+        "1.0.0.beta.5",
+        "1.0.0.beta.8",
+        "1.0.0.beta.9",
+        "1.0.0.rc.1",
+        "1.0.0.rc.2",
+        "1.0.0.rc.3",
+        "1.0.0.rc.5",
+        "1.0.0.rc.6",
+        "1.0.10",
+        "1.0.11",
+        "1.0.12",
+        "1.0.13",
+        "1.0.14",
+        "1.0.15",
+        "1.0.17",
+        "1.0.18",
+        "1.0.19.rc",
+        "1.0.2",
+        "1.0.20",
+        "1.0.20.rc",
+        "1.0.21",
+        "1.0.21.rc",
+        "1.0.22",
+        "1.0.3",
+        "1.0.5",
+        "1.0.7",
+        "1.0.9",
+        "1.1.0",
+        "1.1.1",
+        "1.1.2",
+        "1.1.3",
+        "1.1.4",
+        "1.1.5",
+        "1.1.pre",
+        "1.1.pre.1",
+        "1.1.pre.10",
+        "1.1.pre.2",
+        "1.1.pre.3",
+        "1.1.pre.4",
+        "1.1.pre.5",
+        "1.1.pre.7",
+        "1.1.pre.8",
+        "1.1.pre.9",
+        "1.1.rc",
+        "1.1.rc.2",
+        "1.1.rc.3",
+        "1.1.rc.5",
+        "1.1.rc.6",
+        "1.1.rc.7",
+        "1.1.rc.8",
+        "1.10.0",
+        "1.10.0.pre",
+        "1.10.0.pre.1",
+        "1.10.0.pre.2",
+        "1.10.0.rc",
+        "1.10.1",
+        "1.10.2",
+        "1.10.3",
+        "1.10.4",
+        "1.10.5",
+        "1.10.6",
+        "1.11.0",
+        "1.11.0.pre.1",
+        "1.11.0.pre.2",
+        "1.11.1",
+        "1.11.2",
+        "1.12.0",
+        "1.12.0.pre.1",
+        "1.12.0.pre.2",
+        "1.12.0.rc",
+        "1.12.0.rc.2",
+        "1.12.0.rc.3",
+        "1.12.0.rc.4",
+        "1.12.1",
+        "1.12.2",
+        "1.12.3",
+        "1.12.4",
+        "1.12.5",
+        "1.12.6",
+        "1.13.0",
+        "1.13.0.pre.1",
+        "1.13.0.rc.1",
+        "1.13.0.rc.2",
+        "1.13.1",
+        "1.13.2",
+        "1.13.3",
+        "1.13.4",
+        "1.13.5",
+        "1.13.6",
+        "1.13.7",
+        "1.14.0",
+        "1.14.0.pre.1",
+        "1.14.0.pre.2",
+        "1.14.1",
+        "1.14.2",
+        "1.14.3",
+        "1.14.4",
+        "1.14.5",
+        "1.14.6",
+        "1.15.0",
+        "1.15.0.pre.1",
+        "1.15.0.pre.2",
+        "1.15.0.pre.3",
+        "1.15.0.pre.4",
+        "1.15.1",
+        "1.15.2",
+        "1.15.3",
+        "1.15.4",
+        "1.16.0",
+        "1.16.0.pre.1",
+        "1.16.0.pre.2",
+        "1.16.0.pre.3",
+        "1.16.1",
+        "1.16.2",
+        "1.16.3",
+        "1.16.4",
+        "1.16.5",
+        "1.16.6",
+        "1.17.0",
+        "1.17.0.pre.1",
+        "1.17.0.pre.2",
+        "1.17.1",
+        "1.17.2",
+        "1.17.3",
+        "1.2.0",
+        "1.2.0.pre",
+        "1.2.0.pre.1",
+        "1.2.0.rc",
+        "1.2.0.rc.2",
+        "1.2.1",
+        "1.2.2",
+        "1.2.3",
+        "1.2.4",
+        "1.2.5",
+        "1.3.0",
+        "1.3.0.pre",
+        "1.3.0.pre.2",
+        "1.3.0.pre.3",
+        "1.3.0.pre.4",
+        "1.3.0.pre.5",
+        "1.3.0.pre.6",
+        "1.3.0.pre.7",
+        "1.3.0.pre.8",
+        "1.3.1",
+        "1.3.2",
+        "1.3.3",
+        "1.3.4",
+        "1.3.5",
+        "1.3.6",
+        "1.4.0.pre.1",
+        "1.4.0.pre.2",
+        "1.4.0.rc.1",
+        "1.5.0",
+        "1.5.0.rc.1",
+        "1.5.0.rc.2",
+        "1.5.1",
+        "1.5.2",
+        "1.5.3",
+        "1.6.0",
+        "1.6.0.pre.1",
+        "1.6.0.pre.2",
+        "1.6.0.rc",
+        "1.6.0.rc2",
+        "1.6.1",
+        "1.6.2",
+        "1.6.3",
+        "1.6.4",
+        "1.6.5",
+        "1.6.6",
+        "1.6.7",
+        "1.6.8",
+        "1.6.9",
+        "1.7.0",
+        "1.7.1",
+        "1.7.1.pre",
+        "1.7.1.pre.2",
+        "1.7.1.pre.3",
+        "1.7.10",
+        "1.7.11",
+        "1.7.12",
+        "1.7.13",
+        "1.7.14",
+        "1.7.15",
+        "1.7.2",
+        "1.7.3",
+        "1.7.4",
+        "1.7.5",
+        "1.7.6",
+        "1.7.7",
+        "1.7.8",
+        "1.7.9",
+        "1.8.0",
+        "1.8.0.pre",
+        "1.8.1",
+        "1.8.2",
+        "1.8.3",
+        "1.8.4",
+        "1.8.5",
+        "1.8.6",
+        "1.8.7",
+        "1.8.8",
+        "1.8.9",
+        "1.9.0",
+        "1.9.0.pre",
+        "1.9.0.pre.1",
+        "1.9.0.rc",
+        "1.9.1",
+        "1.9.10",
+        "1.9.2",
+        "1.9.3",
+        "1.9.4",
+        "1.9.5",
+        "1.9.6",
+        "1.9.7",
+        "1.9.8",
+        "1.9.9",
+        "2.0.0",
+        "2.0.0.pre.1",
+        "2.0.0.pre.2",
+        "2.0.0.pre.3",
+        "2.0.1",
+        "2.0.2",
+        "2.1.0",
+        "2.1.0.pre.1",
+        "2.1.0.pre.2",
+        "2.1.0.pre.3",
+        "2.1.1",
+        "2.1.2",
+        "2.1.3",
+        "2.1.4",
+        "2.2.0",
+        "2.2.0.rc.1",
+        "2.2.0.rc.2",
+        "2.2.1",
+        "2.2.10",
+        "2.2.11",
+        "2.2.12",
+        "2.2.13",
+        "2.2.14",
+        "2.2.15",
+        "2.2.16",
+        "2.2.17",
+        "2.2.18",
+        "2.2.19",
+        "2.2.2",
+        "2.2.20",
+        "2.2.21",
+        "2.2.22",
+        "2.2.23",
+        "2.2.24",
+        "2.2.25",
+        "2.2.26",
+        "2.2.27",
+        "2.2.28",
+        "2.2.29",
+        "2.2.3",
+        "2.2.30",
+        "2.2.31",
+        "2.2.32",
+        "2.2.4",
+        "2.2.5",
+        "2.2.6",
+        "2.2.7",
+        "2.2.8",
+        "2.2.9"
+      ],
+      "affected_conda_versions": [
+        "2.0.2",
+        "2.1.1",
+        "2.1.4"
+      ]
+    },
+    {
+      "id": "GHSA-fp4w-jxhp-m23p",
+      "primary_id": "CVE-2020-36327",
+      "aliases": [
+        "CVE-2020-36327"
+      ],
+      "cve_ids": [
+        "CVE-2020-36327"
+      ],
+      "ecosystem": "RubyGems",
+      "upstream_name": "bundler",
+      "summary": "Dependency Confusion in Bundler",
+      "details": "Bundler 1.16.0 through 2.2.9 and 2.2.11 through 2.2.17 sometimes chooses a dependency source based on the highest gem version number, which means that a rogue gem found at a public source may be chosen, even if the intended choice was a private gem that is a dependency of another private gem that is explicitly depended on by the application.",
+      "published": "2021-05-24T18:12:33Z",
+      "modified": "2024-12-05T05:42:55.716134Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2020-36327"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/rubygems/rubygems/issues/3982"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/rubygems/rubygems/pull/4609"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/rubygems/rubygems/commit/078bf682ac40017b309b5fc69f283ff640e7c129"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bundler.io/blog/2021/02/15/a-more-secure-bundler-we-fixed-our-source-priorities.html"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/rubygems/rubygems"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/rubygems/rubygems/blob/master/bundler/CHANGELOG.md#2218-may-25-2021"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/rubysec/ruby-advisory-db/blob/master/gems/bundler/CVE-2020-36327.yml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/MWXHK5UUHVSHF7HTHMX6JY3WXDVNIHSL"
+        },
+        {
+          "type": "WEB",
+          "url": "https://mensfeld.pl/2021/02/rubygems-dependency-confusion-attack-side-of-things"
+        },
+        {
+          "type": "WEB",
+          "url": "https://msrc.microsoft.com/update-guide/en-US/vulnerability/CVE-2021-24105"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.zofrex.com/blog/2021/04/29/bundler-still-vulnerable-dependency-confusion-cve-2020-36327"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-fp4w-jxhp-m23p",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "1.16.0"
+            },
+            {
+              "fixed": "2.2.10"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "1.16.0",
+        "1.16.1",
+        "1.16.2",
+        "1.16.3",
+        "1.16.4",
+        "1.16.5",
+        "1.16.6",
+        "1.17.0",
+        "1.17.0.pre.1",
+        "1.17.0.pre.2",
+        "1.17.1",
+        "1.17.2",
+        "1.17.3",
+        "2.0.0",
+        "2.0.0.pre.1",
+        "2.0.0.pre.2",
+        "2.0.0.pre.3",
+        "2.0.1",
+        "2.0.2",
+        "2.1.0",
+        "2.1.0.pre.1",
+        "2.1.0.pre.2",
+        "2.1.0.pre.3",
+        "2.1.1",
+        "2.1.2",
+        "2.1.3",
+        "2.1.4",
+        "2.2.0",
+        "2.2.0.rc.1",
+        "2.2.0.rc.2",
+        "2.2.1",
+        "2.2.2",
+        "2.2.3",
+        "2.2.4",
+        "2.2.5",
+        "2.2.6",
+        "2.2.7",
+        "2.2.8",
+        "2.2.9"
+      ],
+      "affected_conda_versions": [
+        "2.0.2",
+        "2.1.1",
+        "2.1.4"
+      ]
+    },
+    {
+      "id": "GHSA-g98m-96g9-wfjq",
+      "primary_id": "CVE-2019-3881",
+      "aliases": [
+        "CVE-2019-3881"
+      ],
+      "cve_ids": [
+        "CVE-2019-3881"
+      ],
+      "ecosystem": "RubyGems",
+      "upstream_name": "bundler",
+      "summary": "Insecure path handling in Bundler",
+      "details": "Bundler prior to 2.1.0 uses a predictable path in `/tmp/`, created with insecure permissions as a storage location for gems, if locations under the user's home directory are not available. If Bundler is used in a scenario where the user does not have a writable home directory, an attacker could place malicious code in this directory that would be later loaded and executed.",
+      "published": "2021-05-10T14:53:59Z",
+      "modified": "2024-02-16T08:22:47.202315Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2019-3881"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/rubygems/bundler/issues/6501"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/rubygems/bundler/pull/7416/commits/65cfebb041c454c246aaf32a177b0243915a9998"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugzilla.redhat.com/show_bug.cgi?id=1651826"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/advisories/GHSA-g98m-96g9-wfjq"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/rubygems/bundler"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/rubysec/ruby-advisory-db/blob/master/gems/bundler/CVE-2019-3881.yml"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-g98m-96g9-wfjq",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "1.14.0"
+            },
+            {
+              "fixed": "2.1.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "1.14.0",
+        "1.14.1",
+        "1.14.2",
+        "1.14.3",
+        "1.14.4",
+        "1.14.5",
+        "1.14.6",
+        "1.15.0",
+        "1.15.0.pre.1",
+        "1.15.0.pre.2",
+        "1.15.0.pre.3",
+        "1.15.0.pre.4",
+        "1.15.1",
+        "1.15.2",
+        "1.15.3",
+        "1.15.4",
+        "1.16.0",
+        "1.16.0.pre.1",
+        "1.16.0.pre.2",
+        "1.16.0.pre.3",
+        "1.16.1",
+        "1.16.2",
+        "1.16.3",
+        "1.16.4",
+        "1.16.5",
+        "1.16.6",
+        "1.17.0",
+        "1.17.0.pre.1",
+        "1.17.0.pre.2",
+        "1.17.1",
+        "1.17.2",
+        "1.17.3",
+        "2.0.0",
+        "2.0.0.pre.1",
+        "2.0.0.pre.2",
+        "2.0.0.pre.3",
+        "2.0.1",
+        "2.0.2",
+        "2.1.0.pre.1",
+        "2.1.0.pre.2",
+        "2.1.0.pre.3"
+      ],
+      "affected_conda_versions": [
+        "2.0.2"
+      ]
+    },
+    {
+      "id": "GHSA-49jx-9cmc-xjxm",
+      "primary_id": "CVE-2013-0334",
+      "aliases": [
+        "CVE-2013-0334"
+      ],
+      "cve_ids": [
+        "CVE-2013-0334"
+      ],
+      "ecosystem": "RubyGems",
+      "upstream_name": "bundler",
+      "summary": "Bundler may install gems from a different source than expected",
+      "details": "Bundler before 1.7, when multiple top-level source lines are used, allows remote attackers to install arbitrary gems by creating a gem with the same name as another gem in a different source.",
+      "published": "2022-05-05T02:48:48Z",
+      "modified": "2024-12-06T05:31:01.084668Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2013-0334"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/rubygems/bundler"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/rubysec/ruby-advisory-db/blob/master/gems/bundler/CVE-2013-0334.yml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.gentoo.org/glsa/201609-02"
+        },
+        {
+          "type": "WEB",
+          "url": "https://web.archive.org/web/20210122060358/https://www.securityfocus.com/bid/70099"
+        },
+        {
+          "type": "WEB",
+          "url": "http://bundler.io/blog/2014/08/14/bundler-may-install-gems-from-a-different-source-than-expected-cve-2013-0334.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.fedoraproject.org/pipermail/package-announce/2014-October/140609.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.fedoraproject.org/pipermail/package-announce/2014-October/140654.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.fedoraproject.org/pipermail/package-announce/2014-October/140655.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-updates/2015-03/msg00092.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.oracle.com/technetwork/topics/security/linuxbulletinoct2015-2719645.html"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-49jx-9cmc-xjxm",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.7.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.3.0",
+        "0.3.1",
+        "0.4.0",
+        "0.4.1",
+        "0.5.0",
+        "0.6.0",
+        "0.7.0",
+        "0.7.1",
+        "0.7.2",
+        "0.7.3.pre",
+        "0.7.3.pre2",
+        "0.8.0",
+        "0.8.1",
+        "0.9.0",
+        "0.9.0.pre1",
+        "0.9.0.pre2",
+        "0.9.0.pre3",
+        "0.9.0.pre4",
+        "0.9.0.pre5",
+        "0.9.1",
+        "0.9.1.pre1",
+        "0.9.10",
+        "0.9.11",
+        "0.9.12",
+        "0.9.13",
+        "0.9.14",
+        "0.9.15",
+        "0.9.16",
+        "0.9.17",
+        "0.9.18",
+        "0.9.19",
+        "0.9.2",
+        "0.9.20",
+        "0.9.21",
+        "0.9.22",
+        "0.9.23",
+        "0.9.24",
+        "0.9.25",
+        "0.9.26",
+        "0.9.3",
+        "0.9.4",
+        "0.9.5",
+        "0.9.6",
+        "0.9.7",
+        "0.9.8",
+        "0.9.9",
+        "1.0.0",
+        "1.0.0.beta.1",
+        "1.0.0.beta.10",
+        "1.0.0.beta.2",
+        "1.0.0.beta.3",
+        "1.0.0.beta.4",
+        "1.0.0.beta.5",
+        "1.0.0.beta.8",
+        "1.0.0.beta.9",
+        "1.0.0.rc.1",
+        "1.0.0.rc.2",
+        "1.0.0.rc.3",
+        "1.0.0.rc.5",
+        "1.0.0.rc.6",
+        "1.0.10",
+        "1.0.11",
+        "1.0.12",
+        "1.0.13",
+        "1.0.14",
+        "1.0.15",
+        "1.0.17",
+        "1.0.18",
+        "1.0.19.rc",
+        "1.0.2",
+        "1.0.20",
+        "1.0.20.rc",
+        "1.0.21",
+        "1.0.21.rc",
+        "1.0.22",
+        "1.0.3",
+        "1.0.5",
+        "1.0.7",
+        "1.0.9",
+        "1.1.0",
+        "1.1.1",
+        "1.1.2",
+        "1.1.3",
+        "1.1.4",
+        "1.1.5",
+        "1.1.pre",
+        "1.1.pre.1",
+        "1.1.pre.10",
+        "1.1.pre.2",
+        "1.1.pre.3",
+        "1.1.pre.4",
+        "1.1.pre.5",
+        "1.1.pre.7",
+        "1.1.pre.8",
+        "1.1.pre.9",
+        "1.1.rc",
+        "1.1.rc.2",
+        "1.1.rc.3",
+        "1.1.rc.5",
+        "1.1.rc.6",
+        "1.1.rc.7",
+        "1.1.rc.8",
+        "1.2.0",
+        "1.2.0.pre",
+        "1.2.0.pre.1",
+        "1.2.0.rc",
+        "1.2.0.rc.2",
+        "1.2.1",
+        "1.2.2",
+        "1.2.3",
+        "1.2.4",
+        "1.2.5",
+        "1.3.0",
+        "1.3.0.pre",
+        "1.3.0.pre.2",
+        "1.3.0.pre.3",
+        "1.3.0.pre.4",
+        "1.3.0.pre.5",
+        "1.3.0.pre.6",
+        "1.3.0.pre.7",
+        "1.3.0.pre.8",
+        "1.3.1",
+        "1.3.2",
+        "1.3.3",
+        "1.3.4",
+        "1.3.5",
+        "1.3.6",
+        "1.4.0.pre.1",
+        "1.4.0.pre.2",
+        "1.4.0.rc.1",
+        "1.5.0",
+        "1.5.0.rc.1",
+        "1.5.0.rc.2",
+        "1.5.1",
+        "1.5.2",
+        "1.5.3",
+        "1.6.0",
+        "1.6.0.pre.1",
+        "1.6.0.pre.2",
+        "1.6.0.rc",
+        "1.6.0.rc2",
+        "1.6.1",
+        "1.6.2",
+        "1.6.3",
+        "1.6.4",
+        "1.6.5",
+        "1.6.6",
+        "1.6.7",
+        "1.6.8",
+        "1.6.9"
+      ],
+      "affected_conda_versions": []
+    },
+    {
+      "id": "GHSA-jvgm-pfqv-887x",
+      "primary_id": "CVE-2016-7954",
+      "aliases": [
+        "CVE-2016-7954"
+      ],
+      "cve_ids": [
+        "CVE-2016-7954"
+      ],
+      "ecosystem": "RubyGems",
+      "upstream_name": "bundler",
+      "summary": "Bundler allows attacker to inject arbitrary code via secondary Gem source",
+      "details": "Bundler 1.x might allow remote attackers to inject arbitrary Ruby code into an application by leveraging a gem name collision on a secondary source.  NOTE: this might overlap CVE-2013-0334.",
+      "published": "2022-05-14T00:57:16Z",
+      "modified": "2025-04-14T22:27:57.972251Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2016-7954"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/bundler/bundler/issues/5051"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/bundler/bundler/issues/5062"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugzilla.redhat.com/show_bug.cgi?id=1381951"
+        },
+        {
+          "type": "WEB",
+          "url": "https://collectiveidea.com/blog/archives/2016/10/06/bundlers-multiple-source-security-vulnerability"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/rubygems/bundler"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/rubysec/ruby-advisory-db/blob/master/gems/bundler/CVE-2016-7954.yml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://web.archive.org/web/20170214030311/http://www.securityfocus.com/bid/93423"
+        },
+        {
+          "type": "WEB",
+          "url": "http://collectiveidea.com/blog/archives/2016/10/06/bundlers-multiple-source-security-vulnerability"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2016/10/04/5"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2016/10/04/7"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2016/10/05/3"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-jvgm-pfqv-887x",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "1.0.0"
+            },
+            {
+              "fixed": "2.0.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "1.0.0",
+        "1.0.10",
+        "1.0.11",
+        "1.0.12",
+        "1.0.13",
+        "1.0.14",
+        "1.0.15",
+        "1.0.17",
+        "1.0.18",
+        "1.0.19.rc",
+        "1.0.2",
+        "1.0.20",
+        "1.0.20.rc",
+        "1.0.21",
+        "1.0.21.rc",
+        "1.0.22",
+        "1.0.3",
+        "1.0.5",
+        "1.0.7",
+        "1.0.9",
+        "1.1.0",
+        "1.1.1",
+        "1.1.2",
+        "1.1.3",
+        "1.1.4",
+        "1.1.5",
+        "1.1.pre",
+        "1.1.pre.1",
+        "1.1.pre.10",
+        "1.1.pre.2",
+        "1.1.pre.3",
+        "1.1.pre.4",
+        "1.1.pre.5",
+        "1.1.pre.7",
+        "1.1.pre.8",
+        "1.1.pre.9",
+        "1.1.rc",
+        "1.1.rc.2",
+        "1.1.rc.3",
+        "1.1.rc.5",
+        "1.1.rc.6",
+        "1.1.rc.7",
+        "1.1.rc.8",
+        "1.10.0",
+        "1.10.0.pre",
+        "1.10.0.pre.1",
+        "1.10.0.pre.2",
+        "1.10.0.rc",
+        "1.10.1",
+        "1.10.2",
+        "1.10.3",
+        "1.10.4",
+        "1.10.5",
+        "1.10.6",
+        "1.11.0",
+        "1.11.0.pre.1",
+        "1.11.0.pre.2",
+        "1.11.1",
+        "1.11.2",
+        "1.12.0",
+        "1.12.0.pre.1",
+        "1.12.0.pre.2",
+        "1.12.0.rc",
+        "1.12.0.rc.2",
+        "1.12.0.rc.3",
+        "1.12.0.rc.4",
+        "1.12.1",
+        "1.12.2",
+        "1.12.3",
+        "1.12.4",
+        "1.12.5",
+        "1.12.6",
+        "1.13.0",
+        "1.13.0.pre.1",
+        "1.13.0.rc.1",
+        "1.13.0.rc.2",
+        "1.13.1",
+        "1.13.2",
+        "1.13.3",
+        "1.13.4",
+        "1.13.5",
+        "1.13.6",
+        "1.13.7",
+        "1.14.0",
+        "1.14.0.pre.1",
+        "1.14.0.pre.2",
+        "1.14.1",
+        "1.14.2",
+        "1.14.3",
+        "1.14.4",
+        "1.14.5",
+        "1.14.6",
+        "1.15.0",
+        "1.15.0.pre.1",
+        "1.15.0.pre.2",
+        "1.15.0.pre.3",
+        "1.15.0.pre.4",
+        "1.15.1",
+        "1.15.2",
+        "1.15.3",
+        "1.15.4",
+        "1.16.0",
+        "1.16.0.pre.1",
+        "1.16.0.pre.2",
+        "1.16.0.pre.3",
+        "1.16.1",
+        "1.16.2",
+        "1.16.3",
+        "1.16.4",
+        "1.16.5",
+        "1.16.6",
+        "1.17.0",
+        "1.17.0.pre.1",
+        "1.17.0.pre.2",
+        "1.17.1",
+        "1.17.2",
+        "1.17.3",
+        "1.2.0",
+        "1.2.0.pre",
+        "1.2.0.pre.1",
+        "1.2.0.rc",
+        "1.2.0.rc.2",
+        "1.2.1",
+        "1.2.2",
+        "1.2.3",
+        "1.2.4",
+        "1.2.5",
+        "1.3.0",
+        "1.3.0.pre",
+        "1.3.0.pre.2",
+        "1.3.0.pre.3",
+        "1.3.0.pre.4",
+        "1.3.0.pre.5",
+        "1.3.0.pre.6",
+        "1.3.0.pre.7",
+        "1.3.0.pre.8",
+        "1.3.1",
+        "1.3.2",
+        "1.3.3",
+        "1.3.4",
+        "1.3.5",
+        "1.3.6",
+        "1.4.0.pre.1",
+        "1.4.0.pre.2",
+        "1.4.0.rc.1",
+        "1.5.0",
+        "1.5.0.rc.1",
+        "1.5.0.rc.2",
+        "1.5.1",
+        "1.5.2",
+        "1.5.3",
+        "1.6.0",
+        "1.6.0.pre.1",
+        "1.6.0.pre.2",
+        "1.6.0.rc",
+        "1.6.0.rc2",
+        "1.6.1",
+        "1.6.2",
+        "1.6.3",
+        "1.6.4",
+        "1.6.5",
+        "1.6.6",
+        "1.6.7",
+        "1.6.8",
+        "1.6.9",
+        "1.7.0",
+        "1.7.1",
+        "1.7.1.pre",
+        "1.7.1.pre.2",
+        "1.7.1.pre.3",
+        "1.7.10",
+        "1.7.11",
+        "1.7.12",
+        "1.7.13",
+        "1.7.14",
+        "1.7.15",
+        "1.7.2",
+        "1.7.3",
+        "1.7.4",
+        "1.7.5",
+        "1.7.6",
+        "1.7.7",
+        "1.7.8",
+        "1.7.9",
+        "1.8.0",
+        "1.8.0.pre",
+        "1.8.1",
+        "1.8.2",
+        "1.8.3",
+        "1.8.4",
+        "1.8.5",
+        "1.8.6",
+        "1.8.7",
+        "1.8.8",
+        "1.8.9",
+        "1.9.0",
+        "1.9.0.pre",
+        "1.9.0.pre.1",
+        "1.9.0.rc",
+        "1.9.1",
+        "1.9.10",
+        "1.9.2",
+        "1.9.3",
+        "1.9.4",
+        "1.9.5",
+        "1.9.6",
+        "1.9.7",
+        "1.9.8",
+        "1.9.9",
+        "2.0.0.pre.1",
+        "2.0.0.pre.2",
+        "2.0.0.pre.3"
+      ],
+      "affected_conda_versions": []
+    }
+  ]
+}

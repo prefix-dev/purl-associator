@@ -1,0 +1,1191 @@
+{
+  "schema_version": 1,
+  "package": "bleach",
+  "purls": [
+    "pkg:pypi/bleach"
+  ],
+  "generated_at": "2026-05-18T06:01:40+00:00",
+  "conda_versions_total": 28,
+  "advisories": [
+    {
+      "id": "GHSA-m6xf-fq7q-8743",
+      "primary_id": "CVE-2020-6816",
+      "aliases": [
+        "CVE-2020-6816",
+        "PYSEC-2020-28"
+      ],
+      "cve_ids": [
+        "CVE-2020-6816"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "bleach",
+      "summary": "Bleach vulnerable to mutation XSS via whitelisted math or svg and raw tag",
+      "details": "### Impact\n\nA [mutation XSS](https://cure53.de/fp170.pdf) affects users calling `bleach.clean` with all of:\n\n* the `svg` or `math` in the allowed/whitelisted tags\n* an RCDATA tag (see below) in the allowed/whitelisted tags\n* the keyword argument `strip=False`\n\n### Patches\n\nUsers are encouraged to upgrade to bleach v3.1.2 or greater.\n\n### Workarounds\n\n* modify `bleach.clean` calls to use `strip=True`, or not whitelist `math` or `svg` tags and one or more of the following tags:\n\n```\nscript\nnoscript\nstyle\nnoframes\nxmp\nnoembed\niframe\n```\n\n* A strong [Content-Security-Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP) without `unsafe-inline` and `unsafe-eval` [`script-src`s](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/script-src)) will also help mitigate the risk.\n\n### References\n\n* https://bugzilla.mozilla.org/show_bug.cgi?id=1621692\n* https://cure53.de/fp170.pdf\n* https://nvd.nist.gov/vuln/detail/CVE-2020-6816\n* https://www.checkmarx.com/blog/vulnerabilities-discovered-in-mozilla-bleach\n\n### Credits\n\n* Reported by [Yaniv Nizry](https://twitter.com/ynizry) from the CxSCA AppSec group at Checkmarx\n\n### For more information\n\nIf you have any questions or comments about this advisory:\n\n* Open an issue at [https://github.com/mozilla/bleach/issues](https://github.com/mozilla/bleach/issues)\n* Email us at [security@mozilla.org](mailto:security@mozilla.org)",
+      "published": "2020-03-24T15:06:32Z",
+      "modified": "2026-03-13T22:15:25.195784Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/mozilla/bleach/security/advisories/GHSA-m6xf-fq7q-8743"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2020-6816"
+        },
+        {
+          "type": "WEB",
+          "url": "https://advisory.checkmarx.net/advisory/CX-2020-4277"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/mozilla/bleach"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/mozilla/bleach/releases/tag/v3.1.2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/bleach/PYSEC-2020-28.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/EDQU2SZLZMSSACCBUBJ6NOSRNNBDYFW5"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.checkmarx.com/blog/vulnerabilities-discovered-in-mozilla-bleach"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-m6xf-fq7q-8743",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "3.1.2"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1",
+        "0.1.1",
+        "0.1.2",
+        "0.2",
+        "0.2.1",
+        "0.2.2",
+        "0.3",
+        "0.3.1",
+        "0.3.3",
+        "0.3.4",
+        "0.5.0",
+        "0.5.1",
+        "1.0.0",
+        "1.0.1",
+        "1.0.2",
+        "1.0.3",
+        "1.0.4",
+        "1.1.0",
+        "1.1.1",
+        "1.1.2",
+        "1.1.3",
+        "1.1.4",
+        "1.1.5",
+        "1.2",
+        "1.2.1",
+        "1.2.2",
+        "1.4",
+        "1.4.1",
+        "1.4.2",
+        "1.4.3",
+        "1.5.0",
+        "2.0.0",
+        "2.1",
+        "2.1.1",
+        "2.1.2",
+        "2.1.3",
+        "2.1.4",
+        "3.0.0",
+        "3.0.1",
+        "3.0.2",
+        "3.1.0",
+        "3.1.1"
+      ],
+      "affected_conda_versions": [
+        "1.5.0",
+        "2.0.0",
+        "2.1.2",
+        "2.1.3",
+        "2.1.4",
+        "3.0.0",
+        "3.0.1",
+        "3.0.2",
+        "3.1.0",
+        "3.1.1"
+      ]
+    },
+    {
+      "id": "GHSA-m9mq-p2f9-cfqv",
+      "primary_id": "CVE-2018-7753",
+      "aliases": [
+        "CVE-2018-7753",
+        "PYSEC-2018-51"
+      ],
+      "cve_ids": [
+        "CVE-2018-7753"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "bleach",
+      "summary": "Bleach URI Scheme Restriction Bypass",
+      "details": "An issue was discovered in Bleach 2.1.x before 2.1.3. Attributes that have URI values weren't properly sanitized if the values contained character entities. Using character entities, it was possible to construct a URI value with a scheme that was not allowed that would slide through unsanitized.",
+      "published": "2019-01-04T17:46:30Z",
+      "modified": "2025-02-16T05:29:49.530342Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2018-7753"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/mozilla/bleach/commit/c5df5789ec3471a31311f42c2d19fc2cf21b35ef"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugs.debian.org/892252"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/mozilla/bleach"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/mozilla/bleach/releases/tag/v2.1.3"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/bleach/PYSEC-2018-51.yaml"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-m9mq-p2f9-cfqv",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "2.1.0"
+            },
+            {
+              "fixed": "2.1.3"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "2.1",
+        "2.1.1",
+        "2.1.2"
+      ],
+      "affected_conda_versions": [
+        "2.1.2"
+      ]
+    },
+    {
+      "id": "GHSA-q65m-pv3f-wr5r",
+      "primary_id": "CVE-2020-6802",
+      "aliases": [
+        "CVE-2020-6802",
+        "PYSEC-2020-27"
+      ],
+      "cve_ids": [
+        "CVE-2020-6802"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "bleach",
+      "summary": "XSS in Bleach when noscript and raw tag whitelisted",
+      "details": "### Impact\n\nA [mutation XSS](https://cure53.de/fp170.pdf) affects users calling `bleach.clean` with `noscript` and a raw tag (see below) in the allowed/whitelisted tags option.\n\n### Patches\n\nv3.1.1\n\n### Workarounds\n\n* modify `bleach.clean` calls to not whitelist `noscript` and one or more of the following raw tags:\n\n```\ntitle\ntextarea\nscript\nstyle\nnoembed\nnoframes\niframe\nxmp\n```\n\n* A strong [Content-Security-Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP) without `unsafe-inline` and `unsafe-eval` [`script-src`s](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/script-src)) will also help mitigate the risk.\n\n### References\n\n* https://bugzilla.mozilla.org/show_bug.cgi?id=1615315\n* https://cure53.de/fp170.pdf\n* https://nvd.nist.gov/vuln/detail/CVE-2020-6802\n* https://www.checkmarx.com/blog/vulnerabilities-discovered-in-mozilla-bleach\n\n### Credits\n\n* Reported by [Yaniv Nizry](https://twitter.com/ynizry) from the CxSCA AppSec group at Checkmarx\n\n### For more information\n\nIf you have any questions or comments about this advisory:\n\n* Open an issue at [https://github.com/mozilla/bleach/issues](https://github.com/mozilla/bleach/issues)\n* Email us at [security@mozilla.org](mailto:security@mozilla.org)\n",
+      "published": "2020-02-24T17:33:44Z",
+      "modified": "2026-03-13T22:00:17.879348Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/mozilla/bleach/security/advisories/GHSA-q65m-pv3f-wr5r"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2020-6802"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/mozilla/bleach/commit/f77e0f6392177a06e46a49abd61a4d9f035e57fd"
+        },
+        {
+          "type": "WEB",
+          "url": "https://advisory.checkmarx.net/advisory/CX-2020-4276"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugzilla.mozilla.org/show_bug.cgi?id=1615315"
+        },
+        {
+          "type": "WEB",
+          "url": "https://cure53.de/fp170.pdf"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/mozilla/bleach"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/bleach/PYSEC-2020-27.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/72R4VFFHDRSQMNT7IZU3X2755ZP4HGNI"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/OCNLM2MGQTOLCIVVYS2Z5S7KOQJR5JC4"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/YTULPQB7HVPPYWEYVNHJGDTSPVIDHIZX"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.checkmarx.com/blog/vulnerabilities-discovered-in-mozilla-bleach"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-q65m-pv3f-wr5r",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "3.1.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1",
+        "0.1.1",
+        "0.1.2",
+        "0.2",
+        "0.2.1",
+        "0.2.2",
+        "0.3",
+        "0.3.1",
+        "0.3.3",
+        "0.3.4",
+        "0.5.0",
+        "0.5.1",
+        "1.0.0",
+        "1.0.1",
+        "1.0.2",
+        "1.0.3",
+        "1.0.4",
+        "1.1.0",
+        "1.1.1",
+        "1.1.2",
+        "1.1.3",
+        "1.1.4",
+        "1.1.5",
+        "1.2",
+        "1.2.1",
+        "1.2.2",
+        "1.4",
+        "1.4.1",
+        "1.4.2",
+        "1.4.3",
+        "1.5.0",
+        "2.0.0",
+        "2.1",
+        "2.1.1",
+        "2.1.2",
+        "2.1.3",
+        "2.1.4",
+        "3.0.0",
+        "3.0.1",
+        "3.0.2",
+        "3.1.0"
+      ],
+      "affected_conda_versions": [
+        "1.5.0",
+        "2.0.0",
+        "2.1.2",
+        "2.1.3",
+        "2.1.4",
+        "3.0.0",
+        "3.0.1",
+        "3.0.2",
+        "3.1.0"
+      ]
+    },
+    {
+      "id": "GHSA-vqhp-cxgc-6wmm",
+      "primary_id": "CVE-2020-6817",
+      "aliases": [
+        "CVE-2020-6817",
+        "PYSEC-2020-340",
+        "SNYK-PYTHON-BLEACH-561754"
+      ],
+      "cve_ids": [
+        "CVE-2020-6817"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "bleach",
+      "summary": "regular expression denial-of-service (ReDoS) in Bleach",
+      "details": "### Impact\n\n`bleach.clean` behavior parsing style attributes could result in a regular expression denial of service (ReDoS).\n\nCalls to ``bleach.clean`` with an allowed tag with an allowed ``style`` attribute are vulnerable to ReDoS. For example, ``bleach.clean(..., attributes={'a': ['style']})``.\n\n### Patches\n\n3.1.4\n\n### Workarounds\n\n* do not whitelist the style attribute in `bleach.clean` calls\n\n* limit input string length\n\n### References\n\n* https://bugzilla.mozilla.org/show_bug.cgi?id=1623633\n* https://www.regular-expressions.info/redos.html\n* https://blog.r2c.dev/posts/finding-python-redos-bugs-at-scale-using-dlint-and-r2c/\n* https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2020-6817\n\n### Credits\n\n* Reported by schwag09 of r2c\n\n### For more information\nIf you have any questions or comments about this advisory:\n\n* Open an issue at https://github.com/mozilla/bleach/issues\n* Email us at security@mozilla.org",
+      "published": "2020-03-30T19:45:56Z",
+      "modified": "2026-03-13T22:14:05.326936Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/mozilla/bleach/security/advisories/GHSA-vqhp-cxgc-6wmm"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2020-6817"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugzilla.mozilla.org/show_bug.cgi?id=1623633"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/mozilla/bleach"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/mozilla/bleach/releases/tag/v3.1.4"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/bleach/PYSEC-2020-340.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://snyk.io/vuln/SNYK-PYTHON-BLEACH-561754"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-vqhp-cxgc-6wmm",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "3.1.4"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1",
+        "0.1.1",
+        "0.1.2",
+        "0.2",
+        "0.2.1",
+        "0.2.2",
+        "0.3",
+        "0.3.1",
+        "0.3.3",
+        "0.3.4",
+        "0.5.0",
+        "0.5.1",
+        "1.0.0",
+        "1.0.1",
+        "1.0.2",
+        "1.0.3",
+        "1.0.4",
+        "1.1.0",
+        "1.1.1",
+        "1.1.2",
+        "1.1.3",
+        "1.1.4",
+        "1.1.5",
+        "1.2",
+        "1.2.1",
+        "1.2.2",
+        "1.4",
+        "1.4.1",
+        "1.4.2",
+        "1.4.3",
+        "1.5.0",
+        "2.0.0",
+        "2.1",
+        "2.1.1",
+        "2.1.2",
+        "2.1.3",
+        "2.1.4",
+        "3.0.0",
+        "3.0.1",
+        "3.0.2",
+        "3.1.0",
+        "3.1.1",
+        "3.1.2",
+        "3.1.3"
+      ],
+      "affected_conda_versions": [
+        "1.5.0",
+        "2.0.0",
+        "2.1.2",
+        "2.1.3",
+        "2.1.4",
+        "3.0.0",
+        "3.0.1",
+        "3.0.2",
+        "3.1.0",
+        "3.1.1",
+        "3.1.2",
+        "3.1.3"
+      ]
+    },
+    {
+      "id": "GHSA-vv2x-vrpj-qqpq",
+      "primary_id": "CVE-2021-23980",
+      "aliases": [
+        "CVE-2021-23980",
+        "PYSEC-2021-865"
+      ],
+      "cve_ids": [
+        "CVE-2021-23980"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "bleach",
+      "summary": "Cross-site scripting in Bleach",
+      "details": "### Impact                                                                                                                                                                                                                                                    \n\nA [mutation XSS](https://cure53.de/fp170.pdf) affects users calling `bleach.clean` with all of:\n\n* `svg` or `math` in the allowed tags\n* `p` or `br` in allowed tags\n* `style`, `title`, `noscript`, `script`, `textarea`, `noframes`, `iframe`, or `xmp` in allowed tags\n* the keyword argument `strip_comments=False`\n\nNote: none of the above tags are in the default allowed tags and `strip_comments` defaults to `True`.\n\n### Patches\n\nUsers are encouraged to upgrade to bleach v3.3.0 or greater.\n\nNote: bleach v3.3.0 introduces a breaking change to escape HTML comments by default.\n\n### Workarounds\n\n* modify `bleach.clean` calls to at least one of:\n  * not allow the `style`, `title`, `noscript`, `script`, `textarea`, `noframes`, `iframe`, or `xmp` tag\n  * not allow `svg` or `math` tags\n  * not allow `p` or `br` tags\n  * set `strip_comments=True`\n\n* A strong [Content-Security-Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP) without `unsafe-inline` and `unsafe-eval` [`script-src`s](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/script-src)) will also help mitigate the risk.\n\n### References\n\n* https://bugzilla.mozilla.org/show_bug.cgi?id=1689399\n* https://advisory.checkmarx.net/advisory/CX-2021-4303\n* https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-23980\n* https://cure53.de/fp170.pdf\n\n### Credits\n\n* Reported by [Yaniv Nizry](https://twitter.com/ynizry) from the CxSCA AppSec group at Checkmarx\n* Additional eject tags not mentioned in the original advisory and the CSP mitigation line being truncated in the revised advisory reported by [Micha\u0142 Bentkowski](https://twitter.com/SecurityMB) at Securitum\n\n### For more information\n\nIf you have any questions or comments about this advisory:\n\n* Open an issue at [https://github.com/mozilla/bleach/issues](https://github.com/mozilla/bleach/issues)\n* Email us at [security@mozilla.org](mailto:security@mozilla.org)",
+      "published": "2021-02-02T17:58:40Z",
+      "modified": "2026-03-13T22:00:34.004096Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/mozilla/bleach/security/advisories/GHSA-vv2x-vrpj-qqpq"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2021-23980"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/mozilla/bleach/commit/79b7a3c5e56a09d1d323a5006afa59b56162eb13"
+        },
+        {
+          "type": "WEB",
+          "url": "https://advisory.checkmarx.net/advisory/CX-2021-4303"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugzilla.mozilla.org/show_bug.cgi?id=1689399"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugzilla.mozilla.org/show_bug.cgi?id=CVE-2021-23980"
+        },
+        {
+          "type": "WEB",
+          "url": "https://cure53.de/fp170.pdf"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/mozilla/bleach"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/mozilla/bleach/blob/79b7a3c5e56a09d1d323a5006afa59b56162eb13/CHANGES#L4"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/bleach/PYSEC-2021-865.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://pypi.org/project/bleach"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-vv2x-vrpj-qqpq",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "3.3.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1",
+        "0.1.1",
+        "0.1.2",
+        "0.2",
+        "0.2.1",
+        "0.2.2",
+        "0.3",
+        "0.3.1",
+        "0.3.3",
+        "0.3.4",
+        "0.5.0",
+        "0.5.1",
+        "1.0.0",
+        "1.0.1",
+        "1.0.2",
+        "1.0.3",
+        "1.0.4",
+        "1.1.0",
+        "1.1.1",
+        "1.1.2",
+        "1.1.3",
+        "1.1.4",
+        "1.1.5",
+        "1.2",
+        "1.2.1",
+        "1.2.2",
+        "1.4",
+        "1.4.1",
+        "1.4.2",
+        "1.4.3",
+        "1.5.0",
+        "2.0.0",
+        "2.1",
+        "2.1.1",
+        "2.1.2",
+        "2.1.3",
+        "2.1.4",
+        "3.0.0",
+        "3.0.1",
+        "3.0.2",
+        "3.1.0",
+        "3.1.1",
+        "3.1.2",
+        "3.1.3",
+        "3.1.4",
+        "3.1.5",
+        "3.2.0",
+        "3.2.1",
+        "3.2.2",
+        "3.2.3"
+      ],
+      "affected_conda_versions": [
+        "1.5.0",
+        "2.0.0",
+        "2.1.2",
+        "2.1.3",
+        "2.1.4",
+        "3.0.0",
+        "3.0.1",
+        "3.0.2",
+        "3.1.0",
+        "3.1.1",
+        "3.1.2",
+        "3.1.3",
+        "3.1.4",
+        "3.1.5",
+        "3.2.0",
+        "3.2.1",
+        "3.2.2",
+        "3.2.3"
+      ]
+    },
+    {
+      "id": "PYSEC-2018-51",
+      "primary_id": "CVE-2018-7753",
+      "aliases": [
+        "CVE-2018-7753",
+        "GHSA-m9mq-p2f9-cfqv"
+      ],
+      "cve_ids": [
+        "CVE-2018-7753"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "bleach",
+      "summary": null,
+      "details": "An issue was discovered in Bleach 2.1.x before 2.1.3. Attributes that have URI values weren't properly sanitized if the values contained character entities. Using character entities, it was possible to construct a URI value with a scheme that was not allowed that would slide through unsanitized.",
+      "published": "2018-03-07T23:29:00Z",
+      "modified": "2023-11-08T04:00:23.566004Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/mozilla/bleach/releases/tag/v2.1.3"
+        },
+        {
+          "type": "FIX",
+          "url": "https://github.com/mozilla/bleach/commit/c5df5789ec3471a31311f42c2d19fc2cf21b35ef"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugs.debian.org/892252"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/advisories/GHSA-m9mq-p2f9-cfqv"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2018-51",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "2.1"
+            },
+            {
+              "fixed": "2.1.3"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "2.1",
+        "2.1.1",
+        "2.1.2"
+      ],
+      "affected_conda_versions": [
+        "2.1.2"
+      ]
+    },
+    {
+      "id": "PYSEC-2020-27",
+      "primary_id": "CVE-2020-6802",
+      "aliases": [
+        "CVE-2020-6802",
+        "GHSA-q65m-pv3f-wr5r"
+      ],
+      "cve_ids": [
+        "CVE-2020-6802"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "bleach",
+      "summary": null,
+      "details": "In Mozilla Bleach before 3.11, a mutation XSS affects users calling bleach.clean with noscript and a raw tag in the allowed/whitelisted tags option.",
+      "published": "2020-03-24T22:15:00Z",
+      "modified": "2023-11-08T04:03:57.056470Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/mozilla/bleach/security/advisories/GHSA-q65m-pv3f-wr5r"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/OCNLM2MGQTOLCIVVYS2Z5S7KOQJR5JC4/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/72R4VFFHDRSQMNT7IZU3X2755ZP4HGNI/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/YTULPQB7HVPPYWEYVNHJGDTSPVIDHIZX/"
+        },
+        {
+          "type": "ARTICLE",
+          "url": "https://www.checkmarx.com/blog/vulnerabilities-discovered-in-mozilla-bleach"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://advisory.checkmarx.net/advisory/CX-2020-4276"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2020-27",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "3.1.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1",
+        "0.1.1",
+        "0.1.2",
+        "0.2",
+        "0.2.1",
+        "0.2.2",
+        "0.3",
+        "0.3.1",
+        "0.3.3",
+        "0.3.4",
+        "0.5.0",
+        "0.5.1",
+        "1.0.0",
+        "1.0.1",
+        "1.0.2",
+        "1.0.3",
+        "1.0.4",
+        "1.1.0",
+        "1.1.1",
+        "1.1.2",
+        "1.1.3",
+        "1.1.4",
+        "1.1.5",
+        "1.2",
+        "1.2.1",
+        "1.2.2",
+        "1.4",
+        "1.4.1",
+        "1.4.2",
+        "1.4.3",
+        "1.5.0",
+        "2.0.0",
+        "2.1",
+        "2.1.1",
+        "2.1.2",
+        "2.1.3",
+        "2.1.4",
+        "3.0.0",
+        "3.0.1",
+        "3.0.2",
+        "3.1.0"
+      ],
+      "affected_conda_versions": [
+        "1.5.0",
+        "2.0.0",
+        "2.1.2",
+        "2.1.3",
+        "2.1.4",
+        "3.0.0",
+        "3.0.1",
+        "3.0.2",
+        "3.1.0"
+      ]
+    },
+    {
+      "id": "PYSEC-2020-28",
+      "primary_id": "CVE-2020-6816",
+      "aliases": [
+        "CVE-2020-6816",
+        "GHSA-m6xf-fq7q-8743"
+      ],
+      "cve_ids": [
+        "CVE-2020-6816"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "bleach",
+      "summary": null,
+      "details": "In Mozilla Bleach before 3.12, a mutation XSS in bleach.clean when RCDATA and either svg or math tags are whitelisted and the keyword argument strip=False.",
+      "published": "2020-03-24T22:15:00Z",
+      "modified": "2023-11-08T04:03:57.116894Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/mozilla/bleach/security/advisories/GHSA-m6xf-fq7q-8743"
+        },
+        {
+          "type": "ARTICLE",
+          "url": "https://www.checkmarx.com/blog/vulnerabilities-discovered-in-mozilla-bleach"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/EDQU2SZLZMSSACCBUBJ6NOSRNNBDYFW5/"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://advisory.checkmarx.net/advisory/CX-2020-4277"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2020-28",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "3.1.2"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1",
+        "0.1.1",
+        "0.1.2",
+        "0.2",
+        "0.2.1",
+        "0.2.2",
+        "0.3",
+        "0.3.1",
+        "0.3.3",
+        "0.3.4",
+        "0.5.0",
+        "0.5.1",
+        "1.0.0",
+        "1.0.1",
+        "1.0.2",
+        "1.0.3",
+        "1.0.4",
+        "1.1.0",
+        "1.1.1",
+        "1.1.2",
+        "1.1.3",
+        "1.1.4",
+        "1.1.5",
+        "1.2",
+        "1.2.1",
+        "1.2.2",
+        "1.4",
+        "1.4.1",
+        "1.4.2",
+        "1.4.3",
+        "1.5.0",
+        "2.0.0",
+        "2.1",
+        "2.1.1",
+        "2.1.2",
+        "2.1.3",
+        "2.1.4",
+        "3.0.0",
+        "3.0.1",
+        "3.0.2",
+        "3.1.0",
+        "3.1.1"
+      ],
+      "affected_conda_versions": [
+        "1.5.0",
+        "2.0.0",
+        "2.1.2",
+        "2.1.3",
+        "2.1.4",
+        "3.0.0",
+        "3.0.1",
+        "3.0.2",
+        "3.1.0",
+        "3.1.1"
+      ]
+    },
+    {
+      "id": "PYSEC-2020-340",
+      "primary_id": "CVE-2020-6817",
+      "aliases": [
+        "CVE-2020-6817",
+        "GHSA-vqhp-cxgc-6wmm",
+        "SNYK-PYTHON-BLEACH-561754"
+      ],
+      "cve_ids": [
+        "CVE-2020-6817"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "bleach",
+      "summary": null,
+      "details": "In Mozilla Bleach before 3.1.4, `bleach.clean` behavior parsing style attributes could result in a regular expression denial of service (ReDoS).",
+      "published": "2020-03-30T19:45:00Z",
+      "modified": "2023-11-08T04:03:57.176645Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/mozilla/bleach/security/advisories/GHSA-vqhp-cxgc-6wmm"
+        },
+        {
+          "type": "ARTICLE",
+          "url": "https://blog.r2c.dev/posts/finding-python-redos-bugs-at-scale-using-dlint-and-r2c/"
+        },
+        {
+          "type": "REPORT",
+          "url": "https://bugzilla.mozilla.org/show_bug.cgi?id=1623633"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/mozilla/bleach/releases/tag/v3.1.4"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://snyk.io/vuln/SNYK-PYTHON-BLEACH-561754"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2020-340",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "3.1.4"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1",
+        "0.1.1",
+        "0.1.2",
+        "0.2",
+        "0.2.1",
+        "0.2.2",
+        "0.3",
+        "0.3.1",
+        "0.3.3",
+        "0.3.4",
+        "0.5.0",
+        "0.5.1",
+        "1.0.0",
+        "1.0.1",
+        "1.0.2",
+        "1.0.3",
+        "1.0.4",
+        "1.1.0",
+        "1.1.1",
+        "1.1.2",
+        "1.1.3",
+        "1.1.4",
+        "1.1.5",
+        "1.2",
+        "1.2.1",
+        "1.2.2",
+        "1.4",
+        "1.4.1",
+        "1.4.2",
+        "1.4.3",
+        "1.5.0",
+        "2.0.0",
+        "2.1",
+        "2.1.1",
+        "2.1.2",
+        "2.1.3",
+        "2.1.4",
+        "3.0.0",
+        "3.0.1",
+        "3.0.2",
+        "3.1.0",
+        "3.1.1",
+        "3.1.2",
+        "3.1.3"
+      ],
+      "affected_conda_versions": [
+        "1.5.0",
+        "2.0.0",
+        "2.1.2",
+        "2.1.3",
+        "2.1.4",
+        "3.0.0",
+        "3.0.1",
+        "3.0.2",
+        "3.1.0",
+        "3.1.1",
+        "3.1.2",
+        "3.1.3"
+      ]
+    },
+    {
+      "id": "PYSEC-2021-865",
+      "primary_id": "CVE-2021-23980",
+      "aliases": [
+        "CVE-2021-23980",
+        "GHSA-vv2x-vrpj-qqpq"
+      ],
+      "cve_ids": [
+        "CVE-2021-23980"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "bleach",
+      "summary": null,
+      "details": "In Mozilla Bleach before 3.3.0, a mutation XSS affects users calling bleach.clean with math or svg; p or br; and style, title, noscript, script, textarea, noframes, iframe, or xmp tags with strip_comments=False.",
+      "published": "2021-02-02T17:58:00Z",
+      "modified": "2023-11-08T04:05:14.166540Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/mozilla/bleach/security/advisories/GHSA-vv2x-vrpj-qqpq"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://advisory.checkmarx.net/advisory/CX-2021-4303"
+        },
+        {
+          "type": "REPORT",
+          "url": "ttps://bugzilla.mozilla.org/show_bug.cgi?id=1689399"
+        },
+        {
+          "type": "FIX",
+          "url": "https://github.com/mozilla/bleach/commit/79b7a3c5e56a09d1d323a5006afa59b56162eb13"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2021-865",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "3.3.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1",
+        "0.1.1",
+        "0.1.2",
+        "0.2",
+        "0.2.1",
+        "0.2.2",
+        "0.3",
+        "0.3.1",
+        "0.3.3",
+        "0.3.4",
+        "0.5.0",
+        "0.5.1",
+        "1.0.0",
+        "1.0.1",
+        "1.0.2",
+        "1.0.3",
+        "1.0.4",
+        "1.1.0",
+        "1.1.1",
+        "1.1.2",
+        "1.1.3",
+        "1.1.4",
+        "1.1.5",
+        "1.2",
+        "1.2.1",
+        "1.2.2",
+        "1.4",
+        "1.4.1",
+        "1.4.2",
+        "1.4.3",
+        "1.5.0",
+        "2.0.0",
+        "2.1",
+        "2.1.1",
+        "2.1.2",
+        "2.1.3",
+        "2.1.4",
+        "3.0.0",
+        "3.0.1",
+        "3.0.2",
+        "3.1.0",
+        "3.1.1",
+        "3.1.2",
+        "3.1.3",
+        "3.1.4",
+        "3.1.5",
+        "3.2.0",
+        "3.2.1",
+        "3.2.2",
+        "3.2.3"
+      ],
+      "affected_conda_versions": [
+        "1.5.0",
+        "2.0.0",
+        "2.1.2",
+        "2.1.3",
+        "2.1.4",
+        "3.0.0",
+        "3.0.1",
+        "3.0.2",
+        "3.1.0",
+        "3.1.1",
+        "3.1.2",
+        "3.1.3",
+        "3.1.4",
+        "3.1.5",
+        "3.2.0",
+        "3.2.1",
+        "3.2.2",
+        "3.2.3"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,299 @@
+{
+  "schema_version": 1,
+  "package": "aws-encryption-sdk",
+  "purls": [
+    "pkg:pypi/aws-encryption-sdk"
+  ],
+  "generated_at": "2026-05-18T06:01:40+00:00",
+  "conda_versions_total": 1,
+  "advisories": [
+    {
+      "id": "GHSA-v638-38fc-rhfv",
+      "primary_id": "CVE-2026-6550",
+      "aliases": [
+        "CVE-2026-6550"
+      ],
+      "cve_ids": [
+        "CVE-2026-6550"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "aws-encryption-sdk",
+      "summary": "AWS Encryption SDK for Python: Key commitment policy bypass via shared key cache",
+      "details": "## Summary\nAWS Encryption SDK (ESDK) for Python is a client-side encryption library. An issue exists where, under certain circumstances, a specific cryptographic algorithm downgrade in the caching layer might allow an authenticated local threat actor to bypass key commitment policy enforcement via a shared key cache, resulting in ciphertext that can be decrypted to multiple different plaintexts.\n\n## Impact\nThis issue requires all of the following conditions to be true: (1) Two ESDK for Python clients with different commitment policies share a single CachingCryptoMaterialsManager instance within the same process. (2) The client with the weaker commitment policy encrypts first, warming the cache. (3) Both clients use matching encryption contexts. (4) Both clients use the pre-configured default algorithm suite.\n\nThese conditions may occur during a migration from ESDK for Python v1 to newer versions, as v1 did not support key commitment.\n\nWhen the weaker-policy client encrypts first, the cache stores encryption materials that do not enforce key commitment. Subsequent callers \u2014 including those configured to require key commitment \u2014 are served these cached materials instead of generating new ones that satisfy their policy. This results in encryption without key commitment, meaning the same ciphertext can be validly decrypted to different plaintexts under different keys (the \"Invisible Salamanders\" issue; see https://github.com/google/security-research/security/advisories/GHSA-wqgp-vphw-hphf). A threat actor who controls ciphertext can cause a recipient to decrypt a message different from what the sender encrypted, breaking message integrity.\n\n## Impacted versions\n- From 2.0 to 2.5.1\n- From 3.0 to 3.3.0\n- From 4.0 to 4.0.4\n\n## Patches\nThis issue has been addressed in ESDK for Python versions 3.3.1 and 4.0.5. We recommend upgrading to the latest version and ensuring any forked or derivative code is patched to incorporate the new fixes.\n\n## Workarounds\nIf a customer requires operating multiple instances of the Python ESDK each with differently configured key commitment policies, they must not share a key cache.\n\nReferences\nIf there are any questions or comments about this advisory, contact AWS Security through the [vulnerability reporting page](https://aws.amazon.com/security/vulnerability-reporting) or directly via email to [aws-security@amazon.com](mailto:aws-security@amazon.com). Please do not create a public GitHub issue.\n\n## Acknowledgement\nThanks to [1seal.org](http://1seal.org/) for collaborating on this issue through the coordinated vulnerability disclosure process.",
+      "published": "2026-04-24T15:59:17Z",
+      "modified": "2026-04-24T16:16:32.746296Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:L/AC:H/AT:P/PR:L/UI:N/VC:N/VI:H/VA:N/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:H/A:N"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:L/AC:H/AT:P/PR:L/UI:N/VC:N/VI:H/VA:N/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/aws/aws-encryption-sdk-python/security/advisories/GHSA-v638-38fc-rhfv"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/google/security-research/security/advisories/GHSA-wqgp-vphw-hphf"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-6550"
+        },
+        {
+          "type": "WEB",
+          "url": "https://aws.amazon.com/security/security-bulletins/2026-017-aws"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/aws/aws-encryption-sdk-python"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/aws/aws-encryption-sdk-python/releases/tag/v3.3.1"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/aws/aws-encryption-sdk-python/releases/tag/v4.0.5"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-v638-38fc-rhfv",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "2.0.0"
+            },
+            {
+              "fixed": "3.3.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "2.0.0",
+        "2.1.0",
+        "2.2.0",
+        "2.3.0",
+        "2.4.0",
+        "2.5.0",
+        "2.5.1",
+        "3.0.0",
+        "3.1.0",
+        "3.1.1",
+        "3.2.0",
+        "3.3.0"
+      ],
+      "affected_conda_versions": [
+        "3.1.1"
+      ]
+    },
+    {
+      "id": "GHSA-wqgp-vphw-hphf",
+      "primary_id": "CVE-2020-8897",
+      "aliases": [
+        "CVE-2020-8897",
+        "PYSEC-2020-261"
+      ],
+      "cve_ids": [
+        "CVE-2020-8897"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "aws-encryption-sdk",
+      "summary": "Security issues in AWS KMS and AWS Encryption SDKs: in-band protocol negotiation and robustness",
+      "details": "Authors: Thai \"[thaidn](https://twitter.com/xorninja)\" Duong\n\n# Summary\n\nThe following security vulnerabilities was discovered and reported to Amazon, affecting AWS KMS and all versions of [AWS Encryption SDKs](https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/introduction.html) prior to version 2.0.0:\n\n* **Information leakage**: an attacker can create ciphertexts that would leak the user\u2019s AWS account ID, encryption context, user agent, and IP address upon decryption\n* **Ciphertext forgery**: an attacker can create ciphertexts that are accepted by other users\n* **Robustness**: an attacker can create ciphertexts that decrypt to different plaintexts for different users\n\nThe first two bugs are somewhat surprising because they show that the ciphertext format can lead to vulnerabilities. These bugs (and the infamous [alg: \"None\"](https://auth0.com/blog/critical-vulnerabilities-in-json-web-token-libraries/) bugs in JWT) belong to a class of vulnerabilities called **in-band protocol negotiation**. This is the second time we\u2019ve found in-band protocol negotiation vulnerabilities in AWS cryptography libraries; see this [bug](https://github.com/google/security-research/security/advisories/GHSA-7f33-f4f5-xwgw) in S3 Crypto SDK discovered by my colleague Sophie Schmieg.\n\nIn JWT and S3 SDK the culprit is the algorithm field\u2014here it is the key ID. Because the key ID is used to determine which decryption key to use, it can\u2019t be meaningfully authenticated despite being under the attacker\u2019s control. If the key ID is a URL indicating where to fetch the key, the attacker can replace it with their own URL, and learn side-channel information such as the timing and machines on which the decryption happens (this can also lead to [SSRF](https://portswigger.net/web-security/ssrf) issues, but that\u2019s another topic for another day).\n\nIn AWS, the key ID is a unique [Amazon Resource Name](https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html). If an attacker were to capture a ciphertext from a user and replace its key ID with their own, the victim\u2019s AWS account ID, encryption context, user agent, and IP address would be logged to the attacker\u2019s AWS account whenever the victim attempted to decrypt the modified ciphertext.\n\nThe last bug shows that the non-committing property of AES-GCM (and other AEAD ciphers such as [AES-GCM-SIV](https://keymaterial.net/2020/09/07/invisible-salamanders-in-aes-gcm-siv/) or (X)ChaCha20Poly1305) is especially problematic in multi-recipient settings. These ciphers have a property that can cause nonidentical plaintexts when decrypting a single ciphertext with two different keys! For example, you can send a single encrypted email to Alice and Bob which, upon decryption, reads \u201cattack\u201d to Alice and \u201cretreat\u201d to Bob. The AWS Encryption SDKs are vulnerable to this attack because they allow a single ciphertext to be generated for multiple recipients, with each decrypting using a different key. I believe this kind of problem is prevalent. I briefly looked at [JWE](https://tools.ietf.org/html/rfc7516) and I think it is vulnerable.\n\n# Mitigations\n\nAmazon has fixed these bugs in release 2.0.0 of the SDKs. A new major version was required because, unfortunately, the fix for the last bug requires a breaking change from earlier versions. All users are recommended to upgrade. More details about Amazon\u2019s mitigations can be found in [their announcement](https://aws.amazon.com/blogs/security/improved-client-side-encryption-explicit-keyids-and-key-commitment/).\n\nWe\u2019re collaborating with Shay Gueron on a paper regarding fast committing AEADs.\n\n# Vulnerabilities\n\n## Information Leakage\n\nThe [Encrypt](https://docs.aws.amazon.com/kms/latest/APIReference/API_Encrypt.html) API in AWS KMS encrypts plaintext into ciphertext by using a customer master key (CMK). The ciphertext format is undocumented, but it contains metadata that specifies the CMK and the encryption algorithm. I reverse-engineered the format and found the location of the CMK. Externally the CMK is identified by its key ARN, but within a ciphertext it is represented by an internal ID, which remained stable during my testing.\n\nWhen I replaced the internal ID of a CMK in a ciphertext with the internal ID of another CMK, I found that AWS KMS attempted to decrypt the ciphertext with the new CMK. The encryption failed and the failure event\u2014including the AWS Account ID, the user agent and the IP address of the caller\u2014was logged to Cloud Trail in the account that owned the replacement CMK.\n\nThis enables the following attack:\n* The attacker creates a CMK that has a key policy that allows access from everyone. This requires no prior knowledge about the victim.\n* The attacker intercepts a ciphertext from the victim, and replaces its CMK with their CMK.\n* Whenever the victim attempts to decrypt the modified ciphertext, the attacker learns the timing of such actions, the victim\u2019s AWS Account ID, user agent, encryption context, and IP address.\n\nThis attack requires the victim to have an IAM policy that allows them to access the attacker\u2019s CMK. I found that this practice was allowed by the AWS Visual Policy Editor, but I don\u2019t know whether it is common.\n\nThe AWS Encryption SDKs also succumb to this attack. The SDKs implement envelope encryption: encrypting data with a data encryption key (DEK) and then wrapping the DEK with a CMK using the Encrypt API in AWS KMS. The wrapped DEK is stored as part of the final ciphertext (format is defined [here](https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/message-format.html)). The attacker can mount this attack by replacing the CMK in the wrapped DEK with their own.\n\n```\n{\n    \"eventVersion\": \"1.05\",\n    \"userIdentity\": {\n        \"type\": \"AWSAccount\",\n        \"principalId\": \"<redacted this is the principal ID of the victim>\",\n        \"accountId\": \"<redacted - this is the AWS account ID of the victim>\"\n    },\n    \"eventTime\": \"2020-06-21T21:05:04Z\",\n    \"eventSource\": \"kms.amazonaws.com\",\n    \"eventName\": \"Decrypt\",\n    \"awsRegion\": \"us-west-2\",\n    \"sourceIPAddress\": \"<redacted - this is the IP address of the victim>\",\n    \"userAgent\": \"<redacted - this is the user agent of the victim>\",\n    \"errorCode\": \"InvalidCiphertextException\",\n    \"requestParameters\": {\n        // The encryption context might include other data from the victim\n        \"encryptionContext\": {\n            \"aws-crypto-public-key\": \"AzfNOGOnNYFmpHspKrAm1L6XtRybONkmkhmB/IriKSA7b2NsV4MEPMph9yX2KTPKWw==\"\n        },\n        \"encryptionAlgorithm\": \"SYMMETRIC_DEFAULT\"\n    },\n    \"responseElements\": null,\n    \"requestID\": \"aeced8e8-75a2-42c3-96ac-d1fa2a1c5ee6\",\n    \"eventID\": \"780a0a6e-4ad8-43d4-a426-75d05022f870\",\n    \"readOnly\": true,\n    \"resources\": [\n        {\n            \"accountId\": \"<redacted - this is the account ID of the attacker>\",\n            \"type\": \"AWS::KMS::Key\",\n            \"ARN\": <redacted - this is the key ARN of the attacker>\n        }\n    ],\n    \"eventType\": \"AwsApiCall\",\n    \"recipientAccountId\": \"<redacted - this is the account ID of the attacker>\",\n    \"sharedEventID\": \"033e147c-8a36-42f5-9d6c-9e071eb752b7\"\n}\n```\n**Figure 1: A failure event logged to the attacker\u2019s Cloud Trail when the victim attempted to decrypt a modified ciphertext containing the attacker\u2019s CMK.**\n\n## Ciphertext Forgery\n\nThe [Decrypt](https://docs.aws.amazon.com/kms/latest/APIReference/API_Decrypt.html) API in AWS KMS doesn\u2019t require the caller to specify the CMK. This parameter is required only when the ciphertext was encrypted under an asymmetric CMK. Otherwise, AWS KMS uses the metadata that it adds to the ciphertext blob to determine which CMK was used to encrypt the ciphertext.\n\nThis leads to the following attack:\n* The attacker creates a CMK that has a key policy that allows access from everyone. This requires no prior knowledge about the victim.\n* The attacker generates a ciphertext by calling the Encrypt API with their key.\n* The attacker intercepts a ciphertext from the victim, and replaces it entirely with their ciphertext.\n* The victim successfully decrypts the ciphertext, as if it was encrypted under their own key. The attacker also learns when this happened, the victim\u2019s AWS Account ID, user agent, encryption context, and IP address.\n\nSimilar to the information leakage attack, this attack also requires the victim to have an IAM policy that allows them to access the attacker\u2019s CMK.\n\nThe AWS Encryption SDKs also succumb to this attack. They don\u2019t specify the CMK when they call the Decrypt API to unwrap the DEK.\n\n## Robustness\n\nThe AWS Encryption SDKs allow a single ciphertext to be generated for multiple recipients, with each decrypting using a different key. To that end, it wraps the DEK multiple times, each under a different CMK. The wrapped DEKs can be combined to form a single ciphertext which can be sent to multiple recipients who can use their own credentials to decrypt it. It\u2019s reasonable to expect that all recipients should decrypt the ciphertext to an identical plaintext. However, because of the use of AES-GMAC and AES-GCM, it\u2019s possible to create a ciphertext that decrypts to two valid yet different plaintexts for two different users. In other words, the AWS Encryption SDKs are [not](https://eprint.iacr.org/2008/440.pdf) [robust](https://eprint.iacr.org/2019/016.pdf).\n\nThe encryption of a message under two CMKs can be summarized as follows:\n* A DEK is randomly generated, and two wrapped DEKs are produced by calling the Encrypt API using the two CMKs\n* A per-message AES-GCM key (K) is derived using HKDF from the DEK, a randomly generated message ID, and a fixed algorithm ID.\n* A header is formed from the wrapped DEKs, the encryption context, and other metadata. A header authentication tag is computed on the header using AES-GMAC with K and a zero IV.\n* The message is encrypted using AES-GCM with K, a non-zero IV, and fixed associated additional data. This produces a message authentication tag.\n* The ciphertext consists of the header, the header authentication tag, the encrypted message, and the message authentication tag.\n\n(There\u2019s also a self-signed digital signature that is irrelevant to this discussion).\n\nIn order to decrypt a ciphertext, the AWS Encryption SDKs loops over the list of wrapped DEKs and returns the first one that it can successfully unwrap. The attacker therefore can wrap a unique DEK for each recipient. Next, the attacker exploits the non-committing property of GMAC to produce two messages that have the same GMAC tag under two different keys. The attacker has to do this twice, one for the header authentication tag and one for the message authentication tag.\n\n```\nGiven a data blob B of one 128-bit block B_1, a GMAC tag is computed as follows:\n\nB_1 * H^2 + B_len * H + J\n\nwhere H and J depends on the key and B_len depends on the length of B.\n\nTo find a message that can produce the same tag under two different keys, one\ncan add append to B a new block B_2 whose value can be deduced by solving\nan algebraic equation. That is, we want to find B_2 such that:\n\nB_1 * H^3 + B_2 * H^2 + B_len * H + J = B_1 * H\u2019^3 + B_2 * H\u2019^2 + B_len * H\u2019 + J\u2019\n\nwhere H\u2019 and J\u2019 are the corresponding H and J of the other key.\n\nB_2 is the only unknown value in this equation, thus it can be computed using\nfinite field arithmetics of GF(2^128):\n\nB_2 = [B_1 * (H^3+H\u2019^3) + B_len * (H + H\u2019) + J + J\u2019] * (H^2 + H\u2019^2)^-1.\n```\n**Figure 2: How to find a message that has the same GMAC tag under two different keys.**\n\nThe overall attack works as follows:\n* The attacker generates a random DEK, derives a per-message key K, and encrypts message M with it using AES in counter mode. This generates a ciphertext C.\n* The attacker generates another random DEK\u2019, derives a per-message key K\u2019, and performs trial decryption of C until the decrypted message M\u2019 has desirable properties. For example, if the attacker wants the first bit of M\u2019 different from that of M, this process should only take a few attempts.\n* The attacker finds a block C* such that the GMAC of C\u2019 = C || C* under K and K\u2019 are identical. Denote this tag C\u2019_tag.\n* The attacker wraps DEK and DEK\u2019 under two recipients\u2019 CMK.\n* The attacker forms a header H and adds a block H* to the encryption context such that the new H\u2019 has the same authentication tag H\u2019_tag under K and K\u2019.\n* The attacker output H\u2019, H\u2019_tag, C\u2019, C\u2019_tag.\n\nThis attack is similar to the one discovered in [Facebook Messenger](https://eprint.iacr.org/2019/016.pdf).\n\n# Acknowledgement\n\nI\u2019m grateful to Jen Barnason for carefully editing this advisory. I will never publish anything without her approval! I want to thank my friend and coworker Sophie \u201cQueen of Hashing\u201d Schmieg for wonderful discussions and for showing me how the arithmetic in GF(2^128) works. I want to thank Jonathan Bannet for asking the questions that led to this work.",
+      "published": "2021-10-12T16:01:12Z",
+      "modified": "2026-03-13T22:14:23.405182Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:N"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/google/security-research/security/advisories/GHSA-wqgp-vphw-hphf"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2020-8897"
+        },
+        {
+          "type": "WEB",
+          "url": "https://aws.amazon.com/blogs/security/improved-client-side-encryption-explicit-keyids-and-key-commitment"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/aws-encryption-sdk/PYSEC-2020-261.yaml"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-wqgp-vphw-hphf",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.0.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "1.10.0",
+        "1.10.1",
+        "1.2.0",
+        "1.2.2",
+        "1.3.0",
+        "1.3.1",
+        "1.3.2",
+        "1.3.3",
+        "1.3.4",
+        "1.3.5",
+        "1.3.6",
+        "1.3.7",
+        "1.3.8",
+        "1.4.0",
+        "1.4.1",
+        "1.7.1",
+        "1.9.0"
+      ],
+      "affected_conda_versions": []
+    },
+    {
+      "id": "GHSA-x5h4-9gqw-942j",
+      "primary_id": "GHSA-x5h4-9gqw-942j",
+      "aliases": [],
+      "cve_ids": [],
+      "ecosystem": "PyPI",
+      "upstream_name": "aws-encryption-sdk",
+      "summary": "Improper Verification of Cryptographic Signature in aws-encryption-sdk",
+      "details": "### Impact\n\nThis advisory addresses several LOW severity issues with streaming signed messages and restricting processing of certain types of invalid messages. \n\nThis ESDK supports a streaming mode where callers may stream the plaintext of signed messages before the ECDSA signature is validated. In addition to these signatures, the ESDK uses AES-GCM encryption and all plaintext is verified before being released to a caller. There is no impact on the integrity of the ciphertext or decrypted plaintext, however some callers may rely on the the ECDSA signature for non-repudiation. Without validating the ECDSA signature, an actor with trusted KMS permissions to decrypt a message may also be able to encrypt messages. This update introduces a new API for callers who wish to stream only unsigned messages. \n\nFor customers who process ESDK messages from untrusted sources, this update also introduces a new configuration to limit the number of Encrypted Data Keys (EDKs) that the ESDK will attempt to process per message. This configuration provides customers with a way to limit the number of AWS KMS Decrypt API calls that the ESDK will make per message. This setting will reject messages with more EDKs than the configured limit.\n\nFinally, this update adds early rejection of invalid messages with certain invalid combinations of algorithm suite and header data.\n\n### Patches\n\nFixed in versions 1.9 and 2.2. We recommend that all users upgrade to address these issues.\n\nCustomers leveraging the ESDK\u2019s streaming features have several options to protect signature validation. One is to ensure that client code reads to the end of the stream before using released plaintext. With this release, using the new API for streaming and falling back to the non-streaming decrypt API for signed messages prevents using any plaintext from signed data before the signature is validated. See https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/about-versions.html#version2.2.x\n\nUsers processing ESDK messages from untrusted sources should use the new maximum encrypted data keys parameter. See https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/about-versions.html#version2.2.x\n\n### Workarounds\n\nNone\n\n### For more information\n\nhttps://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/concepts.html#digital-sigs\n\nhttps://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/about-versions.html#version2.2.x\n",
+      "published": "2021-06-01T21:17:53Z",
+      "modified": "2024-12-02T05:55:27.847029Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/aws/aws-encryption-sdk-python/security/advisories/GHSA-x5h4-9gqw-942j"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-x5h4-9gqw-942j",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.9.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "1.2.0",
+        "1.2.2",
+        "1.3.0",
+        "1.3.1",
+        "1.3.2",
+        "1.3.3",
+        "1.3.4",
+        "1.3.5",
+        "1.3.6",
+        "1.3.7",
+        "1.3.8",
+        "1.4.0",
+        "1.4.1",
+        "1.7.1"
+      ],
+      "affected_conda_versions": []
+    },
+    {
+      "id": "PYSEC-2020-261",
+      "primary_id": "CVE-2020-8897",
+      "aliases": [
+        "CVE-2020-8897",
+        "GHSA-wqgp-vphw-hphf"
+      ],
+      "cve_ids": [
+        "CVE-2020-8897"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "aws-encryption-sdk",
+      "summary": null,
+      "details": "A weak robustness vulnerability exists in the AWS Encryption SDKs for Java, Python, C and Javalcript prior to versions 2.0.0. Due to the non-committing property of AES-GCM (and other AEAD ciphers such as AES-GCM-SIV or (X)ChaCha20Poly1305) used by the SDKs to encrypt messages, an attacker can craft a unique cyphertext which will decrypt to multiple different results, and becomes especially relevant in a multi-recipient setting. We recommend users update their SDK to 2.0.0 or later.",
+      "published": "2020-11-16T12:15:00Z",
+      "modified": "2025-10-09T06:53:18.019386Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "ARTICLE",
+          "url": "https://aws.amazon.com/blogs/security/improved-client-side-encryption-explicit-keyids-and-key-commitment/"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/google/security-research/security/advisories/GHSA-wqgp-vphw-hphf"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2020-261",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.0.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "1.2.0",
+        "1.2.2",
+        "1.3.0",
+        "1.3.1",
+        "1.3.2",
+        "1.3.3",
+        "1.3.4",
+        "1.3.5",
+        "1.3.6",
+        "1.3.7",
+        "1.3.8",
+        "1.4.0",
+        "1.4.1",
+        "1.7.1",
+        "1.9.0",
+        "1.10.0",
+        "1.10.1"
+      ],
+      "affected_conda_versions": []
+    }
+  ]
+}

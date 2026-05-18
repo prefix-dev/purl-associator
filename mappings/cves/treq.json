@@ -1,0 +1,168 @@
+{
+  "schema_version": 1,
+  "package": "treq",
+  "purls": [
+    "pkg:pypi/treq"
+  ],
+  "generated_at": "2026-05-18T06:01:40+00:00",
+  "conda_versions_total": 14,
+  "advisories": [
+    {
+      "id": "GHSA-fhpf-pp6p-55qc",
+      "primary_id": "CVE-2022-23607",
+      "aliases": [
+        "CVE-2022-23607",
+        "PYSEC-2022-26"
+      ],
+      "cve_ids": [
+        "CVE-2022-23607"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "treq",
+      "summary": "Unsafe handling of user-specified cookies in treq",
+      "details": "### Impact\n\nTreq's request methods (`treq.get`, `treq.post`, `HTTPClient.request`, `HTTPClient.get`, etc.) accept cookies as a dictionary, for example:\n\n```py\ntreq.get('https://example.com/', cookies={'session': '1234'})\n```\n\nSuch cookies are not bound to a single domain, and are therefore sent to *every* domain (\"supercookies\"). This can potentially cause sensitive information to leak upon an HTTP redirect to a different domain., e.g. should `https://example.com` redirect to `http://cloudstorageprovider.com` the latter will receive the cookie `session`.\n\n### Patches\n\nTreq 2021.1.0 and later bind cookies given to request methods (`treq.request`, `treq.get`, `HTTPClient.request`, `HTTPClient.get`, etc.) to the origin of the *url* parameter.\n\n### Workarounds\n\nInstead of passing a dictionary as the *cookies* argument, pass a `http.cookiejar.CookieJar` instance with properly domain- and scheme-scoped cookies in it:\n\n```py\nfrom http.cookiejar import CookieJar\nfrom requests.cookies import create_cookie\n\njar = CookieJar()\njar.add_cookie(\n    create_cookie(\n        name='session',\n        value='1234',\n        domain='example.com',\n        secure=True,\n    ),\n)\nclient = HTTPClient(cookies=jar)\nclient.get('https://example.com/')\n```\n\n### References\n\n* Originally reported at [huntr.dev](https://huntr.dev/bounties/3c9204fc-a3d1-4441-8599-924c5f57e7ae/?token=06d930e37046c914bcb037e85cc227dc7b510b475989fc69837566562ba899277d46b0fb4b1e21cdcb6ddc1b7d9b1ded632cf3a3551ecb89afca16a63b34641284b50479d5195bba2ac09b116f3dd4fad27f54404c2de922c05c8c8b744aec27bb4d4d198cb8b3abf479af0c2d5fbaa10412da7922594ac3eb39)\n* A related issue in the handling of HTTP basic authentication was addressed in Twisted 22.1 ([GHSA-92x2-jw7w-xvvx](https://github.com/twisted/twisted/security/advisories/GHSA-92x2-jw7w-xvvx), CVE-2022-21712).",
+      "published": "2022-02-01T00:43:38Z",
+      "modified": "2024-11-13T23:23:04.346646Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:N/A:N"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/twisted/treq/security/advisories/GHSA-fhpf-pp6p-55qc"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2022-23607"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/twisted/treq/commit/1da6022cc880bbcff59321abe02bf8498b89efb2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/treq/PYSEC-2022-26.yaml"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/twisted/treq"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/twisted/treq/releases/tag/release-22.1.0"
+        },
+        {
+          "type": "WEB",
+          "url": "https://huntr.dev/bounties/3c9204fc-a3d1-4441-8599-924c5f57e7ae/?token=06d930e37046c914bcb037e85cc227dc7b510b475989fc69837566562ba899277d46b0fb4b1e21cdcb6ddc1b7d9b1ded632cf3a3551ecb89afca16a63b34641284b50479d5195bba2ac09b116f3dd4fad27f54404c2de922c05c8c8b744aec27bb4d4d198cb8b3abf479af0c2d5fbaa10412da7922594ac3eb39"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2022/03/msg00025.html"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-fhpf-pp6p-55qc",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "22.1.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1.0",
+        "0.2.0",
+        "0.2.1",
+        "15.0.0",
+        "15.1.0",
+        "16.12.0",
+        "17.3.0",
+        "17.3.1",
+        "17.7.0",
+        "17.8.0",
+        "18.6.0",
+        "20.3.0",
+        "20.3.0rc1",
+        "20.4.1",
+        "20.9.0",
+        "20.9.0rc1",
+        "21.1.0",
+        "21.5.0"
+      ],
+      "affected_conda_versions": [
+        "15.1.0",
+        "17.3.1",
+        "17.8.0",
+        "18.6.0",
+        "20.3.0",
+        "20.4.1",
+        "20.9.0",
+        "21.1.0",
+        "21.5.0"
+      ]
+    },
+    {
+      "id": "PYSEC-2022-26",
+      "primary_id": "CVE-2022-23607",
+      "aliases": [
+        "CVE-2022-23607",
+        "GHSA-fhpf-pp6p-55qc"
+      ],
+      "cve_ids": [
+        "CVE-2022-23607"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "treq",
+      "summary": null,
+      "details": "treq is an HTTP library inspired by requests but written on top of Twisted's Agents. Treq's request methods (`treq.get`, `treq.post`, etc.) and `treq.client.HTTPClient` constructor accept cookies as a dictionary. Such cookies are not bound to a single domain, and are therefore sent to *every* domain (\"supercookies\"). This can potentially cause sensitive information to leak upon an HTTP redirect to a different domain., e.g. should `https://example.com` redirect to `http://cloudstorageprovider.com` the latter will receive the cookie `session`. Treq 2021.1.0 and later bind cookies given to request methods (`treq.request`, `treq.get`, `HTTPClient.request`, `HTTPClient.get`, etc.) to the origin of the *url* parameter. Users are advised to upgrade. For users unable to upgrade Instead of passing a dictionary as the *cookies* argument, pass a `http.cookiejar.CookieJar` instance with properly domain- and scheme-scoped cookies in it.",
+      "published": "2022-02-01T11:15:00Z",
+      "modified": "2023-11-08T04:08:24.827076Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/twisted/treq/security/advisories/GHSA-fhpf-pp6p-55qc"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2022-26",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "21.1.0"
+            },
+            {
+              "fixed": "22.1.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "21.1.0",
+        "21.5.0"
+      ],
+      "affected_conda_versions": [
+        "21.1.0",
+        "21.5.0"
+      ]
+    }
+  ]
+}
