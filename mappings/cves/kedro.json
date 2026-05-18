@@ -1,0 +1,671 @@
+{
+  "schema_version": 1,
+  "package": "kedro",
+  "purls": [
+    "pkg:pypi/kedro"
+  ],
+  "generated_at": "2026-05-18T06:01:40+00:00",
+  "conda_versions_total": 51,
+  "advisories": [
+    {
+      "id": "GHSA-6326-w46w-ppjw",
+      "primary_id": "CVE-2026-35167",
+      "aliases": [
+        "CVE-2026-35167"
+      ],
+      "cve_ids": [
+        "CVE-2026-35167"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "kedro",
+      "summary": "Kedro: Path Traversal in versioned dataset loading via unsanitized version string",
+      "details": "### Impact\nThe `_get_versioned_path()` method in kedro/io/core.py constructs filesystem paths by directly interpolating user-supplied version strings without sanitization. Because version strings are used as path components, traversal sequences such as ../ are preserved and can escape the intended versioned dataset directory.\nThis is reachable through multiple entry points: `catalog.load(..., version=...)`, `DataCatalog.from_config(..., load_versions=...)`, and the CLI via `kedro run --load-versions=dataset:../../../secrets`. An attacker who can influence the version string can force Kedro to load files from outside the intended version directory, enabling unauthorized file reads, data poisoning, or cross-tenant data access in shared environments.\n\n### Patches\nYes. Fixed in kedro version 1.3.0. Users should upgrade to kedro >= 1.3.0.\n\n### Workarounds\nValidate version strings before passing them to DataCatalog or the CLI, ensuring they do not contain `..` segments, path separators, or absolute paths.",
+      "published": "2026-04-03T03:46:48Z",
+      "modified": "2026-04-06T23:50:38.899411Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:L/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:L/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/kedro-org/kedro/security/advisories/GHSA-6326-w46w-ppjw"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-35167"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/kedro-org/kedro/pull/5442"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/kedro-org/kedro"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-6326-w46w-ppjw",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.3.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.14.0",
+        "0.14.1",
+        "0.14.2",
+        "0.14.3",
+        "0.15.0",
+        "0.15.1",
+        "0.15.2",
+        "0.15.3",
+        "0.15.4",
+        "0.15.5",
+        "0.15.6",
+        "0.15.7",
+        "0.15.8",
+        "0.15.9",
+        "0.16.0",
+        "0.16.1",
+        "0.16.2",
+        "0.16.3",
+        "0.16.4",
+        "0.16.5",
+        "0.16.6",
+        "0.17.0",
+        "0.17.1",
+        "0.17.2",
+        "0.17.3",
+        "0.17.4",
+        "0.17.5",
+        "0.17.6",
+        "0.17.7",
+        "0.18.0",
+        "0.18.1",
+        "0.18.10",
+        "0.18.11",
+        "0.18.12",
+        "0.18.13",
+        "0.18.14",
+        "0.18.2",
+        "0.18.3",
+        "0.18.4",
+        "0.18.5",
+        "0.18.6",
+        "0.18.7",
+        "0.18.8",
+        "0.18.9",
+        "0.19.0",
+        "0.19.1",
+        "0.19.10",
+        "0.19.11",
+        "0.19.12",
+        "0.19.13",
+        "0.19.14",
+        "0.19.15",
+        "0.19.2",
+        "0.19.3",
+        "0.19.4",
+        "0.19.5",
+        "0.19.6",
+        "0.19.7",
+        "0.19.8",
+        "0.19.9",
+        "1.0.0",
+        "1.0.0rc1",
+        "1.0.0rc2",
+        "1.0.0rc3",
+        "1.1.0",
+        "1.1.1",
+        "1.2.0"
+      ],
+      "affected_conda_versions": [
+        "0.15.9",
+        "0.16.0",
+        "0.16.1",
+        "0.16.2",
+        "0.16.3",
+        "0.16.4",
+        "0.16.5",
+        "0.16.6",
+        "0.17.0",
+        "0.17.1",
+        "0.17.2",
+        "0.17.3",
+        "0.17.4",
+        "0.17.5",
+        "0.17.6",
+        "0.17.7",
+        "0.18.0",
+        "0.18.1",
+        "0.18.2",
+        "0.18.3",
+        "0.18.4",
+        "0.18.5",
+        "0.18.6",
+        "0.18.7",
+        "0.18.8",
+        "0.18.9",
+        "0.18.10",
+        "0.18.11",
+        "0.18.12",
+        "0.18.13",
+        "0.18.14",
+        "0.19.0",
+        "0.19.1",
+        "0.19.2",
+        "0.19.3",
+        "0.19.4",
+        "0.19.5",
+        "0.19.6",
+        "0.19.7",
+        "0.19.8",
+        "0.19.9",
+        "0.19.10",
+        "0.19.11",
+        "0.19.12",
+        "0.19.13",
+        "0.19.14",
+        "1.0.0",
+        "1.1.0",
+        "1.1.1",
+        "1.2.0"
+      ]
+    },
+    {
+      "id": "GHSA-747f-ww56-4q4h",
+      "primary_id": "CVE-2024-9701",
+      "aliases": [
+        "CVE-2024-9701"
+      ],
+      "cve_ids": [
+        "CVE-2024-9701"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "kedro",
+      "summary": "Kedro deserialization vulnerability",
+      "details": "A Remote Code Execution (RCE) vulnerability has been identified in the Kedro ShelveStore class (version 0.19.8). This vulnerability allows an attacker to execute arbitrary Python code via deserialization of malicious payloads, potentially leading to a full system compromise. The ShelveStore class uses Python's shelve module to manage session data, which relies on pickle for serialization. Crafting a malicious payload and storing it in the shelve file can lead to RCE when the payload is deserialized.",
+      "published": "2025-03-20T12:32:51Z",
+      "modified": "2025-03-21T04:02:42.117915Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-9701"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/kedro-org/kedro/commit/66e5e074b2789469550370f370c8b486f638d975"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/kedro-org/kedro"
+        },
+        {
+          "type": "WEB",
+          "url": "https://huntr.com/bounties/96c77fef-93b2-4d4d-8cbe-57a718d8eea5"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-747f-ww56-4q4h",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "0.19.9"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.14.0",
+        "0.14.1",
+        "0.14.2",
+        "0.14.3",
+        "0.15.0",
+        "0.15.1",
+        "0.15.2",
+        "0.15.3",
+        "0.15.4",
+        "0.15.5",
+        "0.15.6",
+        "0.15.7",
+        "0.15.8",
+        "0.15.9",
+        "0.16.0",
+        "0.16.1",
+        "0.16.2",
+        "0.16.3",
+        "0.16.4",
+        "0.16.5",
+        "0.16.6",
+        "0.17.0",
+        "0.17.1",
+        "0.17.2",
+        "0.17.3",
+        "0.17.4",
+        "0.17.5",
+        "0.17.6",
+        "0.17.7",
+        "0.18.0",
+        "0.18.1",
+        "0.18.10",
+        "0.18.11",
+        "0.18.12",
+        "0.18.13",
+        "0.18.14",
+        "0.18.2",
+        "0.18.3",
+        "0.18.4",
+        "0.18.5",
+        "0.18.6",
+        "0.18.7",
+        "0.18.8",
+        "0.18.9",
+        "0.19.0",
+        "0.19.1",
+        "0.19.2",
+        "0.19.3",
+        "0.19.4",
+        "0.19.5",
+        "0.19.6",
+        "0.19.7",
+        "0.19.8"
+      ],
+      "affected_conda_versions": [
+        "0.15.9",
+        "0.16.0",
+        "0.16.1",
+        "0.16.2",
+        "0.16.3",
+        "0.16.4",
+        "0.16.5",
+        "0.16.6",
+        "0.17.0",
+        "0.17.1",
+        "0.17.2",
+        "0.17.3",
+        "0.17.4",
+        "0.17.5",
+        "0.17.6",
+        "0.17.7",
+        "0.18.0",
+        "0.18.1",
+        "0.18.2",
+        "0.18.3",
+        "0.18.4",
+        "0.18.5",
+        "0.18.6",
+        "0.18.7",
+        "0.18.8",
+        "0.18.9",
+        "0.18.10",
+        "0.18.11",
+        "0.18.12",
+        "0.18.13",
+        "0.18.14",
+        "0.19.0",
+        "0.19.1",
+        "0.19.2",
+        "0.19.3",
+        "0.19.4",
+        "0.19.5",
+        "0.19.6",
+        "0.19.7",
+        "0.19.8"
+      ]
+    },
+    {
+      "id": "GHSA-9cqf-439c-j96r",
+      "primary_id": "CVE-2026-35171",
+      "aliases": [
+        "CVE-2026-35171"
+      ],
+      "cve_ids": [
+        "CVE-2026-35171"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "kedro",
+      "summary": "Kedro has Arbitrary Code Execution via Malicious Logging Configuration",
+      "details": "### Impact\n\nThis is a **critical remote code execution (RCE)** vulnerability caused by unsafe use of `logging.config.dictConfig()` with user-controlled input.\n\nKedro allows the logging configuration file path to be set via the `KEDRO_LOGGING_CONFIG` environment variable and loads it without validation. The logging configuration schema supports the special `()` key, which enables arbitrary callable instantiation. An attacker can exploit this to execute arbitrary system commands during application startup.\n\n---\n\n### Patches\n\nThe vulnerability is fixed by introducing validation that rejects the unsafe `()` factory key in logging configurations before passing them to `dictConfig()`.\n\n#### Fixed in\n- Kedro 1.3.0\n\nUsers should upgrade to this version as soon as possible.\n\n---\n\n### Workarounds\n\nIf upgrading is not immediately possible:\n\n- Do not allow untrusted input to control the `KEDRO_LOGGING_CONFIG` environment variable  \n- Restrict write access to logging configuration files  \n- Avoid using externally supplied or dynamically generated logging configs  \n- Manually validate logging YAML to ensure it does not contain the `()` key  \n\nThese mitigations reduce risk but do not fully eliminate it.\n\n---\n\n### References\n\n- Python logging configuration documentation: https://docs.python.org/3/library/logging.config.html#logging-config-dictschema  \n- CWE-94: Code Injection \u2014 https://cwe.mitre.org/data/definitions/94.html",
+      "published": "2026-04-03T03:48:48Z",
+      "modified": "2026-04-07T17:32:55.613682Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/kedro-org/kedro/security/advisories/GHSA-9cqf-439c-j96r"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-35171"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/kedro-org/kedro"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-9cqf-439c-j96r",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.3.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.14.0",
+        "0.14.1",
+        "0.14.2",
+        "0.14.3",
+        "0.15.0",
+        "0.15.1",
+        "0.15.2",
+        "0.15.3",
+        "0.15.4",
+        "0.15.5",
+        "0.15.6",
+        "0.15.7",
+        "0.15.8",
+        "0.15.9",
+        "0.16.0",
+        "0.16.1",
+        "0.16.2",
+        "0.16.3",
+        "0.16.4",
+        "0.16.5",
+        "0.16.6",
+        "0.17.0",
+        "0.17.1",
+        "0.17.2",
+        "0.17.3",
+        "0.17.4",
+        "0.17.5",
+        "0.17.6",
+        "0.17.7",
+        "0.18.0",
+        "0.18.1",
+        "0.18.10",
+        "0.18.11",
+        "0.18.12",
+        "0.18.13",
+        "0.18.14",
+        "0.18.2",
+        "0.18.3",
+        "0.18.4",
+        "0.18.5",
+        "0.18.6",
+        "0.18.7",
+        "0.18.8",
+        "0.18.9",
+        "0.19.0",
+        "0.19.1",
+        "0.19.10",
+        "0.19.11",
+        "0.19.12",
+        "0.19.13",
+        "0.19.14",
+        "0.19.15",
+        "0.19.2",
+        "0.19.3",
+        "0.19.4",
+        "0.19.5",
+        "0.19.6",
+        "0.19.7",
+        "0.19.8",
+        "0.19.9",
+        "1.0.0",
+        "1.0.0rc1",
+        "1.0.0rc2",
+        "1.0.0rc3",
+        "1.1.0",
+        "1.1.1",
+        "1.2.0"
+      ],
+      "affected_conda_versions": [
+        "0.15.9",
+        "0.16.0",
+        "0.16.1",
+        "0.16.2",
+        "0.16.3",
+        "0.16.4",
+        "0.16.5",
+        "0.16.6",
+        "0.17.0",
+        "0.17.1",
+        "0.17.2",
+        "0.17.3",
+        "0.17.4",
+        "0.17.5",
+        "0.17.6",
+        "0.17.7",
+        "0.18.0",
+        "0.18.1",
+        "0.18.2",
+        "0.18.3",
+        "0.18.4",
+        "0.18.5",
+        "0.18.6",
+        "0.18.7",
+        "0.18.8",
+        "0.18.9",
+        "0.18.10",
+        "0.18.11",
+        "0.18.12",
+        "0.18.13",
+        "0.18.14",
+        "0.19.0",
+        "0.19.1",
+        "0.19.2",
+        "0.19.3",
+        "0.19.4",
+        "0.19.5",
+        "0.19.6",
+        "0.19.7",
+        "0.19.8",
+        "0.19.9",
+        "0.19.10",
+        "0.19.11",
+        "0.19.12",
+        "0.19.13",
+        "0.19.14",
+        "1.0.0",
+        "1.1.0",
+        "1.1.1",
+        "1.2.0"
+      ]
+    },
+    {
+      "id": "GHSA-rm69-wvpv-r2w7",
+      "primary_id": "CVE-2024-12215",
+      "aliases": [
+        "CVE-2024-12215"
+      ],
+      "cve_ids": [
+        "CVE-2024-12215"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "kedro",
+      "summary": "Kedro allows Remote Code Execution by Pulling Micro Packages",
+      "details": "In kedro-org/kedro version 0.19.8, the `pull_package()` API function allows users to download and extract micro packages from the Internet. However, the function `project_wheel_metadata()` within the code path can execute the `setup.py` file inside the tar file, leading to remote code execution (RCE) by running arbitrary commands on the victim's machine.",
+      "published": "2025-03-20T12:32:42Z",
+      "modified": "2025-10-15T17:31:37.829387Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-12215"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/kedro-org/kedro"
+        },
+        {
+          "type": "WEB",
+          "url": "https://huntr.com/bounties/fad27503-97a4-4933-91d4-96223b8c54d8"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-rm69-wvpv-r2w7",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "last_affected": "0.19.8"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.14.0",
+        "0.14.1",
+        "0.14.2",
+        "0.14.3",
+        "0.15.0",
+        "0.15.1",
+        "0.15.2",
+        "0.15.3",
+        "0.15.4",
+        "0.15.5",
+        "0.15.6",
+        "0.15.7",
+        "0.15.8",
+        "0.15.9",
+        "0.16.0",
+        "0.16.1",
+        "0.16.2",
+        "0.16.3",
+        "0.16.4",
+        "0.16.5",
+        "0.16.6",
+        "0.17.0",
+        "0.17.1",
+        "0.17.2",
+        "0.17.3",
+        "0.17.4",
+        "0.17.5",
+        "0.17.6",
+        "0.17.7",
+        "0.18.0",
+        "0.18.1",
+        "0.18.10",
+        "0.18.11",
+        "0.18.12",
+        "0.18.13",
+        "0.18.14",
+        "0.18.2",
+        "0.18.3",
+        "0.18.4",
+        "0.18.5",
+        "0.18.6",
+        "0.18.7",
+        "0.18.8",
+        "0.18.9",
+        "0.19.0",
+        "0.19.1",
+        "0.19.2",
+        "0.19.3",
+        "0.19.4",
+        "0.19.5",
+        "0.19.6",
+        "0.19.7",
+        "0.19.8"
+      ],
+      "affected_conda_versions": [
+        "0.15.9",
+        "0.16.0",
+        "0.16.1",
+        "0.16.2",
+        "0.16.3",
+        "0.16.4",
+        "0.16.5",
+        "0.16.6",
+        "0.17.0",
+        "0.17.1",
+        "0.17.2",
+        "0.17.3",
+        "0.17.4",
+        "0.17.5",
+        "0.17.6",
+        "0.17.7",
+        "0.18.0",
+        "0.18.1",
+        "0.18.2",
+        "0.18.3",
+        "0.18.4",
+        "0.18.5",
+        "0.18.6",
+        "0.18.7",
+        "0.18.8",
+        "0.18.9",
+        "0.18.10",
+        "0.18.11",
+        "0.18.12",
+        "0.18.13",
+        "0.18.14",
+        "0.19.0",
+        "0.19.1",
+        "0.19.2",
+        "0.19.3",
+        "0.19.4",
+        "0.19.5",
+        "0.19.6",
+        "0.19.7",
+        "0.19.8"
+      ]
+    }
+  ]
+}

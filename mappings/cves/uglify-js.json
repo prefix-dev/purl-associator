@@ -1,0 +1,191 @@
+{
+  "schema_version": 1,
+  "package": "uglify-js",
+  "purls": [
+    "pkg:npm/uglify-js"
+  ],
+  "generated_at": "2026-05-18T06:01:40+00:00",
+  "conda_versions_total": 52,
+  "advisories": [
+    {
+      "id": "GHSA-34r7-q49f-h37c",
+      "primary_id": "CVE-2015-8857",
+      "aliases": [
+        "CVE-2015-8857"
+      ],
+      "cve_ids": [
+        "CVE-2015-8857"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "uglify-js",
+      "summary": "Incorrect Handling of Non-Boolean Comparisons During Minification in uglify-js",
+      "details": "Versions of `uglify-js` prior to 2.4.24 are affected by a vulnerability which may cause crafted JavaScript to have altered functionality after minification.\n\n## Recommendation\n\nUpgrade UglifyJS to version >= 2.4.24.",
+      "published": "2017-10-24T18:33:36Z",
+      "modified": "2024-02-16T08:16:42.823655Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2015-8857"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/mishoo/UglifyJS2/issues/751"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/lautis/uglifier/commit/4677bfe38142937ff952f95605bcec4618892c3e"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/mishoo/UglifyJS2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/rubysec/ruby-advisory-db/blob/master/gems/uglifier/CVE-2015-8857.yml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://web.archive.org/web/20200227190830/http://www.securityfocus.com/bid/96410"
+        },
+        {
+          "type": "WEB",
+          "url": "https://zyan.scripts.mit.edu/blog/backdooring-js"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2016/04/20/11"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-34r7-q49f-h37c",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.4.24"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": []
+    },
+    {
+      "id": "GHSA-c9f4-xj24-8jqx",
+      "primary_id": "CVE-2015-8858",
+      "aliases": [
+        "CVE-2015-8858"
+      ],
+      "cve_ids": [
+        "CVE-2015-8858"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "uglify-js",
+      "summary": "Regular Expression Denial of Service in uglify-js",
+      "details": "Versions of `uglify-js` prior to 2.6.0 are affected by a regular expression denial of service vulnerability when malicious inputs are passed into the `parse()` method.\n\n\n### Proof of Concept\n\n```\nvar u = require('uglify-js');\nvar genstr = function (len, chr) {\n    var result = \"\";\n    for (i=0; i<=len; i++) {\n        result = result + chr;\n    }\n\n    return result;\n}\n\nu.parse(\"var a = \" + genstr(process.argv[2], \"1\") + \".1ee7;\");\n```\n\n### Results\n```\n$ time node test.js 10000\nreal\t0m1.091s\nuser\t0m1.047s\nsys\t0m0.039s\n\n$ time node test.js 80000\nreal\t0m6.486s\nuser\t0m6.229s\nsys\t0m0.094s\n```\n\n\n## Recommendation\n\nUpdate to version 2.6.0 or later.",
+      "published": "2017-10-24T18:33:36Z",
+      "modified": "2023-11-08T03:58:03.623951Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2015-8858"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/advisories/GHSA-c9f4-xj24-8jqx"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.npmjs.com/advisories/48"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2016/04/20/11"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.securityfocus.com/bid/96409"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-c9f4-xj24-8jqx",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.6.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": []
+    },
+    {
+      "id": "GHSA-g6f4-j6c2-w3p3",
+      "primary_id": "GHSA-g6f4-j6c2-w3p3",
+      "aliases": [],
+      "cve_ids": [],
+      "ecosystem": "npm",
+      "upstream_name": "uglify-js",
+      "summary": "High severity vulnerability that affects uglify-js",
+      "details": "Withdrawn, accidental duplicate publish.\n\nThe uglify-js package before 2.4.24 for Node.js does not properly account for non-boolean values when rewriting boolean expressions, which might allow attackers to bypass security mechanisms or possibly have unspecified other impact by leveraging improperly rewritten Javascript.",
+      "published": "2018-10-09T00:39:43Z",
+      "modified": "2020-06-17T15:14:46Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2015-8857"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/advisories/GHSA-g6f4-j6c2-w3p3"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-g6f4-j6c2-w3p3",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.4.24"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": []
+    }
+  ]
+}

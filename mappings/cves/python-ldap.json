@@ -1,0 +1,501 @@
+{
+  "schema_version": 1,
+  "package": "python-ldap",
+  "purls": [
+    "pkg:pypi/python-ldap"
+  ],
+  "generated_at": "2026-05-18T06:01:40+00:00",
+  "conda_versions_total": 8,
+  "advisories": [
+    {
+      "id": "GHSA-p34h-wq7j-h5v6",
+      "primary_id": "CVE-2025-61912",
+      "aliases": [
+        "CVE-2025-61912"
+      ],
+      "cve_ids": [
+        "CVE-2025-61912"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "python-ldap",
+      "summary": "python-ldap is Vulnerable to Improper Encoding or Escaping of Output and Improper Null Termination",
+      "details": "### Summary\n\n\n`ldap.dn.escape_dn_chars()` escapes `\\x00` incorrectly by emitting a backslash followed by a literal NUL byte instead of the RFC-4514 hex form `\\00`. Any application that uses this helper to construct DNs from untrusted input can be made to consistently fail before a request is sent to the LDAP server (e.g., AD), resulting in a client-side denial of service.\n\n\n\n### Details\n\n\n\nAffected function: `ldap.dn.escape_dn_chars(s)`\n\nFile: Lib/ldap/dn.py\n\nBuggy behavior:\nFor NUL, the function does:\n\n`s = s.replace('\\000', '\\\\\\000')  # backslash + literal NUL`\n\nThis produces Python strings which, when passed to python-ldap APIs (e.g., `add_s`, `modify_s`, r`ename_s`, or used as search bases), contain an embedded NUL. python-ldap then raises ValueError: embedded null character (or otherwise fails) before any network I/O.\nWith correct RFC-4514 encoding (`\\00`), the client proceeds and the server can apply its own syntax rules (e.g., AD will reject NUL in CN with result: 34), proving the failure originates in the escaping helper.\n\nWhy it matters: Projects follow the docs which state this function \u201cshould be used when building LDAP DN strings from arbitrary input.\u201d The function\u2019s guarantee is therefore relied upon as a safety API. A single NUL in attacker-controlled input reliably breaks client workflows (crash/unhandled exception, stuck retries, poison queue record), i.e., a DoS.\n\nStandards: RFC 4514 requires special characters and controls to be escaped using hex form; a literal NUL is not a valid DN character.\n\nMinimal fix: Escape NUL as hex:\n\n`s = s.replace('\\x00', r'\\00')`\n\n\n\n### PoC\n\nPrereqs: Any python-ldap install and a reachable LDAP server (for the second half). The first half (client-side failure) does not require a live server.\n\n```import ldap\nfrom ldap.dn import escape_dn_chars, str2dn\n\nl = ldap.initialize(\"ldap://10.0.1.11\")              # your lab DC/LDAP\nl.protocol_version = 3\nl.set_option(ldap.OPT_REFERRALS, 0)\nl.simple_bind_s(r\"DSEC\\dani.aga\", \"PassAa1\")         \n\n# --- Attacker-controlled value contains NUL ---\ncn = \"bad\\0name\"\nescaped_cn = escape_dn_chars(cn)\ndn = f\"CN={escaped_cn},OU=Users,DC=dsec,DC=local\"\nattrs = [('objectClass', [b'user']), ('sAMAccountName', [b'badsam'])]\n\nprint(\"=== BUGGY DN (contains literal NUL) ===\")\nprint(\"escaped_cn repr:\", repr(escaped_cn))\nprint(\"dn repr:\", repr(dn))\nprint(\"contains NUL?:\", \"\\x00\" in dn, \"at index:\", dn.find(\"\\x00\"))\n\nprint(\"=> add_s(buggy DN): expected client-side failure (no server contact)\")\ntry:\n    l.add_s(dn, attrs)\n    print(\"add_s(buggy): succeeded (unexpected)\")\nexcept Exception as e:\n    print(\"add_s(buggy):\", type(e).__name__, e)  # ValueError: embedded null character\n\n# --- Correct hex escape demonstrates the client proceeds to the server ---\nsafe_dn = dn.replace(\"\\x00\", r\"\\00\")                 # RFC 4514-compliant\nprint(\"\\n=== HEX-ESCAPED DN (\\\\00) ===\")\nprint(\"safe_dn repr:\", repr(safe_dn))\nprint(\"=> sanity parse:\", str2dn(safe_dn))           # parses locally\n\nprint(\"=> add_s(safe DN): reaches server (AD will likely reject with 34)\")\ntry:\n    l.add_s(safe_dn, attrs)\n    print(\"add_s(safe): success (unlikely without required attrs/rights)\")\nexcept ldap.LDAPError as e:\n    print(\"add_s(safe):\", e.__class__.__name__, e)  # e.g., result 34 Invalid DN syntax (AD forbids NUL in CN)\n```\n\nObserved result (example):\n\n`add_s(buggy): ValueError embedded null character` \u2190 client-side DoS\n\n`add_s(safe): INVALID_DN_SYNTAX (result 34, BAD_NAME)` \u2190 request reached server; rejection due to server policy, not client bug\n\n\n### Impact\n\nType: Denial of Service (client-side).\n\nWho is impacted: Any application that uses ldap.dn.escape_dn_chars() to build DNs from (partially) untrusted input\u2014e.g., user `creation/rename tools`, `sync/ETL jobs`, portals allowing self-service attributes, device onboarding, batch imports. A single crafted value with `\\x00` reliably forces exceptions/failures and can crash handlers or jam pipelines with poison records.",
+      "published": "2025-10-10T22:53:25Z",
+      "modified": "2026-02-04T03:24:02.625381Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N/E:P"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N/E:P"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/python-ldap/python-ldap/security/advisories/GHSA-p34h-wq7j-h5v6"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-61912"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/python-ldap/python-ldap/commit/6ea80326a34ee6093219628d7690bced50c49a3f"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/python-ldap/python-ldap"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/python-ldap/python-ldap/releases/tag/python-ldap-3.4.5"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-p34h-wq7j-h5v6",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "3.4.5"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "2.3.13",
+        "2.4.0",
+        "2.4.1",
+        "2.4.10",
+        "2.4.12",
+        "2.4.13",
+        "2.4.14",
+        "2.4.15",
+        "2.4.16",
+        "2.4.17",
+        "2.4.18",
+        "2.4.19",
+        "2.4.2",
+        "2.4.20",
+        "2.4.21",
+        "2.4.22",
+        "2.4.25",
+        "2.4.26",
+        "2.4.27",
+        "2.4.28",
+        "2.4.29",
+        "2.4.3",
+        "2.4.30",
+        "2.4.31",
+        "2.4.32",
+        "2.4.33",
+        "2.4.35",
+        "2.4.36",
+        "2.4.37",
+        "2.4.38",
+        "2.4.39",
+        "2.4.4",
+        "2.4.40",
+        "2.4.41",
+        "2.4.42",
+        "2.4.43",
+        "2.4.44",
+        "2.4.45",
+        "2.4.5",
+        "2.4.6",
+        "2.4.7",
+        "2.4.8",
+        "2.4.9",
+        "2.5.1",
+        "2.5.2",
+        "3.0.0",
+        "3.0.0b1",
+        "3.0.0b2",
+        "3.0.0b3",
+        "3.0.0b4",
+        "3.1.0",
+        "3.2.0",
+        "3.3.0",
+        "3.3.1",
+        "3.4.0",
+        "3.4.2",
+        "3.4.3",
+        "3.4.4"
+      ],
+      "affected_conda_versions": [
+        "3.1.0",
+        "3.2.0",
+        "3.3.1",
+        "3.4.0",
+        "3.4.3",
+        "3.4.4"
+      ]
+    },
+    {
+      "id": "GHSA-qfr5-wjpw-q4c4",
+      "primary_id": "CVE-2021-46823",
+      "aliases": [
+        "CVE-2021-46823"
+      ],
+      "cve_ids": [
+        "CVE-2021-46823"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "python-ldap",
+      "summary": "Denial of Service in python-ldap",
+      "details": "python-ldap before 3.4.0 is vulnerable to a denial of service when ldap.schema is used for untrusted schema definitions, because of a regular expression denial of service (ReDoS) flaw in the LDAP schema parser. By sending crafted regex input, a remote authenticated attacker could exploit this vulnerability to cause a denial of service condition.",
+      "published": "2022-06-19T00:00:21Z",
+      "modified": "2026-03-13T21:56:56.862260Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/python-ldap/python-ldap/security/advisories/GHSA-r8wq-qrxc-hmcm"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2021-46823"
+        },
+        {
+          "type": "WEB",
+          "url": "https://exchange.xforce.ibmcloud.com/vulnerabilities/221507"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/python-ldap/python-ldap"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-qfr5-wjpw-q4c4",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "3.4.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "2.3.13",
+        "2.4.0",
+        "2.4.1",
+        "2.4.10",
+        "2.4.12",
+        "2.4.13",
+        "2.4.14",
+        "2.4.15",
+        "2.4.16",
+        "2.4.17",
+        "2.4.18",
+        "2.4.19",
+        "2.4.2",
+        "2.4.20",
+        "2.4.21",
+        "2.4.22",
+        "2.4.25",
+        "2.4.26",
+        "2.4.27",
+        "2.4.28",
+        "2.4.29",
+        "2.4.3",
+        "2.4.30",
+        "2.4.31",
+        "2.4.32",
+        "2.4.33",
+        "2.4.35",
+        "2.4.36",
+        "2.4.37",
+        "2.4.38",
+        "2.4.39",
+        "2.4.4",
+        "2.4.40",
+        "2.4.41",
+        "2.4.42",
+        "2.4.43",
+        "2.4.44",
+        "2.4.45",
+        "2.4.5",
+        "2.4.6",
+        "2.4.7",
+        "2.4.8",
+        "2.4.9",
+        "2.5.1",
+        "2.5.2",
+        "3.0.0",
+        "3.0.0b1",
+        "3.0.0b2",
+        "3.0.0b3",
+        "3.0.0b4",
+        "3.1.0",
+        "3.2.0",
+        "3.3.0",
+        "3.3.1"
+      ],
+      "affected_conda_versions": [
+        "3.1.0",
+        "3.2.0",
+        "3.3.1"
+      ]
+    },
+    {
+      "id": "GHSA-r7r6-cc7p-4v5m",
+      "primary_id": "CVE-2025-61911",
+      "aliases": [
+        "CVE-2025-61911"
+      ],
+      "cve_ids": [
+        "CVE-2025-61911"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "python-ldap",
+      "summary": "python-ldap has sanitization bypass in ldap.filter.escape_filter_chars",
+      "details": "### Summary\nThe sanitization method `ldap.filter.escape_filter_chars` can be tricked to skip escaping of special characters when a crafted `list` or `dict` is supplied as the `assertion_value` parameter, and the non-default `escape_mode=1` is configured.\n\n### Details\nThe method `ldap.filter.escape_filter_chars` supports 3 different escaping modes. `escape_mode=0` (default) and `escape_mode=2` happen to raise exceptions when a `list` or `dict` object is supplied as the `assertion_value` parameter. However, `escape_mode=1` happily computes without performing adequate logic to ensure a fully escaped return value.\n\n### PoC\n```\n>>> import ldap.filter\n```\n**Exploitable**\n```\n>>> ldap.filter.escape_filter_chars([\"abc@*()/xyz\"], escape_mode=1)\n'abc@*()/xyz'\n>>> ldap.filter.escape_filter_chars({\"abc@*()/xyz\": 1}, escape_mode=1)\n'abc@*()/xyz'\n```\n**Not exploitable**\n```\n>>> ldap.filter.escape_filter_chars(\"abc@*()/xyz\", escape_mode=1)\n'abc@\\\\2a\\\\28\\\\29\\\\2fxyz'\n>>> ldap.filter.escape_filter_chars([\"abc@*()/xyz\"], escape_mode=0)\nTraceback (most recent call last):\n  File \"<stdin>\", line 1, in <module>\n  File \"/usr/local/lib64/python3.12/site-packages/ldap/filter.py\", line 41, in escape_filter_chars\n    s = assertion_value.replace('\\\\', r'\\5c')\n        ^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'list' object has no attribute 'replace'\n>>> ldap.filter.escape_filter_chars([\"abc@*()/xyz\"], escape_mode=2)\nTraceback (most recent call last):\n  File \"<stdin>\", line 1, in <module>\n  File \"/usr/local/lib64/python3.12/site-packages/ldap/filter.py\", line 36, in escape_filter_chars\n    r.append(\"\\\\%02x\" % ord(c))\n                        ^^^^^^\nTypeError: ord() expected a character, but string of length 11 found\n```\n### Impact\nIf an application relies on the vulnerable method in the `python-ldap` library to escape untrusted user input, an attacker might be able to abuse the vulnerability to launch ldap injection attacks which could potentially disclose or manipulate ldap data meant to be inaccessible to them.\n\nWith Python being a dynamically typed language, and the commonly used `JSON` format supporting `list` and `dict`, it is to be expected that Python applications may commonly forward unchecked and potentially malicious `list` and `dict` objects to the vulnerable sanitization method.\n\nThe vulnerable `escape_mode=1` configuration does not appear to be widely used.\n\n### Suggested Fix\nAdd a type check at the start of the `ldap.filter.escape_filter_chars` method to raise an exception when the supplied `assertion_value` parameter is not of type `str`.",
+      "published": "2025-10-10T22:51:28Z",
+      "modified": "2026-02-04T03:48:59.348923Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:L/VI:L/VA:N/SC:N/SI:N/SA:N/E:P"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:L/VI:L/VA:N/SC:N/SI:N/SA:N/E:P"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/python-ldap/python-ldap/security/advisories/GHSA-r7r6-cc7p-4v5m"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-61911"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/python-ldap/python-ldap/commit/3957526fb1852e84b90f423d9fef34c7af25b85a"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/python-ldap/python-ldap"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/python-ldap/python-ldap/releases/tag/python-ldap-3.4.5"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-r7r6-cc7p-4v5m",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "3.4.5"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "2.3.13",
+        "2.4.0",
+        "2.4.1",
+        "2.4.10",
+        "2.4.12",
+        "2.4.13",
+        "2.4.14",
+        "2.4.15",
+        "2.4.16",
+        "2.4.17",
+        "2.4.18",
+        "2.4.19",
+        "2.4.2",
+        "2.4.20",
+        "2.4.21",
+        "2.4.22",
+        "2.4.25",
+        "2.4.26",
+        "2.4.27",
+        "2.4.28",
+        "2.4.29",
+        "2.4.3",
+        "2.4.30",
+        "2.4.31",
+        "2.4.32",
+        "2.4.33",
+        "2.4.35",
+        "2.4.36",
+        "2.4.37",
+        "2.4.38",
+        "2.4.39",
+        "2.4.4",
+        "2.4.40",
+        "2.4.41",
+        "2.4.42",
+        "2.4.43",
+        "2.4.44",
+        "2.4.45",
+        "2.4.5",
+        "2.4.6",
+        "2.4.7",
+        "2.4.8",
+        "2.4.9",
+        "2.5.1",
+        "2.5.2",
+        "3.0.0",
+        "3.0.0b1",
+        "3.0.0b2",
+        "3.0.0b3",
+        "3.0.0b4",
+        "3.1.0",
+        "3.2.0",
+        "3.3.0",
+        "3.3.1",
+        "3.4.0",
+        "3.4.2",
+        "3.4.3",
+        "3.4.4"
+      ],
+      "affected_conda_versions": [
+        "3.1.0",
+        "3.2.0",
+        "3.3.1",
+        "3.4.0",
+        "3.4.3",
+        "3.4.4"
+      ]
+    },
+    {
+      "id": "GHSA-r8wq-qrxc-hmcm",
+      "primary_id": "GHSA-r8wq-qrxc-hmcm",
+      "aliases": [],
+      "cve_ids": [],
+      "ecosystem": "PyPI",
+      "upstream_name": "python-ldap",
+      "summary": "ReDoS in LDAP schema parser",
+      "details": "https://github.com/python-ldap/python-ldap/issues/424\n\n### Impact\nThe LDAP schema parser of python-ldap 3.3.1 and earlier are vulnerable to a regular expression denial-of-service attack. The issue affects clients that use ``ldap.schema`` package to parse LDAP schema definitions from an untrusted source.\n\n### Patches\nThe upcoming release of python-ldap 3.4.0 will contain a workaround to prevent ReDoS attacks. The schema parser refuses schema definitions with an excessive amount of backslashes.\n\n### Workarounds\nAs a workaround, users can check input for excessive amount of backslashes in schemas. More than a dozen backslashes per line are atypical.\n\n### References\n[CWE-1333](https://cwe.mitre.org/data/definitions/1333.html)\n\n### For more information\nIf you have any questions or comments about this advisory:\n* Open an issue in [python-ldap](https://github.com/python-ldap/python-ldap) tracker\n",
+      "published": "2021-11-29T17:58:59Z",
+      "modified": "2026-03-13T22:01:10.252794Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/python-ldap/python-ldap/security/advisories/GHSA-r8wq-qrxc-hmcm"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/python-ldap/python-ldap/issues/424"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/python-ldap/python-ldap"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-r8wq-qrxc-hmcm",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "3.4.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "2.3.13",
+        "2.4.0",
+        "2.4.1",
+        "2.4.10",
+        "2.4.12",
+        "2.4.13",
+        "2.4.14",
+        "2.4.15",
+        "2.4.16",
+        "2.4.17",
+        "2.4.18",
+        "2.4.19",
+        "2.4.2",
+        "2.4.20",
+        "2.4.21",
+        "2.4.22",
+        "2.4.25",
+        "2.4.26",
+        "2.4.27",
+        "2.4.28",
+        "2.4.29",
+        "2.4.3",
+        "2.4.30",
+        "2.4.31",
+        "2.4.32",
+        "2.4.33",
+        "2.4.35",
+        "2.4.36",
+        "2.4.37",
+        "2.4.38",
+        "2.4.39",
+        "2.4.4",
+        "2.4.40",
+        "2.4.41",
+        "2.4.42",
+        "2.4.43",
+        "2.4.44",
+        "2.4.45",
+        "2.4.5",
+        "2.4.6",
+        "2.4.7",
+        "2.4.8",
+        "2.4.9",
+        "2.5.1",
+        "2.5.2",
+        "3.0.0",
+        "3.0.0b1",
+        "3.0.0b2",
+        "3.0.0b3",
+        "3.0.0b4",
+        "3.1.0",
+        "3.2.0",
+        "3.3.0",
+        "3.3.1"
+      ],
+      "affected_conda_versions": [
+        "3.1.0",
+        "3.2.0",
+        "3.3.1"
+      ]
+    }
+  ]
+}

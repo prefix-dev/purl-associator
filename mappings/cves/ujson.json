@@ -1,0 +1,833 @@
+{
+  "schema_version": 1,
+  "package": "ujson",
+  "purls": [
+    "pkg:pypi/ujson"
+  ],
+  "generated_at": "2026-05-18T06:01:40+00:00",
+  "conda_versions_total": 24,
+  "advisories": [
+    {
+      "id": "GHSA-c38f-wx89-p2xg",
+      "primary_id": "CVE-2026-44660",
+      "aliases": [
+        "CVE-2026-44660"
+      ],
+      "cve_ids": [
+        "CVE-2026-44660"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "ujson",
+      "summary": "UltraJSON has a Memory Leak in ujson.dump() on Write Failure",
+      "details": "### Summary\n\nWhen `ujson.dump()` writes to a file-like object and the write operation raises an exception, the serialized JSON string object is not decremented, leaking memory. Each failed write operation leaks the full size of the serialized payload.\n\nCode that uses `ujson.dumps()` rather than `ujson.dump()` or only JSON load/decode methods is unaffected.\n\n### Details\n\n**Vulnerability Location:**\n- `src/ujson/python/objToJSON.c:913` - `objToJSONFile()` function start\n- `src/ujson/python/objToJSON.c:931` - Error return on write failure\n- `src/ujson/python/objToJSON.c:942` - Early return without cleanup\n \n**Root Cause:**\n\nThe `objToJSONFile()` function allocates a Python string object via `ujson_dumps_internal()`, calls the file's `write()` method, and returns early if `write()` raises an exception\u2014but never calls `Py_DECREF(string)` on the early exit path.\n\n### PoC\n```python\nimport gc, tracemalloc, ujson\n\nclass BadFile:\n    def write(self, s):\n        raise RuntimeError(\"boom\")\n\nobj = {\"x\": \"A\" * 200000}\n\ndef run():\n    try:\n        ujson.dump(obj, BadFile())\n    except RuntimeError:\n        pass\n\nrun()\ntracemalloc.start()\ngc.collect()\nbase = tracemalloc.get_traced_memory()[0]\n\nfor i in range(5):\n    run()\n    gc.collect()\n    cur = tracemalloc.get_traced_memory()[0]\n    print(i, cur - base)\n```\n\n### Impact\n\nAny application that serializes data through `ujson.dump()` to an attacker-influenced file-like object that can fail can be driven into linear memory growth. An attacker can quickly use up all the memory of say a web server that sends JSON responses using `ujson.dump()` by repeatedly making requests then closing the connection mid response.\n\n### Remediation\n\nThe missing dec-refs were added in 82af1d0ac01d09aa40c887b460d44b9d9f4bccd9. We recommend upgrading to [UltraJSON 5.12.1](https://github.com/ultrajson/ultrajson/releases/tag/5.12.1).\n\n### Workarounds\n\nReplacing `ujson.dump(obj, file)` with `file.write(ujson.dumps(obj))` is equivalent (contrary to popular misconception, there are no streaming benefits to using `ujson.dump()`) and will avoid the memory leak.",
+      "published": "2026-05-12T22:25:11Z",
+      "modified": "2026-05-12T22:33:17.578914Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/ultrajson/ultrajson/security/advisories/GHSA-c38f-wx89-p2xg"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/ultrajson/ultrajson/commit/82af1d0ac01d09aa40c887b460d44b9d9f4bccd9"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/ultrajson/ultrajson"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/ultrajson/ultrajson/releases/tag/5.12.1"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-c38f-wx89-p2xg",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "5.12.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "1.15",
+        "1.18",
+        "1.19",
+        "1.21",
+        "1.22",
+        "1.23",
+        "1.30",
+        "1.33",
+        "1.34",
+        "1.35",
+        "1.4",
+        "1.6",
+        "1.8",
+        "1.9",
+        "2.0.0",
+        "2.0.1",
+        "2.0.2",
+        "2.0.3",
+        "3.0.0",
+        "3.1.0",
+        "3.2.0",
+        "4.0.0",
+        "4.0.1",
+        "4.0.2",
+        "4.1.0",
+        "4.2.0",
+        "4.3.0",
+        "5.0.0",
+        "5.1.0",
+        "5.10.0",
+        "5.11.0",
+        "5.12.0",
+        "5.2.0",
+        "5.3.0",
+        "5.4.0",
+        "5.5.0",
+        "5.6.0",
+        "5.7.0",
+        "5.8.0",
+        "5.9.0"
+      ],
+      "affected_conda_versions": [
+        "1.35",
+        "2.0.1",
+        "2.0.2",
+        "2.0.3",
+        "3.0.0",
+        "3.1.0",
+        "3.2.0",
+        "4.0.0",
+        "4.0.1",
+        "4.0.2",
+        "4.1.0",
+        "4.2.0",
+        "5.0.0",
+        "5.1.0",
+        "5.2.0",
+        "5.3.0",
+        "5.4.0",
+        "5.5.0",
+        "5.7.0",
+        "5.8.0",
+        "5.9.0",
+        "5.10.0",
+        "5.11.0",
+        "5.12.0"
+      ]
+    },
+    {
+      "id": "GHSA-c8rr-9gxc-jprv",
+      "primary_id": "CVE-2026-32875",
+      "aliases": [
+        "CVE-2026-32875"
+      ],
+      "cve_ids": [
+        "CVE-2026-32875"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "ujson",
+      "summary": "UltraJSON has an integer overflow handling large indent leads to buffer overflow or infinite loop",
+      "details": "### Summary\n\n`ujson.dumps()` crashes the Python interpreter (segmentation fault) when the product of the `indent` parameter and the nested depth of the input exceeds INT32_MAX. It can also get stuck in an infinite loop if the `indent` is a large negative number. Both are caused by an integer overflow/underflow whilst calculating how much memory to reserve for indentation. And both can be used to achieve denial of service.\n\n(Note: A negative indent to `ujson` means add spaces after colons but do not add line breaks or indentation. It is unclear to the current maintainers whether this was ever even an intended feature or just a byproduct of the way it was written.)\n\n### Exploitability\n\nTo be vulnerable, a service must call `ujson.dump()`/`ujson.dumps()`/`ujson.encode()` whilst giving untrusted users control over the `indent` parameter and not restrict that indentation to reasonably small non-negative values. (Even with the fix for this vulnerability, such usage is strongly advised against since even a bug-free JSON serialiser would be vulnerable to denial of service simply by the attacker requesting indents that have the server needlessly filling out gigabytes of whitespace.)\n\nA service may also be vulnerable to the infinite loop if it uses a fixed _negative_ `indent`. An underflow always occurs for any negative indent when the input data is at least one level nested but, for small negative indents, the underflow is usually accidentally rectified by another overflow. As far as the maintainers are aware, the infinite loop can not be reached for indentations from -1 to -65536 / max_recursion_depth_as_limited_by_stack_size but users of negative indents are encouraged to consider their service affected even if the infinite loop seems unreachable.\n\n### Example\n\n```python\nimport ujson\n\ndef example(depth, indent):\n    a = [0]\n    for i in range(1000):\n        a = [a]\n    ujson.dumps(a, indent=indent)\n\nexample(1, 2**30)  # segfault\nexample(1000, -200)  # infinite loop\n```\n\n### Patches\n\nujson 5.12.0, containing 486bd4553dc471a1de11613bc7347a6b318e37ea, promotes the integer types where the overflow occurred, skips the indentation code path for negative indent (which was supposed to be a no-op) and places an artificial cap of 1000 on the `indent` parameter.\n\n### Workarounds\n\nUsers who don't wish to upgrade can either use a fixed indentation, no indentation or ensure indentation is non-negative and not enormous (below `2**31 / max_recursion_depth_as_limited_by_stack_size`).\n\n### References\n\nThe original bug report can be found at https://github.com/ultrajson/ultrajson/issues/700\n\nThis issue was independently discovered by @coco1629, @EthanKim88 and @vmfunc.",
+      "published": "2026-03-18T13:01:24Z",
+      "modified": "2026-03-23T05:03:52.510168157Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/ultrajson/ultrajson/security/advisories/GHSA-c8rr-9gxc-jprv"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-32875"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/ultrajson/ultrajson/issues/700"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/ultrajson/ultrajson/commit/486bd4553dc471a1de11613bc7347a6b318e37ea"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/ultrajson/ultrajson"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-c8rr-9gxc-jprv",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "5.1.0"
+            },
+            {
+              "fixed": "5.12.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "5.1.0",
+        "5.10.0",
+        "5.11.0",
+        "5.2.0",
+        "5.3.0",
+        "5.4.0",
+        "5.5.0",
+        "5.6.0",
+        "5.7.0",
+        "5.8.0",
+        "5.9.0"
+      ],
+      "affected_conda_versions": [
+        "5.1.0",
+        "5.2.0",
+        "5.3.0",
+        "5.4.0",
+        "5.5.0",
+        "5.7.0",
+        "5.8.0",
+        "5.9.0",
+        "5.10.0",
+        "5.11.0"
+      ]
+    },
+    {
+      "id": "GHSA-fh56-85cw-5pq6",
+      "primary_id": "CVE-2021-45958",
+      "aliases": [
+        "CVE-2021-45958",
+        "PYSEC-2022-25"
+      ],
+      "cve_ids": [
+        "CVE-2021-45958"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "ujson",
+      "summary": "UltraJSON vulnerable to Out-of-bounds Write",
+      "details": "UltraJSON (aka ujson) 1.34 through 5.1.0 has a stack-based buffer overflow in Buffer_AppendIndentUnchecked (called from encode).",
+      "published": "2022-01-21T23:27:45Z",
+      "modified": "2024-11-18T23:02:13.081685Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:P/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:U/C:N/I:N/A:H"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:P/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2021-45958"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/ultrajson/ultrajson/issues/501"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/ultrajson/ultrajson/issues/502#issuecomment-1031747284"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/ultrajson/ultrajson/pull/504"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/ultrajson/ultrajson/pull/519"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=36009"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/advisories/GHSA-fh56-85cw-5pq6"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/google/oss-fuzz-vulns/blob/main/vulns/ujson/OSV-2021-955.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/ujson/PYSEC-2022-25.yaml"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/ultrajson/ultrajson"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2022/02/msg00023.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/CN7W3GOXALINKFUUE7ICQIC2EF5HNKUQ"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/NAU5N4A7EUK2AMUCOLYDD5ARXAJYZBD2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/O6JUWQTJLA2CMG4CJN7DCUVSOXLZIIXL"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/ULX35TSWLBBIMEH44MUORPXYYRZKEDC6"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-fh56-85cw-5pq6",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "1.34"
+            },
+            {
+              "fixed": "5.2.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "1.34",
+        "1.35",
+        "2.0.0",
+        "2.0.1",
+        "2.0.2",
+        "2.0.3",
+        "3.0.0",
+        "3.1.0",
+        "3.2.0",
+        "4.0.0",
+        "4.0.1",
+        "4.0.2",
+        "4.1.0",
+        "4.2.0",
+        "4.3.0",
+        "5.0.0",
+        "5.1.0"
+      ],
+      "affected_conda_versions": [
+        "1.35",
+        "2.0.1",
+        "2.0.2",
+        "2.0.3",
+        "3.0.0",
+        "3.1.0",
+        "3.2.0",
+        "4.0.0",
+        "4.0.1",
+        "4.0.2",
+        "4.1.0",
+        "4.2.0",
+        "5.0.0",
+        "5.1.0"
+      ]
+    },
+    {
+      "id": "GHSA-fm67-cv37-96ff",
+      "primary_id": "CVE-2022-31117",
+      "aliases": [
+        "CVE-2022-31117"
+      ],
+      "cve_ids": [
+        "CVE-2022-31117"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "ujson",
+      "summary": "Potential double free of buffer during string decoding",
+      "details": "### Impact\n_What kind of vulnerability is it? Who is impacted?_\n\nWhen an error occurs while reallocating the buffer for string decoding, the buffer gets freed twice.\n\nDue to how UltraJSON uses the internal decoder, this double free is impossible to trigger from Python.\n\n### Patches\n_Has the problem been patched? What versions should users upgrade to?_\n\nUsers should upgrade to UltraJSON 5.4.0.\n\n### Workarounds\n_Is there a way for users to fix or remediate the vulnerability without upgrading?_\n\nThere is no workaround.\n\n### For more information\nIf you have any questions or comments about this advisory:\n* Open an issue in [UltraJSON](http://github.com/ultrajson/ultrajson/issues)\n",
+      "published": "2022-07-05T21:05:59Z",
+      "modified": "2024-02-21T05:31:42.092499Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/ultrajson/ultrajson/security/advisories/GHSA-fm67-cv37-96ff"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2022-31117"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/ultrajson/ultrajson/commit/9c20de0f77b391093967e25d01fb48671104b15b"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/ultrajson/ultrajson"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/NAU5N4A7EUK2AMUCOLYDD5ARXAJYZBD2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/OPPU5FZP3LCTXYORFH7NHUMYA5X66IA7"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-fm67-cv37-96ff",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "5.4.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "1.15",
+        "1.18",
+        "1.19",
+        "1.21",
+        "1.22",
+        "1.23",
+        "1.30",
+        "1.33",
+        "1.34",
+        "1.35",
+        "1.4",
+        "1.6",
+        "1.8",
+        "1.9",
+        "2.0.0",
+        "2.0.1",
+        "2.0.2",
+        "2.0.3",
+        "3.0.0",
+        "3.1.0",
+        "3.2.0",
+        "4.0.0",
+        "4.0.1",
+        "4.0.2",
+        "4.1.0",
+        "4.2.0",
+        "4.3.0",
+        "5.0.0",
+        "5.1.0",
+        "5.2.0",
+        "5.3.0"
+      ],
+      "affected_conda_versions": [
+        "1.35",
+        "2.0.1",
+        "2.0.2",
+        "2.0.3",
+        "3.0.0",
+        "3.1.0",
+        "3.2.0",
+        "4.0.0",
+        "4.0.1",
+        "4.0.2",
+        "4.1.0",
+        "4.2.0",
+        "5.0.0",
+        "5.1.0",
+        "5.2.0",
+        "5.3.0"
+      ]
+    },
+    {
+      "id": "GHSA-wgvc-ghv9-3pmm",
+      "primary_id": "CVE-2026-32874",
+      "aliases": [
+        "CVE-2026-32874"
+      ],
+      "cve_ids": [
+        "CVE-2026-32874"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "ujson",
+      "summary": "UltraJSON has a Memory Leak parsing large integers allows DoS ",
+      "details": "#### Summary\n\nujson 5.4.0 to 5.11.0 inclusive contain an accumulating memory leak in JSON parsing _large_ (outside of the range [-2^63, 2^64 - 1]) integers.\n\n#### Exploitability\n\nAny service that calls `ujson.load()`/`ujson.loads()`/`ujson.decode()` on untrusted inputs is affected and vulnerable to denial of service attacks.\n\n#### Details\n\nThe leaked memory is a copy of the string form of the integer plus an additional NULL byte. The leak occurs irrespective of whether the integer parses successfully or is rejected due to having more than `sys.get_int_max_str_digits()` digits, meaning that any sized leak per malicious JSON can be achieved provided that there is no limit on the overall size of the payload.\n\n```python\nujson.loads(str(2 ** 64 - 1))  # No leak\nujson.loads(str(2 ** 64))  # Leaks\nujson.loads(str(10 ** sys.get_int_max_str_digits()))  # Leaks and raises ValueError\n```\n\n#### Fix\n\nThe leak is fixed in `ujson 5.12.0` (4baeb950df780092bd3c89fc702a868e99a3a1d2). There are no workarounds beyond upgrading to an unaffected version.\n\n#### Credits\n\nDiscovered by Cameron Criswell/Skevros using Coverage-guided fuzzing (libFuzzer + AddressSanitizer)",
+      "published": "2026-03-18T13:01:15Z",
+      "modified": "2026-03-23T05:09:14.196864728Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/ultrajson/ultrajson/security/advisories/GHSA-wgvc-ghv9-3pmm"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-32874"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/ultrajson/ultrajson/commit/4baeb950df780092bd3c89fc702a868e99a3a1d2"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/ultrajson/ultrajson"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/ultrajson/ultrajson/releases/tag/5.12.0"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-wgvc-ghv9-3pmm",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "5.4.0"
+            },
+            {
+              "fixed": "5.12.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "5.10.0",
+        "5.11.0",
+        "5.4.0",
+        "5.5.0",
+        "5.6.0",
+        "5.7.0",
+        "5.8.0",
+        "5.9.0"
+      ],
+      "affected_conda_versions": [
+        "5.4.0",
+        "5.5.0",
+        "5.7.0",
+        "5.8.0",
+        "5.9.0",
+        "5.10.0",
+        "5.11.0"
+      ]
+    },
+    {
+      "id": "GHSA-wpqr-jcpx-745r",
+      "primary_id": "CVE-2022-31116",
+      "aliases": [
+        "CVE-2022-31116"
+      ],
+      "cve_ids": [
+        "CVE-2022-31116"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "ujson",
+      "summary": "Incorrect handling of invalid surrogate pair characters",
+      "details": "### Impact\n_What kind of vulnerability is it? Who is impacted?_\n\nAnyone parsing JSON from an untrusted source is vulnerable.\n\nJSON strings that contain escaped surrogate characters not part of a proper surrogate pair were decoded incorrectly. Besides corrupting strings, this allowed for potential key confusion and value overwriting in dictionaries.\n\nExamples:\n\n```python\n# An unpaired high surrogate character is ignored.\n>>> ujson.loads(r'\"\\uD800\"')\n''\n>>> ujson.loads(r'\"\\uD800hello\"')\n'hello'\n\n# An unpaired low surrogate character is preserved.\n>>> ujson.loads(r'\"\\uDC00\"')\n'\\udc00'\n\n# A pair of surrogates with additional non surrogate characters pair up in spite of being invalid.\n>>> ujson.loads(r'\"\\uD800foo bar\\uDC00\"')\n'foo bar\ud800\udc00'\n```\n\n### Patches\n_Has the problem been patched? What versions should users upgrade to?_\n\nUsers should upgrade to UltraJSON 5.4.0.\n\nFrom version 5.4.0, UltraJSON decodes lone surrogates in the same way as the standard library's `json` module does, preserving them in the parsed output:\n\n```python3\n>>> ujson.loads(r'\"\\uD800\"')\n'\\ud800'\n>>> ujson.loads(r'\"\\uD800hello\"')\n'\\ud800hello'\n>>> ujson.loads(r'\"\\uDC00\"')\n'\\udc00'\n>>> ujson.loads(r'\"\\uD800foo bar\\uDC00\"')\n'\\ud800foo bar\\udc00'\n```\n\n### Workarounds\n_Is there a way for users to fix or remediate the vulnerability without upgrading?_\n\nShort of switching to an entirely different JSON library, there are no safe alternatives to upgrading.\n\n### For more information\nIf you have any questions or comments about this advisory:\n* Open an issue in [UltraJSON](http://github.com/ultrajson/ultrajson/issues)\n",
+      "published": "2022-07-05T21:06:00Z",
+      "modified": "2024-02-21T05:24:44.762164Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/ultrajson/ultrajson/security/advisories/GHSA-wpqr-jcpx-745r"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2022-31116"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/ultrajson/ultrajson/commit/67ec07183342589d602e0fcf7bb1ff3e19272687"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/ultrajson/ultrajson"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/NAU5N4A7EUK2AMUCOLYDD5ARXAJYZBD2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/OPPU5FZP3LCTXYORFH7NHUMYA5X66IA7"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-wpqr-jcpx-745r",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "5.4.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "1.15",
+        "1.18",
+        "1.19",
+        "1.21",
+        "1.22",
+        "1.23",
+        "1.30",
+        "1.33",
+        "1.34",
+        "1.35",
+        "1.4",
+        "1.6",
+        "1.8",
+        "1.9",
+        "2.0.0",
+        "2.0.1",
+        "2.0.2",
+        "2.0.3",
+        "3.0.0",
+        "3.1.0",
+        "3.2.0",
+        "4.0.0",
+        "4.0.1",
+        "4.0.2",
+        "4.1.0",
+        "4.2.0",
+        "4.3.0",
+        "5.0.0",
+        "5.1.0",
+        "5.2.0",
+        "5.3.0"
+      ],
+      "affected_conda_versions": [
+        "1.35",
+        "2.0.1",
+        "2.0.2",
+        "2.0.3",
+        "3.0.0",
+        "3.1.0",
+        "3.2.0",
+        "4.0.0",
+        "4.0.1",
+        "4.0.2",
+        "4.1.0",
+        "4.2.0",
+        "5.0.0",
+        "5.1.0",
+        "5.2.0",
+        "5.3.0"
+      ]
+    },
+    {
+      "id": "OSV-2021-1809",
+      "primary_id": "OSV-2021-1809",
+      "aliases": [],
+      "cve_ids": [],
+      "ecosystem": "PyPI",
+      "upstream_name": "ujson",
+      "summary": "Heap-buffer-overflow in ujson.cpython-38-x86_64-linux-gnu.so",
+      "details": "OSS-Fuzz report: https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=44973\n\n```\nCrash type: Heap-buffer-overflow WRITE 1\nCrash state:\nujson.cpython-38-x86_64-linux-gnu.so\nujson.cpython-38-x86_64-linux-gnu.so\nujson.cpython-38-x86_64-linux-gnu.so\n```\n",
+      "published": "2022-02-25T00:00:25.106722Z",
+      "modified": "2022-05-19T00:55:00.970552Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "REPORT",
+          "url": "https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=44973"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/OSV-2021-1809",
+      "osv_ranges": [],
+      "osv_versions": [
+        "5.1.0"
+      ],
+      "affected_conda_versions": [
+        "5.1.0"
+      ]
+    },
+    {
+      "id": "OSV-2021-955",
+      "primary_id": "OSV-2021-955",
+      "aliases": [],
+      "cve_ids": [],
+      "ecosystem": "PyPI",
+      "upstream_name": "ujson",
+      "summary": "Stack-buffer-overflow in Buffer_AppendIndentUnchecked",
+      "details": "OSS-Fuzz report: https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=36009\n\n```\nCrash type: Stack-buffer-overflow WRITE 1\nCrash state:\nBuffer_AppendIndentUnchecked\nencode\nencode\n```\n",
+      "published": "2021-07-11T00:01:05.153778Z",
+      "modified": "2022-05-19T00:45:08.957102Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "REPORT",
+          "url": "https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=36009"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/OSV-2021-955",
+      "osv_ranges": [],
+      "osv_versions": [
+        "2.0.0",
+        "2.0.1",
+        "2.0.2",
+        "2.0.3",
+        "3.0.0",
+        "3.1.0",
+        "3.2.0",
+        "4.0.0",
+        "4.0.1",
+        "4.0.2",
+        "4.1.0",
+        "4.2.0",
+        "4.3.0",
+        "5.0.0",
+        "5.1.0",
+        "v1.34",
+        "v1.35"
+      ],
+      "affected_conda_versions": [
+        "2.0.1",
+        "2.0.2",
+        "2.0.3",
+        "3.0.0",
+        "3.1.0",
+        "3.2.0",
+        "4.0.0",
+        "4.0.1",
+        "4.0.2",
+        "4.1.0",
+        "4.2.0",
+        "5.0.0",
+        "5.1.0"
+      ]
+    },
+    {
+      "id": "PYSEC-2022-25",
+      "primary_id": "CVE-2021-45958",
+      "aliases": [
+        "CVE-2021-45958",
+        "GHSA-fh56-85cw-5pq6"
+      ],
+      "cve_ids": [
+        "CVE-2021-45958"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "ujson",
+      "summary": null,
+      "details": "UltraJSON (aka ujson) through 5.1.0 has a stack-based buffer overflow in Buffer_AppendIndentUnchecked (called from encode). Exploitation can, for example, use a large amount of indentation.",
+      "published": "2022-01-01T00:15:00Z",
+      "modified": "2023-11-08T04:07:24.600926Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/google/oss-fuzz-vulns/blob/main/vulns/ujson/OSV-2021-955.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=36009"
+        },
+        {
+          "type": "REPORT",
+          "url": "https://github.com/ultrajson/ultrajson/issues/501"
+        },
+        {
+          "type": "REPORT",
+          "url": "https://github.com/ultrajson/ultrajson/issues/502#issuecomment-1031747284"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/advisories/GHSA-fh56-85cw-5pq6"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2022-25",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "4.0.2"
+            },
+            {
+              "fixed": "5.1.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "4.0.2",
+        "4.1.0",
+        "4.2.0",
+        "4.3.0",
+        "5.0.0"
+      ],
+      "affected_conda_versions": [
+        "4.0.2",
+        "4.1.0",
+        "4.2.0",
+        "5.0.0"
+      ]
+    }
+  ]
+}

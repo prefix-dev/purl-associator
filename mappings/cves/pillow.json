@@ -4,7 +4,7 @@
   "purls": [
     "pkg:pypi/pillow"
   ],
-  "generated_at": "2026-05-11T09:28:41+00:00",
+  "generated_at": "2026-05-18T06:01:40+00:00",
   "conda_versions_total": 59,
   "advisories": [
     {
@@ -1977,6 +1977,7 @@
       "id": "GHSA-5xmw-vc9v-4wf2",
       "primary_id": "CVE-2026-42309",
       "aliases": [
+        "BIT-pillow-2026-42309",
         "CVE-2026-42309"
       ],
       "cve_ids": [
@@ -1987,12 +1988,16 @@
       "summary": "Pillow has a heap buffer overflow with nested list coordinates",
       "details": "Passing nested lists as coordinates to APIs that accept coordinates such as `ImagePath.Path`, `ImageDraw.ImageDraw.polygon` and `ImageDraw.ImageDraw.line` could cause a heap buffer overflow, as nested lists were recursively unpacked beyond the allocated buffer. Coordinate lists are now validated to contain exactly two numeric coordinates. This was introduced in Pillow 11.2.1.",
       "published": "2026-05-04T20:18:27Z",
-      "modified": "2026-05-11T00:41:12.077164151Z",
+      "modified": "2026-05-13T13:55:36.334377Z",
       "severity": {
         "type": "CVSS_V4",
         "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
       },
       "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+        },
         {
           "type": "CVSS_V4",
           "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
@@ -2004,8 +2009,16 @@
           "url": "https://github.com/python-pillow/Pillow/security/advisories/GHSA-5xmw-vc9v-4wf2"
         },
         {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-42309"
+        },
+        {
           "type": "PACKAGE",
           "url": "https://github.com/python-pillow/Pillow"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/python-pillow/Pillow/releases/tag/12.2.0"
         }
       ],
       "osv_url": "https://osv.dev/vulnerability/GHSA-5xmw-vc9v-4wf2",
@@ -7838,6 +7851,7 @@
       "id": "GHSA-pwv6-vv43-88gr",
       "primary_id": "CVE-2026-42311",
       "aliases": [
+        "BIT-pillow-2026-42311",
         "CVE-2026-42311"
       ],
       "cve_ids": [
@@ -7848,7 +7862,7 @@
       "summary": "Pillow has an OOB Write with Invalid PSD Tile Extents (Integer Overflow)",
       "details": "### Impact\nProcessing a malicious PSD file could lead to memory corruption, potentially resulting in a crash or arbitrary code execution.\n\n### Patches\nPatched version: 12.2.0\n\nPillow 12.1.1 addressed CVE-2026-25990 by adding checks for tile extents in PSD image decoding/encoding to prevent an out-of-bounds write. However, the bounds checks computed tile extent sums using types susceptible to integer overflow, meaning a PSD image with carefully chosen tile dimensions could produce values that wrap around and bypass the checks, still triggering an out-of-bounds write in src/decode.c and src/encode.c. The fix avoids adding extents together before comparison.\n\n### Workarounds\nUse any version but affected versions: >= 10.3.0, < 12.2.0\n\n### Resources\n - Fix: https://github.com/python-pillow/Pillow/pull/9520 \n - Original issue: CVE-2026-25990 (Pillow 12.1.1)",
       "published": "2026-05-04T20:20:31Z",
-      "modified": "2026-05-11T00:41:28.363463245Z",
+      "modified": "2026-05-13T13:56:20.293368Z",
       "severity": {
         "type": "CVSS_V4",
         "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
@@ -7869,12 +7883,24 @@
           "url": "https://github.com/python-pillow/Pillow/security/advisories/GHSA-pwv6-vv43-88gr"
         },
         {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-42311"
+        },
+        {
           "type": "WEB",
           "url": "https://github.com/python-pillow/Pillow/pull/9520"
         },
         {
+          "type": "WEB",
+          "url": "https://github.com/python-pillow/Pillow/commit/58f9a1d166dcb0c274807d4423522d205b0c35ea"
+        },
+        {
           "type": "PACKAGE",
           "url": "https://github.com/python-pillow/Pillow"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/python-pillow/Pillow/releases/tag/12.2.0"
         }
       ],
       "osv_url": "https://osv.dev/vulnerability/GHSA-pwv6-vv43-88gr",
@@ -8208,6 +8234,7 @@
       "id": "GHSA-r73j-pqj5-w3x7",
       "primary_id": "CVE-2026-42310",
       "aliases": [
+        "BIT-pillow-2026-42310",
         "CVE-2026-42310"
       ],
       "cve_ids": [
@@ -8218,12 +8245,16 @@
       "summary": "Pillow has a PDF Parsing Trailer Infinite Loop (DoS)",
       "details": "### Impact\nAn attacker can supply a malicious PDF that causes the process to hang indefinitely, consuming 100% CPU and making the application unresponsive.\n\n### Patches\nPatched version: 12.2.0.\n\nPdfParser (introduced in Pillow 4.2.0) follows Prev pointers in PDF trailers to read cross-reference sections. If a\ntrailer's Prev pointer references an offset that has already been processed \u2014 either pointing to itself or forming a\nlonger cycle \u2014 the parser enters an infinite loop. Pillow now tracks previously processed trailer offsets and raises an\nerror if a cycle is detected.\n\n### Workarounds\nUse any version but the affected versions: >= 4.2.0, < 12.2.0\n\n### Resources\n - Fix: https://github.com/python-pillow/Pillow/pull/9519",
       "published": "2026-05-04T20:19:30Z",
-      "modified": "2026-05-05T20:14:24.620101798Z",
+      "modified": "2026-05-13T13:56:38.908970Z",
       "severity": {
         "type": "CVSS_V4",
         "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
       },
       "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+        },
         {
           "type": "CVSS_V4",
           "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
@@ -8235,12 +8266,24 @@
           "url": "https://github.com/python-pillow/Pillow/security/advisories/GHSA-r73j-pqj5-w3x7"
         },
         {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-42310"
+        },
+        {
           "type": "WEB",
           "url": "https://github.com/python-pillow/Pillow/pull/9519"
         },
         {
+          "type": "WEB",
+          "url": "https://github.com/python-pillow/Pillow/commit/3bf614e4b8615d0ce1d5039efaf6db447fe7c468"
+        },
+        {
           "type": "PACKAGE",
           "url": "https://github.com/python-pillow/Pillow"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/python-pillow/Pillow/releases/tag/12.2.0"
         }
       ],
       "osv_url": "https://osv.dev/vulnerability/GHSA-r73j-pqj5-w3x7",
@@ -9796,6 +9839,7 @@
       "id": "GHSA-wjx4-4jcj-g98j",
       "primary_id": "CVE-2026-42308",
       "aliases": [
+        "BIT-pillow-2026-42308",
         "CVE-2026-42308"
       ],
       "cve_ids": [
@@ -9806,12 +9850,16 @@
       "summary": "Pillow has an integer overflow when processing fonts",
       "details": "If a font advances for each glyph by an exceeding large amount, when Pillow keeps track of the current position, it may lead to an integer overflow. This has been fixed.",
       "published": "2026-05-04T20:18:45Z",
-      "modified": "2026-05-11T00:41:20.475760751Z",
+      "modified": "2026-05-13T13:54:15.361204Z",
       "severity": {
         "type": "CVSS_V4",
         "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
       },
       "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+        },
         {
           "type": "CVSS_V4",
           "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
@@ -9823,8 +9871,16 @@
           "url": "https://github.com/python-pillow/Pillow/security/advisories/GHSA-wjx4-4jcj-g98j"
         },
         {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-42308"
+        },
+        {
           "type": "PACKAGE",
           "url": "https://github.com/python-pillow/Pillow"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/python-pillow/Pillow/releases/tag/12.2.0"
         }
       ],
       "osv_url": "https://osv.dev/vulnerability/GHSA-wjx4-4jcj-g98j",

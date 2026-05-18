@@ -1,0 +1,225 @@
+{
+  "schema_version": 1,
+  "package": "nbdime",
+  "purls": [
+    "pkg:pypi/nbdime"
+  ],
+  "generated_at": "2026-05-18T06:01:40+00:00",
+  "conda_versions_total": 28,
+  "advisories": [
+    {
+      "id": "GHSA-p6rw-44q7-3fw4",
+      "primary_id": "CVE-2021-41134",
+      "aliases": [
+        "CVE-2021-41134",
+        "PYSEC-2021-428"
+      ],
+      "cve_ids": [
+        "CVE-2021-41134"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "nbdime",
+      "summary": "Stored XSS in Jupyter nbdime",
+      "details": "### Impact\n\nImproper handling of user controlled input caused a stored cross-site scripting (XSS) vulnerability. All previous versions of nbdime are affected.\n\n### Patches\n\nSecurity patches will be released for each of the major versions of the nbdime packages since version 1.x of the nbdime python package.\n\n#### Python\n- nbdime 1.x: Patched in v. 1.1.1\n- nbdime 2.x: Patched in v. 2.1.1\n- nbdime 3.x: Patched in v. 3.1.1\n\n#### npm\n- nbdime 6.x version: Patched in 6.1.2\n- nbdime 5.x version: Patched in 5.0.2\n- nbdime-jupyterlab 1.x version: Patched in 1.0.1\n- nbdime-jupyterlab 2.x version: Patched in 2.1.1\n\n### For more information\nIf you have any questions or comments about this advisory email us at [security@ipython.org](mailto:security@ipython.org).\n\n\n",
+      "published": "2021-11-08T18:09:27Z",
+      "modified": "2026-03-13T22:00:45.793342Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:P/VC:N/VI:N/VA:N/SC:H/SI:H/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:R/S:C/C:H/I:H/A:N"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:P/VC:N/VI:N/VA:N/SC:H/SI:H/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyter/nbdime/security/advisories/GHSA-p6rw-44q7-3fw4"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2021-41134"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyter/nbdime/commit/e44a5cc7677f24b45ebafc756db49058c2f750ea"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/jupyter/nbdime"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/nbdime/PYSEC-2021-428.yaml"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-p6rw-44q7-3fw4",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.1.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1.0",
+        "0.1.0.dev",
+        "0.1.0b1",
+        "0.1.1",
+        "0.1.2",
+        "0.2.0",
+        "0.3.0",
+        "0.4.0",
+        "0.4.1",
+        "1.0.0",
+        "1.0.0rc0",
+        "1.0.0rc1",
+        "1.0.1",
+        "1.0.2",
+        "1.0.3",
+        "1.0.4",
+        "1.0.5",
+        "1.0.6",
+        "1.0.7",
+        "1.1.0"
+      ],
+      "affected_conda_versions": [
+        "0.1.0",
+        "0.1.1",
+        "0.1.2",
+        "0.2.0",
+        "0.3.0",
+        "0.4.0",
+        "0.4.1",
+        "1.0.0",
+        "1.0.1",
+        "1.0.2",
+        "1.0.3",
+        "1.0.4",
+        "1.0.5",
+        "1.0.6",
+        "1.0.7",
+        "1.1.0",
+        "2.0.0",
+        "2.1.0",
+        "3.0.0",
+        "3.1.0"
+      ]
+    },
+    {
+      "id": "PYSEC-2021-428",
+      "primary_id": "CVE-2021-41134",
+      "aliases": [
+        "CVE-2021-41134",
+        "GHSA-p6rw-44q7-3fw4"
+      ],
+      "cve_ids": [
+        "CVE-2021-41134"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "nbdime",
+      "summary": null,
+      "details": "nbdime provides tools for diffing and merging of Jupyter Notebooks. In affected versions a stored cross-site scripting (XSS) issue exists within the Jupyter-owned nbdime project. It appears that when reading the file name and path from disk, the extension does not sanitize the string it constructs before returning it to be displayed. The diffNotebookCheckpoint function within nbdime causes this issue. When attempting to display the name of the local notebook (diffNotebookCheckpoint), nbdime appears to simply append .ipynb to the name of the input file. The NbdimeWidget is then created, and the base string is passed through to the request API function. From there, the frontend simply renders the HTML tag and anything along with it. Users are advised to patch to the most recent version of the affected product.",
+      "published": "2021-11-03T18:15:00Z",
+      "modified": "2023-11-08T04:06:52.416770Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "FIX",
+          "url": "https://github.com/jupyter/nbdime/commit/e44a5cc7677f24b45ebafc756db49058c2f750ea"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/jupyter/nbdime/security/advisories/GHSA-p6rw-44q7-3fw4"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2021-428",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.1.1"
+            },
+            {
+              "introduced": "2.0.0"
+            },
+            {
+              "fixed": "2.1.1"
+            },
+            {
+              "introduced": "3.0.0"
+            },
+            {
+              "fixed": "3.1.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1.0",
+        "0.1.0.dev",
+        "0.1.0b1",
+        "0.1.1",
+        "0.1.2",
+        "0.2.0",
+        "0.3.0",
+        "0.4.0",
+        "0.4.1",
+        "1.0.0",
+        "1.0.0rc0",
+        "1.0.0rc1",
+        "1.0.1",
+        "1.0.2",
+        "1.0.3",
+        "1.0.4",
+        "1.0.5",
+        "1.0.6",
+        "1.0.7",
+        "1.1.0",
+        "2.0.0",
+        "2.1.0",
+        "3.0.0",
+        "3.1.0"
+      ],
+      "affected_conda_versions": [
+        "0.1.0",
+        "0.1.1",
+        "0.1.2",
+        "0.2.0",
+        "0.3.0",
+        "0.4.0",
+        "0.4.1",
+        "1.0.0",
+        "1.0.1",
+        "1.0.2",
+        "1.0.3",
+        "1.0.4",
+        "1.0.5",
+        "1.0.6",
+        "1.0.7",
+        "1.1.0",
+        "2.0.0",
+        "2.1.0",
+        "3.0.0",
+        "3.1.0"
+      ]
+    }
+  ]
+}

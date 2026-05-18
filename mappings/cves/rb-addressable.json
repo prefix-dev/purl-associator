@@ -1,0 +1,206 @@
+{
+  "schema_version": 1,
+  "package": "rb-addressable",
+  "purls": [
+    "pkg:gem/addressable"
+  ],
+  "generated_at": "2026-05-18T06:01:40+00:00",
+  "conda_versions_total": 9,
+  "advisories": [
+    {
+      "id": "GHSA-h27x-rffw-24p4",
+      "primary_id": "CVE-2026-35611",
+      "aliases": [
+        "CVE-2026-35611"
+      ],
+      "cve_ids": [
+        "CVE-2026-35611"
+      ],
+      "ecosystem": "RubyGems",
+      "upstream_name": "addressable",
+      "summary": "Addressable has a Regular Expression Denial of Service in Addressable templates",
+      "details": "### Impact\n\nWithin the URI template implementation in Addressable, two classes of URI template generate regular expressions vulnerable to catastrophic backtracking:\n\n1. Templates using the `*` (explode) modifier with any expansion operator (e.g., `{foo*}`, `{+var*}`, `{#var*}`, `{/var*}`, `{.var*}`, `{;var*}`, `{?var*}`, `{&var*}`) generate patterns with nested unbounded quantifiers that are O(2^n) when matched against a maliciously crafted URI.\n2. Templates using multiple variables with the `+` or `#` operators (e.g., `{+v1,v2,v3}`) generate patterns with O(n^k) complexity due to the comma separator being within the matched character class, causing ambiguous backtracking across k variables.\n\nWhen matched against a maliciously crafted URI, this can result in catastrophic backtracking and uncontrolled resource consumption, leading to denial of service. The first pattern was partially addressed in 2.8.10 for certain operator combinations. Both patterns are fully remediated in 2.9.0.\n\nUsers of the URI parsing capabilities in Addressable but not the URI template matching capabilities are unaffected.\n\n### Affected Versions\n\nThis vulnerability affects Addressable >= 2.3.0 (note: 2.3.0 and 2.3.1 were yanked; the earliest installable release is 2.3.2). It was partially fixed in version 2.8.10 and fully remediated in 2.9.0.\n\nThe vulnerability is more exploitable on MRI Ruby < 3.2 and on all versions of JRuby and TruffleRuby. MRI Ruby 3.2 and later ship with Onigmo 6.9, which introduces memoization that prevents catastrophic backtracking for the first class of template. JRuby and TruffleRuby do not implement equivalent memoization and remain vulnerable to all patterns.\n\nThis has been confirmed on the following runtimes:\n\n| Runtime | Status |\n|---------|--------|\n| MRI Ruby 2.6 | Vulnerable |\n| MRI Ruby 2.7 | Vulnerable |\n| MRI Ruby 3.0 | Vulnerable |\n| MRI Ruby 3.1 | Vulnerable |\n| MRI Ruby 3.2 | Partially vulnerable |\n| MRI Ruby 3.3 | Partially vulnerable |\n| MRI Ruby 3.4 | Partially vulnerable |\n| MRI Ruby 4.0 | Partially vulnerable |\n| JRuby 10.0 | Vulnerable |\n| TruffleRuby 21.2 | Vulnerable |\n\n### Workarounds\n\n- **Upgrade to MRI Ruby 3.2 or later**, if your application does not use JRuby or TruffleRuby. The Onigmo memoization introduced in MRI Ruby 3.2 prevents catastrophic backtracking from nested unbounded quantifiers (pattern 1 above \u2014 templates using the `*` modifier). It does not reliably mitigate the O(n^k) multi-variable case (pattern 2), so upgrading Ruby alone may not be sufficient if your templates use `{+v1,v2,...}` or `{#v1,v2,...}` syntax.\n\n- **Avoid using vulnerable template patterns** when matching user-supplied input on unpatched versions of the library:\n  - Templates using the `*` (explode) modifier: `{foo*}`, `{+var*}`, `{#var*}`, `{.var*}`, `{/var*}`, `{;var*}`, `{?var*}`, `{&var*}`\n  - Templates using multiple variables with the `+` or `#` operators: `{+v1,v2}`, `{#v1,v2,v3}`, etc.\n\n- **Apply a short timeout** around any call to `Template#match` or `Template#extract` that processes user-supplied data.\n\n### References\n\n- https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS\n- https://cwe.mitre.org/data/definitions/1333.html\n- https://www.regular-expressions.info/catastrophic.html\n\n### Credits\n\nDiscovered in collaboration with @jamfish.\n\n### For more information\n\nIf you have any questions or comments about this advisory:\n* [Open an issue](https://github.com/sporkmonger/addressable/issues)",
+      "published": "2026-04-08T00:05:27Z",
+      "modified": "2026-05-13T16:37:23.626309Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/sporkmonger/addressable/security/advisories/GHSA-h27x-rffw-24p4"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-35611"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/rubysec/ruby-advisory-db/blob/master/gems/addressable/CVE-2026-35611.yml"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/sporkmonger/addressable"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-h27x-rffw-24p4",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "2.3.0"
+            },
+            {
+              "fixed": "2.9.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "2.3.2",
+        "2.3.3",
+        "2.3.4",
+        "2.3.5",
+        "2.3.6",
+        "2.3.7",
+        "2.3.8",
+        "2.4.0",
+        "2.5.0",
+        "2.5.1",
+        "2.5.2",
+        "2.6.0",
+        "2.7.0",
+        "2.8.0",
+        "2.8.1",
+        "2.8.10",
+        "2.8.2",
+        "2.8.3",
+        "2.8.4",
+        "2.8.5",
+        "2.8.6",
+        "2.8.7",
+        "2.8.8",
+        "2.8.9"
+      ],
+      "affected_conda_versions": [
+        "2.6.0",
+        "2.7.0",
+        "2.8.5",
+        "2.8.6",
+        "2.8.7",
+        "2.8.8",
+        "2.8.9",
+        "2.8.10"
+      ]
+    },
+    {
+      "id": "GHSA-jxhc-q857-3j6g",
+      "primary_id": "CVE-2021-32740",
+      "aliases": [
+        "CVE-2021-32740"
+      ],
+      "cve_ids": [
+        "CVE-2021-32740"
+      ],
+      "ecosystem": "RubyGems",
+      "upstream_name": "addressable",
+      "summary": "Regular Expression Denial of Service in Addressable templates",
+      "details": "### Impact\n\nWithin the URI template implementation in Addressable, a maliciously crafted template may result in uncontrolled resource consumption, leading to denial of service when matched against a URI. In typical usage, templates would not normally be read from untrusted user input, but nonetheless, no previous security advisory for Addressable has cautioned against doing this. Users of the parsing capabilities in Addressable but not the URI template capabilities are unaffected.\n\n### Patches\n\nThe vulnerability was introduced in version 2.3.0 (previously yanked) and has been present in all subsequent versions up to, and including, 2.7.0. It is fixed in version 2.8.0.\n\n### Workarounds\n\nThe vulnerability can be avoided by only creating Template objects from trusted sources that have been validated not to produce catastrophic backtracking.\n\n### References\n\n- https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS\n- https://cwe.mitre.org/data/definitions/1333.html\n- https://www.regular-expressions.info/catastrophic.html\n\n### For more information\nIf you have any questions or comments about this advisory:\n* [Open an issue](https://github.com/sporkmonger/addressable/issues)",
+      "published": "2021-07-12T16:58:33Z",
+      "modified": "2026-04-06T23:16:29.686787Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/sporkmonger/addressable/security/advisories/GHSA-jxhc-q857-3j6g"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2021-32740"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/sporkmonger/addressable/commit/0d8a3127e35886ce9284810a7f2438bff6b43cbc"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/sporkmonger/addressable/commit/89c76130ce255c601f642a018cb5fb5a80e679a7"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/sporkmonger/addressable/commit/92685096b1f7235ed8986c03ce30a24972eed848#diff-fb36d3dc67e6565ffde17e666a98697f48e76dac38fabf1bb9e97cdf3b583d76"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/advisories/GHSA-jxhc-q857-3j6g"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/rubysec/ruby-advisory-db/blob/master/gems/addressable/CVE-2021-32740.yml"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/sporkmonger/addressable"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/SDFQM2NHNAZ3NNUQZEJTYECYZYXV4UDS"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/WYPVOOQU7UB277UUERJMCNQLRCXRCIQ5"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-jxhc-q857-3j6g",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "2.3.0"
+            },
+            {
+              "fixed": "2.8.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "2.3.2",
+        "2.3.3",
+        "2.3.4",
+        "2.3.5",
+        "2.3.6",
+        "2.3.7",
+        "2.3.8",
+        "2.4.0",
+        "2.5.0",
+        "2.5.1",
+        "2.5.2",
+        "2.6.0",
+        "2.7.0"
+      ],
+      "affected_conda_versions": [
+        "2.6.0",
+        "2.7.0"
+      ]
+    }
+  ]
+}

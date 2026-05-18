@@ -1,0 +1,193 @@
+{
+  "schema_version": 1,
+  "package": "eslint",
+  "purls": [
+    "pkg:npm/eslint"
+  ],
+  "generated_at": "2026-05-18T06:01:40+00:00",
+  "conda_versions_total": 103,
+  "advisories": [
+    {
+      "id": "GHSA-p5wg-g6qr-c7cg",
+      "primary_id": "CVE-2025-50537",
+      "aliases": [
+        "CVE-2025-50537"
+      ],
+      "cve_ids": [
+        "CVE-2025-50537"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "eslint",
+      "summary": "Withdrawn Advisory: eslint has a Stack Overflow when serializing objects with circular references",
+      "details": "## Withdrawn Advisory\nThis advisory has been withdrawn because RuleTester is used for testing rules during development and results in a error rather than crashing the application.\n\n## Original Description\n\nThere is a Stack Overflow vulnerability in eslint before 9.26.0 when serializing objects with circular references in `eslint/lib/shared/serialization.js`. The exploit is triggered via the `RuleTester.run()` method, which validates test cases and checks for duplicates. During validation, the internal function `checkDuplicateTestCase()` is called, which in turn uses the `isSerializable()` function for serialization checks. When a circular reference object is passed in, `isSerializable()` enters infinite recursion, ultimately causing a Stack Overflow.",
+      "published": "2026-01-26T18:31:29Z",
+      "modified": "2026-02-04T04:22:54.633389Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:U/C:N/I:N/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-50537"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/eslint/eslint/issues/19646"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/eslint/eslint/commit/d683aebc8e0792e4f80bd1488c705c90f22c317e"
+        },
+        {
+          "type": "WEB",
+          "url": "https://gist.github.com/lyyffee/2ee1815e5c2da82c05e9838b9bfefbbc"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/eslint/eslint"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-p5wg-g6qr-c7cg",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "9.26.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "8.10.0",
+        "8.11.0",
+        "8.12.0",
+        "8.13.0",
+        "8.14.0",
+        "8.15.0",
+        "8.16.0",
+        "8.17.0",
+        "8.18.0",
+        "8.19.0",
+        "8.20.0",
+        "8.21.0",
+        "8.22.0",
+        "8.23.0",
+        "8.23.1",
+        "8.24.0",
+        "8.25.0",
+        "8.26.0",
+        "8.27.0",
+        "8.28.0",
+        "8.29.0",
+        "8.30.0",
+        "8.31.0",
+        "8.32.0",
+        "8.33.0",
+        "8.34.0",
+        "8.35.0",
+        "8.36.0",
+        "8.37.0",
+        "8.38.0",
+        "8.39.0",
+        "8.40.0",
+        "8.41.0",
+        "8.42.0",
+        "8.43.0",
+        "8.44.0",
+        "8.45.0",
+        "8.46.0",
+        "8.47.0",
+        "8.48.0",
+        "8.49.0",
+        "8.50.0",
+        "8.51.0",
+        "8.52.0",
+        "8.53.0",
+        "8.54.0",
+        "8.55.0",
+        "8.56.0",
+        "8.57.0",
+        "9.0.0",
+        "9.1.0",
+        "9.1.1",
+        "9.2.0",
+        "9.3.0",
+        "9.4.0",
+        "9.5.0",
+        "9.6.0",
+        "9.7.0",
+        "9.8.0",
+        "9.9.0",
+        "9.9.1",
+        "9.10.0",
+        "9.11.0",
+        "9.11.1",
+        "9.12.0",
+        "9.13.0",
+        "9.14.0",
+        "9.17.0",
+        "9.18.0",
+        "9.19.0",
+        "9.20.1",
+        "9.21.0",
+        "9.22.0",
+        "9.23.0",
+        "9.24.0",
+        "9.25.0",
+        "9.25.1"
+      ]
+    },
+    {
+      "id": "GHSA-jcgq-xh2f-2hfm",
+      "primary_id": "GHSA-jcgq-xh2f-2hfm",
+      "aliases": [],
+      "cve_ids": [],
+      "ecosystem": "npm",
+      "upstream_name": "eslint",
+      "summary": "Regular Expression Denial of Service",
+      "details": "A vulnerability was descovered in eslint before 4.18.2. One of the regexes in eslint is vulnerable to catastrophic backtracking.",
+      "published": "2021-02-25T01:20:42Z",
+      "modified": "2021-02-25T01:20:42Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/eslint/eslint/issues/10002"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/eslint/eslint/commit/f6901d0bcf6c918ac4e5c6c7c4bddeb2cb715c09"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-jcgq-xh2f-2hfm",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "4.18.2"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": []
+    }
+  ]
+}

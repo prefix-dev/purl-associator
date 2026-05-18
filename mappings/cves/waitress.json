@@ -1,0 +1,2535 @@
+{
+  "schema_version": 1,
+  "package": "waitress",
+  "purls": [
+    "pkg:pypi/waitress"
+  ],
+  "generated_at": "2026-05-18T06:01:40+00:00",
+  "conda_versions_total": 14,
+  "advisories": [
+    {
+      "id": "GHSA-3f84-rpwh-47g6",
+      "primary_id": "CVE-2024-49769",
+      "aliases": [
+        "CVE-2024-49769",
+        "PYSEC-2024-211"
+      ],
+      "cve_ids": [
+        "CVE-2024-49769"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "waitress",
+      "summary": "Waitress vulnerable to DoS leading to high CPU usage/resource exhaustion",
+      "details": "### Impact\n\nWhen a remote client closes the connection before waitress has had the opportunity to call `getpeername()` waitress won't correctly clean up the connection leading to the main thread attempting to write to a socket that no longer exists, but not removing it from the list of sockets to attempt to process. This leads to a busy-loop calling the write function.\n\nA remote attacker could run waitress out of available sockets with very little resources required.\n\n### Patches\n\nWaitress 3.0.1 contains fixes that remove the race condition.\n\n### Workarounds\n\nNo work-around.\n\n### References\n\n- https://github.com/Pylons/waitress/issues/418\n- https://github.com/Pylons/waitress/pull/435\n",
+      "published": "2024-10-29T14:33:00Z",
+      "modified": "2025-01-21T18:19:46.257061Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/Pylons/waitress/security/advisories/GHSA-3f84-rpwh-47g6"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-49769"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/Pylons/waitress/issues/418"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/Pylons/waitress/pull/435"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/Pylons/waitress/commit/1ae4e894c9f76543bee06584001583fc6fa8c95c"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/Pylons/waitress"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/waitress/PYSEC-2024-211.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2024/11/msg00012.html"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-3f84-rpwh-47g6",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "3.0.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1",
+        "0.2",
+        "0.3",
+        "0.4",
+        "0.5",
+        "0.6",
+        "0.6.1",
+        "0.7",
+        "0.8",
+        "0.8.1",
+        "0.8.10",
+        "0.8.11b0",
+        "0.8.2",
+        "0.8.3",
+        "0.8.4",
+        "0.8.5",
+        "0.8.6",
+        "0.8.7",
+        "0.8.8",
+        "0.8.9",
+        "0.9.0",
+        "0.9.0b0",
+        "0.9.0b1",
+        "1.0.0",
+        "1.0.1",
+        "1.0.2",
+        "1.0a1",
+        "1.0a2",
+        "1.1.0",
+        "1.2.0",
+        "1.2.0b1",
+        "1.2.0b2",
+        "1.2.0b3",
+        "1.2.1",
+        "1.3.0",
+        "1.3.0b0",
+        "1.3.1",
+        "1.4.0",
+        "1.4.1",
+        "1.4.2",
+        "1.4.3",
+        "1.4.4",
+        "2.0.0",
+        "2.0.0b0",
+        "2.0.0b1",
+        "2.1.0",
+        "2.1.0b0",
+        "2.1.1",
+        "2.1.2",
+        "3.0.0"
+      ],
+      "affected_conda_versions": [
+        "1.1.0",
+        "1.2.0",
+        "1.2.1",
+        "1.3.0",
+        "1.3.1",
+        "1.4.1",
+        "1.4.3",
+        "1.4.4",
+        "2.0.0",
+        "2.1.0",
+        "2.1.1",
+        "2.1.2",
+        "3.0.0"
+      ]
+    },
+    {
+      "id": "GHSA-4f7p-27jc-3c36",
+      "primary_id": "CVE-2022-24761",
+      "aliases": [
+        "CVE-2022-24761",
+        "PYSEC-2022-169"
+      ],
+      "cve_ids": [
+        "CVE-2022-24761"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "waitress",
+      "summary": "HTTP Request Smuggling in waitress",
+      "details": "### Impact\n\nWhen using Waitress behind a proxy that does not properly validate the incoming HTTP request matches the RFC7230 standard, Waitress and the frontend proxy may disagree on where one request starts and where it ends.\n\nThis would allow requests to be smuggled via the front-end proxy to waitress and later behavior.\n\nThere are two classes of vulnerability that may lead to request smuggling that are addressed by this advisory:\n\n- The use of Python's `int()` to parse strings into integers, leading to `+10` to be parsed as `10`, or `0x01` to be parsed as `1`, where as the standard specifies that the string should contain only digits or hex digits.\n- Waitress does not support chunk extensions, however it was discarding them without validating that they did not contain illegal characters\n\n### Patches\n\nThis has been fixed in Waitress 2.1.1\n\n### Workarounds\n\nWhen deploying a proxy in front of waitress, turning on any and all functionality to make sure that the request matches the RFC7230 standard. Certain proxy servers may not have this functionality though and users are encouraged to upgrade to the latest version of waitress instead.\n\n### References\n\n- https://portswigger.net/research/http-desync-attacks-request-smuggling-reborn\n\n### For more information\n\nIf you have any questions or comments about this advisory:\n* Open an issue in [the Github issue tracker](https://github.com/Pylons/waitress/issues) (if not security related/sensitive)\n* Email us at [pylons-project-security@googlegroups.com](mailto:pylons-project-security@googlegroups.com) (If security related or sensitive)\n",
+      "published": "2022-03-18T19:00:59Z",
+      "modified": "2024-11-19T16:22:31.940218Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:H/VA:N/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:H/VA:N/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/Pylons/waitress/security/advisories/GHSA-4f7p-27jc-3c36"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2022-24761"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/Pylons/waitress/commit/9e0b8c801e4d505c2ffc91b891af4ba48af715e0"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/Pylons/waitress"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/Pylons/waitress/releases/tag/v2.1.1"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/waitress/PYSEC-2022-169.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2022/05/msg00011.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.debian.org/security/2022/dsa-5138"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-4f7p-27jc-3c36",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.1.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1",
+        "0.2",
+        "0.3",
+        "0.4",
+        "0.5",
+        "0.6",
+        "0.6.1",
+        "0.7",
+        "0.8",
+        "0.8.1",
+        "0.8.10",
+        "0.8.11b0",
+        "0.8.2",
+        "0.8.3",
+        "0.8.4",
+        "0.8.5",
+        "0.8.6",
+        "0.8.7",
+        "0.8.8",
+        "0.8.9",
+        "0.9.0",
+        "0.9.0b0",
+        "0.9.0b1",
+        "1.0.0",
+        "1.0.1",
+        "1.0.2",
+        "1.0a1",
+        "1.0a2",
+        "1.1.0",
+        "1.2.0",
+        "1.2.0b1",
+        "1.2.0b2",
+        "1.2.0b3",
+        "1.2.1",
+        "1.3.0",
+        "1.3.0b0",
+        "1.3.1",
+        "1.4.0",
+        "1.4.1",
+        "1.4.2",
+        "1.4.3",
+        "1.4.4",
+        "2.0.0",
+        "2.0.0b0",
+        "2.0.0b1",
+        "2.1.0",
+        "2.1.0b0"
+      ],
+      "affected_conda_versions": [
+        "1.1.0",
+        "1.2.0",
+        "1.2.1",
+        "1.3.0",
+        "1.3.1",
+        "1.4.1",
+        "1.4.3",
+        "1.4.4",
+        "2.0.0",
+        "2.1.0"
+      ]
+    },
+    {
+      "id": "GHSA-4ppp-gpcr-7qf6",
+      "primary_id": "CVE-2019-16792",
+      "aliases": [
+        "CVE-2019-16792",
+        "GHSA-j7j6-7hfx-5522",
+        "PYSEC-2020-178"
+      ],
+      "cve_ids": [
+        "CVE-2019-16792"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "waitress",
+      "summary": "HTTP Request Smuggling: Content-Length Sent Twice in Waitress",
+      "details": "### Impact\n\nWaitress would header fold a double `Content-Length` header and due to being unable to cast the now comma separated value to an integer would set the `Content-Length` to 0 internally.\n\nSo a request with:\n\n```\nContent-Length: 10\nContent-Length: 10\n```\n\nwould get transformed to:\n\n```\nContent-Length: 10, 10\n```\n\nWhich would Waitress would then internally set to `Content-Lenght: 0`.\n\nWaitress would then treat the request as having no body, thereby treating the body of the request as a new request in HTTP pipelining.\n\n### Patches\n\nThis issue is fixed in Waitress 1.4.0. This brings a range of changes to harden Waitress against potential HTTP request confusions, and may change the behaviour of Waitress behind non-conformist proxies. \n\nThe Pylons Project recommends upgrading as soon as possible, while validating that the changes in Waitress don't cause any changes in behavior.\n\n### Workarounds\n\nVarious reverse proxies may have protections against sending potentially bad HTTP requests to the backend, and or hardening against potential issues like this. If the reverse proxy doesn't use HTTP/1.1 for connecting to the backend issues are also somewhat mitigated, as HTTP pipelining does not exist in HTTP/1.0 and Waitress will close the connection after every single request (unless the Keep Alive header is explicitly sent... so this is not a fool proof security method).\n\n### Issues/more security issues:\n\n* open an issue at https://github.com/Pylons/waitress/issues (if not sensitive or security related)\n* email the Pylons Security mailing list: pylons-project-security@googlegroups.com (if security related)",
+      "published": "2019-12-20T23:04:35Z",
+      "modified": "2026-03-13T22:14:58.976084Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/Pylons/waitress/security/advisories/GHSA-4ppp-gpcr-7qf6"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2019-16792"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/Pylons/waitress/commit/575994cd42e83fd772a5f7ec98b2c56751bd3f65"
+        },
+        {
+          "type": "WEB",
+          "url": "https://docs.pylonsproject.org/projects/waitress/en/latest/#security-fixes"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/Pylons/waitress"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/waitress/PYSEC-2020-178.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2022/05/msg00011.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.oracle.com/security-alerts/cpuapr2022.html"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-4ppp-gpcr-7qf6",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.4.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1",
+        "0.2",
+        "0.3",
+        "0.4",
+        "0.5",
+        "0.6",
+        "0.6.1",
+        "0.7",
+        "0.8",
+        "0.8.1",
+        "0.8.10",
+        "0.8.11b0",
+        "0.8.2",
+        "0.8.3",
+        "0.8.4",
+        "0.8.5",
+        "0.8.6",
+        "0.8.7",
+        "0.8.8",
+        "0.8.9",
+        "0.9.0",
+        "0.9.0b0",
+        "0.9.0b1",
+        "1.0.0",
+        "1.0.1",
+        "1.0.2",
+        "1.0a1",
+        "1.0a2",
+        "1.1.0",
+        "1.2.0",
+        "1.2.0b1",
+        "1.2.0b2",
+        "1.2.0b3",
+        "1.2.1",
+        "1.3.0",
+        "1.3.0b0",
+        "1.3.1"
+      ],
+      "affected_conda_versions": [
+        "1.1.0",
+        "1.2.0",
+        "1.2.1",
+        "1.3.0",
+        "1.3.1"
+      ]
+    },
+    {
+      "id": "GHSA-9298-4cf8-g4wj",
+      "primary_id": "CVE-2024-49768",
+      "aliases": [
+        "CVE-2024-49768",
+        "PYSEC-2024-210"
+      ],
+      "cve_ids": [
+        "CVE-2024-49768"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "waitress",
+      "summary": "Waitress has request processing race condition in HTTP pipelining with invalid first request",
+      "details": "### Impact\n\nA remote client may send a request that is exactly `recv_bytes` (defaults to 8192) long, followed by a secondary request using HTTP pipelining.\n\nWhen request lookahead is disabled (default) we won't read any more requests, and when the first request fails due to a parsing error, we simply close the connection.\n\nHowever when request lookahead is enabled, it is possible to process and receive the first request, start sending the error message back to the client while we read the next request and queue it. This will allow the secondary request to be serviced by the worker thread while the connection should be closed.\n\n### Patches\n\nWaitress 3.0.1 fixes the race condition.\n\n### Workarounds\n\nDisable  `channel_request_lookahead`, this is set to `0` by default disabling this feature. For this vulnerability this value is required to be changed from the default.\n\n### For more information\n\nIf you have any questions or comments about this advisory:\n* Open an issue in https://github.com/Pylons/waitress/issues (if not sensitive or security related)\n* email the Pylons Security mailing list: [pylons-project-security@googlegroups.com](mailto:pylons-project-security@googlegroups.com) (if security related)\n\n### Thanks\n\n- m4yfly and urn1ce From TianGong Team of Legendsec at Qi'anxin Group.",
+      "published": "2024-10-29T14:45:03Z",
+      "modified": "2025-01-21T18:22:46.807383Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/Pylons/waitress/security/advisories/GHSA-9298-4cf8-g4wj"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-49768"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/Pylons/waitress/commit/e4359018537af376cf24bd13616d861e2fb76f65"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/Pylons/waitress"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/waitress/PYSEC-2024-210.yaml"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-9298-4cf8-g4wj",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "2.0.0"
+            },
+            {
+              "fixed": "3.0.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "2.0.0",
+        "2.1.0",
+        "2.1.0b0",
+        "2.1.1",
+        "2.1.2",
+        "3.0.0"
+      ],
+      "affected_conda_versions": [
+        "2.0.0",
+        "2.1.0",
+        "2.1.1",
+        "2.1.2",
+        "3.0.0"
+      ]
+    },
+    {
+      "id": "GHSA-968f-66r5-5v74",
+      "primary_id": "CVE-2019-16789",
+      "aliases": [
+        "CVE-2019-16789",
+        "PYSEC-2019-138"
+      ],
+      "cve_ids": [
+        "CVE-2019-16789"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "waitress",
+      "summary": "HTTP Request Smuggling in Waitress: Invalid whitespace characters in headers (Follow-up)",
+      "details": "### Impact\n\nThe patches introduced to fix https://github.com/Pylons/waitress/security/advisories/GHSA-m5ff-3wj3-8ph4 were not complete and still would allow an attacker to smuggle requests/split a HTTP request with invalid data.\n\nThis updates the existing CVE with ID: CVE-2019-16789\n\n### Patches\n\nWaitress version 1.4.2 has been updated to now validate HTTP headers better to avoid the issue, completely fixing all known issues with whitespace.\n\n### Workarounds\n\nThere are no work-arounds, upgrading to Waitress 1.4.2 is highly recommended.\n\n### References\n\nSee https://github.com/Pylons/waitress/security/advisories/GHSA-m5ff-3wj3-8ph4 for more information on the security issue.\n\n### For more information\n\nIf you have any questions or comments about this advisory:\n\n* open an issue at https://github.com/Pylons/waitress/issues (if not sensitive or security related)\n* email the Pylons Security mailing list: pylons-project-security@googlegroups.com (if security related)",
+      "published": "2020-01-06T18:44:21Z",
+      "modified": "2024-11-19T14:00:55.884655Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:N/VI:N/VA:N/SC:L/SI:H/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:C/C:L/I:H/A:N"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:N/VI:N/VA:N/SC:L/SI:H/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/Pylons/waitress/security/advisories/GHSA-968f-66r5-5v74"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2019-16789"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/github/advisory-review/pull/14604"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/Pylons/waitress/commit/11d9e138125ad46e951027184b13242a3c1de017"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/Pylons/waitress/commit/ddb65b489d01d696afa1695b75fdd5df3e4ffdf8"
+        },
+        {
+          "type": "WEB",
+          "url": "https://access.redhat.com/errata/RHSA-2020:0720"
+        },
+        {
+          "type": "WEB",
+          "url": "https://docs.pylonsproject.org/projects/waitress/en/latest/#security-fixes"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/Pylons/waitress"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/advisories/GHSA-968f-66r5-5v74"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/waitress/PYSEC-2019-138.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2022/05/msg00011.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/GVDHR2DNKCNQ7YQXISJ45NT4IQDX3LJ7"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/LYEOTGWJZVKPRXX2HBNVIYWCX73QYPM5"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.oracle.com/security-alerts/cpuapr2022.html"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-968f-66r5-5v74",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.4.2"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1",
+        "0.2",
+        "0.3",
+        "0.4",
+        "0.5",
+        "0.6",
+        "0.6.1",
+        "0.7",
+        "0.8",
+        "0.8.1",
+        "0.8.10",
+        "0.8.11b0",
+        "0.8.2",
+        "0.8.3",
+        "0.8.4",
+        "0.8.5",
+        "0.8.6",
+        "0.8.7",
+        "0.8.8",
+        "0.8.9",
+        "0.9.0",
+        "0.9.0b0",
+        "0.9.0b1",
+        "1.0.0",
+        "1.0.1",
+        "1.0.2",
+        "1.0a1",
+        "1.0a2",
+        "1.1.0",
+        "1.2.0",
+        "1.2.0b1",
+        "1.2.0b2",
+        "1.2.0b3",
+        "1.2.1",
+        "1.3.0",
+        "1.3.0b0",
+        "1.3.1",
+        "1.4.0",
+        "1.4.1"
+      ],
+      "affected_conda_versions": [
+        "1.1.0",
+        "1.2.0",
+        "1.2.1",
+        "1.3.0",
+        "1.3.1",
+        "1.4.1"
+      ]
+    },
+    {
+      "id": "GHSA-f5x9-8jwc-25rw",
+      "primary_id": "CVE-2022-31015",
+      "aliases": [
+        "CVE-2022-31015",
+        "PYSEC-2022-205"
+      ],
+      "cve_ids": [
+        "CVE-2022-31015"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "waitress",
+      "summary": "Uncaught Exception (due to a data race) leads to process termination in Waitress",
+      "details": "### Impact\n\nWaitress may terminate early due to a thread closing a socket while the main thread is about to call select(). This will lead to the main thread raising an exception that is not handled and then causing the entire application to be killed.\n\n### Patches\n\nThis issue has been fixed in Waitress 2.1.2 by no longer allowing the WSGI thread to close the socket, instead it is always delegated to the main thread.\n\n### Workarounds\n\nThere is no work-around, however users using waitress behind a reverse proxy server are less likely to have issues if the reverse proxy always reads the full response.\n\n### For more information\n\nIf you have any questions or comments about this advisory:\n* Open an issue in https://github.com/Pylons/waitress/issues (if not sensitive or security related)\n* email the Pylons Security mailing list: [pylons-project-security@googlegroups.com](mailto:pylons-project-security@googlegroups.com) (if security related)\n",
+      "published": "2022-06-02T20:37:48Z",
+      "modified": "2024-11-19T16:22:52.848754Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/Pylons/waitress/security/advisories/GHSA-f5x9-8jwc-25rw"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2022-31015"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/Pylons/waitress/issues/374"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/Pylons/waitress/pull/377"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/Pylons/waitress/commit/4f6789b035610e0552738cdc4b35ca809a592d48"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/Pylons/waitress"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/waitress/PYSEC-2022-205.yaml"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-f5x9-8jwc-25rw",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "2.1.0"
+            },
+            {
+              "fixed": "2.1.2"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "2.1.0",
+        "2.1.1"
+      ],
+      "affected_conda_versions": [
+        "2.1.0",
+        "2.1.1"
+      ]
+    },
+    {
+      "id": "GHSA-g2xc-35jw-c63p",
+      "primary_id": "CVE-2019-16786",
+      "aliases": [
+        "CVE-2019-16786",
+        "PYSEC-2019-137"
+      ],
+      "cve_ids": [
+        "CVE-2019-16786"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "waitress",
+      "summary": "HTTP Request Smuggling: Invalid Transfer-Encoding in Waitress",
+      "details": "### Impact\n\nWaitress would parse the `Transfer-Encoding` header and only look for a single string value, if that value was not `chunked` it would fall through and use the `Content-Length` header instead.\n\nAccording to the HTTP standard `Transfer-Encoding` should be a comma separated list, with the inner-most encoding first, followed by any further transfer codings, ending with `chunked`.\n\nRequests sent with:\n\n```\nTransfer-Encoding: gzip, chunked\n```\n\nWould incorrectly get ignored, and the request would use a `Content-Length` header instead to determine the body size of the HTTP message.\n\nThis could allow for Waitress to treat a single request as multiple requests in the case of HTTP pipelining.\n\n### Patches\n\nThis issue is fixed in Waitress 1.4.0. This brings a range of changes to harden Waitress against potential HTTP request confusions, and may change the behaviour of Waitress behind non-conformist proxies. \n\nWaitress will now return a 501 Not Implemented error if the `Transfer-Encoding` is not `chunked` or contains multiple elements. Waitress does not support any transfer codings such as `gzip` or `deflate`.\n\nThe Pylons Project recommends upgrading as soon as possible, while validating that the changes in Waitress don&#39;t cause any changes in behavior.\n\n### Workarounds\n\nVarious reverse proxies may have protections against sending potentially bad HTTP requests to the backend, and or hardening against potential issues like this. If the reverse proxy doesn&#39;t use HTTP/1.1 for connecting to the backend issues are also somewhat mitigated, as HTTP pipelining does not exist in HTTP/1.0 and Waitress will close the connection after every single request (unless the Keep Alive header is explicitly sent... so this is not a fool proof security method).\n\n### Issues/more security issues:\n\n* open an issue at https://github.com/Pylons/waitress/issues (if not sensitive or security related)\n* email the Pylons Security mailing list: pylons-project-security@googlegroups.com (if security related)",
+      "published": "2019-12-20T23:04:18Z",
+      "modified": "2026-03-13T22:14:16.440275Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:N/VI:N/VA:N/SC:H/SI:L/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:C/C:H/I:L/A:N"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:N/VI:N/VA:N/SC:H/SI:L/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/Pylons/waitress/security/advisories/GHSA-g2xc-35jw-c63p"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2019-16786"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/Pylons/waitress/commit/f11093a6b3240fc26830b6111e826128af7771c3"
+        },
+        {
+          "type": "WEB",
+          "url": "https://access.redhat.com/errata/RHSA-2020:0720"
+        },
+        {
+          "type": "WEB",
+          "url": "https://docs.pylonsproject.org/projects/waitress/en/latest/#security-fixes"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/Pylons/waitress"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/waitress/PYSEC-2019-137.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2022/05/msg00011.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/GVDHR2DNKCNQ7YQXISJ45NT4IQDX3LJ7"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/LYEOTGWJZVKPRXX2HBNVIYWCX73QYPM5"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.oracle.com/security-alerts/cpuapr2022.html"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-g2xc-35jw-c63p",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.4.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1",
+        "0.2",
+        "0.3",
+        "0.4",
+        "0.5",
+        "0.6",
+        "0.6.1",
+        "0.7",
+        "0.8",
+        "0.8.1",
+        "0.8.10",
+        "0.8.11b0",
+        "0.8.2",
+        "0.8.3",
+        "0.8.4",
+        "0.8.5",
+        "0.8.6",
+        "0.8.7",
+        "0.8.8",
+        "0.8.9",
+        "0.9.0",
+        "0.9.0b0",
+        "0.9.0b1",
+        "1.0.0",
+        "1.0.1",
+        "1.0.2",
+        "1.0a1",
+        "1.0a2",
+        "1.1.0",
+        "1.2.0",
+        "1.2.0b1",
+        "1.2.0b2",
+        "1.2.0b3",
+        "1.2.1",
+        "1.3.0",
+        "1.3.0b0",
+        "1.3.1"
+      ],
+      "affected_conda_versions": [
+        "1.1.0",
+        "1.2.0",
+        "1.2.1",
+        "1.3.0",
+        "1.3.1"
+      ]
+    },
+    {
+      "id": "GHSA-j7j6-7hfx-5522",
+      "primary_id": "CVE-2019-16792",
+      "aliases": [
+        "CVE-2019-16792",
+        "GHSA-4ppp-gpcr-7qf6",
+        "PYSEC-2020-178"
+      ],
+      "cve_ids": [
+        "CVE-2019-16792"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "waitress",
+      "summary": "Duplicate Advisory: Inconsistent Interpretation of HTTP Requests in Waitress",
+      "details": "## Duplicate Advisory\nThis advisory has been withdrawn because it is a duplicate of GHSA-4ppp-gpcr-7qf6. This link is maintained to preserve external references.\n\n## Original Description\nWaitress through version 1.3.1 allows request smuggling by sending the Content-Length header twice. Waitress would header fold a double Content-Length header and due to being unable to cast the now comma separated value to an integer would set the Content-Length to 0 internally. If two Content-Length headers are sent in a single request, Waitress would treat the request as having no body, thereby treating the body of the request as a new request in HTTP pipelining. This issue is fixed in Waitress 1.4.0.",
+      "published": "2022-05-24T17:07:06Z",
+      "modified": "2026-02-25T14:21:15.242040Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/Pylons/waitress/security/advisories/GHSA-4ppp-gpcr-7qf6"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2019-16792"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/Pylons/waitress/commit/575994cd42e83fd772a5f7ec98b2c56751bd3f65"
+        },
+        {
+          "type": "WEB",
+          "url": "https://docs.pylonsproject.org/projects/waitress/en/latest/#security-fixes"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/Pylons/waitress"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2022/05/msg00011.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.oracle.com/security-alerts/cpuapr2022.html"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-j7j6-7hfx-5522",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.4.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1",
+        "0.2",
+        "0.3",
+        "0.4",
+        "0.5",
+        "0.6",
+        "0.6.1",
+        "0.7",
+        "0.8",
+        "0.8.1",
+        "0.8.10",
+        "0.8.11b0",
+        "0.8.2",
+        "0.8.3",
+        "0.8.4",
+        "0.8.5",
+        "0.8.6",
+        "0.8.7",
+        "0.8.8",
+        "0.8.9",
+        "0.9.0",
+        "0.9.0b0",
+        "0.9.0b1",
+        "1.0.0",
+        "1.0.1",
+        "1.0.2",
+        "1.0a1",
+        "1.0a2",
+        "1.1.0",
+        "1.2.0",
+        "1.2.0b1",
+        "1.2.0b2",
+        "1.2.0b3",
+        "1.2.1",
+        "1.3.0",
+        "1.3.0b0",
+        "1.3.1"
+      ],
+      "affected_conda_versions": [
+        "1.1.0",
+        "1.2.0",
+        "1.2.1",
+        "1.3.0",
+        "1.3.1"
+      ]
+    },
+    {
+      "id": "GHSA-m5ff-3wj3-8ph4",
+      "primary_id": "GHSA-m5ff-3wj3-8ph4",
+      "aliases": [],
+      "cve_ids": [],
+      "ecosystem": "PyPI",
+      "upstream_name": "waitress",
+      "summary": "HTTP Request Smuggling: Invalid whitespace characters in headers in Waitress",
+      "details": "### Impact\n\nIf a proxy server is used in front of waitress, an invalid request may be sent by an attacker that bypasses the front-end and is parsed differently by waitress leading to a potential for HTTP request smuggling.\n\n```\nContent-Length: 10\nTransfer-Encoding: [\\x0b]chunked\n```\n\nFor clarity:\n\n```\n0x0b == vertical tab\n```\n\nWould get parsed by Waitress as being a `chunked` request, but a front-end server would use the `Content-Length` instead as the `Transfer-Encoding` header is considered invalid due to containing invalid characters.\n\nIf a front-end server does HTTP pipelining to a backend Waitress server this could lead to HTTP request splitting which may lead to potential cache poisoning or unexpected information disclosure.\n\n### Patches\n\nPlease upgrade to Waitress 1.4.1 which fixes this issue with stricter HTTP field validation.\n\nWaitress 1.4.1 due to this change has become much more strict in what is allowed in header values, while the maintainers don't believe that these changes will cause any issues, it may cause failures with non-conformist reverse proxies or clients, and it is highly recommend that users validate the changes in their environment and make sure it won't cause any unacceptable failures.\n\n### Workarounds\n\nYou may enable additional protections on front-end servers, those that follow RFC7230 correctly would drop the request with a 400 Bad Request.\n\nWaitress will now correctly responds to the request with a 400 Bad Request, and will drop the connection to avoid any potential HTTP pipelining issues.\n\n### References\n\nThis was mentioned in https://portswigger.net/research/http-desync-attacks-what-happened-next and was specifically mentioned as being an issue in HAProxy which did not properly filter it in this article: https://nathandavison.com/blog/haproxy-http-request-smuggling\n\n### Thanks\n\nThe Pylons Project would like to thank ZeddYu Lu for doing extended testing against Waitress 1.4.0 and bringing this to our attention!\n\n### For more information\n\nIf you have any questions or comments about this advisory:\n\n* open an issue at https://github.com/Pylons/waitress/issues (if not sensitive or security related)\n* email the Pylons Security mailing list: pylons-project-security@googlegroups.com (if security related)",
+      "published": "2019-12-26T16:34:38Z",
+      "modified": "2025-02-17T05:27:24.012454Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/Pylons/waitress/security/advisories/GHSA-m5ff-3wj3-8ph4"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/Pylons/waitress/commit/11d9e138125ad46e951027184b13242a3c1de017"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-m5ff-3wj3-8ph4",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.4.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1",
+        "0.2",
+        "0.3",
+        "0.4",
+        "0.5",
+        "0.6",
+        "0.6.1",
+        "0.7",
+        "0.8",
+        "0.8.1",
+        "0.8.10",
+        "0.8.11b0",
+        "0.8.2",
+        "0.8.3",
+        "0.8.4",
+        "0.8.5",
+        "0.8.6",
+        "0.8.7",
+        "0.8.8",
+        "0.8.9",
+        "0.9.0",
+        "0.9.0b0",
+        "0.9.0b1",
+        "1.0.0",
+        "1.0.1",
+        "1.0.2",
+        "1.0a1",
+        "1.0a2",
+        "1.1.0",
+        "1.2.0",
+        "1.2.0b1",
+        "1.2.0b2",
+        "1.2.0b3",
+        "1.2.1",
+        "1.3.0",
+        "1.3.0b0",
+        "1.3.1",
+        "1.4.0"
+      ],
+      "affected_conda_versions": [
+        "1.1.0",
+        "1.2.0",
+        "1.2.1",
+        "1.3.0",
+        "1.3.1"
+      ]
+    },
+    {
+      "id": "GHSA-pg36-wpm5-g57p",
+      "primary_id": "CVE-2019-16785",
+      "aliases": [
+        "CVE-2019-16785",
+        "PYSEC-2019-136"
+      ],
+      "cve_ids": [
+        "CVE-2019-16785"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "waitress",
+      "summary": "HTTP Request Smuggling: LF vs CRLF handling in Waitress",
+      "details": "### Impact\n\nWaitress implemented a &amp;quot;MAY&amp;quot; part of the RFC7230 (https://tools.ietf.org/html/rfc7230#section-3.5) which states:\n\n      Although the line terminator for the start-line and header fields is\n      the sequence CRLF, a recipient MAY recognize a single LF as a line\n      terminator and ignore any preceding CR.\n\nUnfortunately if a front-end server does not parse header fields with an LF the same way as it does those with a CRLF it can lead to the front-end and the back-end server parsing the same HTTP message in two different ways. This can lead to a potential for HTTP request smuggling/splitting whereby Waitress may see two requests while the front-end server only sees a single HTTP message.\n\nExample:\n\n```\nContent-Length: 100[CRLF]\nX-Header: x[LF]Content-Length: 0[CRLF]\n```\n\nWould get treated by Waitress as if it were:\n\n```\nContent-Length: 100\nX-Header: x\nContent-Length: 0\n```\n\nThis could potentially get used by attackers to split the HTTP request and smuggle a second request in the body of the first.\n\n\n### Patches\n\nThis issue is fixed in Waitress 1.4.0. This brings a range of changes to harden Waitress against potential HTTP request confusions, and may change the behaviour of Waitress behind non-conformist proxies. \n\nWaitress no longer implements the MAY part of the specification and instead requires that all lines are terminated correctly with CRLF. If any lines are found with a bare CR or LF a 400 Bad Request is sent back to the requesting entity.\n\nThe Pylons Project recommends upgrading as soon as possible, while validating that the changes in Waitress don&amp;#39;t cause any changes in behavior.\n\n### Workarounds\n\nVarious reverse proxies may have protections against sending potentially bad HTTP requests to the backend, and or hardening against potential issues like this. If the reverse proxy doesn&amp;#39;t use HTTP/1.1 for connecting to the backend issues are also somewhat mitigated, as HTTP pipelining does not exist in HTTP/1.0 and Waitress will close the connection after every single request (unless the Keep Alive header is explicitly sent... so this is not a fool proof security method)\n\n### Issues/more security issues:\n\n* open an issue at https://github.com/Pylons/waitress/issues (if not sensitive or security related)\n* email the Pylons Security mailing list: pylons-project-security@googlegroups.com (if security related)",
+      "published": "2019-12-20T23:03:57Z",
+      "modified": "2026-03-14T04:58:52.415607Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:N/VI:N/VA:N/SC:H/SI:L/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:C/C:H/I:L/A:N"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:N/VI:N/VA:N/SC:H/SI:L/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/Pylons/waitress/security/advisories/GHSA-pg36-wpm5-g57p"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2019-16785"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/Pylons/waitress/commit/8eba394ad75deaf9e5cd15b78a3d16b12e6b0eba"
+        },
+        {
+          "type": "WEB",
+          "url": "https://access.redhat.com/errata/RHSA-2020:0720"
+        },
+        {
+          "type": "WEB",
+          "url": "https://docs.pylonsproject.org/projects/waitress/en/latest/#security-fixes"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/Pylons/waitress"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/waitress/PYSEC-2019-136.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2022/05/msg00011.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/GVDHR2DNKCNQ7YQXISJ45NT4IQDX3LJ7"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/LYEOTGWJZVKPRXX2HBNVIYWCX73QYPM5"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.oracle.com/security-alerts/cpuapr2022.html"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-pg36-wpm5-g57p",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.4.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1",
+        "0.2",
+        "0.3",
+        "0.4",
+        "0.5",
+        "0.6",
+        "0.6.1",
+        "0.7",
+        "0.8",
+        "0.8.1",
+        "0.8.10",
+        "0.8.11b0",
+        "0.8.2",
+        "0.8.3",
+        "0.8.4",
+        "0.8.5",
+        "0.8.6",
+        "0.8.7",
+        "0.8.8",
+        "0.8.9",
+        "0.9.0",
+        "0.9.0b0",
+        "0.9.0b1",
+        "1.0.0",
+        "1.0.1",
+        "1.0.2",
+        "1.0a1",
+        "1.0a2",
+        "1.1.0",
+        "1.2.0",
+        "1.2.0b1",
+        "1.2.0b2",
+        "1.2.0b3",
+        "1.2.1",
+        "1.3.0",
+        "1.3.0b0",
+        "1.3.1"
+      ],
+      "affected_conda_versions": [
+        "1.1.0",
+        "1.2.0",
+        "1.2.1",
+        "1.3.0",
+        "1.3.1"
+      ]
+    },
+    {
+      "id": "PYSEC-2019-136",
+      "primary_id": "CVE-2019-16785",
+      "aliases": [
+        "CVE-2019-16785",
+        "GHSA-pg36-wpm5-g57p"
+      ],
+      "cve_ids": [
+        "CVE-2019-16785"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "waitress",
+      "summary": null,
+      "details": "Waitress through version 1.3.1 implemented a \"MAY\" part of the RFC7230 which states: \"Although the line terminator for the start-line and header fields is the sequence CRLF, a recipient MAY recognize a single LF as a line terminator and ignore any preceding CR.\" Unfortunately if a front-end server does not parse header fields with an LF the same way as it does those with a CRLF it can lead to the front-end and the back-end server parsing the same HTTP message in two different ways. This can lead to a potential for HTTP request smuggling/splitting whereby Waitress may see two requests while the front-end server only sees a single HTTP message. This issue is fixed in Waitress 1.4.0.",
+      "published": "2019-12-20T23:15:00Z",
+      "modified": "2023-11-08T04:01:21.641524Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/Pylons/waitress/security/advisories/GHSA-pg36-wpm5-g57p"
+        },
+        {
+          "type": "FIX",
+          "url": "https://github.com/Pylons/waitress/commit/8eba394ad75deaf9e5cd15b78a3d16b12e6b0eba"
+        },
+        {
+          "type": "WEB",
+          "url": "https://docs.pylonsproject.org/projects/waitress/en/latest/#security-fixes"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/GVDHR2DNKCNQ7YQXISJ45NT4IQDX3LJ7/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/LYEOTGWJZVKPRXX2HBNVIYWCX73QYPM5/"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://access.redhat.com/errata/RHSA-2020:0720"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2019-136",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.4.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1",
+        "0.2",
+        "0.3",
+        "0.4",
+        "0.5",
+        "0.6",
+        "0.6.1",
+        "0.7",
+        "0.8",
+        "0.8.1",
+        "0.8.2",
+        "0.8.3",
+        "0.8.4",
+        "0.8.5",
+        "0.8.6",
+        "0.8.7",
+        "0.8.8",
+        "0.8.9",
+        "0.8.10",
+        "0.8.11b0",
+        "0.9.0b0",
+        "0.9.0b1",
+        "0.9.0",
+        "1.0a1",
+        "1.0a2",
+        "1.0.0",
+        "1.0.1",
+        "1.0.2",
+        "1.1.0",
+        "1.2.0b1",
+        "1.2.0b2",
+        "1.2.0b3",
+        "1.2.0",
+        "1.2.1",
+        "1.3.0b0",
+        "1.3.0",
+        "1.3.1"
+      ],
+      "affected_conda_versions": [
+        "1.1.0",
+        "1.2.0",
+        "1.2.1",
+        "1.3.0",
+        "1.3.1"
+      ]
+    },
+    {
+      "id": "PYSEC-2019-137",
+      "primary_id": "CVE-2019-16786",
+      "aliases": [
+        "CVE-2019-16786",
+        "GHSA-g2xc-35jw-c63p"
+      ],
+      "cve_ids": [
+        "CVE-2019-16786"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "waitress",
+      "summary": null,
+      "details": "Waitress through version 1.3.1 would parse the Transfer-Encoding header and only look for a single string value, if that value was not chunked it would fall through and use the Content-Length header instead. According to the HTTP standard Transfer-Encoding should be a comma separated list, with the inner-most encoding first, followed by any further transfer codings, ending with chunked. Requests sent with: \"Transfer-Encoding: gzip, chunked\" would incorrectly get ignored, and the request would use a Content-Length header instead to determine the body size of the HTTP message. This could allow for Waitress to treat a single request as multiple requests in the case of HTTP pipelining. This issue is fixed in Waitress 1.4.0.",
+      "published": "2019-12-20T23:15:00Z",
+      "modified": "2023-11-08T04:01:21.705659Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/Pylons/waitress/security/advisories/GHSA-g2xc-35jw-c63p"
+        },
+        {
+          "type": "FIX",
+          "url": "https://github.com/Pylons/waitress/commit/f11093a6b3240fc26830b6111e826128af7771c3"
+        },
+        {
+          "type": "WEB",
+          "url": "https://docs.pylonsproject.org/projects/waitress/en/latest/#security-fixes"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/GVDHR2DNKCNQ7YQXISJ45NT4IQDX3LJ7/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/LYEOTGWJZVKPRXX2HBNVIYWCX73QYPM5/"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://access.redhat.com/errata/RHSA-2020:0720"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2019-137",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.3.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1",
+        "0.2",
+        "0.3",
+        "0.4",
+        "0.5",
+        "0.6",
+        "0.6.1",
+        "0.7",
+        "0.8",
+        "0.8.1",
+        "0.8.2",
+        "0.8.3",
+        "0.8.4",
+        "0.8.5",
+        "0.8.6",
+        "0.8.7",
+        "0.8.8",
+        "0.8.9",
+        "0.8.10",
+        "0.8.11b0",
+        "0.9.0b0",
+        "0.9.0b1",
+        "0.9.0",
+        "1.0a1",
+        "1.0a2",
+        "1.0.0",
+        "1.0.1",
+        "1.0.2",
+        "1.1.0",
+        "1.2.0b1",
+        "1.2.0b2",
+        "1.2.0b3",
+        "1.2.0",
+        "1.2.1",
+        "1.3.0b0",
+        "1.3.0"
+      ],
+      "affected_conda_versions": [
+        "1.1.0",
+        "1.2.0",
+        "1.2.1",
+        "1.3.0"
+      ]
+    },
+    {
+      "id": "PYSEC-2019-138",
+      "primary_id": "CVE-2019-16789",
+      "aliases": [
+        "CVE-2019-16789",
+        "GHSA-968f-66r5-5v74"
+      ],
+      "cve_ids": [
+        "CVE-2019-16789"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "waitress",
+      "summary": null,
+      "details": "In Waitress through version 1.4.0, if a proxy server is used in front of waitress, an invalid request may be sent by an attacker that bypasses the front-end and is parsed differently by waitress leading to a potential for HTTP request smuggling. Specially crafted requests containing special whitespace characters in the Transfer-Encoding header would get parsed by Waitress as being a chunked request, but a front-end server would use the Content-Length instead as the Transfer-Encoding header is considered invalid due to containing invalid characters. If a front-end server does HTTP pipelining to a backend Waitress server this could lead to HTTP request splitting which may lead to potential cache poisoning or unexpected information disclosure. This issue is fixed in Waitress 1.4.1 through more strict HTTP field validation.",
+      "published": "2019-12-26T17:15:00Z",
+      "modified": "2023-11-08T04:01:21.767656Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "FIX",
+          "url": "https://github.com/Pylons/waitress/commit/11d9e138125ad46e951027184b13242a3c1de017"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/github/advisory-review/pull/14604"
+        },
+        {
+          "type": "WEB",
+          "url": "https://docs.pylonsproject.org/projects/waitress/en/latest/#security-fixes"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/GVDHR2DNKCNQ7YQXISJ45NT4IQDX3LJ7/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/LYEOTGWJZVKPRXX2HBNVIYWCX73QYPM5/"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://access.redhat.com/errata/RHSA-2020:0720"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/advisories/GHSA-968f-66r5-5v74"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2019-138",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.4.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1",
+        "0.2",
+        "0.3",
+        "0.4",
+        "0.5",
+        "0.6",
+        "0.6.1",
+        "0.7",
+        "0.8",
+        "0.8.1",
+        "0.8.2",
+        "0.8.3",
+        "0.8.4",
+        "0.8.5",
+        "0.8.6",
+        "0.8.7",
+        "0.8.8",
+        "0.8.9",
+        "0.8.10",
+        "0.8.11b0",
+        "0.9.0b0",
+        "0.9.0b1",
+        "0.9.0",
+        "1.0a1",
+        "1.0a2",
+        "1.0.0",
+        "1.0.1",
+        "1.0.2",
+        "1.1.0",
+        "1.2.0b1",
+        "1.2.0b2",
+        "1.2.0b3",
+        "1.2.0",
+        "1.2.1",
+        "1.3.0b0",
+        "1.3.0",
+        "1.3.1",
+        "1.4.0"
+      ],
+      "affected_conda_versions": [
+        "1.1.0",
+        "1.2.0",
+        "1.2.1",
+        "1.3.0",
+        "1.3.1"
+      ]
+    },
+    {
+      "id": "PYSEC-2019-66",
+      "primary_id": "PYSEC-2019-66",
+      "aliases": [],
+      "cve_ids": [],
+      "ecosystem": "PyPI",
+      "upstream_name": "waitress",
+      "summary": null,
+      "details": "Waitress through version 1.3.1 implemented a \"MAY\" part of the RFC7230 which states: \"Although the line terminator for the start-line and header fields is the sequence CRLF, a recipient MAY recognize a single LF as a line terminator and ignore any preceding CR.\" Unfortunately if a front-end server does not parse header fields with an LF the same way as it does those with a CRLF it can lead to the front-end and the back-end server parsing the same HTTP message in two different ways. This can lead to a potential for HTTP request smuggling/splitting whereby Waitress may see two requests while the front-end server only sees a single HTTP message. This issue is fixed in Waitress 1.4.0.",
+      "published": "2019-12-20T23:15:00Z",
+      "modified": "2023-03-14T07:01:09.372726Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/Pylons/waitress/security/advisories/GHSA-pg36-wpm5-g57p"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/Pylons/waitress/commit/8eba394ad75deaf9e5cd15b78a3d16b12e6b0eba"
+        },
+        {
+          "type": "WEB",
+          "url": "https://docs.pylonsproject.org/projects/waitress/en/latest/#security-fixes"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/GVDHR2DNKCNQ7YQXISJ45NT4IQDX3LJ7/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/LYEOTGWJZVKPRXX2HBNVIYWCX73QYPM5/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://access.redhat.com/errata/RHSA-2020:0720"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2019-66",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.4.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1",
+        "0.2",
+        "0.3",
+        "0.4",
+        "0.5",
+        "0.6",
+        "0.6.1",
+        "0.7",
+        "0.8",
+        "0.8.1",
+        "0.8.2",
+        "0.8.3",
+        "0.8.4",
+        "0.8.5",
+        "0.8.6",
+        "0.8.7",
+        "0.8.8",
+        "0.8.9",
+        "0.8.10",
+        "0.8.11b0",
+        "0.9.0b0",
+        "0.9.0b1",
+        "0.9.0",
+        "1.0a1",
+        "1.0a2",
+        "1.0.0",
+        "1.0.1",
+        "1.0.2",
+        "1.1.0",
+        "1.2.0b1",
+        "1.2.0b2",
+        "1.2.0b3",
+        "1.2.0",
+        "1.2.1",
+        "1.3.0b0",
+        "1.3.0",
+        "1.3.1"
+      ],
+      "affected_conda_versions": [
+        "1.1.0",
+        "1.2.0",
+        "1.2.1",
+        "1.3.0",
+        "1.3.1"
+      ]
+    },
+    {
+      "id": "PYSEC-2019-67",
+      "primary_id": "PYSEC-2019-67",
+      "aliases": [],
+      "cve_ids": [],
+      "ecosystem": "PyPI",
+      "upstream_name": "waitress",
+      "summary": null,
+      "details": "Waitress through version 1.3.1 would parse the Transfer-Encoding header and only look for a single string value, if that value was not chunked it would fall through and use the Content-Length header instead. According to the HTTP standard Transfer-Encoding should be a comma separated list, with the inner-most encoding first, followed by any further transfer codings, ending with chunked. Requests sent with: \"Transfer-Encoding: gzip, chunked\" would incorrectly get ignored, and the request would use a Content-Length header instead to determine the body size of the HTTP message. This could allow for Waitress to treat a single request as multiple requests in the case of HTTP pipelining. This issue is fixed in Waitress 1.4.0.",
+      "published": "2019-12-20T23:15:00Z",
+      "modified": "2023-03-14T07:01:09.373833Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/Pylons/waitress/security/advisories/GHSA-g2xc-35jw-c63p"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/Pylons/waitress/commit/f11093a6b3240fc26830b6111e826128af7771c3"
+        },
+        {
+          "type": "WEB",
+          "url": "https://docs.pylonsproject.org/projects/waitress/en/latest/#security-fixes"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/GVDHR2DNKCNQ7YQXISJ45NT4IQDX3LJ7/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/LYEOTGWJZVKPRXX2HBNVIYWCX73QYPM5/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://access.redhat.com/errata/RHSA-2020:0720"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2019-67",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.3.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1",
+        "0.2",
+        "0.3",
+        "0.4",
+        "0.5",
+        "0.6",
+        "0.6.1",
+        "0.7",
+        "0.8",
+        "0.8.1",
+        "0.8.2",
+        "0.8.3",
+        "0.8.4",
+        "0.8.5",
+        "0.8.6",
+        "0.8.7",
+        "0.8.8",
+        "0.8.9",
+        "0.8.10",
+        "0.8.11b0",
+        "0.9.0b0",
+        "0.9.0b1",
+        "0.9.0",
+        "1.0a1",
+        "1.0a2",
+        "1.0.0",
+        "1.0.1",
+        "1.0.2",
+        "1.1.0",
+        "1.2.0b1",
+        "1.2.0b2",
+        "1.2.0b3",
+        "1.2.0",
+        "1.2.1",
+        "1.3.0b0",
+        "1.3.0"
+      ],
+      "affected_conda_versions": [
+        "1.1.0",
+        "1.2.0",
+        "1.2.1",
+        "1.3.0"
+      ]
+    },
+    {
+      "id": "PYSEC-2019-68",
+      "primary_id": "PYSEC-2019-68",
+      "aliases": [],
+      "cve_ids": [],
+      "ecosystem": "PyPI",
+      "upstream_name": "waitress",
+      "summary": null,
+      "details": "In Waitress through version 1.4.0, if a proxy server is used in front of waitress, an invalid request may be sent by an attacker that bypasses the front-end and is parsed differently by waitress leading to a potential for HTTP request smuggling. Specially crafted requests containing special whitespace characters in the Transfer-Encoding header would get parsed by Waitress as being a chunked request, but a front-end server would use the Content-Length instead as the Transfer-Encoding header is considered invalid due to containing invalid characters. If a front-end server does HTTP pipelining to a backend Waitress server this could lead to HTTP request splitting which may lead to potential cache poisoning or unexpected information disclosure. This issue is fixed in Waitress 1.4.1 through more strict HTTP field validation.",
+      "published": "2019-12-26T17:15:00Z",
+      "modified": "2023-03-14T07:01:09.374789Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/Pylons/waitress/commit/11d9e138125ad46e951027184b13242a3c1de017"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/github/advisory-review/pull/14604"
+        },
+        {
+          "type": "WEB",
+          "url": "https://docs.pylonsproject.org/projects/waitress/en/latest/#security-fixes"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/GVDHR2DNKCNQ7YQXISJ45NT4IQDX3LJ7/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/LYEOTGWJZVKPRXX2HBNVIYWCX73QYPM5/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://access.redhat.com/errata/RHSA-2020:0720"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2019-68",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.4.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1",
+        "0.2",
+        "0.3",
+        "0.4",
+        "0.5",
+        "0.6",
+        "0.6.1",
+        "0.7",
+        "0.8",
+        "0.8.1",
+        "0.8.2",
+        "0.8.3",
+        "0.8.4",
+        "0.8.5",
+        "0.8.6",
+        "0.8.7",
+        "0.8.8",
+        "0.8.9",
+        "0.8.10",
+        "0.8.11b0",
+        "0.9.0b0",
+        "0.9.0b1",
+        "0.9.0",
+        "1.0a1",
+        "1.0a2",
+        "1.0.0",
+        "1.0.1",
+        "1.0.2",
+        "1.1.0",
+        "1.2.0b1",
+        "1.2.0b2",
+        "1.2.0b3",
+        "1.2.0",
+        "1.2.1",
+        "1.3.0b0",
+        "1.3.0",
+        "1.3.1",
+        "1.4.0"
+      ],
+      "affected_conda_versions": [
+        "1.1.0",
+        "1.2.0",
+        "1.2.1",
+        "1.3.0",
+        "1.3.1"
+      ]
+    },
+    {
+      "id": "PYSEC-2020-155",
+      "primary_id": "CVE-2020-5236",
+      "aliases": [
+        "CVE-2020-5236",
+        "GHSA-73m2-3pwg-5fgc"
+      ],
+      "cve_ids": [
+        "CVE-2020-5236"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "waitress",
+      "summary": null,
+      "details": "Waitress version 1.4.2 allows a DOS attack When waitress receives a header that contains invalid characters. When a header like \"Bad-header: xxxxxxxxxxxxxxx\\x10\" is received, it will cause the regular expression engine to catastrophically backtrack causing the process to use 100% CPU time and blocking any other interactions. This allows an attacker to send a single request with an invalid header and take the service offline. This issue was introduced in version 1.4.2 when the regular expression was updated to attempt to match the behaviour required by errata associated with RFC7230. The regular expression that is used to validate incoming headers has been updated in version 1.4.3, it is recommended that people upgrade to the new version of Waitress as soon as possible.",
+      "published": "2020-02-04T03:15:00Z",
+      "modified": "2023-11-08T04:03:52.479840Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/Pylons/waitress/security/advisories/GHSA-73m2-3pwg-5fgc"
+        },
+        {
+          "type": "FIX",
+          "url": "https://github.com/Pylons/waitress/commit/6e46f9e3f014d64dd7d1e258eaf626e39870ee1f"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2020-155",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.4.3"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1",
+        "0.2",
+        "0.3",
+        "0.4",
+        "0.5",
+        "0.6",
+        "0.6.1",
+        "0.7",
+        "0.8",
+        "0.8.1",
+        "0.8.2",
+        "0.8.3",
+        "0.8.4",
+        "0.8.5",
+        "0.8.6",
+        "0.8.7",
+        "0.8.8",
+        "0.8.9",
+        "0.8.10",
+        "0.8.11b0",
+        "0.9.0b0",
+        "0.9.0b1",
+        "0.9.0",
+        "1.0a1",
+        "1.0a2",
+        "1.0.0",
+        "1.0.1",
+        "1.0.2",
+        "1.1.0",
+        "1.2.0b1",
+        "1.2.0b2",
+        "1.2.0b3",
+        "1.2.0",
+        "1.2.1",
+        "1.3.0b0",
+        "1.3.0",
+        "1.3.1",
+        "1.4.0",
+        "1.4.1",
+        "1.4.2"
+      ],
+      "affected_conda_versions": [
+        "1.1.0",
+        "1.2.0",
+        "1.2.1",
+        "1.3.0",
+        "1.3.1",
+        "1.4.1"
+      ]
+    },
+    {
+      "id": "PYSEC-2020-178",
+      "primary_id": "CVE-2019-16792",
+      "aliases": [
+        "CVE-2019-16792",
+        "GHSA-4ppp-gpcr-7qf6",
+        "GHSA-j7j6-7hfx-5522"
+      ],
+      "cve_ids": [
+        "CVE-2019-16792"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "waitress",
+      "summary": null,
+      "details": "Waitress through version 1.3.1 allows request smuggling by sending the Content-Length header twice. Waitress would header fold a double Content-Length header and due to being unable to cast the now comma separated value to an integer would set the Content-Length to 0 internally. If two Content-Length headers are sent in a single request, Waitress would treat the request as having no body, thereby treating the body of the request as a new request in HTTP pipelining. This issue is fixed in Waitress 1.4.0.",
+      "published": "2020-01-22T19:15:00Z",
+      "modified": "2023-11-08T04:01:21.890990Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://docs.pylonsproject.org/projects/waitress/en/latest/#security-fixes"
+        },
+        {
+          "type": "FIX",
+          "url": "https://github.com/Pylons/waitress/commit/575994cd42e83fd772a5f7ec98b2c56751bd3f65"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/Pylons/waitress/security/advisories/GHSA-4ppp-gpcr-7qf6"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/advisories/GHSA-j7j6-7hfx-5522"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2020-178",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.4.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1",
+        "0.2",
+        "0.3",
+        "0.4",
+        "0.5",
+        "0.6",
+        "0.6.1",
+        "0.7",
+        "0.8",
+        "0.8.1",
+        "0.8.2",
+        "0.8.3",
+        "0.8.4",
+        "0.8.5",
+        "0.8.6",
+        "0.8.7",
+        "0.8.8",
+        "0.8.9",
+        "0.8.10",
+        "0.8.11b0",
+        "0.9.0b0",
+        "0.9.0b1",
+        "0.9.0",
+        "1.0a1",
+        "1.0a2",
+        "1.0.0",
+        "1.0.1",
+        "1.0.2",
+        "1.1.0",
+        "1.2.0b1",
+        "1.2.0b2",
+        "1.2.0b3",
+        "1.2.0",
+        "1.2.1",
+        "1.3.0b0",
+        "1.3.0",
+        "1.3.1"
+      ],
+      "affected_conda_versions": [
+        "1.1.0",
+        "1.2.0",
+        "1.2.1",
+        "1.3.0",
+        "1.3.1"
+      ]
+    },
+    {
+      "id": "PYSEC-2020-197",
+      "primary_id": "PYSEC-2020-197",
+      "aliases": [],
+      "cve_ids": [],
+      "ecosystem": "PyPI",
+      "upstream_name": "waitress",
+      "summary": null,
+      "details": "Waitress through version 1.3.1 allows request smuggling by sending the Content-Length header twice. Waitress would header fold a double Content-Length header and due to being unable to cast the now comma separated value to an integer would set the Content-Length to 0 internally. If two Content-Length headers are sent in a single request, Waitress would treat the request as having no body, thereby treating the body of the request as a new request in HTTP pipelining. This issue is fixed in Waitress 1.4.0.",
+      "published": "2020-01-22T19:15:00Z",
+      "modified": "2023-03-14T07:01:09.423920Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://docs.pylonsproject.org/projects/waitress/en/latest/#security-fixes"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/Pylons/waitress/commit/575994cd42e83fd772a5f7ec98b2c56751bd3f65"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/Pylons/waitress/security/advisories/GHSA-4ppp-gpcr-7qf6"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2020-197",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.4.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1",
+        "0.2",
+        "0.3",
+        "0.4",
+        "0.5",
+        "0.6",
+        "0.6.1",
+        "0.7",
+        "0.8",
+        "0.8.1",
+        "0.8.2",
+        "0.8.3",
+        "0.8.4",
+        "0.8.5",
+        "0.8.6",
+        "0.8.7",
+        "0.8.8",
+        "0.8.9",
+        "0.8.10",
+        "0.8.11b0",
+        "0.9.0b0",
+        "0.9.0b1",
+        "0.9.0",
+        "1.0a1",
+        "1.0a2",
+        "1.0.0",
+        "1.0.1",
+        "1.0.2",
+        "1.1.0",
+        "1.2.0b1",
+        "1.2.0b2",
+        "1.2.0b3",
+        "1.2.0",
+        "1.2.1",
+        "1.3.0b0",
+        "1.3.0",
+        "1.3.1"
+      ],
+      "affected_conda_versions": [
+        "1.1.0",
+        "1.2.0",
+        "1.2.1",
+        "1.3.0",
+        "1.3.1"
+      ]
+    },
+    {
+      "id": "PYSEC-2022-169",
+      "primary_id": "CVE-2022-24761",
+      "aliases": [
+        "CVE-2022-24761",
+        "GHSA-4f7p-27jc-3c36"
+      ],
+      "cve_ids": [
+        "CVE-2022-24761"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "waitress",
+      "summary": null,
+      "details": "Waitress is a Web Server Gateway Interface server for Python 2 and 3. When using Waitress versions 2.1.0 and prior behind a proxy that does not properly validate the incoming HTTP request matches the RFC7230 standard, Waitress and the frontend proxy may disagree on where one request starts and where it ends. This would allow requests to be smuggled via the front-end proxy to waitress and later behavior. There are two classes of vulnerability that may lead to request smuggling that are addressed by this advisory: The use of Python's `int()` to parse strings into integers, leading to `+10` to be parsed as `10`, or `0x01` to be parsed as `1`, where as the standard specifies that the string should contain only digits or hex digits; and Waitress does not support chunk extensions, however it was discarding them without validating that they did not contain illegal characters. This vulnerability has been patched in Waitress 2.1.1. A workaround is available. When deploying a proxy in front of waitress, turning on any and all functionality to make sure that the request matches the RFC7230 standard. Certain proxy servers may not have this functionality though and users are encouraged to upgrade to the latest version of waitress instead.",
+      "published": "2022-03-17T13:15:00Z",
+      "modified": "2023-11-08T04:08:35.551138Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "FIX",
+          "url": "https://github.com/Pylons/waitress/commit/9e0b8c801e4d505c2ffc91b891af4ba48af715e0"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/Pylons/waitress/security/advisories/GHSA-4f7p-27jc-3c36"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/Pylons/waitress/releases/tag/v2.1.1"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2022-169",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.1.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1",
+        "0.2",
+        "0.3",
+        "0.4",
+        "0.5",
+        "0.6",
+        "0.6.1",
+        "0.7",
+        "0.8",
+        "0.8.1",
+        "0.8.10",
+        "0.8.11b0",
+        "0.8.2",
+        "0.8.3",
+        "0.8.4",
+        "0.8.5",
+        "0.8.6",
+        "0.8.7",
+        "0.8.8",
+        "0.8.9",
+        "0.9.0",
+        "0.9.0b0",
+        "0.9.0b1",
+        "1.0.0",
+        "1.0.1",
+        "1.0.2",
+        "1.0a1",
+        "1.0a2",
+        "1.1.0",
+        "1.2.0",
+        "1.2.0b1",
+        "1.2.0b2",
+        "1.2.0b3",
+        "1.2.1",
+        "1.3.0",
+        "1.3.0b0",
+        "1.3.1",
+        "1.4.0",
+        "1.4.1",
+        "1.4.2",
+        "1.4.3",
+        "1.4.4",
+        "2.0.0",
+        "2.0.0b0",
+        "2.0.0b1",
+        "2.1.0",
+        "2.1.0b0"
+      ],
+      "affected_conda_versions": [
+        "1.1.0",
+        "1.2.0",
+        "1.2.1",
+        "1.3.0",
+        "1.3.1",
+        "1.4.1",
+        "1.4.3",
+        "1.4.4",
+        "2.0.0",
+        "2.1.0"
+      ]
+    },
+    {
+      "id": "PYSEC-2022-205",
+      "primary_id": "CVE-2022-31015",
+      "aliases": [
+        "CVE-2022-31015",
+        "GHSA-f5x9-8jwc-25rw"
+      ],
+      "cve_ids": [
+        "CVE-2022-31015"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "waitress",
+      "summary": null,
+      "details": "Waitress is a Web Server Gateway Interface server for Python 2 and 3. Waitress versions 2.1.0 and 2.1.1 may terminate early due to a thread closing a socket while the main thread is about to call select(). This will lead to the main thread raising an exception that is not handled and then causing the entire application to be killed. This issue has been fixed in Waitress 2.1.2 by no longer allowing the WSGI thread to close the socket. Instead, that is always delegated to the main thread. There is no work-around for this issue. However, users using waitress behind a reverse proxy server are less likely to have issues if the reverse proxy always reads the full response.",
+      "published": "2022-05-31T23:15:00Z",
+      "modified": "2023-11-08T04:09:22.536443Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/Pylons/waitress/pull/377"
+        },
+        {
+          "type": "REPORT",
+          "url": "https://github.com/Pylons/waitress/issues/374"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/Pylons/waitress/security/advisories/GHSA-f5x9-8jwc-25rw"
+        },
+        {
+          "type": "FIX",
+          "url": "https://github.com/Pylons/waitress/commit/4f6789b035610e0552738cdc4b35ca809a592d48"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2022-205",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "2.1.0"
+            },
+            {
+              "fixed": "2.1.2"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "2.1.0",
+        "2.1.1"
+      ],
+      "affected_conda_versions": [
+        "2.1.0",
+        "2.1.1"
+      ]
+    },
+    {
+      "id": "PYSEC-2024-210",
+      "primary_id": "CVE-2024-49768",
+      "aliases": [
+        "CVE-2024-49768",
+        "GHSA-9298-4cf8-g4wj"
+      ],
+      "cve_ids": [
+        "CVE-2024-49768"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "waitress",
+      "summary": null,
+      "details": "Waitress is a Web Server Gateway Interface server for Python 2 and 3. A remote client may send a request that is exactly recv_bytes (defaults to 8192) long, followed by a secondary request using HTTP pipelining. When request lookahead is disabled (default) we won't read any more requests, and when the first request fails due to a parsing error, we simply close the connection. However when request lookahead is enabled, it is possible to process and receive the first request, start sending the error message back to the client while we read the next request and queue it. This will allow the secondary request to be serviced by the worker thread while the connection should be closed. Waitress 3.0.1 fixes the race condition. As a workaround, disable channel_request_lookahead, this is set to 0 by default disabling this feature.",
+      "published": "2024-10-29T15:15:11Z",
+      "modified": "2025-01-19T19:56:46.402896Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:L/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:L/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/Pylons/waitress/security/advisories/GHSA-9298-4cf8-g4wj"
+        },
+        {
+          "type": "FIX",
+          "url": "https://github.com/Pylons/waitress/commit/e4359018537af376cf24bd13616d861e2fb76f65"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2024-210",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "2.0.0"
+            },
+            {
+              "fixed": "3.0.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "2.0.0",
+        "2.1.0",
+        "2.1.0b0",
+        "2.1.1",
+        "2.1.2",
+        "3.0.0"
+      ],
+      "affected_conda_versions": [
+        "2.0.0",
+        "2.1.0",
+        "2.1.1",
+        "2.1.2",
+        "3.0.0"
+      ]
+    },
+    {
+      "id": "PYSEC-2024-211",
+      "primary_id": "CVE-2024-49769",
+      "aliases": [
+        "CVE-2024-49769",
+        "GHSA-3f84-rpwh-47g6"
+      ],
+      "cve_ids": [
+        "CVE-2024-49769"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "waitress",
+      "summary": null,
+      "details": "Waitress is a Web Server Gateway Interface server for Python 2 and 3. When a remote client closes the connection before waitress has had the opportunity to call getpeername() waitress won't correctly clean up the connection leading to the main thread attempting to write to a socket that no longer exists, but not removing it from the list of sockets to attempt to process. This leads to a busy-loop calling the write function. A remote attacker could run waitress out of available sockets with very little resources required. Waitress 3.0.1 contains fixes that remove the race condition.",
+      "published": "2024-10-29T15:15:12Z",
+      "modified": "2025-01-19T19:56:44.597517Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/Pylons/waitress/security/advisories/GHSA-3f84-rpwh-47g6"
+        },
+        {
+          "type": "FIX",
+          "url": "https://github.com/Pylons/waitress/commit/1ae4e894c9f76543bee06584001583fc6fa8c95c"
+        },
+        {
+          "type": "FIX",
+          "url": "https://github.com/Pylons/waitress/pull/435"
+        },
+        {
+          "type": "REPORT",
+          "url": "https://github.com/Pylons/waitress/issues/418"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2024/11/msg00012.html"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2024-211",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "3.0.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1",
+        "0.2",
+        "0.3",
+        "0.4",
+        "0.5",
+        "0.6",
+        "0.6.1",
+        "0.7",
+        "0.8",
+        "0.8.1",
+        "0.8.10",
+        "0.8.11b0",
+        "0.8.2",
+        "0.8.3",
+        "0.8.4",
+        "0.8.5",
+        "0.8.6",
+        "0.8.7",
+        "0.8.8",
+        "0.8.9",
+        "0.9.0",
+        "0.9.0b0",
+        "0.9.0b1",
+        "1.0.0",
+        "1.0.1",
+        "1.0.2",
+        "1.0a1",
+        "1.0a2",
+        "1.1.0",
+        "1.2.0",
+        "1.2.0b1",
+        "1.2.0b2",
+        "1.2.0b3",
+        "1.2.1",
+        "1.3.0",
+        "1.3.0b0",
+        "1.3.1",
+        "1.4.0",
+        "1.4.1",
+        "1.4.2",
+        "1.4.3",
+        "1.4.4",
+        "2.0.0",
+        "2.0.0b0",
+        "2.0.0b1",
+        "2.1.0",
+        "2.1.0b0",
+        "2.1.1",
+        "2.1.2",
+        "3.0.0"
+      ],
+      "affected_conda_versions": [
+        "1.1.0",
+        "1.2.0",
+        "1.2.1",
+        "1.3.0",
+        "1.3.1",
+        "1.4.1",
+        "1.4.3",
+        "1.4.4",
+        "2.0.0",
+        "2.1.0",
+        "2.1.1",
+        "2.1.2",
+        "3.0.0"
+      ]
+    },
+    {
+      "id": "GHSA-73m2-3pwg-5fgc",
+      "primary_id": "CVE-2020-5236",
+      "aliases": [
+        "CVE-2020-5236",
+        "PYSEC-2020-155"
+      ],
+      "cve_ids": [
+        "CVE-2020-5236"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "waitress",
+      "summary": "Catastrophic backtracking in regex allows Denial of Service in Waitress",
+      "details": "### Impact\n\nWhen waitress receives a header that contains invalid characters it will cause the regular expression engine to catastrophically backtrack causing the process to use 100% CPU time and blocking any other interactions.\n\nThis would allow an attacker to send a single request with an invalid header and take the service offline.\n\nInvalid header example:\n\n```\nBad-header: xxxxxxxxxxxxxxx\\x10\n```\n\nIncreasing the number of `x`'s in the header will increase the amount of time Waitress spends in the regular expression engine.\n\nThis issue was introduced in version 1.4.2 when the regular expression was updated to attempt to match the behaviour required by errata associated with RFC7230.\n\n### Patches\n\nThe regular expression that is used to validate incoming headers has been updated in version 1.4.3, it is recommended that people upgrade to the new version of Waitress as soon as possible.\n\n### Workarounds\n\nIf you have deployed a reverse proxy in front of Waitress it may already be rejecting requests that include invalid headers.\n\n### Thanks\n\nThe Pylons Project would like to thank [Fil Zembowicz](https://github.com/fzembow) for reaching out and disclosing this vulnerability!\n\n### References\n\nCatastrophic backtracking explained: https://www.regular-expressions.info/catastrophic.html\n\n### For more information\nIf you have any questions or comments about this advisory:\n\n- open an issue at https://github.com/Pylons/waitress/issues (if not sensitive or security related)\n- email the Pylons Security mailing list: pylons-project-security@googlegroups.com (if security related)",
+      "published": "2020-02-04T03:07:31Z",
+      "modified": "2026-03-13T22:14:56.447145Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:P/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:R/S:U/C:N/I:N/A:H"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:P/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/Pylons/waitress/security/advisories/GHSA-73m2-3pwg-5fgc"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2020-5236"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/Pylons/waitress/commit/6e46f9e3f014d64dd7d1e258eaf626e39870ee1f"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/Pylons/waitress"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/waitress/PYSEC-2020-155.yaml"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-73m2-3pwg-5fgc",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "1.4.2"
+            },
+            {
+              "fixed": "1.4.3"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "1.4.2"
+      ],
+      "affected_conda_versions": []
+    }
+  ]
+}

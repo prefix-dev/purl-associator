@@ -1,0 +1,295 @@
+{
+  "schema_version": 1,
+  "package": "storybook",
+  "purls": [
+    "pkg:npm/storybook"
+  ],
+  "generated_at": "2026-05-18T06:01:40+00:00",
+  "conda_versions_total": 86,
+  "advisories": [
+    {
+      "id": "GHSA-8452-54wp-rmv6",
+      "primary_id": "CVE-2025-68429",
+      "aliases": [
+        "CVE-2025-68429"
+      ],
+      "cve_ids": [
+        "CVE-2025-68429"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "storybook",
+      "summary": "Storybook manager bundle may expose environment variables during build",
+      "details": "On December 11th, the Storybook team received a responsible disclosure alerting them to a potential vulnerability in certain built and published Storybooks. \n\nThe vulnerability is a bug in how Storybook handles environment variables defined in a `.env` file, which could, in specific circumstances, lead to those variables being unexpectedly bundled into the artifacts created by the `storybook build` command. When a built Storybook is published to the web, the bundle\u2019s source is viewable, thus potentially exposing those variables to anyone with access. If those variables contained secrets, they should be considered compromised.\n\n## Who is impacted?\n\nFor a project to be vulnerable to this issue, it must:\n\n- Build the Storybook (i.e. run `storybook build` directly or indirectly) in a directory that contains a `.env` file (including variants like `.env.local`)\n- The `.env` file contains sensitive secrets\n- Use Storybook version `7.0.0` or above\n- Publish the built Storybook to the web\n\nStorybooks built without a `.env` file at build time are not affected, including common CI-based builds where secrets are provided via platform environment variables rather than `.env` files.\n\nUsers' Storybook runtime environments (i.e. `storybook dev`) are not affected. Deployed applications that share a repo with a project's Storybook are not affected.\n\nStorybook 6 and below are not affected.\n\n## Recommended actions\n\nFirst, Storybook recommends that everyone audit for any sensitive secrets provided via `.env` files and rotate those keys.\n\nSecond, Storybook has released patched versions of all affected major Storybook versions that no longer have this vulnerability. Projects should upgrade their Storybook\u2014on both local machines and CI environments\u2014to one of these versions **before publishing again**.\n\n- `10.1.10+`\n- `9.1.17+`\n- `8.6.15+`\n- `7.6.21+`\n\nFinally, some projects may have been relying on the undocumented behavior at the heart of this issue and will need to change how they reference environment variables after this update. If a project can no longer read necessary environmental variable values, it can either prefix the variables with `STORYBOOK_` or use the [`env` property in Storybook\u2019s configuration](https://storybook.js.org/docs/configure/environment-variables#using-storybook-configuration) to manually specify values. In either case, **do not** include sensitive secrets as they *will* be included in the built bundle.\n\n## Further information\n\nDetails of the vulnerability can be found on the [Storybook announcement](https://storybook.js.org/blog/security-advisory).",
+      "published": "2025-12-18T18:49:21Z",
+      "modified": "2025-12-18T21:21:26.271968Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/storybookjs/storybook/security/advisories/GHSA-8452-54wp-rmv6"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-68429"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/storybookjs/storybook"
+        },
+        {
+          "type": "WEB",
+          "url": "https://storybook.js.org/blog/security-advisory"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-8452-54wp-rmv6",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "7.0.0"
+            },
+            {
+              "fixed": "7.6.21"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "8.3.3",
+        "8.5.0",
+        "8.5.1",
+        "8.5.2",
+        "8.5.3",
+        "8.5.4",
+        "8.5.5",
+        "8.5.6",
+        "8.5.7",
+        "8.5.8",
+        "8.6.3",
+        "8.6.4",
+        "8.6.6",
+        "8.6.7",
+        "8.6.8",
+        "8.6.9",
+        "8.6.10",
+        "8.6.11",
+        "8.6.12",
+        "8.6.13",
+        "8.6.14",
+        "9.0.0",
+        "9.0.1",
+        "9.0.2",
+        "9.0.3",
+        "9.0.4",
+        "9.0.9",
+        "9.0.12",
+        "9.0.13",
+        "9.0.14",
+        "9.0.15",
+        "9.0.16",
+        "9.0.17",
+        "9.0.18",
+        "9.1.0",
+        "9.1.1",
+        "9.1.2",
+        "9.1.3",
+        "9.1.4",
+        "9.1.5",
+        "9.1.6",
+        "9.1.7",
+        "9.1.8",
+        "9.1.9",
+        "9.1.10",
+        "9.1.11",
+        "9.1.12",
+        "9.1.13",
+        "9.1.15",
+        "10.0.3",
+        "10.0.6",
+        "10.0.7",
+        "10.0.8",
+        "10.1.0",
+        "10.1.1",
+        "10.1.2",
+        "10.1.3",
+        "10.1.4",
+        "10.1.5",
+        "10.1.6",
+        "10.1.8"
+      ]
+    },
+    {
+      "id": "GHSA-mjf5-7g4m-gx5w",
+      "primary_id": "CVE-2026-27148",
+      "aliases": [
+        "CVE-2026-27148"
+      ],
+      "cve_ids": [
+        "CVE-2026-27148"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "storybook",
+      "summary": "Storybook Dev Server is Vulnerable to WebSocket Hijacking",
+      "details": "### Summary\n\nThe WebSocket functionality in Storybook's dev server, used to create and update stories, is vulnerable to WebSocket hijacking. This vulnerability **only affects the Storybook dev server; production builds are not impacted**.\n\n### Details\n\nExploitation requires a developer to visit a malicious website while their local Storybook dev server is running. Because the WebSocket connection does not validate the origin of incoming connections, a malicious site can silently send WebSocket messages to the local instance without any further user interaction.\n\nIf a Storybook dev server is intentionally exposed publicly (e.g. for design reviews or stakeholder demos) the risk is higher, as no malicious site visit is required. Any unauthenticated attacker can send WebSocket messages to it directly.\n\nThe vulnerability affects the WebSocket message handlers for creating and saving stories, which can be exploited via unauthorized WebSocket connections to achieve persistent XSS or Remote Code Execution (RCE).\n\n_Note: recent versions of Chrome have some protections against this, but Firefox does not._\n\n### Impact\nThis vulnerability can lead to supply chain compromise. Key risks include:\n\n- **Remote Code Execution**: The vulnerability can allow attackers to execute malicious code, with the extent of impact depending on the configuration. Server-side RCE is possible in non-default configurations, such as when stories are executed via portable stories in JSDOM, potentially allowing attackers to exfiltrate credentials and environment variables, access source code and the filesystem, establish backdoors, or pivot to internal network resources.\n- **Persistent XSS**: Malicious payloads are written directly into story source files. If the malicious payload is committed to version control, it becomes part of the codebase and can propagate to deployed Storybook documentation sites, affecting developers and stakeholders who view them.\n- **Supply Chain Propagation**: If the modified source files are committed, injected code can spread to other team members via git, execute in CI/CD pipelines, and affect shared component libraries used across multiple projects.\n\n### Affected versions\n\n8.1 and above. While the exploitable functionality was introduced in 8.1, the patch has been applied to 7.x as a precautionary measure given the underlying WebSocket behaviour.\n\n### Recommended actions\nUpdate to one of the patched versions: `7.6.23`, `8.6.17`, `9.1.19`, `10.2.10`.",
+      "published": "2026-02-26T15:16:10Z",
+      "modified": "2026-02-26T15:32:56.650508Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:A/VC:H/VI:H/VA:H/SC:H/SI:H/SA:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:A/VC:H/VI:H/VA:H/SC:H/SI:H/SA:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/storybookjs/storybook/security/advisories/GHSA-mjf5-7g4m-gx5w"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-27148"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/storybookjs/storybook/commit/0affdf928bd6fafbadfb1dfe22ce6104805e10e8"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/storybookjs/storybook/commit/54689a8add18ea75d628c540f4bc677592a1e685"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/storybookjs/storybook/commit/b8cfa77c73940c140acdcd8a06ab1ea913c44761"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/storybookjs/storybook/commit/d34085f39c647f5c23c3a3b2d197c18602fcf876"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/storybookjs/storybook"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/storybookjs/storybook/releases/tag/v10.2.10"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/storybookjs/storybook/releases/tag/v7.6.23"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/storybookjs/storybook/releases/tag/v8.6.17"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/storybookjs/storybook/releases/tag/v9.1.19"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-mjf5-7g4m-gx5w",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "8.1.0"
+            },
+            {
+              "fixed": "8.6.17"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "8.3.3",
+        "8.5.0",
+        "8.5.1",
+        "8.5.2",
+        "8.5.3",
+        "8.5.4",
+        "8.5.5",
+        "8.5.6",
+        "8.5.7",
+        "8.5.8",
+        "8.6.3",
+        "8.6.4",
+        "8.6.6",
+        "8.6.7",
+        "8.6.8",
+        "8.6.9",
+        "8.6.10",
+        "8.6.11",
+        "8.6.12",
+        "8.6.13",
+        "8.6.14",
+        "9.0.0",
+        "9.0.1",
+        "9.0.2",
+        "9.0.3",
+        "9.0.4",
+        "9.0.9",
+        "9.0.12",
+        "9.0.13",
+        "9.0.14",
+        "9.0.15",
+        "9.0.16",
+        "9.0.17",
+        "9.0.18",
+        "9.1.0",
+        "9.1.1",
+        "9.1.2",
+        "9.1.3",
+        "9.1.4",
+        "9.1.5",
+        "9.1.6",
+        "9.1.7",
+        "9.1.8",
+        "9.1.9",
+        "9.1.10",
+        "9.1.11",
+        "9.1.12",
+        "9.1.13",
+        "9.1.15",
+        "10.0.3",
+        "10.0.6",
+        "10.0.7",
+        "10.0.8",
+        "10.1.0",
+        "10.1.1",
+        "10.1.2",
+        "10.1.3",
+        "10.1.4",
+        "10.1.5",
+        "10.1.6",
+        "10.1.8",
+        "10.1.10",
+        "10.1.11",
+        "10.2.0",
+        "10.2.1",
+        "10.2.2",
+        "10.2.3",
+        "10.2.4",
+        "10.2.5",
+        "10.2.6",
+        "10.2.7",
+        "10.2.8",
+        "10.2.9"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,131 @@
+{
+  "schema_version": 1,
+  "package": "unocss",
+  "purls": [
+    "pkg:npm/%40unocss/cli"
+  ],
+  "generated_at": "2026-05-18T06:01:40+00:00",
+  "conda_versions_total": 36,
+  "advisories": [
+    {
+      "id": "GHSA-3mrp-qhcj-mwv5",
+      "primary_id": "GHSA-3mrp-qhcj-mwv5",
+      "aliases": [],
+      "cve_ids": [],
+      "ecosystem": "npm",
+      "upstream_name": "cli",
+      "summary": "Duplicate Advisory: Node CLI Allows Arbitrary File Overwrite",
+      "details": "## Duplicate Advisory\nThis advisory has been withdrawn because it is a duplicate of GHSA-6cpc-mj5c-m9rq. This link is maintained to preserve external references.\n\n## Original Description\nAn issue exists in node-cli 0.1.0 through 0.11.3 due to predictable temporary file names in lock_file and log_file, which allows an attacker to overwrite files.",
+      "published": "2022-05-24T17:02:32Z",
+      "modified": "2023-12-08T21:57:37Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.0/AV:N/AC:L/PR:L/UI:R/S:U/C:N/I:L/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.0/AV:N/AC:L/PR:L/UI:R/S:U/C:N/I:L/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2016-1000021"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2016-10538"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/node-js-libs/cli/issues/81"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugzilla.redhat.com/show_bug.cgi?id=CVE-2016-1000021"
+        },
+        {
+          "type": "WEB",
+          "url": "https://web.archive.org/web/20190430172230/https://www.npmjs.com/advisories/95"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-3mrp-qhcj-mwv5",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0.1.0"
+            },
+            {
+              "fixed": "1.0.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "0.62.3"
+      ]
+    },
+    {
+      "id": "GHSA-6cpc-mj5c-m9rq",
+      "primary_id": "CVE-2016-10538",
+      "aliases": [
+        "CVE-2016-10538"
+      ],
+      "cve_ids": [
+        "CVE-2016-10538"
+      ],
+      "ecosystem": "npm",
+      "upstream_name": "cli",
+      "summary": "Arbitrary File Write in cli",
+      "details": "Affected versions of `cli` use predictable temporary file names. If an attacker can create a symbolic link at the location of one of these temporarly file names, the attacker can arbitrarily write to any file that the user which owns the `cli` process has permission to write to.\n\n\n## Proof of Concept\n\nBy creating Symbolic Links at the following locations, the target of the link can be written to.\n```\nlock_file = '/tmp/' + cli.app + '.pid',\nlog_file = '/tmp/' + cli.app + '.log';\n```\n\n\n## Recommendation\n\nUpdate to version 1.0.0 or later.",
+      "published": "2019-02-18T23:40:03Z",
+      "modified": "2023-11-08T03:58:11.333391Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2016-10538"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/node-js-libs/cli/issues/81"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=809252"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/advisories/GHSA-6cpc-mj5c-m9rq"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.npmjs.com/advisories/95"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-6cpc-mj5c-m9rq",
+      "osv_ranges": [
+        {
+          "type": "SEMVER",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.0.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": null,
+      "affected_conda_versions": [
+        "0.62.3"
+      ]
+    }
+  ]
+}

