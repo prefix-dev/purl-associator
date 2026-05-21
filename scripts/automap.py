@@ -85,6 +85,10 @@ class AutoEntry:
     alternative_purls: list[dict] | None = None
     note: str | None = None
     fetched_at: str | None = None
+    # Lifetime download count on prefix.dev (Package.totalCount), backfilled
+    # by ``scripts.hydrate_downloads``. ``None`` means "not yet hydrated" or
+    # "package not visible on prefix.dev".
+    download_count: int | None = None
 
 
 def _record_sort_key(record: RepoDataRecord) -> tuple[VersionWithSource, str, str, int]:
@@ -440,8 +444,9 @@ def main(
         None,
         "--top-downloads",
         help=(
-            "Restrict step 1 to the top-N most-downloaded names on prefix.dev "
-            "(channel must match) and prune auto.json to just those names."
+            "Process the top-N most-downloaded names on prefix.dev in step 1 "
+            "(channel must match). Additive: existing entries in auto.json are "
+            "preserved; only the top-N names are (re)inferred."
         ),
     ),
     parallel: int = typer.Option(20, help="parallel inflight recipe fetches"),
@@ -481,16 +486,17 @@ async def _async_main(
     existing = {} if force else _load_existing(out)
     console.log(f"Loaded {len(existing):,} cached entries from {out}")
 
-    top_names: set[str] | None = None
     if top_downloads is not None:
         console.log(
             f"Fetching top {top_downloads:,} most-downloaded "
             f"[bold]{channel}[/] packages from prefix.dev…"
         )
         ranked = await fetch_top_names(limit=top_downloads, channel=channel)
-        top_names = set(ranked)
         only = ranked
-        console.log(f"Restricting step 1 to {len(top_names):,} top names")
+        console.log(
+            f"Step 1 will (re)process {len(ranked):,} top names; "
+            "existing auto.json entries are preserved"
+        )
 
     records = await _gather_records(channel=channel, platforms=platforms, names=only)
     if limit is not None:
@@ -558,19 +564,16 @@ async def _async_main(
 
             results = await asyncio.gather(*(runner(r) for r in needs_fetch))
             for entry in results:
+                # Preserve prefix.dev download counts across re-runs — they're
+                # owned by scripts.hydrate_downloads, not the recipe fetch.
+                prior_entry = existing.get(entry.name)
+                if prior_entry is not None:
+                    entry.download_count = prior_entry.download_count
                 new_entries[entry.name] = entry
 
-    # Drop entries for packages that disappeared from the channel. For
-    # --top-downloads we also prune so auto.json ends up with exactly the
-    # requested set (any cached entries outside the top-N go away).
-    if top_names is not None:
-        live_names: set[str] = top_names
-    elif not only and not limit:
+    # Drop entries for packages that disappeared from the channel
+    if not only and not limit:
         live_names = {r.name.normalized for r in records}
-    else:
-        live_names = None  # type: ignore[assignment]
-
-    if live_names is not None:
         for stale in [n for n in new_entries if n not in live_names]:
             del new_entries[stale]
 

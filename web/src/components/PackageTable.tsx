@@ -4,7 +4,13 @@ import type { Edit, PackageEntry } from "../data/types";
 import { ECOSYSTEMS } from "../data/loader";
 import { EcosystemChip, Glyph, StatusPill, Theme } from "./Primitives";
 
-export type SortKey = "name" | "version" | "ecosystem" | "purl" | "status";
+export type SortKey =
+  | "name"
+  | "version"
+  | "downloads"
+  | "ecosystem"
+  | "purl"
+  | "status";
 export type SortDir = "asc" | "desc";
 
 type Filters = {
@@ -104,6 +110,11 @@ export function PackageTable({
           break;
         case "version":
           cmp = a.version.localeCompare(b.version, undefined, { numeric: true });
+          break;
+        case "downloads":
+          // Treat missing as -1 so unknown counts always sit at the bottom
+          // when sorting descending and at the top when sorting ascending.
+          cmp = (a.download_count ?? -1) - (b.download_count ?? -1);
           break;
         case "ecosystem":
           cmp = effectiveType(a, edits).localeCompare(effectiveType(b, edits));
@@ -403,7 +414,7 @@ export function PackageTable({
         style={{
           display: "grid",
           gridTemplateColumns:
-            "32px minmax(180px, 1fr) 70px 110px minmax(220px, 2fr) 100px",
+            "32px minmax(180px, 1fr) 70px 90px 110px minmax(220px, 2fr) 100px",
           gap: 8,
           padding: "6px 14px",
           borderBottom: `1px solid ${t.border}`,
@@ -437,6 +448,14 @@ export function PackageTable({
           theme={theme}
           label="Ver"
           col="version"
+          activeKey={sortKey}
+          dir={sortDir}
+          onSort={onSort}
+        />
+        <SortHeader
+          theme={theme}
+          label="Downloads"
+          col="downloads"
           activeKey={sortKey}
           dir={sortDir}
           onSort={onSort}
@@ -508,7 +527,7 @@ export function PackageTable({
                     transform: `translateY(${vi.start}px)`,
                     display: "grid",
                     gridTemplateColumns:
-                      "32px minmax(180px, 1fr) 70px 110px minmax(220px, 2fr) 100px",
+                      "32px minmax(180px, 1fr) 70px 90px 110px minmax(220px, 2fr) 100px",
                     gap: 8,
                     padding: "0 14px",
                     alignItems: "center",
@@ -555,6 +574,21 @@ export function PackageTable({
                     }}
                   >
                     {p.version}
+                  </span>
+                  <span
+                    style={{
+                      color: p.download_count == null ? t.fg3 : t.fg2,
+                      fontSize: 11,
+                      fontVariantNumeric: "tabular-nums",
+                      textAlign: "right",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {p.download_count == null
+                      ? "—"
+                      : p.download_count.toLocaleString()}
                   </span>
                   <span style={{ overflow: "hidden" }}>
                     <EcosystemChip id={eco} theme={theme} />
