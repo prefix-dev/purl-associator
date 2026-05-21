@@ -10,7 +10,13 @@ For each package with at least one PURL in ``web/public/mappings.json``
 3. Intersects each advisory's affected-version *ranges* (or explicit version
    list) with the set of conda-forge versions, producing the set of conda
    versions believed to be vulnerable.
-4. Writes one JSON file per package to ``mappings/cves/<pkg>.json``.
+4. Writes one JSON file per package to ``mappings/cves/<pkg>.json``. Each
+   advisory in that file is the **verbatim OSV record**, re-emitted unchanged
+   so it validates against the official OSV schema (``schemas/osv-schema.json``).
+   The conda-forge match — affected versions, the conda PURL, the source PURL
+   the match came through — is attached under the record's
+   ``database_specific["conda-forge"]`` key, the OSV-sanctioned extension slot
+   for downstream database-specific data.
 
 The version comparison defaults to a direct upstream-vs-conda match using
 ``rattler.version.Version`` (which understands both PEP 440-ish PyPI versions
@@ -22,6 +28,7 @@ mistranslates — :mod:`scripts.merge_cves` applies those during the merge.
 from __future__ import annotations
 
 import asyncio
+import copy
 import json
 import sys
 import time
@@ -236,95 +243,111 @@ def _aggregate_conda_versions(records: Iterable[RepoDataRecord]) -> list[CondaVe
     return sorted(by_version.values(), key=lambda c: c.parsed)
 
 
-def _osv_severity(adv: Advisory) -> dict | None:
-    """Pick the most informative severity entry. Prefer CVSS_V3, then V4, V2,
-    else whatever the advisory has first. None if there's no severity at all."""
-    if not adv.severity:
-        return None
-    pri = {"CVSS_V4": 4, "CVSS_V3": 3, "CVSS_V2": 2}
-    return max(
-        adv.severity,
-        key=lambda s: pri.get(s.get("type", ""), 0) if isinstance(s, dict) else 0,
-    )
+def _conda_purl(conda_package: str) -> str:
+    """A package-level conda PURL (purl-spec ``conda`` type). conda-forge is
+    recorded as a channel qualifier; no version is pinned at this level."""
+    return f"pkg:conda/{conda_package}?channel=conda-forge"
 
 
-def _osv_url(adv: Advisory) -> str:
-    return f"https://osv.dev/vulnerability/{adv.id}"
+_EVENT_KEYS = frozenset({"introduced", "fixed", "last_affected", "limit"})
 
 
-def _build_advisory_record(adv: Advisory, affected_versions: list[str]) -> dict:
-    """Distill an :class:`Advisory` into the shape we store on disk."""
-    entry = adv.raw_affected
-    ranges = []
-    for rng in entry.get("ranges") or []:
-        if not isinstance(rng, dict):
+def _repair_osv_record(record: dict) -> dict:
+    """Strip malformed range events from a verbatim OSV record, in place.
+
+    OSV occasionally publishes records with empty ``{}`` range events (seen on
+    several 2025 PYSEC ``transformers`` advisories). They carry no information,
+    are ignored by :func:`version_in_affected_entry`, and make the record fail
+    OSV-schema validation — so we drop them, along with any range left without
+    a usable event. Nothing else in the record is altered."""
+    for affected in record.get("affected") or []:
+        if not isinstance(affected, dict) or not isinstance(
+            affected.get("ranges"), list
+        ):
             continue
-        if rng.get("type") == "GIT":
-            continue
-        events_out: list[dict] = []
-        for ev in rng.get("events") or []:
-            if isinstance(ev, dict):
-                events_out.append(ev)
-        ranges.append({"type": rng.get("type") or "ECOSYSTEM", "events": events_out})
-    versions_list = entry.get("versions")
-    if not isinstance(versions_list, list):
-        versions_list = None
-    record = {
-        "id": adv.id,
-        "primary_id": adv.primary_id(),
-        "aliases": adv.aliases,
-        "cve_ids": adv.cve_ids(),
-        "ecosystem": adv.ecosystem,
-        "upstream_name": adv.name,
-        "summary": adv.summary,
-        "details": adv.details,
-        "published": adv.published,
-        "modified": adv.modified,
-        "severity": _osv_severity(adv),
-        "all_severity": adv.severity,
-        "references": adv.references,
-        "osv_url": _osv_url(adv),
-        "osv_ranges": ranges,
-        "osv_versions": versions_list,
-        "affected_conda_versions": affected_versions,
+        repaired: list[dict] = []
+        for rng in affected["ranges"]:
+            if not isinstance(rng, dict):
+                continue
+            events = rng.get("events")
+            if isinstance(events, list):
+                events = [
+                    ev
+                    for ev in events
+                    if isinstance(ev, dict) and _EVENT_KEYS & ev.keys()
+                ]
+                if not events:
+                    continue  # range with no usable events — drop it
+                rng["events"] = events
+            repaired.append(rng)
+        affected["ranges"] = repaired
+    return record
+
+
+def _build_osv_record(
+    adv: Advisory,
+    affected_versions: list[str],
+    *,
+    conda_package: str,
+    source_purls: list[str],
+    conda_versions_total: int,
+    generated_at: str,
+) -> dict:
+    """Re-emit the verbatim OSV record with the conda-forge match attached.
+
+    The record is the advisory exactly as OSV published it, so it still
+    validates against the official OSV schema. Our derived data — which
+    conda-forge versions are affected, the conda PURL, which source PURL the
+    match came through — goes into ``database_specific["conda-forge"]``, the
+    OSV-sanctioned extension slot for database-specific fields. ``conda-forge``
+    is not an OSV ecosystem, so it cannot be a real ``affected[]`` entry."""
+    record = _repair_osv_record(copy.deepcopy(adv.raw))
+    db = record.get("database_specific")
+    if not isinstance(db, dict):
+        db = {}
+    db["conda-forge"] = {
+        "package": conda_package,
+        "purl": _conda_purl(conda_package),
+        "source_purls": source_purls,
+        "affected_versions": affected_versions,
+        "conda_versions_total": conda_versions_total,
+        "derived_by": "purl-associator/scripts.cve_match",
+        "generated_at": generated_at,
     }
+    record["database_specific"] = db
     return record
 
 
 def _match_advisories(
     purls: list[ParsedPurl], osv: OsvIndex, versions: list[CondaVersion]
-) -> tuple[list[dict], set[str]]:
-    """Return (advisory_records, advisory_ids_matched). The same advisory may
-    legitimately appear once per PURL (e.g. a numpy CVE indexed under both
-    PyPI and the npm fork). We dedupe by OSV id but keep the union of
-    affected conda versions across whichever PURL matched it."""
-    seen: dict[str, dict] = {}
+) -> dict[str, tuple[Advisory, list[str]]]:
+    """Map each matched OSV id to ``(advisory, affected_conda_versions)``.
+
+    The same advisory may legitimately match more than one PURL (e.g. a numpy
+    CVE indexed under both the PyPI and npm names). We dedupe by OSV id and
+    union the affected conda versions across whichever PURL matched it."""
+    seen: dict[str, tuple[Advisory, set[str]]] = {}
     for purl in purls:
         for adv in osv.for_purl(purl.type, purl.name):
             entry = adv.raw_affected
-            affected: list[str] = []
+            affected: set[str] = set()
             for v in versions:
                 try:
                     if version_in_affected_entry(v.parsed, entry):
-                        affected.append(v.version)
+                        affected.add(v.version)
                 except Exception:
                     # Defensive: a single broken OSV range shouldn't poison
                     # the whole package match. Skip the version, move on.
                     continue
-            record = _build_advisory_record(adv, affected)
-            existing = seen.get(adv.id)
-            if existing is None:
-                seen[adv.id] = record
+            prev = seen.get(adv.id)
+            if prev is None:
+                seen[adv.id] = (adv, affected)
             else:
-                # Union the affected versions; keep the broader range data
-                # from whichever entry has it.
-                merged = sorted(
-                    set(existing["affected_conda_versions"])
-                    | set(record["affected_conda_versions"]),
-                    key=lambda s: _safe_version(s) or Version("0"),
-                )
-                existing["affected_conda_versions"] = merged
-    return list(seen.values()), set(seen.keys())
+                seen[adv.id] = (prev[0], prev[1] | affected)
+    return {
+        adv_id: (adv, sorted(affected, key=lambda s: _safe_version(s) or Version("0")))
+        for adv_id, (adv, affected) in seen.items()
+    }
 
 
 # ---------- I/O ----------
@@ -535,23 +558,37 @@ async def _async_main(
     ) as progress:
         task = progress.add_task("Matching advisories…", total=len(candidates))
         for name, purls in candidates.items():
-            records = records_by_name.get(name) or []
-            versions = _aggregate_conda_versions(records)
-            advisories, _ids = _match_advisories(purls, osv, versions)
-            advisories = [a for a in advisories if a["affected_conda_versions"]] + [
-                a for a in advisories if not a["affected_conda_versions"]
-            ]
-            if not advisories:
+            repo_records = records_by_name.get(name) or []
+            versions = _aggregate_conda_versions(repo_records)
+            matched = _match_advisories(purls, osv, versions)
+            if not matched:
                 # OSV listed an advisory referencing the same name but our
                 # conda versions don't intersect any of its ranges. Skip
-                # writing a noisy empty file — but still log so reviewers
-                # can spot recurring false-negatives.
+                # writing a noisy empty file.
                 progress.advance(task)
                 continue
+            source_purls = [p.to_string() for p in purls]
+            advisories = [
+                _build_osv_record(
+                    adv,
+                    affected,
+                    conda_package=name,
+                    source_purls=source_purls,
+                    conda_versions_total=len(versions),
+                    generated_at=generated_at,
+                )
+                for adv, affected in matched.values()
+            ]
+            # Advisories that actually hit a conda version sort first.
+            advisories.sort(
+                key=lambda r: (
+                    not r["database_specific"]["conda-forge"]["affected_versions"]
+                )
+            )
             payload = {
                 "schema_version": 1,
                 "package": name,
-                "purls": [p.to_string() for p in purls],
+                "purls": source_purls,
                 "generated_at": generated_at,
                 "conda_versions_total": len(versions),
                 "advisories": advisories,
@@ -559,7 +596,8 @@ async def _async_main(
             written.append(_write_file(out_dir, name, payload))
             total_advs += len(advisories)
             total_affected_versions += sum(
-                len(a["affected_conda_versions"]) for a in advisories
+                len(r["database_specific"]["conda-forge"]["affected_versions"])
+                for r in advisories
             )
             progress.advance(task)
 
