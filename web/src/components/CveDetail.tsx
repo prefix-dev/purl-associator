@@ -2,11 +2,24 @@ import { useMemo, useState } from "react";
 import type {
   Advisory,
   CvePackage,
-  Review,
   ReviewEdit,
-  ReviewStatus,
+  Vex,
+  VexJustification,
+  VexStatus,
 } from "../data/cves";
-import { REVIEW_STATUSES, editFromReview, isEditNonEmpty } from "../data/cves";
+import {
+  VEX_JUSTIFICATIONS,
+  VEX_STATUSES,
+  advisoryVex,
+  affectedVersions,
+  bestSeverity,
+  cveIds,
+  editFromVex,
+  isEditNonEmpty,
+  osvRanges,
+  osvUrl,
+  primaryId,
+} from "../data/cves";
 import { Btn, Glyph, Theme } from "./Primitives";
 
 type Props = {
@@ -39,8 +52,9 @@ function severityLevel(score: string): {
 }
 
 function SeverityPill({ adv }: { adv: Advisory }) {
-  if (!adv.severity?.score) return null;
-  const lvl = severityLevel(adv.severity.score);
+  const severity = bestSeverity(adv);
+  if (!severity?.score) return null;
+  const lvl = severityLevel(severity.score);
   if (!lvl) return null;
   return (
     <span
@@ -58,7 +72,7 @@ function SeverityPill({ adv }: { adv: Advisory }) {
         textTransform: "uppercase",
         fontFamily: "Inter, sans-serif",
       }}
-      title={adv.severity.score}
+      title={severity.score}
     >
       {lvl.label}
     </span>
@@ -71,27 +85,27 @@ function ReviewBadge({
   isEdited,
 }: {
   theme: Theme;
-  status: ReviewStatus | undefined;
+  status: VexStatus | undefined;
   isEdited: boolean;
 }) {
-  const map: Record<ReviewStatus, { label: string; bg: string; fg: string }> = {
-    confirmed: {
-      label: "Confirmed",
-      bg: theme.dark ? "#1a2a18" : "#eef7e3",
-      fg: theme.dark ? "#9adf6d" : "#5b9b2c",
-    },
-    rejected: {
-      label: "Rejected",
+  const map: Record<VexStatus, { label: string; bg: string; fg: string }> = {
+    affected: {
+      label: "Affected",
       bg: theme.dark ? "#2a1818" : "#ffe1d8",
       fg: theme.dark ? "#ff8e6a" : "#a8401b",
     },
-    "not-applicable": {
-      label: "Not applicable",
-      bg: theme.dark ? "#222" : "#ece8df",
-      fg: theme.dark ? "#dcdfe4" : "#3a3d44",
+    not_affected: {
+      label: "Not affected",
+      bg: theme.dark ? "#1a2a18" : "#eef7e3",
+      fg: theme.dark ? "#9adf6d" : "#5b9b2c",
     },
-    "needs-review": {
-      label: "Needs review",
+    fixed: {
+      label: "Fixed",
+      bg: theme.dark ? "#1a2a18" : "#ecf5dc",
+      fg: theme.dark ? "#9adf6d" : "#5b9b2c",
+    },
+    under_investigation: {
+      label: "Under investigation",
       bg: theme.dark ? "#2a2616" : "#fff4d2",
       fg: theme.dark ? "#f5c542" : "#866400",
     },
@@ -286,16 +300,14 @@ export function CveDetail({
         // Prioritize unreviewed, then critical→low severity, then date.
         const ea = edits[`${pkg.package}::${a.id}`];
         const eb = edits[`${pkg.package}::${b.id}`];
-        const ra = ea?.status ?? a.review?.status;
-        const rb = eb?.status ?? b.review?.status;
+        const ra = ea?.status ?? advisoryVex(a)?.status;
+        const rb = eb?.status ?? advisoryVex(b)?.status;
         if (!ra && rb) return -1;
         if (ra && !rb) return 1;
-        const sa = a.severity?.score
-          ? parseFloat(a.severity.score.match(/(\d+\.\d+)/)?.[1] || "0")
-          : 0;
-        const sb = b.severity?.score
-          ? parseFloat(b.severity.score.match(/(\d+\.\d+)/)?.[1] || "0")
-          : 0;
+        const sevA = bestSeverity(a)?.score;
+        const sevB = bestSeverity(b)?.score;
+        const sa = sevA ? parseFloat(sevA.match(/(\d+\.\d+)/)?.[1] || "0") : 0;
+        const sb = sevB ? parseFloat(sevB.match(/(\d+\.\d+)/)?.[1] || "0") : 0;
         if (sa !== sb) return sb - sa;
         return (b.modified || "").localeCompare(a.modified || "");
       }),
@@ -411,10 +423,10 @@ function AdvisoryCard({
   const t = theme.t;
   const [expanded, setExpanded] = useState(true);
 
-  const baseReview: Review | undefined = adv.review;
-  const eff: ReviewEdit = edit ?? editFromReview(baseReview);
-  const isEdited = !!edit && isEditNonEmpty(eff, baseReview);
-  const status: ReviewStatus | undefined = edit?.status ?? baseReview?.status;
+  const baseVex: Vex | undefined = advisoryVex(adv);
+  const eff: ReviewEdit = edit ?? editFromVex(baseVex);
+  const isEdited = !!edit && isEditNonEmpty(eff, baseVex);
+  const status: VexStatus | undefined = edit?.status ?? baseVex?.status;
 
   function setField<K extends keyof ReviewEdit>(key: K, value: ReviewEdit[K]): void {
     if (!isLoggedIn && !edit) {
@@ -461,11 +473,11 @@ function AdvisoryCard({
 
   // Compute the effective affected set after applying the pending override.
   const effectiveAffected = useMemo(() => {
-    const base = new Set(adv.affected_conda_versions);
+    const base = new Set(affectedVersions(adv));
     for (const v of eff.version_overrides.not_affected) base.delete(v);
     for (const v of eff.version_overrides.affected) base.add(v);
     return [...base];
-  }, [adv.affected_conda_versions, eff.version_overrides]);
+  }, [adv, eff.version_overrides]);
 
   return (
     <div
@@ -499,7 +511,7 @@ function AdvisoryCard({
             }}
           >
             <a
-              href={adv.osv_url}
+              href={osvUrl(adv)}
               target="_blank"
               rel="noreferrer"
               onClick={(e) => e.stopPropagation()}
@@ -511,9 +523,9 @@ function AdvisoryCard({
                 textDecoration: "none",
               }}
             >
-              {adv.primary_id}
+              {primaryId(adv)}
             </a>
-            {adv.primary_id !== adv.id && (
+            {primaryId(adv) !== adv.id && (
               <code
                 style={{
                   fontFamily: "JetBrains Mono, monospace",
@@ -579,10 +591,10 @@ function AdvisoryCard({
               </strong>{" "}
               conda version{effectiveAffected.length === 1 ? "" : "s"} affected
             </span>
-            {adv.cve_ids.length > 0 && (
+            {cveIds(adv).length > 0 && (
               <>
                 <span style={{ color: t.fg3 }}>·</span>
-                <span>{adv.cve_ids.join(", ")}</span>
+                <span>{cveIds(adv).join(", ")}</span>
               </>
             )}
           </div>
@@ -630,7 +642,7 @@ function AdvisoryCard({
             </details>
           )}
 
-          {adv.osv_ranges.length > 0 && (
+          {osvRanges(adv).length > 0 && (
             <Section title="Upstream affected ranges" theme={theme}>
               <div
                 style={{
@@ -642,7 +654,7 @@ function AdvisoryCard({
                   color: t.fg1,
                 }}
               >
-                {adv.osv_ranges.map((rng, i) => (
+                {osvRanges(adv).map((rng, i) => (
                   <div key={i}>
                     <span style={{ color: t.fg3 }}>{rng.type}: </span>
                     {rng.events
@@ -676,7 +688,7 @@ function AdvisoryCard({
                 borderRadius: 8,
               }}
             >
-              {adv.affected_conda_versions.length === 0 &&
+              {affectedVersions(adv).length === 0 &&
                 eff.version_overrides.affected.length === 0 && (
                   <span
                     style={{ fontSize: 12, fontStyle: "italic", color: t.fg3 }}
@@ -685,7 +697,7 @@ function AdvisoryCard({
                     box below to add specific versions if needed.
                   </span>
                 )}
-              {adv.affected_conda_versions.map((v) => {
+              {affectedVersions(adv).map((v) => {
                 const removed = eff.version_overrides.not_affected.includes(v);
                 return (
                   <VersionChip
@@ -703,7 +715,7 @@ function AdvisoryCard({
                 );
               })}
               {eff.version_overrides.affected
-                .filter((v) => !adv.affected_conda_versions.includes(v))
+                .filter((v) => !affectedVersions(adv).includes(v))
                 .map((v) => (
                   <VersionChip
                     key={v}
@@ -721,11 +733,11 @@ function AdvisoryCard({
             </div>
           </Section>
 
-          <Section title="Review" theme={theme}>
+          <Section title="VEX review" theme={theme}>
             <div
               style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}
             >
-              {REVIEW_STATUSES.map((s) => (
+              {VEX_STATUSES.map((s) => (
                 <button
                   key={s.id}
                   onClick={() => setField("status", s.id)}
@@ -745,11 +757,66 @@ function AdvisoryCard({
                 </button>
               ))}
             </div>
+            {eff.status === "not_affected" && (
+              <div style={{ marginBottom: 10 }}>
+                <div style={{ fontSize: 11, color: t.fg2, marginBottom: 4 }}>
+                  VEX justification{" "}
+                  <span style={{ color: t.fg3 }}>
+                    — required for a “not affected” claim
+                  </span>
+                </div>
+                <select
+                  value={eff.justification}
+                  onChange={(e) =>
+                    setField(
+                      "justification",
+                      e.target.value as VexJustification,
+                    )
+                  }
+                  style={{
+                    width: "100%",
+                    background: t.surface2,
+                    color: t.fg1,
+                    border: `1px solid ${t.border}`,
+                    borderRadius: 8,
+                    padding: "7px 10px",
+                    fontSize: 13,
+                    fontFamily: "Inter, sans-serif",
+                    outline: "none",
+                  }}
+                >
+                  {VEX_JUSTIFICATIONS.map((j) => (
+                    <option key={j.id} value={j.id}>
+                      {j.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            {eff.status === "affected" && (
+              <input
+                value={eff.action_statement}
+                onChange={(e) => setField("action_statement", e.target.value)}
+                placeholder="Action statement — e.g. 'Upgrade to requests ≥ 2.32.4.'"
+                style={{
+                  width: "100%",
+                  background: t.surface2,
+                  color: t.fg1,
+                  border: `1px solid ${t.border}`,
+                  borderRadius: 8,
+                  padding: "8px 10px",
+                  fontSize: 13,
+                  fontFamily: "Inter, sans-serif",
+                  outline: "none",
+                  marginBottom: 10,
+                }}
+              />
+            )}
             <textarea
-              value={eff.note}
-              onChange={(e) => setField("note", e.target.value)}
+              value={eff.notes}
+              onChange={(e) => setField("notes", e.target.value)}
               placeholder={
-                "Optional note. e.g. 'Conda patches CVE-XXXX in build 1.21.5-py39_2.'"
+                "Optional status note. e.g. 'Conda patches CVE-XXXX in build 1.21.5-py39_2.'"
               }
               style={{
                 width: "100%",
@@ -765,7 +832,7 @@ function AdvisoryCard({
                 resize: "vertical",
               }}
             />
-            {baseReview && (
+            {baseVex?.author && (
               <div
                 style={{
                   fontSize: 11,
@@ -777,9 +844,9 @@ function AdvisoryCard({
                 }}
               >
                 <Glyph name="check" size={11} /> Last reviewed by{" "}
-                <strong>@{baseReview.reviewer}</strong>
-                {baseReview.reviewed_at &&
-                  ` on ${baseReview.reviewed_at.slice(0, 10)}`}
+                <strong>@{baseVex.author}</strong>
+                {baseVex.reviewed_at &&
+                  ` on ${baseVex.reviewed_at.slice(0, 10)}`}
               </div>
             )}
             {isEdited && (
@@ -791,7 +858,7 @@ function AdvisoryCard({
             )}
           </Section>
 
-          {adv.references.length > 0 && (
+          {(adv.references ?? []).length > 0 && (
             <Section title="References" theme={theme}>
               <ul
                 style={{
@@ -804,7 +871,7 @@ function AdvisoryCard({
                   gap: 3,
                 }}
               >
-                {adv.references.slice(0, 8).map((r, i) => (
+                {(adv.references ?? []).slice(0, 8).map((r, i) => (
                   <li key={i}>
                     <a
                       href={r.url}

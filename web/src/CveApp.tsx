@@ -13,8 +13,9 @@ import { CveDetail } from "./components/CveDetail";
 import { CvePRDrawer } from "./components/CvePRDrawer";
 import { config, repoFullName } from "./config";
 import {
+  advisoryVex,
   blankReviewEdit,
-  editFromReview,
+  editFromVex,
   isEditNonEmpty,
   loadCves,
   type CvePayload,
@@ -129,9 +130,10 @@ export function CveApp() {
       // Erase the edit when it collapses back to whatever the base review
       // already records — keeps the drawer free of "ghost" entries that
       // wouldn't change anything on disk.
-      const base_ = focusedPackage
-        ? focusedPackage.advisories.find((a) => a.id === advisoryId)?.review
-        : undefined;
+      const advisory = focusedPackage?.advisories.find(
+        (a) => a.id === advisoryId,
+      );
+      const base_ = advisory ? advisoryVex(advisory) : undefined;
       const stillDifferent =
         isEditNonEmpty(next, base_) || next.status !== base.status;
       if (!stillDifferent) {
@@ -423,8 +425,11 @@ export function CveApp() {
             edits={edits}
             onEdit={(advisoryId, edit) => {
               if (!focusedPackage) return;
-              const base = editFromReview(
-                focusedPackage.advisories.find((a) => a.id === advisoryId)?.review,
+              const advisory = focusedPackage.advisories.find(
+                (a) => a.id === advisoryId,
+              );
+              const base = editFromVex(
+                advisory ? advisoryVex(advisory) : undefined,
               );
               handleEdit(focusedPackage.package, advisoryId, edit, base);
             }}
