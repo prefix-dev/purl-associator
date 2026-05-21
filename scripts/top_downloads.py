@@ -41,8 +41,6 @@ DEFAULT_NAMES_OUT = ROOT / "mappings" / "top_downloads.json"
 DEFAULT_ENDPOINT = "https://prefix.dev/api/graphql"
 DEFAULT_CHANNEL = "conda-forge"
 
-# prefix.dev caps Channel.packages at 50 per page
-# (crates/backend/src/schema/mod.rs: MAX_PAGE_SIZE = 50).
 PAGE_SIZE = 50
 
 PAGE_QUERY = """
