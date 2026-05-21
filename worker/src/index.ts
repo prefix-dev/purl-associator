@@ -70,8 +70,8 @@ function json(
   });
 }
 
-function b64urlEncodeBytes(bytes: ArrayBuffer): string {
-  const arr = new Uint8Array(bytes);
+function b64urlEncodeBytes(bytes: ArrayBuffer | Uint8Array): string {
+  const arr = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
   let bin = "";
   for (let i = 0; i < arr.length; i++) bin += String.fromCharCode(arr[i]);
   return btoa(bin).replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
@@ -86,13 +86,6 @@ function b64encode(text: string): string {
   let bin = "";
   for (const b of bytes) bin += String.fromCharCode(b);
   return btoa(bin);
-}
-
-function b64decode(b64: string): string {
-  const bin = atob(b64.replace(/\s+/g, ""));
-  const bytes = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-  return new TextDecoder().decode(bytes);
 }
 
 // ---------- GitHub App: JWT signing + installation tokens ----------
@@ -464,6 +457,72 @@ type CveSubmitBody = {
 };
 
 const OPENVEX_CONTEXT = "https://openvex.dev/ns/v0.2.0";
+const VEX_STATUSES = new Set([
+  "affected",
+  "not_affected",
+  "fixed",
+  "under_investigation",
+]);
+
+function validateOpenVexStatements(statements: unknown): string | null {
+  if (!Array.isArray(statements) || statements.length === 0) {
+    return "statements must be a non-empty array";
+  }
+  for (const [i, stmt] of statements.entries()) {
+    if (!stmt || typeof stmt !== "object") {
+      return `statements[${i}] must be an object`;
+    }
+    const s = stmt as Record<string, unknown>;
+    const vuln = s.vulnerability;
+    if (!vuln || typeof vuln !== "object") {
+      return `statements[${i}].vulnerability is required`;
+    }
+    const vulnName = (vuln as Record<string, unknown>).name;
+    if (typeof vulnName !== "string" || vulnName.trim() === "") {
+      return `statements[${i}].vulnerability.name is required`;
+    }
+    if (typeof s.status !== "string" || !VEX_STATUSES.has(s.status)) {
+      return `statements[${i}].status is invalid`;
+    }
+    if (!Array.isArray(s.products) || s.products.length === 0) {
+      return `statements[${i}].products must be a non-empty array`;
+    }
+    for (const [j, product] of s.products.entries()) {
+      if (!product || typeof product !== "object") {
+        return `statements[${i}].products[${j}] must be an object`;
+      }
+      const id = (product as Record<string, unknown>)["@id"];
+      if (typeof id !== "string" || !id.startsWith("pkg:conda/")) {
+        return `statements[${i}].products[${j}].@id must be a conda PURL`;
+      }
+    }
+    if (
+      s.status === "not_affected" &&
+      typeof s.justification !== "string" &&
+      typeof s.impact_statement !== "string"
+    ) {
+      return `statements[${i}] not_affected requires justification or impact_statement`;
+    }
+    if (
+      s.status === "affected" &&
+      (typeof s.action_statement !== "string" ||
+        s.action_statement.trim() === "")
+    ) {
+      return `statements[${i}] affected requires action_statement`;
+    }
+    for (const key of [
+      "justification",
+      "impact_statement",
+      "action_statement",
+      "status_notes",
+    ]) {
+      if (key in s && typeof s[key] !== "string") {
+        return `statements[${i}].${key} must be a string`;
+      }
+    }
+  }
+  return null;
+}
 
 function buildCveContributionFile(
   statements: OpenVexStatement[],
@@ -507,6 +566,13 @@ async function handleSubmitCves(request: Request, env: Env): Promise<Response> {
     payload.statements.length === 0
   ) {
     return json({ error: "missing_fields" }, { status: 400, origin, env });
+  }
+  const statementError = validateOpenVexStatements(payload.statements);
+  if (statementError) {
+    return json(
+      { error: "invalid_openvex", detail: statementError },
+      { status: 400, origin, env },
+    );
   }
   if (!env.GITHUB_APP_PRIVATE_KEY || !env.GITHUB_INSTALLATION_ID) {
     return json({ error: "app_not_configured" }, { status: 500, origin, env });

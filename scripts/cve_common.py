@@ -1,7 +1,7 @@
 """Shared helpers for reading the OSV-record CVE files.
 
-Every advisory stored under ``mappings/cves/`` is a verbatim OSV record; the
-conda-forge match (and, after the merge, the resolved VEX review) lives under
+Every advisory stored under ``mappings/cves/`` is an OSV record with the
+conda-forge match (and, after the merge, the resolved VEX review) under
 ``database_specific["conda-forge"]``. These accessors centralise that layout
 so :mod:`scripts.merge_cves` and :mod:`scripts.cve_summary` stay in sync.
 """
@@ -23,10 +23,49 @@ def conda_block(advisory: dict) -> dict:
     return block if isinstance(block, dict) else {}
 
 
+def ensure_conda_block(advisory: dict) -> dict:
+    """Return a mutable ``database_specific["conda-forge"]`` block."""
+    db = advisory.setdefault("database_specific", {})
+    if not isinstance(db, dict):
+        db = {}
+        advisory["database_specific"] = db
+    block = db.setdefault(CONDA_DB_KEY, {})
+    if not isinstance(block, dict):
+        block = {}
+        db[CONDA_DB_KEY] = block
+    return block
+
+
+def blank_version_overrides() -> dict[str, list[str]]:
+    return {"affected": [], "not_affected": []}
+
+
+def ensure_vex(advisory: dict) -> dict:
+    """Return a mutable resolved-VEX block in the conda-forge extension."""
+    block = ensure_conda_block(advisory)
+    vex = block.setdefault("vex", {"version_overrides": blank_version_overrides()})
+    if not isinstance(vex, dict):
+        vex = {"version_overrides": blank_version_overrides()}
+        block["vex"] = vex
+    return vex
+
+
 def affected_versions(advisory: dict) -> list[str]:
     """Conda-forge versions the advisory applies to (post-merge: VEX-adjusted)."""
     versions = conda_block(advisory).get("affected_versions")
     return versions if isinstance(versions, list) else []
+
+
+def set_affected_versions(advisory: dict, versions: list[str]) -> None:
+    """Update the conda-forge affected-version list on an advisory."""
+    ensure_conda_block(advisory)["affected_versions"] = versions
+
+
+def conda_purl(name: str, version: str | None = None) -> str:
+    """Build a package-level or version-pinned conda-forge PURL."""
+    if version:
+        return f"pkg:conda/{name}@{version}?channel=conda-forge"
+    return f"pkg:conda/{name}?channel=conda-forge"
 
 
 def cve_ids(advisory: dict) -> list[str]:

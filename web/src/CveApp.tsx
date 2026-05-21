@@ -14,7 +14,6 @@ import { CvePRDrawer } from "./components/CvePRDrawer";
 import { config, repoFullName } from "./config";
 import {
   advisoryVex,
-  blankReviewEdit,
   editFromVex,
   isEditNonEmpty,
   loadCves,
@@ -437,7 +436,6 @@ export function CveApp() {
               if (!focusedPackage) return;
               handleResetEdit(focusedPackage.package, advisoryId);
             }}
-            blankEdit={blankReviewEdit}
             isLoggedIn={isLoggedIn}
             onRequestLogin={() => setLoginOpen(true)}
           />

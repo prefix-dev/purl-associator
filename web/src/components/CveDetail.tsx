@@ -28,7 +28,6 @@ type Props = {
   edits: Record<string, ReviewEdit>;
   onEdit: (advisoryId: string, next: ReviewEdit) => void;
   onResetEdit: (advisoryId: string) => void;
-  blankEdit: () => ReviewEdit;
   isLoggedIn: boolean;
   onRequestLogin: () => void;
 };
@@ -261,6 +260,32 @@ export function CveDetail({
 }: Props) {
   const t = theme.t;
 
+  const advisories = useMemo(
+    () =>
+      pkg
+        ? [...pkg.advisories].sort((a, b) => {
+            // Prioritize unreviewed, then critical→low severity, then date.
+            const ea = edits[`${pkg.package}::${a.id}`];
+            const eb = edits[`${pkg.package}::${b.id}`];
+            const ra = ea?.status ?? advisoryVex(a)?.status;
+            const rb = eb?.status ?? advisoryVex(b)?.status;
+            if (!ra && rb) return -1;
+            if (ra && !rb) return 1;
+            const sevA = bestSeverity(a)?.score;
+            const sevB = bestSeverity(b)?.score;
+            const sa = sevA
+              ? parseFloat(sevA.match(/(\d+\.\d+)/)?.[1] || "0")
+              : 0;
+            const sb = sevB
+              ? parseFloat(sevB.match(/(\d+\.\d+)/)?.[1] || "0")
+              : 0;
+            if (sa !== sb) return sb - sa;
+            return (b.modified || "").localeCompare(a.modified || "");
+          })
+        : [],
+    [pkg, edits],
+  );
+
   if (!pkg) {
     return (
       <div
@@ -293,26 +318,6 @@ export function CveDetail({
       </div>
     );
   }
-
-  const advisories = useMemo(
-    () =>
-      [...pkg.advisories].sort((a, b) => {
-        // Prioritize unreviewed, then critical→low severity, then date.
-        const ea = edits[`${pkg.package}::${a.id}`];
-        const eb = edits[`${pkg.package}::${b.id}`];
-        const ra = ea?.status ?? advisoryVex(a)?.status;
-        const rb = eb?.status ?? advisoryVex(b)?.status;
-        if (!ra && rb) return -1;
-        if (ra && !rb) return 1;
-        const sevA = bestSeverity(a)?.score;
-        const sevB = bestSeverity(b)?.score;
-        const sa = sevA ? parseFloat(sevA.match(/(\d+\.\d+)/)?.[1] || "0") : 0;
-        const sb = sevB ? parseFloat(sevB.match(/(\d+\.\d+)/)?.[1] || "0") : 0;
-        if (sa !== sb) return sb - sa;
-        return (b.modified || "").localeCompare(a.modified || "");
-      }),
-    [pkg, edits],
-  );
 
   return (
     <div style={{ flex: 1, overflowY: "auto", background: t.page }}>

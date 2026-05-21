@@ -11,10 +11,11 @@ For each package with at least one PURL in ``web/public/mappings.json``
    list) with the set of conda-forge versions, producing the set of conda
    versions believed to be vulnerable.
 4. Writes one JSON file per package to ``mappings/cves/<pkg>.json``. Each
-   advisory in that file is the **verbatim OSV record**, re-emitted unchanged
-   so it validates against the official OSV schema (``schemas/osv-schema.json``).
-   The conda-forge match — affected versions, the conda PURL, the source PURL
-   the match came through — is attached under the record's
+   advisory in that file is the OSV record with minimal schema repairs for
+   malformed upstream range events so it validates against the official OSV
+   schema (``schemas/osv-schema.json``). The conda-forge match — affected
+   versions, the conda PURL, the source PURL the match came through — is
+   attached under the record's
    ``database_specific["conda-forge"]`` key, the OSV-sanctioned extension slot
    for downstream database-specific data.
 
@@ -50,6 +51,7 @@ from rich.progress import (
     TimeElapsedColumn,
 )
 
+from scripts.cve_common import conda_purl
 from scripts.osv_fetch import (
     PURL_TO_OSV,
     Advisory,
@@ -243,12 +245,6 @@ def _aggregate_conda_versions(records: Iterable[RepoDataRecord]) -> list[CondaVe
     return sorted(by_version.values(), key=lambda c: c.parsed)
 
 
-def _conda_purl(conda_package: str) -> str:
-    """A package-level conda PURL (purl-spec ``conda`` type). conda-forge is
-    recorded as a channel qualifier; no version is pinned at this level."""
-    return f"pkg:conda/{conda_package}?channel=conda-forge"
-
-
 _EVENT_KEYS = frozenset({"introduced", "fixed", "last_affected", "limit"})
 
 
@@ -293,10 +289,10 @@ def _build_osv_record(
     conda_versions_total: int,
     generated_at: str,
 ) -> dict:
-    """Re-emit the verbatim OSV record with the conda-forge match attached.
+    """Re-emit the OSV record with the conda-forge match attached.
 
-    The record is the advisory exactly as OSV published it, so it still
-    validates against the official OSV schema. Our derived data — which
+    Apart from minimal schema repairs for malformed upstream range events, the
+    record follows the advisory OSV published. Our derived data — which
     conda-forge versions are affected, the conda PURL, which source PURL the
     match came through — goes into ``database_specific["conda-forge"]``, the
     OSV-sanctioned extension slot for database-specific fields. ``conda-forge``
@@ -307,7 +303,7 @@ def _build_osv_record(
         db = {}
     db["conda-forge"] = {
         "package": conda_package,
-        "purl": _conda_purl(conda_package),
+        "purl": conda_purl(conda_package),
         "source_purls": source_purls,
         "affected_versions": affected_versions,
         "conda_versions_total": conda_versions_total,

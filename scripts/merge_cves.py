@@ -3,8 +3,8 @@ single payload the CVE frontend consumes.
 
 **Layering, oldest → newest (newer wins):**
 
-1. ``mappings/cves/*.json`` — per-package matcher output. Each advisory is a
-   verbatim OSV record with the conda-forge match under
+1. ``mappings/cves/*.json`` — per-package matcher output. Each advisory is an
+   OSV record with the conda-forge match under
    ``database_specific["conda-forge"]``.
 2. ``mappings/cve_contributions/*.json`` — per-PR **OpenVEX** documents. Each
    statement asserts a VEX status (``affected`` / ``not_affected`` / ``fixed``
@@ -34,7 +34,14 @@ import json
 from datetime import UTC, datetime
 from pathlib import Path
 
-from scripts.cve_common import CONDA_DB_KEY, conda_block, parse_conda_purl
+from scripts.cve_common import (
+    affected_versions,
+    blank_version_overrides,
+    conda_block,
+    ensure_vex,
+    parse_conda_purl,
+    set_affected_versions,
+)
 
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_CVES_DIR = ROOT / "mappings" / "cves"
@@ -89,10 +96,6 @@ def _find_advisory(pkg: dict, vuln_name: str) -> dict | None:
     return None
 
 
-def _blank_overrides() -> dict[str, list[str]]:
-    return {"affected": [], "not_affected": []}
-
-
 # VEX status-qualifying fields carried verbatim from the statement onto the
 # resolved review. ``justification`` qualifies a not_affected status,
 # ``action_statement`` an affected one (both required by the OpenVEX schema).
@@ -113,8 +116,7 @@ def _apply_statement(
     timestamp: str,
 ) -> None:
     """Fold one VEX statement (for one product) into the advisory's review."""
-    block = advisory.setdefault("database_specific", {}).setdefault(CONDA_DB_KEY, {})
-    vex = block.setdefault("vex", {"version_overrides": _blank_overrides()})
+    vex = ensure_vex(advisory)
     vex["author"] = author
     vex["reviewed_at"] = timestamp
     status = stmt.get("status")
@@ -129,7 +131,7 @@ def _apply_statement(
                 vex[field] = value
         return
     # Version-pinned: flip a single conda version. Last write per version wins.
-    overrides = vex.setdefault("version_overrides", _blank_overrides())
+    overrides = vex.setdefault("version_overrides", blank_version_overrides())
     for key in ("affected", "not_affected"):
         overrides[key] = [v for v in overrides[key] if v != version]
     bucket = "affected" if status == "affected" else "not_affected"
@@ -191,8 +193,9 @@ def _finalize_affected(packages: dict[str, dict]) -> None:
             if isinstance(overrides, dict) and (
                 overrides.get("affected") or overrides.get("not_affected")
             ):
-                block["affected_versions"] = _apply_version_overrides(
-                    block.get("affected_versions") or [], overrides
+                set_affected_versions(
+                    advisory,
+                    _apply_version_overrides(affected_versions(advisory), overrides),
                 )
 
 
