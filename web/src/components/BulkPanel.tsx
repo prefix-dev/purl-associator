@@ -228,7 +228,14 @@ export function BulkPanel({
                   <PurlChip purl={purl} theme={theme} edited={!!e} />
                 </span>
                 <StatusPill
-                  status={status as "verified" | "auto-unverified" | "unmapped" | "edited"}
+                  status={
+                    status as
+                      | "verified"
+                      | "auto-verified"
+                      | "auto-unverified"
+                      | "unmapped"
+                      | "edited"
+                  }
                   theme={theme}
                 />
               </div>

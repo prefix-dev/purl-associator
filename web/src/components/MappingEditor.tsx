@@ -97,7 +97,8 @@ export function MappingEditor({
   };
 
   const isEdited = !!edit;
-  const isVerified = p.status === "verified" && !isEdited;
+  const isVerified =
+    (p.status === "verified" || p.status === "auto-verified") && !isEdited;
 
   function updatePart(patch: Partial<Edit>): void {
     const next: Edit = { ...eff, ...patch };

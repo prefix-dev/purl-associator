@@ -51,7 +51,11 @@ flowchart TD
 
 `scripts.automap` uses `rattler.repo_data.Gateway` to enumerate package
 records. It partially fetches recipe files from package archives, then
-`scripts.purl_inference` decides the source PURL.
+`scripts.purl_inference` decides the source PURL. For Python packages it also
+checks the public Parselmouth conda-artifact-to-PyPI mapping by package sha256.
+When Parselmouth artifact metadata agrees with an inferred PyPI PURL, the
+mapping is marked `auto-verified` and does not need the normal human approval
+step.
 
 The inference step uses source URLs and recipe context. Recipe context matters
 because source hosting is not always the package ecosystem. For example, a

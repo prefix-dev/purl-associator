@@ -106,7 +106,8 @@ def main(
 
     # Layer 1: auto.
     for name, entry in auto_data.get("packages", {}).items():
-        merged[name] = {**entry, "status": "auto-unverified", "source": "auto"}
+        status = "auto-verified" if entry.get("auto_verified") else "auto-unverified"
+        merged[name] = {**entry, "status": status, "source": "auto"}
 
     # Layer 2: manual.json (legacy single-file overrides).
     legacy_attribution = {

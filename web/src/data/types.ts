@@ -48,12 +48,14 @@ export type PackageEntry = {
   source_url: string | null;
   note: string | null;
   fetched_at: string | null;
-  status: "auto-unverified" | "verified" | "unmapped" | "edited";
+  status: "auto-unverified" | "auto-verified" | "verified" | "unmapped" | "edited";
   source: "auto" | "manual";
   unmapped?: boolean;
   approved_by?: string;
   approved_at?: string;
   alternative_purls?: PurlAlternative[] | null;
+  auto_verified?: boolean;
+  verification_sources?: string[] | null;
   /** the original auto guess, kept for diff display when an override exists */
   auto?: AutoMapping;
   /** total downloads on prefix.dev for this package (null if not ranked) */
