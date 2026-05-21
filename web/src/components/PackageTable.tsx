@@ -51,7 +51,8 @@ const STATUS_RANK: Record<string, number> = {
   edited: 0,
   unmapped: 1,
   "auto-unverified": 2,
-  verified: 3,
+  "auto-verified": 3,
+  verified: 4,
 };
 
 export function PackageTable({
@@ -84,7 +85,7 @@ export function PackageTable({
         return false;
       if (
         filters.unverifiedOnly &&
-        p.status === "verified" &&
+        (p.status === "verified" || p.status === "auto-verified") &&
         !edits[p.name]
       )
         return false;
@@ -144,7 +145,7 @@ export function PackageTable({
     for (const p of packages) {
       if (p.status === "unmapped" || p.purl === null) c.unmapped++;
       else if (p.status === "auto-unverified") c.unverified++;
-      else if (p.status === "verified") c.verified++;
+      else if (p.status === "verified" || p.status === "auto-verified") c.verified++;
     }
     return c;
   }, [packages, edits]);
@@ -614,6 +615,7 @@ export function PackageTable({
                       status={
                         status as
                           | "verified"
+                          | "auto-verified"
                           | "auto-unverified"
                           | "unmapped"
                           | "edited"

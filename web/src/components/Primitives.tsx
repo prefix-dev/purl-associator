@@ -149,7 +149,7 @@ export function StatusPill({
   status,
   theme,
 }: {
-  status: "verified" | "auto-unverified" | "unmapped" | "edited";
+  status: "verified" | "auto-verified" | "auto-unverified" | "unmapped" | "edited";
   theme: Theme;
 }) {
   const map = {
@@ -157,6 +157,11 @@ export function StatusPill({
       label: "Verified",
       bg: theme.dark ? "#1a2a18" : "#eef7e3",
       fg: theme.dark ? "#9adf6d" : "#5b9b2c",
+    },
+    "auto-verified": {
+      label: "Auto-verified",
+      bg: theme.dark ? "#162726" : "#dff8f4",
+      fg: theme.dark ? "#69d7c8" : "#15776d",
     },
     "auto-unverified": {
       label: "Unverified",

@@ -48,10 +48,141 @@ cve-match = "python -m scripts.cve_match"
 lint = { cmd = "ruff check scripts && ruff format --check scripts", env = {} }
 fmt = "ruff format scripts"
 
-# Frontend (uses system npm/node — pixi just wraps the commands so they're
-# discoverable alongside the python tasks). Run `pixi run -e lite merge`
-# first if you've edited mappings data and want the SPA to see the changes.
-web-install = { cmd = "npm install", cwd = "web" }
-web-dev = { cmd = "npm run dev", cwd = "web" }
-web-build = { cmd = "npm run build", cwd = "web" }
+[tasks.automap-test]
+cmd = "python -m scripts.automap --only {{ packages }} --out {{ auto }} --parallel {{ parallel }} --force && python -m scripts.merge_mappings --auto {{ auto }} --out {{ out }}"
+description = "Test auto-association on a small package set without touching committed outputs"
+args = [
+  { arg = "packages", default = "numpy,ripgrep,pandas" },
+  { arg = "auto", default = ".tmp/auto-test.json" },
+  { arg = "out", default = ".tmp/mappings-test.json" },
+  { arg = "parallel", default = "8" },
+]
+
+# GitHub Actions helpers. Requires `gh auth login` first.
+[tasks.gh-workflows]
+cmd = "gh workflow list"
+description = "List GitHub Actions workflows"
+
+[tasks.gh-runs]
+cmd = "gh run list --limit {{ limit }}"
+description = "List recent GitHub Actions runs"
+args = [
+  { arg = "limit", default = "10" },
+]
+
+[tasks.gh-watch]
+cmd = "gh run watch {{ run }}"
+description = "Watch a GitHub Actions run by run id"
+args = [
+  { arg = "run" },
+]
+
+[tasks.gh-automap]
+cmd = "gh workflow run automap.yml --ref {{ ref }} -f limit='{{ limit }}' -f only='{{ only }}' -f force='{{ force }}'"
+description = "Trigger the Automatic PURL mapping workflow"
+args = [
+  { arg = "only", default = "" },
+  { arg = "limit", default = "" },
+  { arg = "force", default = "false" },
+  { arg = "ref", default = "main" },
+]
+
+[tasks.gh-automap-force]
+cmd = "gh workflow run automap.yml --ref {{ ref }} -f limit='{{ limit }}' -f only='{{ only }}' -f force=true"
+description = "Trigger a forced Automatic PURL mapping workflow run"
+args = [
+  { arg = "only", default = "" },
+  { arg = "limit", default = "" },
+  { arg = "ref", default = "main" },
+]
+
+[tasks.gh-cve-refresh]
+cmd = "gh workflow run cve_refresh.yml --ref {{ ref }} -f only='{{ only }}' -f limit='{{ limit }}' -f force_osv='{{ force_osv }}'"
+description = "Trigger the Refresh CVE assignments workflow"
+args = [
+  { arg = "only", default = "" },
+  { arg = "limit", default = "" },
+  { arg = "force_osv", default = "false" },
+  { arg = "ref", default = "main" },
+]
+
+[tasks.gh-pages]
+cmd = "gh workflow run pages.yml --ref {{ ref }}"
+description = "Trigger the GitHub Pages deployment workflow"
+args = [
+  { arg = "ref", default = "main" },
+]
+
+[tasks.gh-ai-vet]
+cmd = "gh workflow run ai_vet.yml --ref {{ ref }} -f mode='{{ mode }}' -f limit='{{ limit }}' -f skip_vetted='{{ skip_vetted }}' -f only='{{ only }}' -f ai_batch_size='{{ ai_batch_size }}' -f commit_every='{{ commit_every }}'"
+description = "Trigger the AI vet PURL mappings workflow"
+args = [
+  { arg = "ref", default = "main" },
+  { arg = "mode", default = "realtime" },
+  { arg = "limit", default = "200" },
+  { arg = "skip_vetted", default = "true" },
+  { arg = "only", default = "" },
+  { arg = "ai_batch_size", default = "15" },
+  { arg = "commit_every", default = "16" },
+]
+
+# Local app/Worker helpers.
+[tasks.install]
+depends-on = ["web-install", "worker-install"]
+description = "Install web and Worker npm dependencies"
+
+[tasks.check-local]
+depends-on = ["validate", "web-build", "worker-typecheck"]
+description = "Validate data, build the web app, and typecheck the Worker"
+
+[tasks.web-install]
+cmd = "npm install"
+cwd = "web"
+description = "Install frontend npm dependencies"
+
+[tasks.web-dev]
+cmd = "npm run dev -- --host {{ host }} --port {{ port }}"
+cwd = "web"
+depends-on = ["web-install"]
+description = "Run the frontend Vite dev server"
+args = [
+  { arg = "host", default = "127.0.0.1" },
+  { arg = "port", default = "5173" },
+]
+
+[tasks.web-build]
+cmd = "npm run build"
+cwd = "web"
+depends-on = ["web-install"]
+description = "Build the frontend"
+
+[tasks.web-preview]
+cmd = "npm run preview -- --host {{ host }} --port {{ port }}"
+cwd = "web"
+depends-on = ["web-build"]
+description = "Serve the built frontend locally"
+args = [
+  { arg = "host", default = "127.0.0.1" },
+  { arg = "port", default = "4173" },
+]
+
+[tasks.worker-install]
+cmd = "npm install"
+cwd = "worker"
+description = "Install Worker npm dependencies"
+
+[tasks.worker-dev]
+cmd = "npm run dev -- --port {{ port }}"
+cwd = "worker"
+depends-on = ["worker-install"]
+description = "Run the Cloudflare Worker locally with Wrangler"
+args = [
+  { arg = "port", default = "8787" },
+]
+
+[tasks.worker-typecheck]
+cmd = "npm run typecheck"
+cwd = "worker"
+depends-on = ["worker-install"]
+description = "Typecheck the Cloudflare Worker"
 

@@ -20,6 +20,7 @@ from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 
+import httpx
 import typer
 import yaml
 from rattler.networking import Client
@@ -37,6 +38,7 @@ from rich.progress import (
     TimeElapsedColumn,
 )
 
+from scripts.parselmouth_lookup import fetch_mapping_by_hash
 from scripts.purl_inference import (
     PurlGuess,
     derive_recipe_context,
@@ -83,6 +85,8 @@ class AutoEntry:
     summary: str | None
     source_url: str | None = None
     alternative_purls: list[dict] | None = None
+    auto_verified: bool = False
+    verification_sources: list[str] | None = None
     note: str | None = None
     fetched_at: str | None = None
     # Lifetime download count on prefix.dev (Package.totalCount), backfilled
@@ -278,6 +282,8 @@ async def _process_record(
     record: RepoDataRecord,
     *,
     semaphore: asyncio.Semaphore,
+    parselmouth_client: httpx.AsyncClient,
+    channel: str,
 ) -> AutoEntry:
     name = record.name.normalized
     url = str(record.url)
@@ -320,6 +326,56 @@ async def _process_record(
     )
     candidates: list[PurlGuess] = infer_all(candidate_urls, context=context)
     primary: PurlGuess | None = candidates[0] if candidates else None
+
+    parselmouth = await fetch_mapping_by_hash(
+        parselmouth_client,
+        sha256=getattr(record, "sha256", None),
+        channel=channel,
+    )
+    parselmouth_purls = set(parselmouth.pypi_purls if parselmouth else [])
+    agreeing_candidates = [
+        c for c in candidates if c.type == "pypi" and c.purl in parselmouth_purls
+    ]
+    auto_verified = bool(agreeing_candidates)
+    verification_sources = (
+        ["recipe-inference", "parselmouth-artifact"] if auto_verified else None
+    )
+
+    if agreeing_candidates:
+        # Independent agreement promotes the PyPI candidate to primary, even if
+        # URL-only ranking would otherwise prefer a GitHub source archive.
+        matched = max(agreeing_candidates, key=lambda c: c.confidence)
+        primary = PurlGuess(
+            purl=matched.purl,
+            type=matched.type,
+            namespace=matched.namespace,
+            pkg_name=matched.pkg_name,
+            confidence=0.99,
+            source=matched.source,
+        )
+        candidates = [primary] + [c for c in candidates if c.purl != primary.purl]
+
+    # Surface Parselmouth-discovered PyPI names as alternatives when they do not
+    # duplicate the primary/URL-inferred candidates.
+    seen_purls = {c.purl for c in candidates}
+    if parselmouth:
+        for purl, pypi_name in zip(
+            parselmouth.pypi_purls, parselmouth.pypi_normalized_names
+        ):
+            if purl in seen_purls:
+                continue
+            candidates.append(
+                PurlGuess(
+                    purl=purl,
+                    type="pypi",
+                    namespace=None,
+                    pkg_name=pypi_name,
+                    confidence=0.99,
+                    source="parselmouth-artifact",
+                )
+            )
+            seen_purls.add(purl)
+
     alternates = [
         {
             "purl": c.purl,
@@ -337,6 +393,15 @@ async def _process_record(
         note_parts.append(
             "No automatic match — heuristics did not recognise any source URL."
         )
+    if (
+        parselmouth_purls
+        and primary
+        and primary.type == "pypi"
+        and primary.purl not in parselmouth_purls
+    ):
+        note_parts.append(
+            "Parselmouth artifact metadata suggests a different PyPI package."
+        )
     note_parts.extend(recipe_context_hints(context, primary.type if primary else None))
     note: str | None = " ".join(note_parts) if note_parts else None
 
@@ -352,13 +417,19 @@ async def _process_record(
         namespace=primary.namespace if primary else None,
         pkg_name=primary.pkg_name if primary else None,
         confidence=primary.confidence if primary else 0.0,
-        sources=[primary.source] if primary else [],
+        sources=(
+            [primary.source, "parselmouth-artifact"]
+            if auto_verified and primary
+            else ([primary.source] if primary else [])
+        ),
         homepage=homepage,
         repo=repo_url,
         recipe_url=f"https://github.com/conda-forge/{name}-feedstock/blob/main/recipe/meta.yaml",
         summary=facts.summary,
         source_url=primary_source,
         alternative_purls=alternates if alternates else None,
+        auto_verified=auto_verified,
+        verification_sources=verification_sources,
         note=note,
         fetched_at=datetime.now(UTC).isoformat(timespec="seconds"),
     )
@@ -521,46 +592,54 @@ async def _async_main(
     )
 
     client = Client()
+    parselmouth_client = httpx.AsyncClient()
     semaphore = asyncio.Semaphore(parallel)
 
     new_entries: dict[str, AutoEntry] = dict(existing)
 
-    if needs_fetch:
-        with Progress(
-            TextColumn("[progress.description]{task.description}"),
-            BarColumn(),
-            MofNCompleteColumn(),
-            TimeElapsedColumn(),
-            console=console,
-            transient=False,
-        ) as progress:
-            task = progress.add_task("Fetching recipes…", total=len(needs_fetch))
+    try:
+        if needs_fetch:
+            with Progress(
+                TextColumn("[progress.description]{task.description}"),
+                BarColumn(),
+                MofNCompleteColumn(),
+                TimeElapsedColumn(),
+                console=console,
+                transient=False,
+            ) as progress:
+                task = progress.add_task("Fetching recipes…", total=len(needs_fetch))
 
-            async def runner(record: RepoDataRecord) -> AutoEntry:
-                try:
-                    return await _process_record(client, record, semaphore=semaphore)
-                except Exception as exc:  # noqa: BLE001
-                    return AutoEntry(
-                        name=record.name.normalized,
-                        version=str(record.version),
-                        build=record.build,
-                        subdir=record.subdir,
-                        url=str(record.url),
-                        purl=None,
-                        type=None,
-                        namespace=None,
-                        pkg_name=None,
-                        confidence=0.0,
-                        sources=[],
-                        homepage=None,
-                        repo=None,
-                        recipe_url=None,
-                        summary=None,
-                        note=f"fetch error: {exc}",
-                        fetched_at=datetime.now(UTC).isoformat(timespec="seconds"),
-                    )
-                finally:
-                    progress.advance(task)
+                async def runner(record: RepoDataRecord) -> AutoEntry:
+                    try:
+                        return await _process_record(
+                            client,
+                            record,
+                            semaphore=semaphore,
+                            parselmouth_client=parselmouth_client,
+                            channel=channel,
+                        )
+                    except Exception as exc:  # noqa: BLE001
+                        return AutoEntry(
+                            name=record.name.normalized,
+                            version=str(record.version),
+                            build=record.build,
+                            subdir=record.subdir,
+                            url=str(record.url),
+                            purl=None,
+                            type=None,
+                            namespace=None,
+                            pkg_name=None,
+                            confidence=0.0,
+                            sources=[],
+                            homepage=None,
+                            repo=None,
+                            recipe_url=None,
+                            summary=None,
+                            note=f"fetch error: {exc}",
+                            fetched_at=datetime.now(UTC).isoformat(timespec="seconds"),
+                        )
+                    finally:
+                        progress.advance(task)
 
             results = await asyncio.gather(*(runner(r) for r in needs_fetch))
             for entry in results:
@@ -570,6 +649,8 @@ async def _async_main(
                 if prior_entry is not None:
                     entry.download_count = prior_entry.download_count
                 new_entries[entry.name] = entry
+    finally:
+        await parselmouth_client.aclose()
 
     # Drop entries for packages that disappeared from the channel
     if not only and not limit:
