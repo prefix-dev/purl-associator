@@ -210,11 +210,13 @@ async def _download_all(
 
 @dataclass
 class Advisory:
-    """One advisory as it pertains to a single ecosystem+name. We don't keep
-    the full OSV record around; only the fields the matcher and the
-    frontend need. ``raw_affected`` is the OSV ``affected[]`` entry that
-    matched this package, preserved so the matcher can read the structured
-    ranges + version lists."""
+    """One advisory as it pertains to a single ecosystem+name.
+
+    ``raw`` is the complete, verbatim OSV record as published — the matcher
+    re-emits it unchanged so every stored advisory is a valid OSV document.
+    ``raw_affected`` is the single OSV ``affected[]`` entry that matched this
+    package, kept as a convenient handle for the version-range intersection.
+    The remaining fields are flattened conveniences over ``raw``."""
 
     id: str
     ecosystem: str
@@ -227,6 +229,7 @@ class Advisory:
     severity: list[dict]
     references: list[dict]
     raw_affected: dict
+    raw: dict
 
     def cve_ids(self) -> list[str]:
         return sorted({a for a in [*self.aliases, self.id] if a.startswith("CVE-")})
@@ -338,6 +341,7 @@ def _build_index(dumps: list[CachedDump]) -> dict[tuple[str, str], list[Advisory
                         severity=severity,
                         references=references,
                         raw_affected=entry,
+                        raw=raw,
                     )
                 )
     return by_pkg

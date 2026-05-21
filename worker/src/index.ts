@@ -70,8 +70,8 @@ function json(
   });
 }
 
-function b64urlEncodeBytes(bytes: ArrayBuffer): string {
-  const arr = new Uint8Array(bytes);
+function b64urlEncodeBytes(bytes: ArrayBuffer | Uint8Array): string {
+  const arr = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
   let bin = "";
   for (let i = 0; i < arr.length; i++) bin += String.fromCharCode(arr[i]);
   return btoa(bin).replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
@@ -86,13 +86,6 @@ function b64encode(text: string): string {
   let bin = "";
   for (const b of bytes) bin += String.fromCharCode(b);
   return btoa(bin);
-}
-
-function b64decode(b64: string): string {
-  const bin = atob(b64.replace(/\s+/g, ""));
-  const bytes = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-  return new TextDecoder().decode(bytes);
 }
 
 // ---------- GitHub App: JWT signing + installation tokens ----------
@@ -445,65 +438,111 @@ async function handleSubmit(request: Request, env: Env): Promise<Response> {
 
 // ---------- /api/submit-cves (apply CVE review edits, open PR) ----------
 
-type CveReviewPayload = {
-  status: "confirmed" | "rejected" | "not-applicable" | "needs-review";
-  note?: string;
-  version_overrides?: {
-    affected?: string[];
-    not_affected?: string[];
-  };
+/** One OpenVEX 0.2.0 statement, as built by the dashboard (cve_api.ts). */
+type OpenVexStatement = {
+  vulnerability: { name: string };
+  products: { "@id": string }[];
+  status: string;
+  justification?: string;
+  action_statement?: string;
+  status_notes?: string;
 };
 
 type CveSubmitBody = {
   userToken: string;
-  /** Nested: { [conda_name]: { [advisory_id]: review } } */
-  reviews: Record<string, Record<string, CveReviewPayload>>;
+  /** OpenVEX statements; the Worker wraps them in the document envelope. */
+  statements: OpenVexStatement[];
   title: string;
   body: string;
 };
 
-function buildCveContributionFile(
-  reviews: CveSubmitBody["reviews"],
-  user: GhUser,
-  title: string,
-  timestamp: string,
-): string {
-  // Strip undefineds from the nested structure so the on-disk JSON is tidy
-  // (JSON.stringify already does this for top-level fields).
-  const tidy: Record<string, Record<string, unknown>> = {};
-  for (const [pkg, perAdv] of Object.entries(reviews)) {
-    tidy[pkg] = {};
-    for (const [advisoryId, review] of Object.entries(perAdv)) {
-      const out: Record<string, unknown> = { status: review.status };
-      if (review.note) out.note = review.note;
-      if (review.version_overrides) {
-        const vo: Record<string, unknown> = {};
-        if (
-          Array.isArray(review.version_overrides.affected) &&
-          review.version_overrides.affected.length > 0
-        ) {
-          vo.affected = review.version_overrides.affected;
-        }
-        if (
-          Array.isArray(review.version_overrides.not_affected) &&
-          review.version_overrides.not_affected.length > 0
-        ) {
-          vo.not_affected = review.version_overrides.not_affected;
-        }
-        if (Object.keys(vo).length > 0) out.version_overrides = vo;
+const OPENVEX_CONTEXT = "https://openvex.dev/ns/v0.2.0";
+const VEX_STATUSES = new Set([
+  "affected",
+  "not_affected",
+  "fixed",
+  "under_investigation",
+]);
+
+function validateOpenVexStatements(statements: unknown): string | null {
+  if (!Array.isArray(statements) || statements.length === 0) {
+    return "statements must be a non-empty array";
+  }
+  for (const [i, stmt] of statements.entries()) {
+    if (!stmt || typeof stmt !== "object") {
+      return `statements[${i}] must be an object`;
+    }
+    const s = stmt as Record<string, unknown>;
+    const vuln = s.vulnerability;
+    if (!vuln || typeof vuln !== "object") {
+      return `statements[${i}].vulnerability is required`;
+    }
+    const vulnName = (vuln as Record<string, unknown>).name;
+    if (typeof vulnName !== "string" || vulnName.trim() === "") {
+      return `statements[${i}].vulnerability.name is required`;
+    }
+    if (typeof s.status !== "string" || !VEX_STATUSES.has(s.status)) {
+      return `statements[${i}].status is invalid`;
+    }
+    if (!Array.isArray(s.products) || s.products.length === 0) {
+      return `statements[${i}].products must be a non-empty array`;
+    }
+    for (const [j, product] of s.products.entries()) {
+      if (!product || typeof product !== "object") {
+        return `statements[${i}].products[${j}] must be an object`;
       }
-      tidy[pkg][advisoryId] = out;
+      const id = (product as Record<string, unknown>)["@id"];
+      if (typeof id !== "string" || !id.startsWith("pkg:conda/")) {
+        return `statements[${i}].products[${j}].@id must be a conda PURL`;
+      }
+    }
+    if (
+      s.status === "not_affected" &&
+      typeof s.justification !== "string" &&
+      typeof s.impact_statement !== "string"
+    ) {
+      return `statements[${i}] not_affected requires justification or impact_statement`;
+    }
+    if (
+      s.status === "affected" &&
+      (typeof s.action_statement !== "string" ||
+        s.action_statement.trim() === "")
+    ) {
+      return `statements[${i}] affected requires action_statement`;
+    }
+    for (const key of [
+      "justification",
+      "impact_statement",
+      "action_statement",
+      "status_notes",
+    ]) {
+      if (key in s && typeof s[key] !== "string") {
+        return `statements[${i}].${key} must be a string`;
+      }
     }
   }
-  const payload = {
-    schema_version: 1,
-    title,
+  return null;
+}
+
+function buildCveContributionFile(
+  statements: OpenVexStatement[],
+  user: GhUser,
+  docId: string,
+  timestamp: string,
+): string {
+  // A complete OpenVEX 0.2.0 document. The dashboard supplies the
+  // statements; the Worker owns the envelope — identity, author, time —
+  // which it can attest to and the client cannot forge.
+  const doc = {
+    "@context": OPENVEX_CONTEXT,
+    "@id": docId,
     author: user.login,
-    author_name: user.name ?? null,
     timestamp,
-    reviews: tidy,
+    version: 1,
+    tooling: "purl-associator CVE dashboard",
+    statements,
   };
-  return JSON.stringify(payload, null, 2) + "\n";
+  return JSON.stringify(doc, null, 2) + "\n";
 }
 
 function cveContributionFilename(user: GhUser, timestamp: string): string {
@@ -523,10 +562,17 @@ async function handleSubmitCves(request: Request, env: Env): Promise<Response> {
   }
   if (
     !payload.userToken ||
-    !payload.reviews ||
-    typeof payload.reviews !== "object"
+    !Array.isArray(payload.statements) ||
+    payload.statements.length === 0
   ) {
     return json({ error: "missing_fields" }, { status: 400, origin, env });
+  }
+  const statementError = validateOpenVexStatements(payload.statements);
+  if (statementError) {
+    return json(
+      { error: "invalid_openvex", detail: statementError },
+      { status: 400, origin, env },
+    );
   }
   if (!env.GITHUB_APP_PRIVATE_KEY || !env.GITHUB_INSTALLATION_ID) {
     return json({ error: "app_not_configured" }, { status: 500, origin, env });
@@ -582,10 +628,11 @@ async function handleSubmitCves(request: Request, env: Env): Promise<Response> {
       { ref: `refs/heads/${branch}`, sha: ref.object.sha },
     );
 
+    const docId = `https://github.com/${owner}/${repo}/blob/${baseBranch}/${path}`;
     const newText = buildCveContributionFile(
-      payload.reviews,
+      payload.statements,
       user,
-      payload.title,
+      docId,
       timestamp,
     );
     const email = user.email ?? `${user.login}@users.noreply.github.com`;
