@@ -88,11 +88,11 @@ async def fetch_page(
     return pkgs["pages"], pkgs["totalCount"], rows
 
 
-async def fetch_all(
-    endpoint: str, channel: str, concurrency: int
-) -> list[PackageRank]:
+async def fetch_all(endpoint: str, channel: str, concurrency: int) -> list[PackageRank]:
     timeout = httpx.Timeout(connect=15.0, read=60.0, write=15.0, pool=15.0)
-    limits = httpx.Limits(max_connections=concurrency, max_keepalive_connections=concurrency)
+    limits = httpx.Limits(
+        max_connections=concurrency, max_keepalive_connections=concurrency
+    )
     async with httpx.AsyncClient(timeout=timeout, limits=limits, http2=False) as client:
         total_pages, total_packages, first_rows = await fetch_page(
             client, endpoint, channel, page=0
@@ -116,9 +116,7 @@ async def fetch_all(
             console=console,
             transient=False,
         ) as progress:
-            task = progress.add_task(
-                "Paging prefix.dev…", total=total_pages - 1
-            )
+            task = progress.add_task("Paging prefix.dev…", total=total_pages - 1)
 
             async def runner(page: int) -> list[PackageRank]:
                 async with semaphore:
@@ -138,9 +136,7 @@ async def fetch_all(
                             )
                     return []
 
-            results = await asyncio.gather(
-                *(runner(p) for p in range(1, total_pages))
-            )
+            results = await asyncio.gather(*(runner(p) for p in range(1, total_pages)))
 
         for rows in results:
             all_rows.extend(rows)
@@ -172,9 +168,7 @@ def _write_names(out: Path, channel: str, picked: list[PackageRank]) -> None:
         "channel": channel,
         "source": "prefix.dev GraphQL (Package.totalCount)",
         "limit": len(picked),
-        "packages": [
-            {"name": r.name, "total_count": r.total_count} for r in picked
-        ],
+        "packages": [{"name": r.name, "total_count": r.total_count} for r in picked],
     }
     out.write_text(json.dumps(payload, indent=2) + "\n")
 
@@ -201,9 +195,7 @@ def _prune_auto(auto_path: Path, keep: set[str]) -> tuple[int, int]:
     data = json.loads(auto_path.read_text())
     packages = data.get("packages", {})
     before = len(packages)
-    data["packages"] = {
-        name: entry for name, entry in packages.items() if name in keep
-    }
+    data["packages"] = {name: entry for name, entry in packages.items() if name in keep}
     data["package_count"] = len(data["packages"])
     auto_path.write_text(json.dumps(data, indent=2) + "\n")
     return before, len(data["packages"])
@@ -214,16 +206,12 @@ def main(
     limit: int = typer.Option(1000, help="How many top packages to keep"),
     channel: str = typer.Option(DEFAULT_CHANNEL, help="prefix.dev channel"),
     endpoint: str = typer.Option(DEFAULT_ENDPOINT, help="GraphQL endpoint"),
-    concurrency: int = typer.Option(
-        16, help="Max concurrent GraphQL page requests"
-    ),
+    concurrency: int = typer.Option(16, help="Max concurrent GraphQL page requests"),
     names_out: Path = typer.Option(
         DEFAULT_NAMES_OUT,
         help="Where to write the ranked top-N list (audit artifact)",
     ),
-    auto: Path = typer.Option(
-        DEFAULT_AUTO, help="auto.json path to refresh + prune"
-    ),
+    auto: Path = typer.Option(DEFAULT_AUTO, help="auto.json path to refresh + prune"),
     skip_automap: bool = typer.Option(
         False,
         "--skip-automap",

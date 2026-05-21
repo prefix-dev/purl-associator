@@ -554,7 +554,8 @@ async def _async_main(
     force: bool,
 ) -> None:
     started = time.monotonic()
-    existing = {} if force else _load_existing(out)
+    subset_run = bool(only) or limit is not None or top_downloads is not None
+    existing = {} if force and not subset_run else _load_existing(out)
     console.log(f"Loaded {len(existing):,} cached entries from {out}")
 
     if top_downloads is not None:

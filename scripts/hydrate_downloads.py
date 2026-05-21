@@ -48,9 +48,7 @@ async def _hydrate(
     data = json.loads(auto.read_text())
     packages = data.get("packages", {})
     if not isinstance(packages, dict) or not packages:
-        raise typer.BadParameter(
-            f"{auto} has no packages — run automap first."
-        )
+        raise typer.BadParameter(f"{auto} has no packages — run automap first.")
 
     hits = misses = changed = 0
     for name, entry in packages.items():
@@ -78,14 +76,10 @@ def main(
     auto: Path = typer.Option(DEFAULT_AUTO, help="auto.json path"),
     channel: str = typer.Option(DEFAULT_CHANNEL, help="prefix.dev channel"),
     endpoint: str = typer.Option(DEFAULT_ENDPOINT, help="GraphQL endpoint"),
-    concurrency: int = typer.Option(
-        16, help="Max concurrent GraphQL page requests"
-    ),
+    concurrency: int = typer.Option(16, help="Max concurrent GraphQL page requests"),
 ) -> None:
     asyncio.run(
-        _hydrate(
-            auto=auto, channel=channel, endpoint=endpoint, concurrency=concurrency
-        )
+        _hydrate(auto=auto, channel=channel, endpoint=endpoint, concurrency=concurrency)
     )
 
 
