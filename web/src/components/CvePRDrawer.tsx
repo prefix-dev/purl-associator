@@ -1,6 +1,13 @@
 import { useState } from "react";
 import { repoFullName } from "../config";
 import { submitCveReviewsAsPR } from "../github/cve_api";
+import {
+  advisoryVex,
+  affectedVersions,
+  bestSeverity,
+  osvUrl,
+  primaryId,
+} from "../data/cves";
 import type { CvePackage, ReviewEdit } from "../data/cves";
 import type { GitHubUser } from "../data/types";
 import { Avatar, Btn, Glyph, Theme } from "./Primitives";
@@ -26,10 +33,10 @@ type Committed = {
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  confirmed: "confirmed",
-  rejected: "rejected",
-  "not-applicable": "not applicable",
-  "needs-review": "needs review",
+  affected: "affected",
+  not_affected: "not affected",
+  fixed: "fixed",
+  under_investigation: "under investigation",
 };
 
 export function CvePRDrawer({
@@ -68,17 +75,17 @@ export function CvePRDrawer({
     // Headline stats: status counts + how many advisories carry a version
     // override. Reviewers reading the PR want both at a glance.
     const stats = {
-      confirmed: 0,
-      rejected: 0,
-      notApplicable: 0,
-      needsReview: 0,
+      affected: 0,
+      notAffected: 0,
+      fixed: 0,
+      underInvestigation: 0,
     };
     let versionOverrideCount = 0;
     for (const [, edit] of editEntries) {
-      if (edit.status === "confirmed") stats.confirmed++;
-      else if (edit.status === "rejected") stats.rejected++;
-      else if (edit.status === "not-applicable") stats.notApplicable++;
-      else if (edit.status === "needs-review") stats.needsReview++;
+      if (edit.status === "affected") stats.affected++;
+      else if (edit.status === "not_affected") stats.notAffected++;
+      else if (edit.status === "fixed") stats.fixed++;
+      else if (edit.status === "under_investigation") stats.underInvestigation++;
       if (
         edit.version_overrides.affected.length > 0 ||
         edit.version_overrides.not_affected.length > 0
@@ -89,10 +96,11 @@ export function CvePRDrawer({
 
     const lines: string[] = [];
     const statBits: string[] = [];
-    if (stats.confirmed) statBits.push(`${stats.confirmed} confirmed`);
-    if (stats.rejected) statBits.push(`${stats.rejected} rejected`);
-    if (stats.notApplicable) statBits.push(`${stats.notApplicable} not-applicable`);
-    if (stats.needsReview) statBits.push(`${stats.needsReview} needs-review`);
+    if (stats.affected) statBits.push(`${stats.affected} affected`);
+    if (stats.notAffected) statBits.push(`${stats.notAffected} not-affected`);
+    if (stats.fixed) statBits.push(`${stats.fixed} fixed`);
+    if (stats.underInvestigation)
+      statBits.push(`${stats.underInvestigation} under-investigation`);
 
     const total = editEntries.length;
     lines.push(
@@ -138,27 +146,30 @@ export function CvePRDrawer({
 
       for (const [advisoryId, edit] of items) {
         const adv = pkg?.advisories.find((a) => a.id === advisoryId);
-        const label = adv?.primary_id || advisoryId;
+        const label = adv ? primaryId(adv) : advisoryId;
         const status = STATUS_LABELS[edit.status] || edit.status;
-        const sev = severityText(adv?.severity?.score);
-        const prior = adv?.review;
-        const transition = prior && prior.status !== edit.status
-          ? ` (was: ${STATUS_LABELS[prior.status] || prior.status})`
-          : prior
-            ? " (re-affirming previous review)"
-            : "";
+        const sev = severityText(adv ? bestSeverity(adv)?.score : undefined);
+        const prior = adv ? advisoryVex(adv) : undefined;
+        const priorStatus = prior?.status;
+        const transition =
+          priorStatus && priorStatus !== edit.status
+            ? ` (was: ${STATUS_LABELS[priorStatus] || priorStatus})`
+            : prior
+              ? " (re-affirming previous review)"
+              : "";
 
-        const headline = adv?.osv_url
-          ? `**[${label}](${adv.osv_url})**`
+        const headline = adv
+          ? `**[${label}](${osvUrl(adv)})**`
           : `**${label}**`;
 
         lines.push(`- ${headline}${sev} — status: \`${status}\`${transition}`);
         if (adv?.summary) {
           lines.push(`  - ${adv.summary}`);
         }
-        const autoCount = adv?.affected_conda_versions?.length ?? 0;
+        const autoBase = adv ? affectedVersions(adv) : [];
+        const autoCount = autoBase.length;
         if (autoCount > 0 || edit.version_overrides.affected.length > 0) {
-          const base = adv?.affected_conda_versions ?? [];
+          const base = autoBase;
           const after = new Set(base);
           for (const v of edit.version_overrides.not_affected) after.delete(v);
           for (const v of edit.version_overrides.affected) after.add(v);
@@ -180,8 +191,8 @@ export function CvePRDrawer({
             `  - \`+\` newly marked affected: ${fmtVersions(edit.version_overrides.affected)}`,
           );
         }
-        if (edit.note) {
-          lines.push(`  - _${edit.note}_`);
+        if (edit.notes) {
+          lines.push(`  - _${edit.notes}_`);
         }
       }
       lines.push("");
@@ -366,7 +377,7 @@ export function CvePRDrawer({
                               fontFamily: "JetBrains Mono, monospace",
                             }}
                           >
-                            {adv?.primary_id || advisoryId}
+                            {adv ? primaryId(adv) : advisoryId}
                           </code>
                           <span style={{ flex: 1 }} />
                           <span
@@ -443,7 +454,7 @@ export function CvePRDrawer({
                             ))}
                           </div>
                         )}
-                        {e.note && (
+                        {e.notes && (
                           <div
                             style={{
                               fontSize: 11.5,
@@ -452,7 +463,7 @@ export function CvePRDrawer({
                               fontStyle: "italic",
                             }}
                           >
-                            "{e.note}"
+                            "{e.notes}"
                           </div>
                         )}
                       </div>

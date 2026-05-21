@@ -18,9 +18,24 @@ packageurl-python = ">=0.17.6, <0.18"
 [feature.dev.dependencies]
 ruff = "*"
 
+# Minimal environment for the merge + validate steps (pure stdlib + jsonschema).
+# Lets the Pages deploy run the pixi tasks without installing py-rattler.
+[feature.lite.dependencies]
+python = ">=3.13,<3.14"
+jsonschema = ">=4.20,<5"
+
+# The merge/validate tasks live on the `lite` feature. Both the `default`
+# and `lite` environments include it, so the tasks are defined exactly once
+# (no ambiguity) yet runnable without installing py-rattler.
+[feature.lite.tasks]
+merge = "python -m scripts.merge_mappings"
+merge-cves = "python -m scripts.merge_cves"
+validate = "python -m scripts.validate"
+
 [environments]
-default = []
+default = ["lite"]
 dev = ["dev"]
+lite = { features = ["lite"], no-default-feature = true }
 
 [tasks]
 automap = "python -m scripts.automap"
@@ -29,7 +44,6 @@ merge = "python -m scripts.merge_mappings"
 ai-vet = "python -m scripts.ai_vet"
 osv-fetch = "python -m scripts.osv_fetch"
 cve-match = "python -m scripts.cve_match"
-merge-cves = "python -m scripts.merge_cves"
 lint = { cmd = "ruff check scripts && ruff format --check scripts", env = {} }
 fmt = "ruff format scripts"
 

@@ -73,6 +73,12 @@ jobs:
       - name: Merge CVEs + reviewer contributions for the SPA
         run: pixi run python -m scripts.merge_cves
 
+      - name: Validate against the OSV + OpenVEX schemas
+        # Standards-compliance gate: every per-package file must be a valid
+        # OSV record, every contribution a valid OpenVEX document, and
+        # cves.json a valid bundle. A failure here blocks the refresh PR.
+        run: pixi run validate
+
       - name: Generate PR body
         run: |
           pixi run python -m scripts.cve_summary \

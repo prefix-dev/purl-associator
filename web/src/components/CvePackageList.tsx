@@ -1,5 +1,6 @@
 import { useMemo, useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { advisoryVex, affectedVersions, cveIds } from "../data/cves";
 import type { CvePackage, ReviewEdit } from "../data/cves";
 import { Glyph, Theme } from "./Primitives";
 
@@ -17,32 +18,20 @@ type Props = {
 
 function packageStats(p: CvePackage, edits: Record<string, ReviewEdit>) {
   let unreviewed = 0;
-  let confirmed = 0;
-  let rejected = 0;
-  let notApplicable = 0;
   let editsHere = 0;
-  let affectedVersions = 0;
-  let unique = new Set<string>();
+  const unique = new Set<string>();
   for (const adv of p.advisories) {
     const edit = edits[`${p.package}::${adv.id}`];
-    const status = edit?.status ?? adv.review?.status;
+    const status = edit?.status ?? advisoryVex(adv)?.status;
     if (edit) editsHere++;
-    if (!status) unreviewed++;
-    else if (status === "confirmed") confirmed++;
-    else if (status === "rejected") rejected++;
-    else if (status === "not-applicable") notApplicable++;
-    else if (status === "needs-review") unreviewed++;
-    affectedVersions += adv.affected_conda_versions.length;
-    for (const v of adv.affected_conda_versions) unique.add(v);
+    // No status, or an explicit "under investigation", counts as unreviewed.
+    if (!status || status === "under_investigation") unreviewed++;
+    for (const v of affectedVersions(adv)) unique.add(v);
   }
   return {
     total: p.advisories.length,
     unreviewed,
-    confirmed,
-    rejected,
-    notApplicable,
     editsHere,
-    affectedVersions,
     uniqueVersions: unique.size,
   };
 }
@@ -65,10 +54,11 @@ export function CvePackageList({
     return packages.filter((p) => {
       if (ql) {
         const inName = p.package.toLowerCase().includes(ql);
-        const inCve = p.advisories.some((a) =>
-          a.cve_ids.some((id) => id.toLowerCase().includes(ql)) ||
-          a.id.toLowerCase().includes(ql) ||
-          a.aliases.some((al) => al.toLowerCase().includes(ql)),
+        const inCve = p.advisories.some(
+          (a) =>
+            cveIds(a).some((id) => id.toLowerCase().includes(ql)) ||
+            a.id.toLowerCase().includes(ql) ||
+            (a.aliases ?? []).some((al) => al.toLowerCase().includes(ql)),
         );
         const inSummary = p.advisories.some(
           (a) => (a.summary || "").toLowerCase().includes(ql),
