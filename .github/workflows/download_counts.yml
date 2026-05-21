@@ -1,0 +1,129 @@
+name: Refresh download counts
+
+on:
+  workflow_dispatch:
+    inputs:
+      concurrency:
+        description: "Max concurrent prefix.dev GraphQL page requests"
+        required: false
+        default: "16"
+      channel:
+        description: "prefix.dev channel"
+        required: false
+        default: "conda-forge"
+  schedule:
+    # Weekly on Wednesday at 05:17 UTC. Kept separate from automap so natural
+    # download-count churn does not get mixed into PURL mapping refresh PRs.
+    - cron: "17 5 * * 3"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: download-counts
+  cancel-in-progress: false
+
+jobs:
+  download-counts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: prefix-dev/setup-pixi@v0.9.5
+        with:
+          pixi-version: latest
+          cache: true
+
+      - name: Snapshot baseline counts
+        run: |
+          mkdir -p /tmp/download_counts_baseline
+          git show HEAD:mappings/auto.json > /tmp/download_counts_baseline/auto.json 2>/dev/null \
+            || echo '{"packages":{}}' > /tmp/download_counts_baseline/auto.json
+
+      - name: Hydrate download counts
+        run: |
+          set -euo pipefail
+          CONCURRENCY="${{ inputs.concurrency || '16' }}"
+          CHANNEL="${{ inputs.channel || 'conda-forge' }}"
+          pixi run python -m scripts.hydrate_downloads \
+            --concurrency "$CONCURRENCY" \
+            --channel "$CHANNEL"
+
+      - name: Merge mappings for the SPA
+        run: pixi run python -m scripts.merge_mappings
+
+      - name: Generate PR body
+        run: |
+          python - <<'PY' > /tmp/download_counts_pr_body.md
+          import json
+          from pathlib import Path
+
+          before = json.loads(Path('/tmp/download_counts_baseline/auto.json').read_text()).get('packages', {})
+          after = json.loads(Path('mappings/auto.json').read_text()).get('packages', {})
+
+          changed = []
+          added = removed = became_unknown = became_known = 0
+          for name, entry in after.items():
+              old = before.get(name, {}).get('download_count')
+              new = entry.get('download_count')
+              if old == new:
+                  continue
+              changed.append((name, old, new))
+              if old is None and new is not None:
+                  became_known += 1
+              elif old is not None and new is None:
+                  became_unknown += 1
+              elif old is None:
+                  added += 1
+              else:
+                  # Both known and changed.
+                  pass
+
+          for name in before.keys() - after.keys():
+              if before[name].get('download_count') is not None:
+                  removed += 1
+
+          known_after = sum(1 for entry in after.values() if entry.get('download_count') is not None)
+
+          print('Refreshes prefix.dev lifetime download counts (`Package.totalCount`) in `mappings/auto.json`.')
+          print()
+          print(f'- packages: **{len(after):,}**')
+          print(f'- packages with known counts: **{known_after:,}**')
+          print(f'- count fields changed: **{len(changed):,}**')
+          print(f'- newly known: **{became_known:,}**')
+          print(f'- became unknown: **{became_unknown:,}**')
+          if removed:
+              print(f'- removed packages with prior counts: **{removed:,}**')
+          print()
+          print('Top changed entries by absolute delta:')
+          rows = []
+          for name, old, new in changed:
+              if isinstance(old, int) and isinstance(new, int):
+                  rows.append((abs(new - old), name, old, new))
+          rows.sort(reverse=True)
+          if rows:
+              print()
+              print('| package | before | after | delta |')
+              print('| --- | ---: | ---: | ---: |')
+              for _, name, old, new in rows[:20]:
+                  print(f'| `{name}` | {old:,} | {new:,} | {new - old:+,} |')
+          else:
+              print()
+              print('_No known-to-known count deltas._')
+          PY
+          echo "----- PR body preview -----"
+          cat /tmp/download_counts_pr_body.md
+
+      - name: Open / update PR if counts changed
+        uses: peter-evans/create-pull-request@v8
+        with:
+          add-paths: |
+            mappings/auto.json
+            web/public/mappings.json
+          branch: download-counts/refresh
+          base: main
+          title: "download-counts: refresh prefix.dev totals"
+          body-path: /tmp/download_counts_pr_body.md
+          commit-message: "download-counts: refresh prefix.dev totals"
+          delete-branch: true

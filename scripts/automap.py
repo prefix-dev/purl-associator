@@ -478,12 +478,33 @@ def _load_existing(out_path: Path) -> dict[str, AutoEntry]:
     except json.JSONDecodeError:
         return {}
     entries: dict[str, AutoEntry] = {}
+    field_names = set(AutoEntry.__dataclass_fields__)
     for name, raw in payload.get("packages", {}).items():
+        if not isinstance(raw, dict):
+            continue
+        # Be tolerant of older/newer auto.json payloads carrying extra keys so
+        # cached metadata such as download_count survives schema churn.
+        filtered = {k: v for k, v in raw.items() if k in field_names}
         try:
-            entries[name] = AutoEntry(**raw)
+            entries[name] = AutoEntry(**filtered)
         except TypeError:
             continue
     return entries
+
+
+def _load_existing_download_counts(out_path: Path) -> dict[str, int]:
+    """Load preserved prefix.dev counts even when a forced automap run skips cache."""
+    if not out_path.exists():
+        return {}
+    try:
+        payload = json.loads(out_path.read_text())
+    except json.JSONDecodeError:
+        return {}
+    counts: dict[str, int] = {}
+    for name, raw in payload.get("packages", {}).items():
+        if isinstance(raw, dict) and isinstance(raw.get("download_count"), int):
+            counts[name] = raw["download_count"]
+    return counts
 
 
 def _write_out(out_path: Path, entries: dict[str, AutoEntry]) -> None:
@@ -555,8 +576,13 @@ async def _async_main(
 ) -> None:
     started = time.monotonic()
     subset_run = bool(only) or limit is not None or top_downloads is not None
+    existing_counts = _load_existing_download_counts(out)
     existing = {} if force and not subset_run else _load_existing(out)
     console.log(f"Loaded {len(existing):,} cached entries from {out}")
+    if existing_counts:
+        console.log(
+            f"Loaded {len(existing_counts):,} preserved download counts from {out}"
+        )
 
     if top_downloads is not None:
         console.log(
@@ -649,6 +675,8 @@ async def _async_main(
                 prior_entry = existing.get(entry.name)
                 if prior_entry is not None:
                     entry.download_count = prior_entry.download_count
+                elif entry.name in existing_counts:
+                    entry.download_count = existing_counts[entry.name]
                 new_entries[entry.name] = entry
     finally:
         await parselmouth_client.aclose()

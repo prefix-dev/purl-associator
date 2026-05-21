@@ -42,6 +42,7 @@ automap = "python -m scripts.automap"
 top-downloads = "python -m scripts.top_downloads"
 hydrate-downloads = "python -m scripts.hydrate_downloads"
 merge = "python -m scripts.merge_mappings"
+download-counts-refresh = { cmd = "python -m scripts.hydrate_downloads --concurrency {{ concurrency }} --channel {{ channel }} && python -m scripts.merge_mappings", description = "Refresh prefix.dev download counts locally and rebuild the frontend mappings payload", args = [{ arg = "concurrency", default = "16" }, { arg = "channel", default = "conda-forge" }] }
 ai-vet = "python -m scripts.ai_vet"
 osv-fetch = "python -m scripts.osv_fetch"
 cve-match = "python -m scripts.cve_match"
@@ -111,6 +112,15 @@ cmd = "gh workflow run pages.yml --ref {{ ref }}"
 description = "Trigger the GitHub Pages deployment workflow"
 args = [
   { arg = "ref", default = "main" },
+]
+
+[tasks.gh-download-counts]
+cmd = "gh workflow run download_counts.yml --ref {{ ref }} -f concurrency='{{ concurrency }}' -f channel='{{ channel }}'"
+description = "Trigger the weekly download-count refresh workflow"
+args = [
+  { arg = "ref", default = "main" },
+  { arg = "concurrency", default = "16" },
+  { arg = "channel", default = "conda-forge" },
 ]
 
 [tasks.gh-ai-vet]
