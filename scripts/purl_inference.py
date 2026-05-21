@@ -58,9 +58,31 @@ def _strip_archive_suffix(name: str) -> str:
     return name
 
 
+def _looks_like_version_tail(tail: str) -> bool:
+    """Heuristic for archive filename tails that are likely versions.
+
+    Avoid treating project-name suffixes like ``mt-940`` or
+    ``aliyun-python-sdk-core-v3`` as versions just because they end in a
+    number. Real archive version tails usually contain a dotted release,
+    epoch marker, or an explicit prerelease/dev/post tag.
+    """
+    tail = tail.lower()
+    if tail.startswith("v"):
+        tail = tail[1:]
+    if not tail or not tail[0].isdigit():
+        return False
+    return bool(re.search(r"[.!]", tail) or re.search(r"(?:a|b|rc|dev|post)\d", tail))
+
+
 def _strip_version_tail(stem: str) -> str:
-    # numpy-2.2.4 → numpy
-    return re.sub(r"[-_]v?\d[\d.\w-]*$", "", stem)
+    # numpy-2.2.4 → numpy; mt-940-4.30.0 → mt-940
+    for idx in range(len(stem) - 1, 0, -1):
+        if stem[idx] not in "-_":
+            continue
+        tail = stem[idx + 1 :]
+        if _looks_like_version_tail(tail):
+            return stem[:idx]
+    return stem
 
 
 _PYPI_NORMALIZE_RE = re.compile(r"[-_.]+")
@@ -117,7 +139,8 @@ def normalize_purl(purl: str) -> str:
 
 
 def guess_pypi(url: str) -> PurlGuess | None:
-    host = urlparse(url).netloc
+    parsed = urlparse(url)
+    host = parsed.netloc
     if host not in _PYPI_HOSTS:
         return None
     # pypi.org/project/<name>/...
@@ -125,8 +148,21 @@ def guess_pypi(url: str) -> PurlGuess | None:
     if m:
         name = normalize_pypi_name(m.group(1))
         return PurlGuess(f"pkg:pypi/{name}", "pypi", None, name, 0.97, "recipe-source")
+
+    # pypi.org/packages/source/<initial>/<project>/<project>-<version>.tar.gz
+    # The directory component is the canonical project name and is more
+    # reliable than stripping the version from the filename: projects like
+    # ``mt-940`` and ``aliyun-python-sdk-core-v3`` legitimately end in
+    # numeric-looking suffixes.
+    parts = [p for p in parsed.path.split("/") if p]
+    for idx in range(len(parts) - 3):
+        if parts[idx] == "packages" and parts[idx + 1] == "source":
+            name = normalize_pypi_name(parts[idx + 3])
+            return PurlGuess(
+                f"pkg:pypi/{name}", "pypi", None, name, 0.96, "recipe-source"
+            )
+
     # files.pythonhosted.org/packages/.../<name>-<version>.tar.gz
-    parsed = urlparse(url)
     leaf = parsed.path.rsplit("/", 1)[-1]
     stem = _strip_archive_suffix(leaf)
     name = _strip_version_tail(stem)
@@ -386,31 +422,33 @@ def infer_all(
             key=lambda h: h.confidence,
             reverse=True,
         )
-        if matching:
-            primary = max(matching, key=lambda h: h.confidence)
-            boosted = PurlGuess(
-                purl=primary.purl,
-                type=primary.type,
-                namespace=primary.namespace,
-                pkg_name=primary.pkg_name,
-                confidence=min(0.99, primary.confidence + 0.04),
-                source=f"{primary.source}+recipe-deps",
-            )
-            return [boosted] + [h for h in matching if h is not primary] + others
         if context.inferred_name:
             synth = PurlGuess(
                 purl=f"pkg:{context.ecosystem_hint}/{context.inferred_name}",
                 type=context.ecosystem_hint,
                 namespace=None,
                 pkg_name=context.inferred_name,
-                confidence=0.6,
+                confidence=0.88,
                 source="recipe-deps",
             )
-            # The synth is a soft signal — only "the recipe builds with pip,
-            # so it might be on PyPI". Don't let it override harder URL
-            # evidence; sort by confidence so e.g. a 0.85 github match wins
-            # primary while the synth stays as a low-confidence alt.
-            return sorted([synth] + others, key=lambda h: h.confidence, reverse=True)
+            if all(h.purl != synth.purl for h in matching):
+                matching.append(synth)
+        if matching:
+            primary = max(matching, key=lambda h: h.confidence)
+            boosted_source = (
+                primary.source
+                if "recipe-deps" in primary.source.split("+")
+                else f"{primary.source}+recipe-deps"
+            )
+            boosted = PurlGuess(
+                purl=primary.purl,
+                type=primary.type,
+                namespace=primary.namespace,
+                pkg_name=primary.pkg_name,
+                confidence=min(0.99, primary.confidence + 0.04),
+                source=boosted_source,
+            )
+            return [boosted] + [h for h in matching if h is not primary] + others
         return others
 
     return sorted(deduped, key=lambda h: h.confidence, reverse=True)
