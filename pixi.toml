@@ -19,9 +19,23 @@ jsonschema = ">=4.20,<5"
 [feature.dev.dependencies]
 ruff = "*"
 
+# Minimal environment for the merge + validate steps (pure stdlib + jsonschema).
+# Lets the Pages deploy run the pixi tasks without installing py-rattler.
+[feature.lite.dependencies]
+python = ">=3.13,<3.14"
+jsonschema = ">=4.20,<5"
+
+# Tasks must be declared on the feature too: the `lite` environment sets
+# no-default-feature, so it does not inherit the top-level [tasks].
+[feature.lite.tasks]
+merge = "python -m scripts.merge_mappings"
+merge-cves = "python -m scripts.merge_cves"
+validate = "python -m scripts.validate"
+
 [environments]
 default = []
 dev = ["dev"]
+lite = { features = ["lite"], no-default-feature = true }
 
 [tasks]
 automap = "python -m scripts.automap"

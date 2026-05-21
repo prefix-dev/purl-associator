@@ -30,14 +30,20 @@ jobs:
           cache: "npm"
           cache-dependency-path: web/package-lock.json
 
+      - uses: prefix-dev/setup-pixi@v0.9.5
+        with:
+          pixi-version: latest
+          cache: true
+          environments: lite
+
       - name: Refresh served mappings.json (auto + manual + contributions)
-        run: |
-          mkdir -p web/public
-          python3 scripts/merge_mappings.py
+        run: pixi run -e lite merge
 
       - name: Refresh served cves.json (per-package CVE files + contributions)
-        # Run as a module from the repo root so `scripts.cve_common` resolves.
-        run: python3 -m scripts.merge_cves
+        run: pixi run -e lite merge-cves
+
+      - name: Validate CVE data against the OSV + OpenVEX schemas
+        run: pixi run -e lite validate
 
       - name: Install web deps
         working-directory: web
