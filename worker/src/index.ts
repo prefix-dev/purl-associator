@@ -445,65 +445,45 @@ async function handleSubmit(request: Request, env: Env): Promise<Response> {
 
 // ---------- /api/submit-cves (apply CVE review edits, open PR) ----------
 
-type CveReviewPayload = {
-  status: "confirmed" | "rejected" | "not-applicable" | "needs-review";
-  note?: string;
-  version_overrides?: {
-    affected?: string[];
-    not_affected?: string[];
-  };
+/** One OpenVEX 0.2.0 statement, as built by the dashboard (cve_api.ts). */
+type OpenVexStatement = {
+  vulnerability: { name: string };
+  products: { "@id": string }[];
+  status: string;
+  justification?: string;
+  action_statement?: string;
+  status_notes?: string;
 };
 
 type CveSubmitBody = {
   userToken: string;
-  /** Nested: { [conda_name]: { [advisory_id]: review } } */
-  reviews: Record<string, Record<string, CveReviewPayload>>;
+  /** OpenVEX statements; the Worker wraps them in the document envelope. */
+  statements: OpenVexStatement[];
   title: string;
   body: string;
 };
 
+const OPENVEX_CONTEXT = "https://openvex.dev/ns/v0.2.0";
+
 function buildCveContributionFile(
-  reviews: CveSubmitBody["reviews"],
+  statements: OpenVexStatement[],
   user: GhUser,
-  title: string,
+  docId: string,
   timestamp: string,
 ): string {
-  // Strip undefineds from the nested structure so the on-disk JSON is tidy
-  // (JSON.stringify already does this for top-level fields).
-  const tidy: Record<string, Record<string, unknown>> = {};
-  for (const [pkg, perAdv] of Object.entries(reviews)) {
-    tidy[pkg] = {};
-    for (const [advisoryId, review] of Object.entries(perAdv)) {
-      const out: Record<string, unknown> = { status: review.status };
-      if (review.note) out.note = review.note;
-      if (review.version_overrides) {
-        const vo: Record<string, unknown> = {};
-        if (
-          Array.isArray(review.version_overrides.affected) &&
-          review.version_overrides.affected.length > 0
-        ) {
-          vo.affected = review.version_overrides.affected;
-        }
-        if (
-          Array.isArray(review.version_overrides.not_affected) &&
-          review.version_overrides.not_affected.length > 0
-        ) {
-          vo.not_affected = review.version_overrides.not_affected;
-        }
-        if (Object.keys(vo).length > 0) out.version_overrides = vo;
-      }
-      tidy[pkg][advisoryId] = out;
-    }
-  }
-  const payload = {
-    schema_version: 1,
-    title,
+  // A complete OpenVEX 0.2.0 document. The dashboard supplies the
+  // statements; the Worker owns the envelope — identity, author, time —
+  // which it can attest to and the client cannot forge.
+  const doc = {
+    "@context": OPENVEX_CONTEXT,
+    "@id": docId,
     author: user.login,
-    author_name: user.name ?? null,
     timestamp,
-    reviews: tidy,
+    version: 1,
+    tooling: "purl-associator CVE dashboard",
+    statements,
   };
-  return JSON.stringify(payload, null, 2) + "\n";
+  return JSON.stringify(doc, null, 2) + "\n";
 }
 
 function cveContributionFilename(user: GhUser, timestamp: string): string {
@@ -523,8 +503,8 @@ async function handleSubmitCves(request: Request, env: Env): Promise<Response> {
   }
   if (
     !payload.userToken ||
-    !payload.reviews ||
-    typeof payload.reviews !== "object"
+    !Array.isArray(payload.statements) ||
+    payload.statements.length === 0
   ) {
     return json({ error: "missing_fields" }, { status: 400, origin, env });
   }
@@ -582,10 +562,11 @@ async function handleSubmitCves(request: Request, env: Env): Promise<Response> {
       { ref: `refs/heads/${branch}`, sha: ref.object.sha },
     );
 
+    const docId = `https://github.com/${owner}/${repo}/blob/${baseBranch}/${path}`;
     const newText = buildCveContributionFile(
-      payload.reviews,
+      payload.statements,
       user,
-      payload.title,
+      docId,
       timestamp,
     );
     const email = user.email ?? `${user.login}@users.noreply.github.com`;
