@@ -56,6 +56,8 @@ export type PackageEntry = {
   alternative_purls?: PurlAlternative[] | null;
   /** the original auto guess, kept for diff display when an override exists */
   auto?: AutoMapping;
+  /** total downloads on prefix.dev for this package (null if not ranked) */
+  download_count?: number | null;
 };
 
 export type MappingsPayload = {

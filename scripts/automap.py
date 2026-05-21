@@ -43,6 +43,7 @@ from scripts.purl_inference import (
     infer_all,
     recipe_context_hints,
 )
+from scripts.top_downloads import fetch_top_names
 
 app = typer.Typer(add_completion=False, help=__doc__)
 console = Console()
@@ -84,6 +85,10 @@ class AutoEntry:
     alternative_purls: list[dict] | None = None
     note: str | None = None
     fetched_at: str | None = None
+    # Lifetime download count on prefix.dev (Package.totalCount), backfilled
+    # by ``scripts.hydrate_downloads``. ``None`` means "not yet hydrated" or
+    # "package not visible on prefix.dev".
+    download_count: int | None = None
 
 
 def _record_sort_key(record: RepoDataRecord) -> tuple[VersionWithSource, str, str, int]:
@@ -435,10 +440,23 @@ def main(
     only: str | None = typer.Option(
         None, help="Comma-separated names to process (test runs)"
     ),
+    top_downloads: int | None = typer.Option(
+        None,
+        "--top-downloads",
+        help=(
+            "Process the top-N most-downloaded names on prefix.dev in step 1 "
+            "(channel must match). Additive: existing entries in auto.json are "
+            "preserved; only the top-N names are (re)inferred."
+        ),
+    ),
     parallel: int = typer.Option(20, help="parallel inflight recipe fetches"),
     force: bool = typer.Option(False, help="Re-fetch all packages, ignoring the cache"),
 ) -> None:
     """Generate or refresh the auto mapping JSON."""
+    if top_downloads is not None and (only or limit):
+        raise typer.BadParameter(
+            "--top-downloads is mutually exclusive with --only / --limit"
+        )
     asyncio.run(
         _async_main(
             out=out,
@@ -446,6 +464,7 @@ def main(
             platforms=platforms,
             limit=limit,
             only=only.split(",") if only else None,
+            top_downloads=top_downloads,
             parallel=parallel,
             force=force,
         )
@@ -459,12 +478,25 @@ async def _async_main(
     platforms: list[str],
     limit: int | None,
     only: list[str] | None,
+    top_downloads: int | None,
     parallel: int,
     force: bool,
 ) -> None:
     started = time.monotonic()
     existing = {} if force else _load_existing(out)
     console.log(f"Loaded {len(existing):,} cached entries from {out}")
+
+    if top_downloads is not None:
+        console.log(
+            f"Fetching top {top_downloads:,} most-downloaded "
+            f"[bold]{channel}[/] packages from prefix.dev…"
+        )
+        ranked = await fetch_top_names(limit=top_downloads, channel=channel)
+        only = ranked
+        console.log(
+            f"Step 1 will (re)process {len(ranked):,} top names; "
+            "existing auto.json entries are preserved"
+        )
 
     records = await _gather_records(channel=channel, platforms=platforms, names=only)
     if limit is not None:
@@ -532,6 +564,11 @@ async def _async_main(
 
             results = await asyncio.gather(*(runner(r) for r in needs_fetch))
             for entry in results:
+                # Preserve prefix.dev download counts across re-runs — they're
+                # owned by scripts.hydrate_downloads, not the recipe fetch.
+                prior_entry = existing.get(entry.name)
+                if prior_entry is not None:
+                    entry.download_count = prior_entry.download_count
                 new_entries[entry.name] = entry
 
     # Drop entries for packages that disappeared from the channel

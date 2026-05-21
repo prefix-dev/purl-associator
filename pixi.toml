@@ -39,9 +39,19 @@ lite = { features = ["lite"], no-default-feature = true }
 
 [tasks]
 automap = "python -m scripts.automap"
+top-downloads = "python -m scripts.top_downloads"
+hydrate-downloads = "python -m scripts.hydrate_downloads"
+merge = "python -m scripts.merge_mappings"
 ai-vet = "python -m scripts.ai_vet"
 osv-fetch = "python -m scripts.osv_fetch"
 cve-match = "python -m scripts.cve_match"
 lint = { cmd = "ruff check scripts && ruff format --check scripts", env = {} }
 fmt = "ruff format scripts"
+
+# Frontend (uses system npm/node — pixi just wraps the commands so they're
+# discoverable alongside the python tasks). Run `pixi run -e lite merge`
+# first if you've edited mappings data and want the SPA to see the changes.
+web-install = { cmd = "npm install", cwd = "web" }
+web-dev = { cmd = "npm run dev", cwd = "web" }
+web-build = { cmd = "npm run build", cwd = "web" }
 
