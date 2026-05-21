@@ -14,7 +14,6 @@ httpx = ">=0.28,<0.29"
 rich = ">=13"
 anthropic = ">=0.88,<1"
 packageurl-python = ">=0.17.6, <0.18"
-jsonschema = ">=4.20,<5"
 
 [feature.dev.dependencies]
 ruff = "*"
@@ -25,26 +24,24 @@ ruff = "*"
 python = ">=3.13,<3.14"
 jsonschema = ">=4.20,<5"
 
-# Tasks must be declared on the feature too: the `lite` environment sets
-# no-default-feature, so it does not inherit the top-level [tasks].
+# The merge/validate tasks live on the `lite` feature. Both the `default`
+# and `lite` environments include it, so the tasks are defined exactly once
+# (no ambiguity) yet runnable without installing py-rattler.
 [feature.lite.tasks]
 merge = "python -m scripts.merge_mappings"
 merge-cves = "python -m scripts.merge_cves"
 validate = "python -m scripts.validate"
 
 [environments]
-default = []
+default = ["lite"]
 dev = ["dev"]
 lite = { features = ["lite"], no-default-feature = true }
 
 [tasks]
 automap = "python -m scripts.automap"
-merge = "python -m scripts.merge_mappings"
 ai-vet = "python -m scripts.ai_vet"
 osv-fetch = "python -m scripts.osv_fetch"
 cve-match = "python -m scripts.cve_match"
-merge-cves = "python -m scripts.merge_cves"
-validate = "python -m scripts.validate"
 lint = { cmd = "ruff check scripts && ruff format --check scripts", env = {} }
 fmt = "ruff format scripts"
 
