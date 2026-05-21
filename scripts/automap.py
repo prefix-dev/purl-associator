@@ -43,6 +43,7 @@ from scripts.purl_inference import (
     infer_all,
     recipe_context_hints,
 )
+from scripts.top_downloads import fetch_top_names
 
 app = typer.Typer(add_completion=False, help=__doc__)
 console = Console()
@@ -435,10 +436,22 @@ def main(
     only: str | None = typer.Option(
         None, help="Comma-separated names to process (test runs)"
     ),
+    top_downloads: int | None = typer.Option(
+        None,
+        "--top-downloads",
+        help=(
+            "Restrict step 1 to the top-N most-downloaded names on prefix.dev "
+            "(channel must match) and prune auto.json to just those names."
+        ),
+    ),
     parallel: int = typer.Option(20, help="parallel inflight recipe fetches"),
     force: bool = typer.Option(False, help="Re-fetch all packages, ignoring the cache"),
 ) -> None:
     """Generate or refresh the auto mapping JSON."""
+    if top_downloads is not None and (only or limit):
+        raise typer.BadParameter(
+            "--top-downloads is mutually exclusive with --only / --limit"
+        )
     asyncio.run(
         _async_main(
             out=out,
@@ -446,6 +459,7 @@ def main(
             platforms=platforms,
             limit=limit,
             only=only.split(",") if only else None,
+            top_downloads=top_downloads,
             parallel=parallel,
             force=force,
         )
@@ -459,12 +473,24 @@ async def _async_main(
     platforms: list[str],
     limit: int | None,
     only: list[str] | None,
+    top_downloads: int | None,
     parallel: int,
     force: bool,
 ) -> None:
     started = time.monotonic()
     existing = {} if force else _load_existing(out)
     console.log(f"Loaded {len(existing):,} cached entries from {out}")
+
+    top_names: set[str] | None = None
+    if top_downloads is not None:
+        console.log(
+            f"Fetching top {top_downloads:,} most-downloaded "
+            f"[bold]{channel}[/] packages from prefix.dev…"
+        )
+        ranked = await fetch_top_names(limit=top_downloads, channel=channel)
+        top_names = set(ranked)
+        only = ranked
+        console.log(f"Restricting step 1 to {len(top_names):,} top names")
 
     records = await _gather_records(channel=channel, platforms=platforms, names=only)
     if limit is not None:
@@ -534,9 +560,17 @@ async def _async_main(
             for entry in results:
                 new_entries[entry.name] = entry
 
-    # Drop entries for packages that disappeared from the channel
-    if not only and not limit:
+    # Drop entries for packages that disappeared from the channel. For
+    # --top-downloads we also prune so auto.json ends up with exactly the
+    # requested set (any cached entries outside the top-N go away).
+    if top_names is not None:
+        live_names: set[str] = top_names
+    elif not only and not limit:
         live_names = {r.name.normalized for r in records}
+    else:
+        live_names = None  # type: ignore[assignment]
+
+    if live_names is not None:
         for stale in [n for n in new_entries if n not in live_names]:
             del new_entries[stale]
 
