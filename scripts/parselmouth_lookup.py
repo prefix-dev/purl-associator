@@ -85,10 +85,22 @@ def _parse_mapping(data: Any) -> ParselmouthMapping | None:
     )
 
 
+def _normalize_sha256(sha256: str | bytes | bytearray | None) -> str | None:
+    """Return a lowercase hex sha256 string suitable for Parselmouth URLs."""
+    if sha256 is None:
+        return None
+    if isinstance(sha256, (bytes, bytearray)):
+        return bytes(sha256).hex()
+    value = str(sha256).strip().lower()
+    if value.startswith("sha256:"):
+        value = value[len("sha256:") :]
+    return value or None
+
+
 async def fetch_mapping_by_hash(
     client: httpx.AsyncClient,
     *,
-    sha256: str | None,
+    sha256: str | bytes | bytearray | None,
     channel: str,
     base_url: str | None = None,
 ) -> ParselmouthMapping | None:
@@ -97,13 +109,14 @@ async def fetch_mapping_by_hash(
     Parselmouth stores hash entries at ``/hash-v0/{sha256}``; older docs also
     mention a channel-prefixed form, so we try that as a fallback.
     """
-    if not sha256:
+    sha256_hex = _normalize_sha256(sha256)
+    if not sha256_hex:
         return None
 
     base = _clean_base_url(base_url)
     paths = (
-        f"/hash-v0/{sha256}",
-        f"/{channel}/hash-v0/{sha256}",
+        f"/hash-v0/{sha256_hex}",
+        f"/{channel}/hash-v0/{sha256_hex}",
     )
 
     for path in paths:
