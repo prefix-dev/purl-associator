@@ -18,6 +18,14 @@ import json
 from collections.abc import Iterable
 from pathlib import Path
 
+from scripts.cve_common import (
+    affected_versions,
+    best_severity,
+    cve_ids,
+    osv_url,
+    primary_id,
+)
+
 PER_BUCKET = 30
 ADVISORIES_PER_PKG = 15
 
@@ -49,7 +57,7 @@ def _advisories_by_id(pkg: dict) -> dict[str, dict]:
 
 
 def _severity_str(adv: dict) -> str:
-    sev = adv.get("severity")
+    sev = best_severity(adv)
     if not isinstance(sev, dict):
         return ""
     score = sev.get("score")
@@ -75,15 +83,12 @@ def _severity_str(adv: dict) -> str:
 
 
 def _label(adv: dict) -> str:
-    primary = adv.get("primary_id") or adv.get("id") or "?"
-    cve_ids = adv.get("cve_ids") or []
+    primary = primary_id(adv)
+    ids = cve_ids(adv)
     sev = _severity_str(adv)
-    bits = [f"**{primary}**"]
-    osv = adv.get("osv_url")
-    if isinstance(osv, str):
-        bits[0] = f"**[{primary}]({osv})**"
-    if cve_ids and primary not in cve_ids:
-        bits.append(f"({', '.join(cve_ids)})")
+    bits = [f"**[{primary}]({osv_url(adv)})**"]
+    if ids and primary not in ids:
+        bits.append(f"({', '.join(ids)})")
     if sev:
         bits.append(f"· {sev}")
     return " ".join(bits)
@@ -145,8 +150,8 @@ def main() -> None:
         dropped = [b_adv[i] for i in sorted(set(b_adv) - set(a_adv))]
         changed: list[tuple[dict, int, int]] = []
         for adv_id in sorted(set(a_adv) & set(b_adv)):
-            b_versions = b_adv[adv_id].get("affected_conda_versions") or []
-            a_versions = a_adv[adv_id].get("affected_conda_versions") or []
+            b_versions = affected_versions(b_adv[adv_id])
+            a_versions = affected_versions(a_adv[adv_id])
             if set(b_versions) != set(a_versions):
                 changed.append((a_adv[adv_id], len(b_versions), len(a_versions)))
         if added or dropped or changed:
@@ -157,7 +162,7 @@ def main() -> None:
 
     total_advisory_count = sum(len(p.get("advisories") or []) for p in after.values())
     affected_version_count = sum(
-        len(a.get("affected_conda_versions") or [])
+        len(affected_versions(a))
         for p in after.values()
         for a in p.get("advisories") or []
     )
@@ -245,7 +250,7 @@ def main() -> None:
                 out.append(f"- 🔄 affected-version set changed ({len(changed)}):")
                 rendered: list[str] = []
                 for adv, b_count, a_count in changed:
-                    new_versions = adv.get("affected_conda_versions") or []
+                    new_versions = affected_versions(adv)
                     delta = a_count - b_count
                     sign = "+" if delta >= 0 else ""
                     rendered.append(

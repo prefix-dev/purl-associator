@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/prefix-dev/purl-associator/schemas/cves-bundle.schema.json",
+  "title": "purl-associator merged CVE bundle",
+  "description": "The web/public/cves.json payload produced by scripts/merge_cves.py: per-package OSV records with OpenVEX reviews resolved into database_specific['conda-forge']. Each advisory is additionally validated against schemas/osv-schema.json.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "generated_at",
+    "package_count",
+    "advisory_count",
+    "packages"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "integer", "const": 2 },
+    "generated_at": { "type": "string" },
+    "contribution_count": { "type": "integer", "minimum": 0 },
+    "package_count": { "type": "integer", "minimum": 0 },
+    "advisory_count": { "type": "integer", "minimum": 0 },
+    "affected_version_count": { "type": "integer", "minimum": 0 },
+    "packages": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["package", "advisories"],
+        "properties": {
+          "schema_version": { "type": "integer" },
+          "package": { "type": "string" },
+          "purls": { "type": "array", "items": { "type": "string" } },
+          "generated_at": { "type": "string" },
+          "conda_versions_total": { "type": "integer", "minimum": 0 },
+          "advisories": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id", "modified", "database_specific"],
+              "properties": {
+                "id": { "type": "string" },
+                "database_specific": {
+                  "type": "object",
+                  "required": ["conda-forge"],
+                  "properties": {
+                    "conda-forge": {
+                      "type": "object",
+                      "required": ["package", "purl", "affected_versions"],
+                      "properties": {
+                        "package": { "type": "string" },
+                        "purl": { "type": "string", "pattern": "^pkg:conda/" },
+                        "source_purls": {
+                          "type": "array",
+                          "items": { "type": "string" }
+                        },
+                        "affected_versions": {
+                          "type": "array",
+                          "items": { "type": "string" }
+                        },
+                        "conda_versions_total": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "derived_by": { "type": "string" },
+                        "generated_at": { "type": "string" },
+                        "vex": {
+                          "type": "object",
+                          "description": "Review resolved from OpenVEX contributions.",
+                          "properties": {
+                            "status": {
+                              "type": "string",
+                              "enum": [
+                                "affected",
+                                "not_affected",
+                                "fixed",
+                                "under_investigation"
+                              ]
+                            },
+                            "justification": {
+                              "type": "string",
+                              "enum": [
+                                "component_not_present",
+                                "vulnerable_code_not_present",
+                                "vulnerable_code_not_in_execute_path",
+                                "vulnerable_code_cannot_be_controlled_by_adversary",
+                                "inline_mitigations_already_exist"
+                              ]
+                            },
+                            "status_notes": { "type": ["string", "null"] },
+                            "impact_statement": { "type": "string" },
+                            "action_statement": { "type": "string" },
+                            "author": { "type": "string" },
+                            "reviewed_at": { "type": "string" },
+                            "version_overrides": {
+                              "type": "object",
+                              "properties": {
+                                "affected": {
+                                  "type": "array",
+                                  "items": { "type": "string" }
+                                },
+                                "not_affected": {
+                                  "type": "array",
+                                  "items": { "type": "string" }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
