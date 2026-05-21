@@ -36,7 +36,8 @@ jobs:
           python3 scripts/merge_mappings.py
 
       - name: Refresh served cves.json (per-package CVE files + contributions)
-        run: python3 scripts/merge_cves.py
+        # Run as a module from the repo root so `scripts.cve_common` resolves.
+        run: python3 -m scripts.merge_cves
 
       - name: Install web deps
         working-directory: web
