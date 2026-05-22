@@ -260,15 +260,20 @@ export function CveDetail({
 }: Props) {
   const t = theme.t;
 
+  // PFX-1607: keep the order stable during an editing session. We sort once
+  // when the focused package (or its underlying data) changes, using only
+  // the *committed* VEX status from the data file — pending ``edits`` in
+  // memory deliberately don't participate, otherwise toggling status /
+  // version overrides / notes would re-rank the row the user is editing
+  // and yank it out from under their cursor. Re-sorting happens naturally
+  // when ``pkg`` changes (user picks another package, or data reloads).
   const advisories = useMemo(
     () =>
       pkg
         ? [...pkg.advisories].sort((a, b) => {
             // Prioritize unreviewed, then critical→low severity, then date.
-            const ea = edits[`${pkg.package}::${a.id}`];
-            const eb = edits[`${pkg.package}::${b.id}`];
-            const ra = ea?.status ?? advisoryVex(a)?.status;
-            const rb = eb?.status ?? advisoryVex(b)?.status;
+            const ra = advisoryVex(a)?.status;
+            const rb = advisoryVex(b)?.status;
             if (!ra && rb) return -1;
             if (ra && !rb) return 1;
             const sevA = bestSeverity(a)?.score;
@@ -283,7 +288,7 @@ export function CveDetail({
             return (b.modified || "").localeCompare(a.modified || "");
           })
         : [],
-    [pkg, edits],
+    [pkg],
   );
 
   if (!pkg) {
