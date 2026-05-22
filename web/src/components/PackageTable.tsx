@@ -13,16 +13,23 @@ export type SortKey =
   | "status";
 export type SortDir = "asc" | "desc";
 
+type EcosystemFilter = "all" | (string & {});
+type EditsByName = Record<string, Edit>;
+type EffectiveStatus = PackageEntry["status"];
+type CountKey = "all" | "unmapped" | "unverified" | "verified" | "edited";
+type PackageCounts = Record<CountKey, number>;
+type PackagePredicate = (p: PackageEntry, edits: EditsByName) => boolean;
+
 type Filters = {
   unmappedOnly: boolean;
   unverifiedOnly: boolean;
-  ecosystem: string;
+  ecosystem: EcosystemFilter;
 };
 
 type Props = {
   theme: Theme;
   packages: PackageEntry[];
-  edits: Record<string, Edit>;
+  edits: EditsByName;
   selectedSet: Set<string>;
   setSelectedSet: (s: Set<string>) => void;
   focusedId: string | null;
@@ -33,21 +40,51 @@ type Props = {
   setFilters: (f: Filters) => void;
 };
 
-function effectiveStatus(p: PackageEntry, edits: Record<string, Edit>): string {
+function effectiveStatus(p: PackageEntry, edits: EditsByName): EffectiveStatus {
   if (edits[p.name]) return "edited";
   if (p.purl === null || p.status === "unmapped") return "unmapped";
   return p.status;
 }
 
-function effectivePurl(p: PackageEntry, edits: Record<string, Edit>): string {
+function effectivePurl(p: PackageEntry, edits: EditsByName): string {
   return edits[p.name]?.purl ?? p.purl ?? "";
 }
 
-function effectiveType(p: PackageEntry, edits: Record<string, Edit>): string {
+function effectiveType(p: PackageEntry, edits: EditsByName): string {
   return edits[p.name]?.type ?? p.type ?? "none";
 }
 
-const STATUS_RANK: Record<string, number> = {
+function matchesEcosystem(
+  p: PackageEntry,
+  edits: EditsByName,
+  ecosystem: EcosystemFilter,
+): boolean {
+  return !ecosystem || ecosystem === "all" || effectiveType(p, edits) === ecosystem;
+}
+
+const isUnmapped: PackagePredicate = (p, edits) =>
+  p.status === "unmapped" || p.purl === null || Boolean(edits[p.name]?.unmapped);
+
+const isUnverified: PackagePredicate = (p) => p.status === "auto-unverified";
+
+const isVerified: PackagePredicate = (p) =>
+  p.status === "verified" || p.status === "auto-verified";
+
+const COUNT_BUCKETS = {
+  unmapped: isUnmapped,
+  unverified: isUnverified,
+  verified: isVerified,
+} satisfies Record<Exclude<CountKey, "all" | "edited">, PackagePredicate>;
+
+const EMPTY_COUNTS = {
+  all: 0,
+  unmapped: 0,
+  unverified: 0,
+  verified: 0,
+  edited: 0,
+} satisfies PackageCounts;
+
+const STATUS_RANK: Record<EffectiveStatus, number> = {
   edited: 0,
   unmapped: 1,
   "auto-unverified": 2,
@@ -76,25 +113,10 @@ export function PackageTable({
   const filtered = useMemo(() => {
     const ql = q.trim().toLowerCase();
     const out = packages.filter((p) => {
-      if (
-        filters.unmappedOnly &&
-        p.status !== "unmapped" &&
-        p.purl !== null &&
-        !edits[p.name]?.unmapped
-      )
+      if (filters.unmappedOnly && !isUnmapped(p, edits)) return false;
+      if (filters.unverifiedOnly && isVerified(p, edits) && !edits[p.name])
         return false;
-      if (
-        filters.unverifiedOnly &&
-        (p.status === "verified" || p.status === "auto-verified") &&
-        !edits[p.name]
-      )
-        return false;
-      if (
-        filters.ecosystem &&
-        filters.ecosystem !== "all" &&
-        (p.type ?? "none") !== filters.ecosystem
-      )
-        return false;
+      if (!matchesEcosystem(p, edits, filters.ecosystem)) return false;
       if (!ql) return true;
       const purl = edits[p.name]?.purl ?? p.purl ?? "";
       return (
@@ -134,21 +156,21 @@ export function PackageTable({
     return out;
   }, [packages, q, filters, edits, sortKey, sortDir]);
 
-  const counts = useMemo(() => {
-    const c = {
-      all: packages.length,
-      unmapped: 0,
-      unverified: 0,
-      verified: 0,
-      edited: Object.keys(edits).length,
-    };
-    for (const p of packages) {
-      if (p.status === "unmapped" || p.purl === null) c.unmapped++;
-      else if (p.status === "auto-unverified") c.unverified++;
-      else if (p.status === "verified" || p.status === "auto-verified") c.verified++;
+  const counts = useMemo<PackageCounts>(() => {
+    const scoped = packages.filter((p) =>
+      matchesEcosystem(p, edits, filters.ecosystem),
+    );
+    const c: PackageCounts = { ...EMPTY_COUNTS, all: scoped.length };
+    for (const p of scoped) {
+      if (edits[p.name]) c.edited++;
+      for (const [key, matches] of Object.entries(COUNT_BUCKETS) as Array<
+        [Exclude<CountKey, "all" | "edited">, PackagePredicate]
+      >) {
+        if (matches(p, edits)) c[key]++;
+      }
     }
     return c;
-  }, [packages, edits]);
+  }, [packages, edits, filters.ecosystem]);
 
   // Virtualizer
   const scrollRef = useRef<HTMLDivElement>(null);
