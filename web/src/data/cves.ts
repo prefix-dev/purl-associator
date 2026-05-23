@@ -9,7 +9,7 @@
 
 /* ---- OSV record shape (https://ossf.github.io/osv-schema/) ---- */
 
-export type OsvSeverity = { type: string; score: string };
+export type OsvSeverity = { type: string; score: string; score_num?: number };
 export type OsvReference = { type: string; url: string };
 export type OsvEvent = {
   introduced?: string;
@@ -89,6 +89,8 @@ export type CvePackage = {
   purls: string[];
   generated_at: string;
   conda_versions_total: number;
+  /** Newest conda-forge version of this package by rattler version order. */
+  latest_version?: string | null;
   advisories: Advisory[];
 };
 
@@ -148,6 +150,18 @@ export function bestSeverity(adv: Advisory): OsvSeverity | undefined {
     }
   }
   return best;
+}
+
+/** True iff the package's newest conda-forge release is still listed as
+ *  affected by this advisory and no review has marked it not_affected/fixed.
+ *  These are the highest-priority entries for triage — a CVE actively shipping
+ *  to users today. Returns false when latest_version is unknown. */
+export function isActiveOnLatest(pkg: CvePackage, adv: Advisory): boolean {
+  const latest = pkg.latest_version;
+  if (!latest) return false;
+  const status = advisoryVex(adv)?.status;
+  if (status === "not_affected" || status === "fixed") return false;
+  return affectedVersions(adv).includes(latest);
 }
 
 /** Every non-GIT affected range across all affected[] entries. */

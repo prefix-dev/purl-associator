@@ -615,12 +615,17 @@ async def _async_main(
                     not r["database_specific"]["conda-forge"]["affected_versions"]
                 )
             )
+            # versions is sorted ascending by rattler.Version; the last entry
+            # is the newest conda-forge release. The frontend uses this to
+            # surface "active on latest" advisories for triage prioritization.
+            latest_version = versions[-1].version if versions else None
             payload = {
                 "schema_version": 1,
                 "package": name,
                 "purls": source_purls,
                 "generated_at": generated_at,
                 "conda_versions_total": len(versions),
+                "latest_version": latest_version,
                 "advisories": advisories,
             }
             written.append(_write_file(out_dir, name, payload))
