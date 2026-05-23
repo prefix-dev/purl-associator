@@ -34,6 +34,8 @@ import json
 import re
 import sys
 import time
+
+from cvss import CVSS2, CVSS3, CVSS4, CVSSError
 from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -314,6 +316,33 @@ def _repair_osv_record(record: dict) -> dict:
     return record
 
 
+_CVSS_PARSERS = {"CVSS_V2": CVSS2, "CVSS_V3": CVSS3, "CVSS_V4": CVSS4}
+
+
+def _enrich_severity_scores(record: dict) -> None:
+    """Compute numeric base scores for each CVSS severity entry, in place.
+
+    OSV stores the CVSS vector string under ``severity[].score``; the UI's
+    severity band depends on the numeric base score, not the vector. We
+    precompute it here so the SPA doesn't have to ship a CVSS parser. The
+    extra ``score_num`` field is allowed by the OSV schema (severity items
+    don't restrict additional properties)."""
+    severities = record.get("severity")
+    if not isinstance(severities, list):
+        return
+    for entry in severities:
+        if not isinstance(entry, dict):
+            continue
+        parser = _CVSS_PARSERS.get(entry.get("type"))
+        vector = entry.get("score")
+        if parser is None or not isinstance(vector, str):
+            continue
+        try:
+            entry["score_num"] = float(parser(vector).base_score)
+        except (CVSSError, ValueError, KeyError):
+            continue
+
+
 def _affects_future_version(adv: Advisory, latest: Version | None) -> bool:
     """True iff some upstream-affected version is strictly newer than the
     latest conda-forge version of the package.
@@ -366,14 +395,16 @@ def _build_osv_record(
 ) -> dict:
     """Re-emit the OSV record with the conda-forge match attached.
 
-    Apart from minimal schema repairs for malformed upstream range events, the
-    record follows the advisory OSV published. Our derived data — which
-    conda-forge versions are affected, the conda PURL, which source PURL the
-    match came through, whether the advisory targets a future version we
-    don't ship yet — goes into ``database_specific["conda-forge"]``, the
-    OSV-sanctioned extension slot for database-specific fields. ``conda-forge``
-    is not an OSV ecosystem, so it cannot be a real ``affected[]`` entry."""
+    Apart from minimal schema repairs for malformed upstream range events and
+    a precomputed ``severity[].score_num``, the record follows the advisory
+    OSV published. Our derived data — which conda-forge versions are affected,
+    the conda PURL, which source PURL the match came through, whether the
+    advisory targets a future version we don't ship yet — goes into
+    ``database_specific["conda-forge"]``, the OSV-sanctioned extension slot
+    for database-specific fields. ``conda-forge`` is not an OSV ecosystem, so
+    it cannot be a real ``affected[]`` entry."""
     record = _repair_osv_record(copy.deepcopy(adv.raw))
+    _enrich_severity_scores(record)
     db = record.get("database_specific")
     if not isinstance(db, dict):
         db = {}
