@@ -31,6 +31,7 @@ from __future__ import annotations
 import asyncio
 import copy
 import json
+import re
 import sys
 import time
 from collections.abc import Iterable
@@ -247,15 +248,41 @@ def _aggregate_conda_versions(records: Iterable[RepoDataRecord]) -> list[CondaVe
 
 _EVENT_KEYS = frozenset({"introduced", "fixed", "last_affected", "limit"})
 
+# OSV schema GIT-range pattern: the special value "0" or a 40/64-char hex hash.
+_GIT_HASH_RE = re.compile(r"^(0|[a-f0-9]{40}|[a-f0-9]{64})$")
+
+
+def _sanitize_git_event(ev: dict) -> dict | None:
+    """Coerce a GIT range event's values to the OSV schema's hash pattern.
+
+    Upstream OSV occasionally publishes commit hashes with stray trailing
+    punctuation (PYSEC-2023-80 vyper: ``02339dfd...c520.``). Try a lowercase +
+    trailing-non-hex strip; if the result still doesn't match the schema's
+    pattern, drop the offending key. An event with no remaining keys is
+    returned as ``None`` so the caller can drop it like an empty event."""
+    cleaned: dict = {}
+    for key, value in ev.items():
+        if key in _EVENT_KEYS and isinstance(value, str):
+            candidate = re.sub(r"[^0-9a-f]+$", "", value.strip().lower())
+            if not _GIT_HASH_RE.match(candidate):
+                continue
+            cleaned[key] = candidate
+        else:
+            cleaned[key] = value
+    if not (_EVENT_KEYS & cleaned.keys()):
+        return None
+    return cleaned
+
 
 def _repair_osv_record(record: dict) -> dict:
     """Strip malformed range events from a verbatim OSV record, in place.
 
     OSV occasionally publishes records with empty ``{}`` range events (seen on
-    several 2025 PYSEC ``transformers`` advisories). They carry no information,
-    are ignored by :func:`version_in_affected_entry`, and make the record fail
-    OSV-schema validation — so we drop them, along with any range left without
-    a usable event. Nothing else in the record is altered."""
+    several 2025 PYSEC ``transformers`` advisories) or GIT events whose commit
+    hash has stray trailing characters (PYSEC-2023-80 vyper). Both fail
+    OSV-schema validation — so we drop the empty events, sanitize the GIT hash
+    where possible, and drop any range left without a usable event. Nothing
+    else in the record is altered."""
     for affected in record.get("affected") or []:
         if not isinstance(affected, dict) or not isinstance(
             affected.get("ranges"), list
@@ -267,14 +294,21 @@ def _repair_osv_record(record: dict) -> dict:
                 continue
             events = rng.get("events")
             if isinstance(events, list):
-                events = [
-                    ev
-                    for ev in events
-                    if isinstance(ev, dict) and _EVENT_KEYS & ev.keys()
-                ]
-                if not events:
+                is_git = rng.get("type") == "GIT"
+                cleaned: list[dict] = []
+                for ev in events:
+                    if not isinstance(ev, dict) or not (_EVENT_KEYS & ev.keys()):
+                        continue
+                    if is_git:
+                        fixed_ev = _sanitize_git_event(ev)
+                        if fixed_ev is None:
+                            continue
+                        cleaned.append(fixed_ev)
+                    else:
+                        cleaned.append(ev)
+                if not cleaned:
                     continue  # range with no usable events — drop it
-                rng["events"] = events
+                rng["events"] = cleaned
             repaired.append(rng)
         affected["ranges"] = repaired
     return record
