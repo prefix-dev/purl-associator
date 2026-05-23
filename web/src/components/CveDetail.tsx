@@ -32,17 +32,11 @@ type Props = {
   onRequestLogin: () => void;
 };
 
-function severityLevel(score: string): {
+function severityLevel(v: number): {
   label: string;
   color: string;
   bg: string;
 } | null {
-  // Pull the base CVSS score out of a vector string. The "base" segment is
-  // formatted differently across V3/V4 — for our purposes we just look for
-  // the trailing "/X.Y" pattern or any single number, mapping to a band.
-  const m = score.match(/(\d+\.\d+)/);
-  if (!m) return null;
-  const v = parseFloat(m[1]);
   if (v >= 9.0) return { label: `${v.toFixed(1)} critical`, color: "#fff", bg: "#a8201f" };
   if (v >= 7.0) return { label: `${v.toFixed(1)} high`, color: "#fff", bg: "#d94e1f" };
   if (v >= 4.0) return { label: `${v.toFixed(1)} medium`, color: "#001d38", bg: "#ffd432" };
@@ -52,8 +46,8 @@ function severityLevel(score: string): {
 
 function SeverityPill({ adv }: { adv: Advisory }) {
   const severity = bestSeverity(adv);
-  if (!severity?.score) return null;
-  const lvl = severityLevel(severity.score);
+  if (!severity?.score || severity.score_num == null) return null;
+  const lvl = severityLevel(severity.score_num);
   if (!lvl) return null;
   return (
     <span

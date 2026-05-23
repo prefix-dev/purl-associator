@@ -116,11 +116,8 @@ export function CvePRDrawer({
     }
     lines.push("");
 
-    function severityText(score: string | null | undefined): string {
-      if (!score) return "";
-      const m = score.match(/(\d+\.\d+)/);
-      if (!m) return "";
-      const v = parseFloat(m[1]);
+    function severityText(v: number | null | undefined): string {
+      if (v == null) return "";
       if (v >= 9.0) return ` · ${v.toFixed(1)} critical`;
       if (v >= 7.0) return ` · ${v.toFixed(1)} high`;
       if (v >= 4.0) return ` · ${v.toFixed(1)} medium`;
@@ -148,7 +145,7 @@ export function CvePRDrawer({
         const adv = pkg?.advisories.find((a) => a.id === advisoryId);
         const label = adv ? primaryId(adv) : advisoryId;
         const status = STATUS_LABELS[edit.status] || edit.status;
-        const sev = severityText(adv ? bestSeverity(adv)?.score : undefined);
+        const sev = severityText(adv ? bestSeverity(adv)?.score_num : undefined);
         const prior = adv ? advisoryVex(adv) : undefined;
         const priorStatus = prior?.status;
         const transition =
