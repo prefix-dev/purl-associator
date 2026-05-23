@@ -5,6 +5,7 @@ import {
   bestSeverity,
   cveIds,
   isActiveOnLatest,
+  isFutureAffected,
   primaryId,
 } from "../data/cves";
 import type { Advisory, CvePackage, ReviewEdit } from "../data/cves";
@@ -18,9 +19,12 @@ type Props = {
   onSelect: (pkgName: string, advisoryId: string) => void;
 };
 
+type Kind = "now" | "future";
+
 type Row = {
   pkg: CvePackage;
   adv: Advisory;
+  kind: Kind;
   score: number; // CVSS base score (0 when unknown)
   reviewed: boolean; // has a real VEX status other than under_investigation
 };
@@ -36,6 +40,7 @@ const SEVERITY_BAND = (
 };
 
 type SeverityFilter = "all" | "critical" | "high+";
+type KindFilter = "all" | "now" | "future";
 
 export function CveActiveList({
   theme,
@@ -47,13 +52,17 @@ export function CveActiveList({
   const t = theme.t;
   const [q, setQ] = useState("");
   const [sev, setSev] = useState<SeverityFilter>("all");
+  const [kindFilter, setKindFilter] = useState<KindFilter>("all");
   const [onlyUnreviewed, setOnlyUnreviewed] = useState(true);
 
   const rows = useMemo<Row[]>(() => {
     const out: Row[] = [];
     for (const pkg of packages) {
       for (const adv of pkg.advisories) {
-        if (!isActiveOnLatest(pkg, adv)) continue;
+        let kind: Kind | null = null;
+        if (isActiveOnLatest(pkg, adv)) kind = "now";
+        else if (isFutureAffected(pkg, adv)) kind = "future";
+        if (!kind) continue;
         // Editing in-memory takes precedence over the persisted VEX status, so
         // a row the user has already triaged in this session drops out of
         // "unreviewed" immediately.
@@ -65,15 +74,17 @@ export function CveActiveList({
         out.push({
           pkg,
           adv,
+          kind,
           score: bestSeverity(adv)?.score_num ?? 0,
           reviewed,
         });
       }
     }
-    // Highest severity first; within a tie, unreviewed first; then by package
-    // name for stable ordering.
+    // Highest severity first; within a tie: shipping now > future > tied;
+    // then unreviewed first; then by package name for stable ordering.
     out.sort((a, b) => {
       if (a.score !== b.score) return b.score - a.score;
+      if (a.kind !== b.kind) return a.kind === "now" ? -1 : 1;
       if (a.reviewed !== b.reviewed) return a.reviewed ? 1 : -1;
       return a.pkg.package.localeCompare(b.pkg.package);
     });
@@ -84,12 +95,16 @@ export function CveActiveList({
     let critical = 0;
     let high = 0;
     let unreviewed = 0;
+    let now = 0;
+    let future = 0;
     for (const r of rows) {
       if (r.score >= 9.0) critical++;
       if (r.score >= 7.0) high++;
       if (!r.reviewed) unreviewed++;
+      if (r.kind === "now") now++;
+      else future++;
     }
-    return { total: rows.length, critical, high, unreviewed };
+    return { total: rows.length, critical, high, unreviewed, now, future };
   }, [rows]);
 
   const filtered = useMemo(() => {
@@ -97,6 +112,7 @@ export function CveActiveList({
     return rows.filter((r) => {
       if (sev === "critical" && r.score < 9.0) return false;
       if (sev === "high+" && r.score < 7.0) return false;
+      if (kindFilter !== "all" && r.kind !== kindFilter) return false;
       if (onlyUnreviewed && r.reviewed) return false;
       if (ql) {
         const inName = r.pkg.package.toLowerCase().includes(ql);
@@ -108,7 +124,7 @@ export function CveActiveList({
       }
       return true;
     });
-  }, [rows, q, sev, onlyUnreviewed]);
+  }, [rows, q, sev, kindFilter, onlyUnreviewed]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const ROW_H = 68;
@@ -158,8 +174,11 @@ export function CveActiveList({
           </div>
         </div>
         <div style={{ fontSize: 11, color: t.fg3, lineHeight: 1.45 }}>
-          Advisories still affecting the newest published conda-forge build —
-          the priority list for triage.
+          Advisories shipping on the newest conda-forge build (
+          <strong style={{ color: t.fg2 }}>now</strong>) plus ones targeting
+          a future version we don't have yet (
+          <strong style={{ color: t.fg2 }}>future</strong>) — block them
+          before they land.
         </div>
 
         <div style={{ position: "relative" }}>
@@ -226,6 +245,32 @@ export function CveActiveList({
             Critical{" "}
             <CountTag active={sev === "critical"} theme={theme}>{counts.critical}</CountTag>
           </Chip>
+          <span style={{ width: 1, background: t.border, margin: "0 3px" }} />
+          <Chip
+            theme={theme}
+            active={kindFilter === "now"}
+            onClick={() =>
+              setKindFilter(kindFilter === "now" ? "all" : "now")
+            }
+          >
+            Shipping now{" "}
+            <CountTag active={kindFilter === "now"} theme={theme}>
+              {counts.now}
+            </CountTag>
+          </Chip>
+          <Chip
+            theme={theme}
+            active={kindFilter === "future"}
+            onClick={() =>
+              setKindFilter(kindFilter === "future" ? "all" : "future")
+            }
+          >
+            Future version{" "}
+            <CountTag active={kindFilter === "future"} theme={theme}>
+              {counts.future}
+            </CountTag>
+          </Chip>
+          <span style={{ width: 1, background: t.border, margin: "0 3px" }} />
           <Chip
             theme={theme}
             active={onlyUnreviewed}
@@ -339,6 +384,7 @@ export function CveActiveList({
                     >
                       {r.pkg.package}
                     </code>
+                    <KindBadge theme={theme} kind={r.kind} />
                     <span
                       style={{
                         fontFamily: "JetBrains Mono, monospace",
@@ -348,7 +394,11 @@ export function CveActiveList({
                         padding: "1px 6px",
                         borderRadius: 3,
                       }}
-                      title="Latest conda-forge version"
+                      title={
+                        r.kind === "now"
+                          ? "Latest conda-forge version (affected)"
+                          : "Latest conda-forge version (not yet affected — newer version is)"
+                      }
                     >
                       {r.pkg.latest_version}
                     </span>
@@ -399,6 +449,42 @@ export function CveActiveList({
         )}
       </div>
     </div>
+  );
+}
+
+function KindBadge({ theme, kind }: { theme: Theme; kind: Kind }) {
+  const styles =
+    kind === "now"
+      ? {
+          bg: theme.dark ? "#2a1818" : "#ffe1d8",
+          fg: theme.dark ? "#ff8e6a" : "#a8401b",
+          label: "now",
+          title: "Active on the newest conda-forge release",
+        }
+      : {
+          bg: theme.dark ? "#1f2a16" : "#fff4d2",
+          fg: theme.dark ? "#f5c542" : "#866400",
+          label: "future",
+          title:
+            "Affected version is newer than conda-forge's latest — block before it lands",
+        };
+  return (
+    <span
+      title={styles.title}
+      style={{
+        fontSize: 10,
+        fontWeight: 700,
+        padding: "1px 6px",
+        borderRadius: 3,
+        background: styles.bg,
+        color: styles.fg,
+        textTransform: "uppercase",
+        letterSpacing: ".02em",
+        fontFamily: "Inter, sans-serif",
+      }}
+    >
+      {styles.label}
+    </span>
   );
 }
 

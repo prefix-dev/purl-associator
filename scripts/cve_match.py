@@ -314,6 +314,46 @@ def _repair_osv_record(record: dict) -> dict:
     return record
 
 
+def _affects_future_version(adv: Advisory, latest: Version | None) -> bool:
+    """True iff some upstream-affected version is strictly newer than the
+    latest conda-forge version of the package.
+
+    This is the "we lag behind upstream" signal: the advisory's affected set
+    includes a version conda-forge hasn't shipped yet, so a future release
+    will be vulnerable on arrival. Treat it as a triage priority — gives
+    maintainers a chance to block the upload or patch before it lands.
+
+    Sources checked:
+    * Explicit ``affected[].versions`` list (e.g. mistralai's
+      ``GHSA-wx9m-wx4f-4cmg`` which enumerates ``["2.4.6"]``).
+    * Range events with ``introduced > latest`` — the bug is introduced at a
+      version we don't have yet, so all conda-forge releases that catch up
+      to it will be vulnerable.
+
+    Returns False when ``latest`` is unknown or every reachable affected
+    version is at/below it (the standard "active on latest" case is handled
+    separately)."""
+    if latest is None:
+        return False
+    entry = adv.raw_affected
+    for v in entry.get("versions") or []:
+        parsed = _safe_version(v)
+        if parsed is not None and parsed > latest:
+            return True
+    for rng in entry.get("ranges") or []:
+        if not isinstance(rng, dict) or rng.get("type") == "GIT":
+            continue
+        for ev in rng.get("events") or []:
+            if not isinstance(ev, dict):
+                continue
+            introduced = ev.get("introduced")
+            if isinstance(introduced, str):
+                parsed = _safe_version(introduced)
+                if parsed is not None and parsed > latest:
+                    return True
+    return False
+
+
 def _build_osv_record(
     adv: Advisory,
     affected_versions: list[str],
@@ -321,6 +361,7 @@ def _build_osv_record(
     conda_package: str,
     source_purls: list[str],
     conda_versions_total: int,
+    latest_version: Version | None,
     generated_at: str,
 ) -> dict:
     """Re-emit the OSV record with the conda-forge match attached.
@@ -328,7 +369,8 @@ def _build_osv_record(
     Apart from minimal schema repairs for malformed upstream range events, the
     record follows the advisory OSV published. Our derived data — which
     conda-forge versions are affected, the conda PURL, which source PURL the
-    match came through — goes into ``database_specific["conda-forge"]``, the
+    match came through, whether the advisory targets a future version we
+    don't ship yet — goes into ``database_specific["conda-forge"]``, the
     OSV-sanctioned extension slot for database-specific fields. ``conda-forge``
     is not an OSV ecosystem, so it cannot be a real ``affected[]`` entry."""
     record = _repair_osv_record(copy.deepcopy(adv.raw))
@@ -341,6 +383,7 @@ def _build_osv_record(
         "source_purls": source_purls,
         "affected_versions": affected_versions,
         "conda_versions_total": conda_versions_total,
+        "affects_future": _affects_future_version(adv, latest_version),
         "derived_by": "purl-associator/scripts.cve_match",
         "generated_at": generated_at,
     }
@@ -598,6 +641,7 @@ async def _async_main(
                 progress.advance(task)
                 continue
             source_purls = [p.to_string() for p in purls]
+            latest_parsed = versions[-1].parsed if versions else None
             advisories = [
                 _build_osv_record(
                     adv,
@@ -605,6 +649,7 @@ async def _async_main(
                     conda_package=name,
                     source_purls=source_purls,
                     conda_versions_total=len(versions),
+                    latest_version=latest_parsed,
                     generated_at=generated_at,
                 )
                 for adv, affected in matched.values()
@@ -616,8 +661,9 @@ async def _async_main(
                 )
             )
             # versions is sorted ascending by rattler.Version; the last entry
-            # is the newest conda-forge release. The frontend uses this to
-            # surface "active on latest" advisories for triage prioritization.
+            # is the newest conda-forge release. The frontend uses
+            # latest_version (raw string) to surface "active on latest"
+            # advisories for triage prioritization.
             latest_version = versions[-1].version if versions else None
             payload = {
                 "schema_version": 1,
