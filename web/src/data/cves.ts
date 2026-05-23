@@ -9,7 +9,7 @@
 
 /* ---- OSV record shape (https://ossf.github.io/osv-schema/) ---- */
 
-export type OsvSeverity = { type: string; score: string };
+export type OsvSeverity = { type: string; score: string; score_num?: number };
 export type OsvReference = { type: string; url: string };
 export type OsvEvent = {
   introduced?: string;
