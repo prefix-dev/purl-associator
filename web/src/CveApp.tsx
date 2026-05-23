@@ -9,6 +9,7 @@ import {
 import { LoginModal } from "./components/LoginModal";
 import { Btn, Glyph, useTheme } from "./components/Primitives";
 import { CvePackageList } from "./components/CvePackageList";
+import { CveActiveList } from "./components/CveActiveList";
 import { CveDetail } from "./components/CveDetail";
 import { CvePRDrawer } from "./components/CvePRDrawer";
 import { config, repoFullName } from "./config";
@@ -34,6 +35,7 @@ export function CveApp() {
   const [statusFilter, setStatusFilter] = useState<"all" | "unreviewed" | "reviewed">(
     "all",
   );
+  const [view, setView] = useState<"browse" | "active">("browse");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
   const [token, setToken] = useState<string | null>(null);
@@ -390,31 +392,85 @@ export function CveApp() {
       )}
 
       <div style={{ flex: 1, display: "flex", minHeight: 0 }}>
-        <div style={{ flex: "0 0 38%", minWidth: 0 }}>
-          {payload ? (
-            <CvePackageList
+        <div
+          style={{
+            flex: "0 0 38%",
+            minWidth: 0,
+            display: "flex",
+            flexDirection: "column",
+            background: t.surface,
+            borderRight: `1px solid ${t.border}`,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              gap: 2,
+              padding: "8px 10px 0 10px",
+              borderBottom: `1px solid ${t.border}`,
+              background: t.surface,
+              flexShrink: 0,
+            }}
+          >
+            <ViewTab
               theme={theme}
-              packages={packages}
-              edits={edits}
-              focusedId={focusedPkg}
-              setFocusedId={setFocusedPkg}
-              q={q}
-              setQ={setQ}
-              statusFilter={statusFilter}
-              setStatusFilter={setStatusFilter}
-            />
-          ) : (
-            <div
-              style={{
-                padding: 30,
-                color: t.fg2,
-                textAlign: "center",
-                fontSize: 13,
-              }}
+              active={view === "browse"}
+              onClick={() => setView("browse")}
             >
-              Loading advisories…
-            </div>
-          )}
+              All packages
+            </ViewTab>
+            <ViewTab
+              theme={theme}
+              active={view === "active"}
+              onClick={() => setView("active")}
+              accent
+            >
+              <Glyph name="alert" size={11} /> Active on latest
+            </ViewTab>
+          </div>
+          <div style={{ flex: 1, minHeight: 0 }}>
+            {payload ? (
+              view === "browse" ? (
+                <CvePackageList
+                  theme={theme}
+                  packages={packages}
+                  edits={edits}
+                  focusedId={focusedPkg}
+                  setFocusedId={setFocusedPkg}
+                  q={q}
+                  setQ={setQ}
+                  statusFilter={statusFilter}
+                  setStatusFilter={setStatusFilter}
+                />
+              ) : (
+                <CveActiveList
+                  theme={theme}
+                  packages={packages}
+                  edits={edits}
+                  focusedPkg={focusedPkg}
+                  onSelect={(pkgName, advisoryId) => {
+                    setFocusedPkg(pkgName);
+                    requestAnimationFrame(() => {
+                      const el = document.getElementById(`adv-${advisoryId}`);
+                      if (el)
+                        el.scrollIntoView({ behavior: "smooth", block: "center" });
+                    });
+                  }}
+                />
+              )
+            ) : (
+              <div
+                style={{
+                  padding: 30,
+                  color: t.fg2,
+                  textAlign: "center",
+                  fontSize: 13,
+                }}
+              >
+                Loading advisories…
+              </div>
+            )}
+          </div>
         </div>
 
         <div style={{ flex: 1, minWidth: 0, display: "flex" }}>
@@ -470,5 +526,42 @@ export function CveApp() {
 
       {loginOpen && <LoginModal theme={theme} onClose={() => setLoginOpen(false)} />}
     </div>
+  );
+}
+
+function ViewTab({
+  theme,
+  active,
+  accent,
+  onClick,
+  children,
+}: {
+  theme: ReturnType<typeof useTheme>;
+  active: boolean;
+  accent?: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  const t = theme.t;
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 5,
+        background: active ? t.surface2 : "transparent",
+        border: 0,
+        borderBottom: `2px solid ${active ? (accent ? "#a8201f" : t.accent) : "transparent"}`,
+        color: active ? t.fg1 : t.fg2,
+        padding: "8px 12px 6px 12px",
+        fontSize: 12,
+        fontWeight: 600,
+        cursor: "pointer",
+        fontFamily: "Inter, sans-serif",
+      }}
+    >
+      {children}
+    </button>
   );
 }

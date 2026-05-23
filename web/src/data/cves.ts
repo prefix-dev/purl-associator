@@ -57,6 +57,10 @@ export type CondaForgeBlock = {
   purl: string;
   source_purls?: string[];
   affected_versions: string[];
+  /** True iff the OSV record names a version newer than the package's
+   *  latest conda-forge release as affected. Set by scripts/cve_match.py
+   *  using rattler Version comparison. */
+  affects_future?: boolean;
   conda_versions_total?: number;
   derived_by?: string;
   generated_at?: string;
@@ -89,6 +93,8 @@ export type CvePackage = {
   purls: string[];
   generated_at: string;
   conda_versions_total: number;
+  /** Newest conda-forge version of this package by rattler version order. */
+  latest_version?: string | null;
   advisories: Advisory[];
 };
 
@@ -148,6 +154,29 @@ export function bestSeverity(adv: Advisory): OsvSeverity | undefined {
     }
   }
   return best;
+}
+
+/** True iff the package's newest conda-forge release is still listed as
+ *  affected by this advisory and no review has marked it not_affected/fixed.
+ *  These are the highest-priority entries for triage — a CVE actively shipping
+ *  to users today. Returns false when latest_version is unknown. */
+export function isActiveOnLatest(pkg: CvePackage, adv: Advisory): boolean {
+  const latest = pkg.latest_version;
+  if (!latest) return false;
+  const status = advisoryVex(adv)?.status;
+  if (status === "not_affected" || status === "fixed") return false;
+  return affectedVersions(adv).includes(latest);
+}
+
+/** True iff the advisory targets a version newer than the package's latest
+ *  conda-forge release. These are CVEs we can BLOCK before they ship —
+ *  e.g. mistralai's malicious 2.4.6 dropper, while conda-forge still has
+ *  2.4.5. Computed in scripts/cve_match.py with rattler.Version semantics. */
+export function isFutureAffected(pkg: CvePackage, adv: Advisory): boolean {
+  if (isActiveOnLatest(pkg, adv)) return false;
+  const status = advisoryVex(adv)?.status;
+  if (status === "not_affected" || status === "fixed") return false;
+  return condaBlock(adv)?.affects_future === true;
 }
 
 /** Every non-GIT affected range across all affected[] entries. */
