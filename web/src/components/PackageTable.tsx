@@ -106,8 +106,8 @@ export function PackageTable({
   setFilters,
 }: Props) {
   const t = theme.t;
-  const [sortKey, setSortKey] = useState<SortKey>("name");
-  const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const [sortKey, setSortKey] = useState<SortKey>("downloads");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
   const lastClickedRef = useRef<string | null>(null);
 
   const filtered = useMemo(() => {
