@@ -51,8 +51,18 @@ DEFAULT_OUT_DIR = ROOT / "mappings" / "cves"
 DEFAULT_MAPPINGS = ROOT / "web" / "public" / "mappings.json"
 
 
-def _load_cpe_mappings(mappings_path: Path) -> dict[str, list[str]]:
-    """Read ``cpes: [...]`` from every package entry in the merged mappings.
+@dataclass(frozen=True)
+class CpeMapping:
+    """A package's CPE coordinates plus the curated PURL (if any) that lives
+    alongside them in ``manual.json``."""
+
+    cpes: list[str]
+    purl: str | None  # the package's primary PURL, copied through into the output file
+
+
+def _load_cpe_mappings(mappings_path: Path) -> dict[str, CpeMapping]:
+    """Read ``cpes: [...]`` (and the sibling ``purl``) from every package
+    entry in the merged mappings.
 
     The CPE list comes from ``mappings/manual.json`` overrides (or
     ``contributions/*.json``) and is passed through verbatim by
@@ -67,13 +77,18 @@ def _load_cpe_mappings(mappings_path: Path) -> dict[str, list[str]]:
     pkgs = payload.get("packages")
     if not isinstance(pkgs, dict):
         raise typer.BadParameter(f"Unexpected mappings shape in {mappings_path}")
-    out: dict[str, list[str]] = {}
+    out: dict[str, CpeMapping] = {}
     for name, entry in pkgs.items():
         cpes = entry.get("cpes") if isinstance(entry, dict) else None
-        if isinstance(cpes, list):
-            valid = [c for c in cpes if isinstance(c, str) and c.startswith("cpe:2.3:")]
-            if valid:
-                out[name] = valid
+        if not isinstance(cpes, list):
+            continue
+        valid = [c for c in cpes if isinstance(c, str) and c.startswith("cpe:2.3:")]
+        if not valid:
+            continue
+        purl = entry.get("purl") if isinstance(entry, dict) else None
+        out[name] = CpeMapping(
+            cpes=valid, purl=purl if isinstance(purl, str) else None
+        )
     return out
 
 
@@ -396,7 +411,7 @@ def main(
 async def _async_main(
     *,
     out_dir: Path,
-    cpe_mappings: dict[str, list[str]],
+    cpe_mappings: dict[str, CpeMapping],
     nvd_cache: Path,
     force_nvd: bool,
     nvd_max_age_hours: float,
@@ -423,7 +438,8 @@ async def _async_main(
         channel="conda-forge", platforms=["linux-64", "noarch"], names=names
     )
 
-    for conda_name, cpes in cpe_mappings.items():
+    for conda_name, mapping in cpe_mappings.items():
+        cpes = mapping.cpes
         # Look up each CPE prefix and union the results. The same CVE can be
         # returned by multiple prefixes (e.g. CVE-2023-29491 surfaces under
         # both gnu:ncurses and invisible-island:ncurses if NVD has both
@@ -477,7 +493,12 @@ async def _async_main(
         payload = {
             "schema_version": 1,
             "package": conda_name,
-            "purls": cpes,  # the source CPE coordinates; not real PURLs
+            # PURLs the package is mapped to (curated in manual.json). For
+            # CPE-only packages this is the upstream-source PURL ncurses
+            # has been assigned by reviewers, kept separate from the CPE
+            # coordinates that surfaced the advisories.
+            "purls": [mapping.purl] if mapping.purl else [],
+            "cpes": cpes,
             "generated_at": generated_at,
             "conda_versions_total": len(versions),
             "latest_version": versions[-1].version,
