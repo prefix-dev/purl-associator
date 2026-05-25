@@ -22,7 +22,7 @@ export type ManualOverride = {
   type: string | null;
   namespace: string | null;
   pkg_name: string | null;
-  alternative_purls?: PurlAlternative[] | null;
+  alternative_purls?: (PurlAlternative | string)[] | null;
   unmapped?: boolean;
   note?: string;
   approved_by?: string;
@@ -53,7 +53,7 @@ export type PackageEntry = {
   unmapped?: boolean;
   approved_by?: string;
   approved_at?: string;
-  alternative_purls?: PurlAlternative[] | null;
+  alternative_purls?: (PurlAlternative | string)[] | null;
   auto_verified?: boolean;
   verification_sources?: string[] | null;
   /** the original auto guess, kept for diff display when an override exists */

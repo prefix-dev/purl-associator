@@ -8,6 +8,7 @@ import { PackageTable } from "./components/PackageTable";
 import { PRDrawer } from "./components/PRDrawer";
 import { Btn, Glyph, useTheme } from "./components/Primitives";
 import { repoFullName } from "./config";
+import { purlsFromAlternatives } from "./data/purlAlternatives";
 import type { Edit, PackageEntry } from "./data/types";
 import { useMappingsData } from "./data/useMappingsData";
 import { usePurlEditStore } from "./stores/userState";
@@ -54,27 +55,19 @@ export function App() {
 
   function handleEdit(newEdit: Edit): void {
     if (!focusedPkg) return;
-    const auto = focusedPkg.auto ?? {
-      purl: focusedPkg.purl,
-      type: focusedPkg.type,
-      namespace: focusedPkg.namespace,
-      pkg_name: focusedPkg.pkg_name,
-      alternative_purls: focusedPkg.alternative_purls,
-    };
-    const autoAltSet = new Set(
-      (auto.alternative_purls ?? []).map((a) => a.purl).sort(),
+    const currentAltSet = new Set(
+      purlsFromAlternatives(focusedPkg.alternative_purls).sort(),
     );
     const editAltSet = new Set([...newEdit.alternative_purls].sort());
     const altsMatch =
-      autoAltSet.size === editAltSet.size &&
-      [...autoAltSet].every((p) => editAltSet.has(p));
+      currentAltSet.size === editAltSet.size &&
+      [...currentAltSet].every((p) => editAltSet.has(p));
     const isSame =
-      auto.purl &&
       !newEdit.unmapped &&
-      newEdit.purl === auto.purl &&
-      newEdit.type === auto.type &&
-      (newEdit.namespace || "") === (auto.namespace || "") &&
-      newEdit.pkgName === auto.pkg_name &&
+      newEdit.purl === (focusedPkg.purl ?? "") &&
+      newEdit.type === (focusedPkg.type ?? "") &&
+      (newEdit.namespace || "") === (focusedPkg.namespace || "") &&
+      newEdit.pkgName === (focusedPkg.pkg_name ?? focusedPkg.name) &&
       altsMatch &&
       !newEdit.note;
     setEdits((prev) => {
@@ -99,7 +92,7 @@ export function App() {
       type: auto.type ?? "pypi",
       namespace: auto.namespace ?? "",
       pkgName: auto.pkg_name ?? p.name,
-      alternative_purls: (auto.alternative_purls ?? []).map((a) => a.purl),
+      alternative_purls: purlsFromAlternatives(auto.alternative_purls),
       unmapped: false,
       note: "",
       approved: true,
