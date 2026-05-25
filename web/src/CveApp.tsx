@@ -1,36 +1,28 @@
-import { useEffect, useMemo, useState } from "react";
-import {
-  consumeOauthCallback,
-  fetchUser,
-  hasOauthCallback,
-  loadStoredToken,
-  logout,
-} from "./auth/github";
+import { useState } from "react";
+import { useGithubAuth } from "./auth/useGithubAuth";
+import { LocalDraftBanner } from "./components/LocalDraftBanner";
 import { LoginModal } from "./components/LoginModal";
 import { Btn, Glyph, useTheme } from "./components/Primitives";
 import { CvePackageList } from "./components/CvePackageList";
 import { CveActiveList } from "./components/CveActiveList";
 import { CveDetail } from "./components/CveDetail";
 import { CvePRDrawer } from "./components/CvePRDrawer";
-import { config, repoFullName } from "./config";
+import { repoFullName } from "./config";
 import {
   advisoryVex,
   editFromVex,
   isEditNonEmpty,
-  loadCves,
-  type CvePayload,
   type ReviewEdit,
 } from "./data/cves";
-import type { GitHubUser } from "./data/types";
-
-const EDITS_KEY = "purl-associator/staged_cve_edits";
+import { useCveData } from "./data/useCveData";
+import { useCveEditStore } from "./stores/userState";
 
 export function CveApp() {
   const theme = useTheme();
-  const [payload, setPayload] = useState<CvePayload | null>(null);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [focusedPkg, setFocusedPkg] = useState<string | null>(null);
-  const [edits, setEdits] = useState<Record<string, ReviewEdit>>({});
+  const { payload, loadError, focusedPkg, setFocusedPkg, packages, focusedPackage } =
+    useCveData();
+  const edits = useCveEditStore((state) => state.edits);
+  const setEdits = useCveEditStore((state) => state.setEdits);
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "unreviewed" | "reviewed">(
     "all",
@@ -38,81 +30,11 @@ export function CveApp() {
   const [view, setView] = useState<"browse" | "active">("browse");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
-  const [token, setToken] = useState<string | null>(null);
-  const [user, setUser] = useState<GitHubUser | null>(null);
-  const [authError, setAuthError] = useState<string | null>(null);
+  const { token, user, error: authError, isLoggedIn, signOut } = useGithubAuth();
 
   const t = theme.t;
 
-  useEffect(() => {
-    loadCves(config.cvesUrl)
-      .then((data) => {
-        setPayload(data);
-        const first = Object.keys(data.packages).sort()[0];
-        if (first) setFocusedPkg(first);
-      })
-      .catch((err) => setLoadError(err instanceof Error ? err.message : String(err)));
-  }, []);
-
-  useEffect(() => {
-    try {
-      const stored = sessionStorage.getItem(EDITS_KEY);
-      if (stored) setEdits(JSON.parse(stored));
-    } catch {
-      // ignore
-    }
-  }, []);
-  useEffect(() => {
-    try {
-      if (Object.keys(edits).length === 0) sessionStorage.removeItem(EDITS_KEY);
-      else sessionStorage.setItem(EDITS_KEY, JSON.stringify(edits));
-    } catch {
-      // ignore
-    }
-  }, [edits]);
-
-  useEffect(() => {
-    const stored = loadStoredToken();
-    if (stored) {
-      setToken(stored);
-      fetchUser(stored)
-        .then(setUser)
-        .catch(() => {
-          logout();
-          setToken(null);
-        });
-      return;
-    }
-    if (hasOauthCallback()) {
-      consumeOauthCallback()
-        .then(async (newToken) => {
-          if (!newToken) return;
-          setToken(newToken);
-          try {
-            setUser(await fetchUser(newToken));
-          } catch (err) {
-            setAuthError(err instanceof Error ? err.message : String(err));
-          }
-        })
-        .catch((err) => setAuthError(err instanceof Error ? err.message : String(err)));
-    }
-  }, []);
-
-  const packages = useMemo(() => {
-    if (!payload) return [];
-    return Object.values(payload.packages).sort((a, b) =>
-      a.package.localeCompare(b.package),
-    );
-  }, [payload]);
-
-  const focusedPackage = useMemo(
-    () =>
-      focusedPkg && payload ? payload.packages[focusedPkg] ?? null : null,
-    [focusedPkg, payload],
-  );
-
   const editsCount = Object.keys(edits).length;
-  const isLoggedIn = Boolean(token && user);
 
   function editKey(pkg: string, advisoryId: string): string {
     return `${pkg}::${advisoryId}`;
@@ -124,7 +46,6 @@ export function CveApp() {
     next: ReviewEdit,
     base: ReviewEdit,
   ): void {
-    if (!isLoggedIn) setLoginOpen(true);
     const key = editKey(pkg, advisoryId);
     setEdits((prev) => {
       const out = { ...prev };
@@ -153,12 +74,6 @@ export function CveApp() {
       delete out[key];
       return out;
     });
-  }
-
-  function handleSignOut(): void {
-    logout();
-    setToken(null);
-    setUser(null);
   }
 
   return (
@@ -305,7 +220,7 @@ export function CveApp() {
                 @{user.login}
               </span>
               <button
-                onClick={handleSignOut}
+                onClick={signOut}
                 title="Sign out"
                 style={{
                   background: "transparent",
@@ -332,12 +247,24 @@ export function CveApp() {
         </div>
       </header>
 
+      <LocalDraftBanner
+        theme={theme}
+        count={editsCount}
+        noun="review"
+        onReview={() => setDrawerOpen(true)}
+        onDiscard={() => {
+          if (window.confirm("Discard all locally saved staged reviews?")) {
+            setEdits({});
+          }
+        }}
+      />
+
       {!isLoggedIn && (
         <div
           style={{
             padding: "7px 18px",
-            background: theme.dark ? "#1f1a0d" : "#fff7d6",
-            borderBottom: `1px solid ${theme.dark ? "#3a3416" : "#f0e2a3"}`,
+            background: theme.dark ? "#151c26" : "#eaf3ff",
+            borderBottom: `1px solid ${theme.dark ? "#26364a" : "#c7daf2"}`,
             fontSize: 12,
             color: t.fg1,
             display: "flex",
@@ -345,8 +272,8 @@ export function CveApp() {
             gap: 8,
           }}
         >
-          <Glyph name="eye" size={13} />
-          You're browsing in read-only mode.
+          <Glyph name="edit" size={13} />
+          You can stage local CVE reviews without signing in.
           <button
             onClick={() => setLoginOpen(true)}
             style={{
@@ -361,7 +288,7 @@ export function CveApp() {
           >
             Sign in with GitHub
           </button>
-          to submit reviews.
+          when you're ready to open a PR.
         </div>
       )}
 
@@ -492,8 +419,6 @@ export function CveApp() {
               if (!focusedPackage) return;
               handleResetEdit(focusedPackage.package, advisoryId);
             }}
-            isLoggedIn={isLoggedIn}
-            onRequestLogin={() => setLoginOpen(true)}
           />
         </div>
       </div>

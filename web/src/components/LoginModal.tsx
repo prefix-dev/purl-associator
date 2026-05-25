@@ -72,7 +72,7 @@ export function LoginModal({
             margin: "0 0 6px",
           }}
         >
-          Sign in to edit
+          Sign in to open a PR
         </h3>
         <div
           style={{
@@ -157,7 +157,7 @@ export function LoginModal({
             fontWeight: 500,
           }}
         >
-          Keep browsing read-only
+          Keep drafting locally
         </button>
       </div>
     </>

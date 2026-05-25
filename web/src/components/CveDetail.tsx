@@ -20,6 +20,13 @@ import {
   osvUrl,
   primaryId,
 } from "../data/cves";
+import {
+  DraftSelect,
+  DraftTextArea,
+  DraftTextInput,
+  draftClick,
+  handleDraftSubmit,
+} from "./DraftFields";
 import { cvssBaseMetrics } from "../data/cvssMetrics";
 import { Btn, Glyph, Theme } from "./Primitives";
 
@@ -29,8 +36,6 @@ type Props = {
   edits: Record<string, ReviewEdit>;
   onEdit: (advisoryId: string, next: ReviewEdit) => void;
   onResetEdit: (advisoryId: string) => void;
-  isLoggedIn: boolean;
-  onRequestLogin: () => void;
 };
 
 function severityLevel(v: number): {
@@ -297,8 +302,6 @@ export function CveDetail({
   edits,
   onEdit,
   onResetEdit,
-  isLoggedIn,
-  onRequestLogin,
 }: Props) {
   const t = theme.t;
 
@@ -443,8 +446,6 @@ export function CveDetail({
               edit={edits[`${pkg.package}::${adv.id}`]}
               onEdit={(next) => onEdit(adv.id, next)}
               onReset={() => onResetEdit(adv.id)}
-              isLoggedIn={isLoggedIn}
-              onRequestLogin={onRequestLogin}
             />
           ))}
         </div>
@@ -460,8 +461,6 @@ function AdvisoryCard({
   edit,
   onEdit,
   onReset,
-  isLoggedIn,
-  onRequestLogin,
 }: {
   theme: Theme;
   pkgName: string;
@@ -469,8 +468,6 @@ function AdvisoryCard({
   edit: ReviewEdit | undefined;
   onEdit: (next: ReviewEdit) => void;
   onReset: () => void;
-  isLoggedIn: boolean;
-  onRequestLogin: () => void;
 }) {
   const t = theme.t;
   const [expanded, setExpanded] = useState(true);
@@ -481,14 +478,10 @@ function AdvisoryCard({
   const status: VexStatus | undefined = edit?.status ?? baseVex?.status;
 
   function setField<K extends keyof ReviewEdit>(key: K, value: ReviewEdit[K]): void {
-    if (!isLoggedIn && !edit) {
-      onRequestLogin();
-    }
     onEdit({ ...eff, [key]: value });
   }
 
   function toggleNotAffected(version: string): void {
-    if (!isLoggedIn && !edit) onRequestLogin();
     const cur = new Set(eff.version_overrides.not_affected);
     const aff = new Set(eff.version_overrides.affected);
     if (cur.has(version)) cur.delete(version);
@@ -506,7 +499,6 @@ function AdvisoryCard({
   }
 
   function toggleManuallyAffected(version: string): void {
-    if (!isLoggedIn && !edit) onRequestLogin();
     const cur = new Set(eff.version_overrides.affected);
     const not = new Set(eff.version_overrides.not_affected);
     if (cur.has(version)) cur.delete(version);
@@ -759,7 +751,7 @@ function AdvisoryCard({
                     theme={theme}
                     version={v}
                     state={removed ? "removed" : "affected"}
-                    onClick={() => toggleNotAffected(v)}
+                    onClick={draftClick(() => toggleNotAffected(v))}
                     title={
                       removed
                         ? `Override: not affected. Click to undo.`
@@ -776,7 +768,7 @@ function AdvisoryCard({
                     theme={theme}
                     version={v}
                     state="added"
-                    onClick={() => toggleManuallyAffected(v)}
+                    onClick={draftClick(() => toggleManuallyAffected(v))}
                     title="Manually added. Click to remove."
                   />
                 ))}
@@ -794,7 +786,7 @@ function AdvisoryCard({
               {VEX_STATUSES.map((s) => (
                 <button
                   key={s.id}
-                  onClick={() => setField("status", s.id)}
+                  onClick={draftClick(() => setField("status", s.id))}
                   style={{
                     background: eff.status === s.id ? t.accent : t.surface2,
                     color: eff.status === s.id ? t.accentFg : t.fg1,
@@ -819,13 +811,10 @@ function AdvisoryCard({
                     — required for a “not affected” claim
                   </span>
                 </div>
-                <select
+                <DraftSelect
                   value={eff.justification}
-                  onChange={(e) =>
-                    setField(
-                      "justification",
-                      e.target.value as VexJustification,
-                    )
+                  onDraftChange={(justification) =>
+                    setField("justification", justification as VexJustification)
                   }
                   style={{
                     width: "100%",
@@ -844,47 +833,26 @@ function AdvisoryCard({
                       {j.label}
                     </option>
                   ))}
-                </select>
+                </DraftSelect>
               </div>
             )}
             {eff.status === "affected" && (
-              <input
+              <DraftTextInput
                 value={eff.action_statement}
-                onChange={(e) => setField("action_statement", e.target.value)}
+                onDraftChange={(action) => setField("action_statement", action)}
                 placeholder="Action statement — e.g. 'Upgrade to requests ≥ 2.32.4.'"
-                style={{
-                  width: "100%",
-                  background: t.surface2,
-                  color: t.fg1,
-                  border: `1px solid ${t.border}`,
-                  borderRadius: 8,
-                  padding: "8px 10px",
-                  fontSize: 13,
-                  fontFamily: "Inter, sans-serif",
-                  outline: "none",
-                  marginBottom: 10,
-                }}
+                theme={theme}
+                style={{ background: t.surface2, marginBottom: 10 }}
               />
             )}
-            <textarea
+            <DraftTextArea
               value={eff.notes}
-              onChange={(e) => setField("notes", e.target.value)}
+              onDraftChange={(notes) => setField("notes", notes)}
               placeholder={
                 "Optional status note. e.g. 'Conda patches CVE-XXXX in build 1.21.5-py39_2.'"
               }
-              style={{
-                width: "100%",
-                background: t.surface2,
-                color: t.fg1,
-                border: `1px solid ${t.border}`,
-                borderRadius: 8,
-                padding: "8px 10px",
-                fontSize: 13,
-                fontFamily: "Inter, sans-serif",
-                outline: "none",
-                minHeight: 56,
-                resize: "vertical",
-              }}
+              theme={theme}
+              style={{ background: t.surface2, minHeight: 56 }}
             />
             {baseVex?.author && (
               <div
@@ -1080,29 +1048,29 @@ function AddVersionInline({
   const [draft, setDraft] = useState("");
   return (
     <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        const v = draft.trim();
-        if (v) {
-          onAdd(v);
-          setDraft("");
-        }
-      }}
+      onSubmit={(e) =>
+        handleDraftSubmit(e, () => {
+          const v = draft.trim();
+          if (v) {
+            onAdd(v);
+            setDraft("");
+          }
+        })
+      }
       style={{ display: "inline-flex", alignItems: "center", gap: 4 }}
     >
-      <input
+      <DraftTextInput
         value={draft}
-        onChange={(e) => setDraft(e.target.value)}
+        onDraftChange={setDraft}
         placeholder="+ add version"
-        style={{
+        theme={theme}
+        mono
+        style={{ 
           background: "transparent",
-          color: t.fg1,
           border: `1px dashed ${t.border}`,
           borderRadius: 4,
           padding: "2px 7px",
           fontSize: 11,
-          fontFamily: "JetBrains Mono, monospace",
-          outline: "none",
           width: 110,
         }}
       />

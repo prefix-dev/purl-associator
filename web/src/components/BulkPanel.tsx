@@ -5,8 +5,6 @@ type Props = {
   theme: Theme;
   selectedPackages: PackageEntry[];
   edits: Record<string, Edit>;
-  isLoggedIn: boolean;
-  onRequestLogin: () => void;
   onApproveAll: () => void;
   onMarkUnmappedAll: () => void;
   onResetSelected: () => void;
@@ -17,8 +15,6 @@ export function BulkPanel({
   theme,
   selectedPackages,
   edits,
-  isLoggedIn,
-  onRequestLogin,
   onApproveAll,
   onMarkUnmappedAll,
   onResetSelected,
@@ -32,14 +28,6 @@ export function BulkPanel({
     (p) => p.purl !== null && !edits[p.name]?.unmapped,
   );
   const unmappable = selectedPackages.filter((p) => p.purl === null);
-
-  const requireLogin = (fn: () => void) => () => {
-    if (!isLoggedIn) {
-      onRequestLogin();
-      return;
-    }
-    fn();
-  };
 
   return (
     <div
@@ -132,7 +120,7 @@ export function BulkPanel({
             variant="primary"
             icon="check"
             disabled={approveable.length === 0}
-            onClick={requireLogin(onApproveAll)}
+            onClick={onApproveAll}
             style={{ width: "100%", justifyContent: "center" }}
           >
             Approve {approveable.length} mapping{approveable.length === 1 ? "" : "s"}
@@ -141,7 +129,7 @@ export function BulkPanel({
             theme={theme}
             variant="ghost"
             icon="alert"
-            onClick={requireLogin(onMarkUnmappedAll)}
+            onClick={onMarkUnmappedAll}
             style={{ width: "100%", justifyContent: "center" }}
           >
             Mark all {n} as no-PURL (unmapped)
