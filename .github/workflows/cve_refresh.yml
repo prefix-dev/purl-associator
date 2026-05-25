@@ -91,6 +91,11 @@ jobs:
         # cves.json a valid bundle. A failure here blocks the refresh PR.
         run: pixi run validate
 
+      - name: Refresh AI draft / queue SPA sidecars
+        # Keeps web/public/cve_ai_drafts.json + cve_ai_queue.json fresh so the
+        # SPA never lags behind a cves.json refresh.
+        run: pixi run merge-ai-drafts
+
       - name: Generate PR body
         run: |
           pixi run python -m scripts.cve_summary \
@@ -106,6 +111,8 @@ jobs:
           add-paths: |
             mappings/cves/**
             web/public/cves.json
+            web/public/cve_ai_drafts.json
+            web/public/cve_ai_queue.json
           branch: cves/refresh
           base: main
           title: "cves: refresh advisories"

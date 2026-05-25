@@ -32,6 +32,9 @@ jsonschema = ">=4.20,<5"
 merge = "python -m scripts.merge_mappings"
 merge-cves = "python -m scripts.merge_cves"
 validate = "python -m scripts.validate"
+# AI CVE review SPA sidecars + PR-body summary — pure stdlib, can run in lite.
+merge-ai-drafts = "python -m scripts.merge_ai_drafts"
+cve-ai-summary = "python -m scripts.cve_ai_summary"
 
 [environments]
 default = ["lite"]
@@ -49,8 +52,17 @@ osv-fetch = "python -m scripts.osv_fetch"
 nvd-fetch = "python -m scripts.nvd_fetch"
 cve-match = "python -m scripts.cve_match"
 nvd-cve-match = "python -m scripts.nvd_prototype"
+cve-ai-review = "python -m scripts.cve_ai_review"
+cve-ai-enqueue = { cmd = "python -m scripts.cve_ai_enqueue --package {{ package }} --advisory {{ advisory }}", description = "Append one (package, advisory) pair to the AI review queue", args = [{ arg = "package" }, { arg = "advisory" }] }
+promote-ai-draft = { cmd = "python -m scripts.promote_ai_draft --package {{ package }} --advisory {{ advisory }}", description = "Promote an AI draft into mappings/cve_contributions/ as authoritative OpenVEX", args = [{ arg = "package" }, { arg = "advisory" }] }
 lint = { cmd = "ruff check scripts && ruff format --check scripts", env = {} }
 fmt = "ruff format scripts"
+
+# Convenience: run the AI CVE reviewer against the local Claude subscription
+# (no API key needed — requires the `claude` CLI). Precedent: automap-test.
+[tasks.cve-ai-review-local]
+cmd = "python -m scripts.cve_ai_review --backend claude-cli --mode realtime"
+description = "Run the AI CVE reviewer using the local Claude subscription (requires `claude` CLI installed and authed)"
 
 [tasks.automap-test]
 cmd = "python -m scripts.automap --only {{ packages }} --out {{ auto }} --parallel {{ parallel }} --force && python -m scripts.merge_mappings --auto {{ auto }} --out {{ out }}"
@@ -137,6 +149,19 @@ args = [
   { arg = "only", default = "" },
   { arg = "ai_batch_size", default = "15" },
   { arg = "commit_every", default = "16" },
+]
+
+[tasks.gh-cve-ai-review]
+cmd = "gh workflow run cve_ai_review.yml --ref {{ ref }} -f mode='{{ mode }}' -f limit='{{ limit }}' -f only='{{ only }}' -f redraft='{{ redraft }}' -f ai_batch_size='{{ ai_batch_size }}' -f commit_every='{{ commit_every }}'"
+description = "Trigger the AI CVE review workflow"
+args = [
+  { arg = "ref", default = "main" },
+  { arg = "mode", default = "realtime" },
+  { arg = "limit", default = "50" },
+  { arg = "only", default = "" },
+  { arg = "redraft", default = "false" },
+  { arg = "ai_batch_size", default = "3" },
+  { arg = "commit_every", default = "8" },
 ]
 
 # Local app/Worker helpers.

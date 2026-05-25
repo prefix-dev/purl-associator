@@ -15,6 +15,10 @@ export type RuntimeConfig = {
   mappingsUrl: string;
   /** Optional: where cves.json (per-advisory dataset) lives. */
   cvesUrl: string;
+  /** Optional: where cve_ai_drafts.json (AI draft sidecar) lives. */
+  aiDraftsUrl: string;
+  /** Optional: where cve_ai_queue.json (AI review queue sidecar) lives. */
+  aiQueueUrl: string;
   /** Cloudflare Worker URL handling GitHub OAuth code-exchange. */
   oauthWorkerUrl: string | null;
   /** OAuth app's public client_id. */
@@ -35,6 +39,8 @@ const fromEnv: Partial<RuntimeConfig> = {
   defaultBranch: env.VITE_REPO_BRANCH,
   mappingsUrl: env.VITE_MAPPINGS_URL,
   cvesUrl: env.VITE_CVES_URL,
+  aiDraftsUrl: env.VITE_AI_DRAFTS_URL,
+  aiQueueUrl: env.VITE_AI_QUEUE_URL,
   oauthWorkerUrl: env.VITE_OAUTH_WORKER_URL,
   githubClientId: env.VITE_GITHUB_CLIENT_ID,
 };
@@ -47,6 +53,10 @@ export const config: RuntimeConfig = {
   defaultBranch: injected.defaultBranch ?? fromEnv.defaultBranch ?? "main",
   mappingsUrl: injected.mappingsUrl ?? fromEnv.mappingsUrl ?? "./mappings.json",
   cvesUrl: injected.cvesUrl ?? fromEnv.cvesUrl ?? "./cves.json",
+  aiDraftsUrl:
+    injected.aiDraftsUrl ?? fromEnv.aiDraftsUrl ?? "./cve_ai_drafts.json",
+  aiQueueUrl:
+    injected.aiQueueUrl ?? fromEnv.aiQueueUrl ?? "./cve_ai_queue.json",
   oauthWorkerUrl: injected.oauthWorkerUrl ?? fromEnv.oauthWorkerUrl ?? null,
   githubClientId: injected.githubClientId ?? fromEnv.githubClientId ?? null,
 };

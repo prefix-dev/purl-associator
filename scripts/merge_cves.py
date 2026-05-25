@@ -67,7 +67,14 @@ def _load_pkg_files(directory: Path) -> dict[str, dict]:
 
 
 def _load_openvex(directory: Path) -> list[dict]:
-    """Load every OpenVEX contribution document, sorted oldest → newest."""
+    """Load every OpenVEX contribution document, sorted oldest → newest.
+
+    Belt-and-braces: documents flagged ``"draft": true`` are skipped. This
+    directory is reserved for authoritative human OpenVEX; AI drafts live in
+    ``mappings/cve_ai_drafts/`` and must be promoted explicitly. The guard
+    here is defensive — it stops a misfiled draft from accidentally affecting
+    the published bundle.
+    """
     if not directory.exists():
         return []
     docs: list[dict] = []
@@ -75,6 +82,8 @@ def _load_openvex(directory: Path) -> list[dict]:
         try:
             data = json.loads(f.read_text())
         except json.JSONDecodeError:
+            continue
+        if data.get("draft") is True:
             continue
         if not isinstance(data.get("statements"), list):
             continue

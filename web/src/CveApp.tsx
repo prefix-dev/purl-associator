@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useGithubAuth } from "./auth/useGithubAuth";
 import { LocalDraftBanner } from "./components/LocalDraftBanner";
 import { LoginModal } from "./components/LoginModal";
@@ -7,15 +7,21 @@ import { CvePackageList } from "./components/CvePackageList";
 import { CveActiveList } from "./components/CveActiveList";
 import { CveDetail } from "./components/CveDetail";
 import { CvePRDrawer } from "./components/CvePRDrawer";
-import { repoFullName } from "./config";
+import { CveEnqueueDrawer } from "./components/CveEnqueueDrawer";
+import { config, repoFullName } from "./config";
 import {
   advisoryVex,
   editFromVex,
   isEditNonEmpty,
+  loadAiDrafts,
+  loadAiQueue,
+  type AiDraftsPayload,
+  type AiQueuePayload,
   type ReviewEdit,
 } from "./data/cves";
 import { useCveData } from "./data/useCveData";
 import { useCveEditStore } from "./stores/userState";
+import type { EnqueueItem } from "./github/cve_enqueue_api";
 
 export function CveApp() {
   const theme = useTheme();
@@ -32,7 +38,22 @@ export function CveApp() {
   const [loginOpen, setLoginOpen] = useState(false);
   const { token, user, error: authError, isLoggedIn, signOut } = useGithubAuth();
 
+  // AI CVE review state.
+  const [aiDrafts, setAiDrafts] = useState<AiDraftsPayload | null>(null);
+  const [aiQueue, setAiQueue] = useState<AiQueuePayload | null>(null);
+  const [enqueueItems, setEnqueueItems] = useState<EnqueueItem[]>([]);
+  const [enqueueOpen, setEnqueueOpen] = useState(false);
+
   const t = theme.t;
+
+  // AI CVE review sidecars — loaded once on mount. Loaders are non-throwing
+  // (return EMPTY_DRAFTS / EMPTY_QUEUE on failure with a console.warn) so a
+  // missing sidecar before the first cve_ai_review run doesn't break the
+  // dashboard.
+  useEffect(() => {
+    loadAiDrafts(config.aiDraftsUrl).then(setAiDrafts);
+    loadAiQueue(config.aiQueueUrl).then(setAiQueue);
+  }, []);
 
   const editsCount = Object.keys(edits).length;
 
@@ -75,6 +96,28 @@ export function CveApp() {
       return out;
     });
   }
+
+  const enqueuedSet = useMemo(
+    () => new Set(enqueueItems.map((it) => `${it.package}::${it.advisory_id}`)),
+    [enqueueItems],
+  );
+
+  function handleEnqueueAi(pkg: string, advisoryId: string): void {
+    if (!isLoggedIn) {
+      setLoginOpen(true);
+    }
+    const key = `${pkg}::${advisoryId}`;
+    if (enqueuedSet.has(key)) return;
+    setEnqueueItems((prev) => [...prev, { package: pkg, advisory_id: advisoryId }]);
+    setEnqueueOpen(true);
+  }
+
+  function handleRemoveEnqueue(pkg: string, advisoryId: string): void {
+    setEnqueueItems((prev) =>
+      prev.filter((it) => !(it.package === pkg && it.advisory_id === advisoryId)),
+    );
+  }
+
 
   return (
     <div
@@ -187,6 +230,18 @@ export function CveApp() {
           >
             {theme.dark ? "☀" : "☾"}
           </button>
+
+          <Btn
+            theme={theme}
+            variant={enqueueItems.length > 0 ? "primary" : "ghost"}
+            onClick={() => setEnqueueOpen(true)}
+            disabled={enqueueItems.length === 0}
+          >
+            🤖{" "}
+            {enqueueItems.length === 0
+              ? "No AI reviews queued"
+              : `Ask AI (${enqueueItems.length})`}
+          </Btn>
 
           <Btn
             theme={theme}
@@ -419,6 +474,12 @@ export function CveApp() {
               if (!focusedPackage) return;
               handleResetEdit(focusedPackage.package, advisoryId);
             }}
+            isLoggedIn={isLoggedIn}
+            onRequestLogin={() => setLoginOpen(true)}
+            aiDrafts={aiDrafts}
+            aiQueue={aiQueue}
+            enqueuedAdvisories={enqueuedSet}
+            onEnqueueAi={handleEnqueueAi}
           />
         </div>
       </div>
@@ -445,6 +506,21 @@ export function CveApp() {
           isLoggedIn={isLoggedIn}
           onRequestLogin={() => setLoginOpen(true)}
           user={user}
+          token={token}
+        />
+      )}
+
+      {enqueueOpen && (
+        <CveEnqueueDrawer
+          theme={theme}
+          items={enqueueItems}
+          onClose={() => setEnqueueOpen(false)}
+          onRemove={handleRemoveEnqueue}
+          onSubmitted={() => {
+            setEnqueueItems([]);
+          }}
+          isLoggedIn={isLoggedIn}
+          onRequestLogin={() => setLoginOpen(true)}
           token={token}
         />
       )}
