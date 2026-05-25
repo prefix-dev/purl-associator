@@ -20,6 +20,7 @@ import {
   osvUrl,
   primaryId,
 } from "../data/cves";
+import { cvssBaseMetrics } from "../data/cvssMetrics";
 import { Btn, Glyph, Theme } from "./Primitives";
 
 type Props = {
@@ -69,6 +70,53 @@ function SeverityPill({ adv }: { adv: Advisory }) {
     >
       {lvl.label}
     </span>
+  );
+}
+
+function CvssBaseMetricsSection({ adv, theme }: { adv: Advisory; theme: Theme }) {
+  const [showNone, setShowNone] = useState(false);
+  const metrics = cvssBaseMetrics(bestSeverity(adv));
+  if (!metrics) return null;
+
+  const visible = metrics.items.filter((item) => item.value !== "None");
+  const none = metrics.items.filter((item) => item.value === "None");
+  const shown = showNone ? metrics.items : visible;
+  const rows = shown.map((item) => ({
+    key: item.metricCode,
+    label: item.metric,
+    value: item.value,
+  }));
+  const hiddenNone = none.length > 0 && !showNone;
+
+  return (
+    <Section
+      title="CVSS base metrics"
+      theme={theme}
+      hint={metrics.versionLabel}
+      hintHref={metrics.metricsUrl}
+      action={
+        none.length > 0 ? (
+          <button
+            onClick={() => setShowNone(!showNone)}
+            style={{
+              background: "transparent",
+              border: 0,
+              color: theme.t.link,
+              padding: 0,
+              fontSize: 11,
+              fontFamily: "Inter, sans-serif",
+              cursor: "pointer",
+            }}
+          >
+            {hiddenNone
+              ? `Show ${none.length} none metric${none.length === 1 ? "" : "s"}`
+              : `Hide none metric${none.length === 1 ? "" : "s"}`}
+          </button>
+        ) : undefined
+      }
+    >
+      <KeyValueTable theme={theme} rows={rows} />
+    </Section>
   );
 }
 
@@ -646,6 +694,8 @@ function AdvisoryCard({
             </details>
           )}
 
+          <CvssBaseMetricsSection adv={adv} theme={theme} />
+
           {osvRanges(adv).length > 0 && (
             <Section title="Upstream affected ranges" theme={theme}>
               <div
@@ -904,14 +954,56 @@ function AdvisoryCard({
   );
 }
 
+function KeyValueTable({
+  theme,
+  rows,
+}: {
+  theme: Theme;
+  rows: { key: string; label: React.ReactNode; value: React.ReactNode }[];
+}) {
+  const t = theme.t;
+  return (
+    <div
+      style={{
+        border: `1px solid ${t.border}`,
+        borderRadius: 8,
+        overflow: "hidden",
+        background: t.surface2,
+      }}
+    >
+      {rows.map((row, index) => (
+        <div
+          key={row.key}
+          style={{
+            display: "grid",
+            gridTemplateColumns: "minmax(180px, 1fr) minmax(140px, 1fr)",
+            gap: 12,
+            alignItems: "center",
+            padding: "7px 10px",
+            borderTop: index === 0 ? 0 : `1px solid ${t.border}`,
+            fontSize: 12,
+          }}
+        >
+          <div style={{ color: t.fg2 }}>{row.label}</div>
+          <div style={{ color: t.fg1, fontWeight: 600 }}>{row.value}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function Section({
   title,
   hint,
+  hintHref,
+  action,
   theme,
   children,
 }: {
   title: string;
   hint?: string;
+  hintHref?: string;
+  action?: React.ReactNode;
   theme: Theme;
   children: React.ReactNode;
 }) {
@@ -920,29 +1012,57 @@ function Section({
     <div>
       <div
         style={{
-          fontSize: 11,
-          fontWeight: 600,
-          color: t.fg2,
-          letterSpacing: ".04em",
-          textTransform: "uppercase",
+          display: "flex",
+          alignItems: "baseline",
+          gap: 8,
           marginBottom: 6,
         }}
       >
-        {title}
-        {hint && (
-          <span
-            style={{
-              fontWeight: 400,
-              textTransform: "none",
-              letterSpacing: 0,
-              fontSize: 11,
-              color: t.fg3,
-              marginLeft: 8,
-            }}
-          >
-            {hint}
-          </span>
-        )}
+        <div
+          style={{
+            fontSize: 11,
+            fontWeight: 600,
+            color: t.fg2,
+            letterSpacing: ".04em",
+            textTransform: "uppercase",
+          }}
+        >
+          {title}
+          {hint &&
+            (hintHref ? (
+              <a
+                href={hintHref}
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  fontWeight: 400,
+                  textTransform: "none",
+                  letterSpacing: 0,
+                  fontSize: 11,
+                  color: t.link,
+                  marginLeft: 8,
+                  textDecoration: "none",
+                }}
+                title="Open CVSS base metrics documentation"
+              >
+                {hint}
+              </a>
+            ) : (
+              <span
+                style={{
+                  fontWeight: 400,
+                  textTransform: "none",
+                  letterSpacing: 0,
+                  fontSize: 11,
+                  color: t.fg3,
+                  marginLeft: 8,
+                }}
+              >
+                {hint}
+              </span>
+            ))}
+        </div>
+        {action && <div style={{ marginLeft: "auto" }}>{action}</div>}
       </div>
       {children}
     </div>
