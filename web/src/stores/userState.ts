@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist, type PersistStorage, type StorageValue } from "zustand/middleware";
 import type { ReviewEdit } from "../data/cves";
 import type { Edit } from "../data/types";
+import { storageKey } from "../storage/namespace";
 
 /**
  * Persisted user-owned draft state.
@@ -11,8 +12,8 @@ import type { Edit } from "../data/types";
  * should survive accidental tab/window/browser closes until submitted or reset.
  */
 const STORAGE_KEYS = {
-  stagedPurlEdits: "purl-associator/staged_edits",
-  stagedCveEdits: "purl-associator/staged_cve_edits",
+  stagedPurlEdits: storageKey("staged_edits"),
+  stagedCveEdits: storageKey("staged_cve_edits"),
 } as const;
 
 type PersistedEdits<T> = { edits: Record<string, T> };

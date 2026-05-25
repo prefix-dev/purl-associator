@@ -1,3 +1,5 @@
+import { storageKey } from "./namespace";
+
 /**
  * Centralized low-level browser storage for auth/session data.
  *
@@ -7,9 +9,9 @@
  */
 const STORAGE_KEYS = {
   /** GitHub OAuth access token. Tab-local auth cache. */
-  githubToken: "purl-associator/gh_token",
+  githubToken: storageKey("gh_token"),
   /** GitHub OAuth state nonce. Tab-local CSRF protection for the redirect. */
-  oauthState: "purl-associator/oauth_state",
+  oauthState: storageKey("oauth_state"),
 } as const;
 
 class BrowserStorage {
