@@ -1,5 +1,10 @@
 import { ReactNode, useState } from "react";
 import { PURL_TYPES } from "../data/loader";
+import {
+  alternativeMetas,
+  effectiveAlternativeValues,
+  purlsFromAlternatives,
+} from "../data/purlAlternatives";
 import type { Edit, PackageEntry } from "../data/types";
 import {
   Btn,
@@ -83,15 +88,21 @@ export function MappingEditor({
     sources: p.sources,
   };
 
-  const autoAlts = (p.auto?.alternative_purls ?? p.alternative_purls ?? []).map(
-    (a) => a.purl,
-  );
+  // Prefer the package's current approved alternatives over the preserved
+  // auto snapshot. For manual overrides this is what records reviewer removals;
+  // falling back to p.auto here would silently resurrect rejected auto PURLs.
+  const sourceAlternatives = effectiveAlternativeValues({
+    reviewed: p.alternative_purls,
+    auto: p.auto?.alternative_purls,
+  });
+  const currentAlternativePurls = purlsFromAlternatives(sourceAlternatives);
+  const sourceAlternativeMeta = alternativeMetas(sourceAlternatives);
   const eff: Edit = {
-    type: edit?.type ?? auto.type ?? p.type ?? "pypi",
-    namespace: edit?.namespace ?? auto.namespace ?? p.namespace ?? "",
-    pkgName: edit?.pkgName ?? auto.pkg_name ?? p.pkg_name ?? p.name,
-    purl: edit?.purl ?? auto.purl ?? p.purl ?? "",
-    alternative_purls: edit?.alternative_purls ?? autoAlts,
+    type: edit?.type ?? p.type ?? auto.type ?? "pypi",
+    namespace: edit?.namespace ?? p.namespace ?? auto.namespace ?? "",
+    pkgName: edit?.pkgName ?? p.pkg_name ?? auto.pkg_name ?? p.name,
+    purl: edit?.purl ?? p.purl ?? auto.purl ?? "",
+    alternative_purls: edit?.alternative_purls ?? currentAlternativePurls,
     unmapped: edit?.unmapped ?? p.unmapped ?? p.purl === null,
     note: edit?.note ?? "",
   };
@@ -107,9 +118,7 @@ export function MappingEditor({
   }
 
   function promoteAlt(purl: string): void {
-    const alt = (p.alternative_purls ?? p.auto?.alternative_purls ?? []).find(
-      (a) => a.purl === purl,
-    );
+    const alt = sourceAlternativeMeta.find((a) => a.purl === purl);
     if (!alt) return;
     // Promoting an alternative: it becomes the primary; the previous primary
     // demotes into the alternatives list.
@@ -394,7 +403,7 @@ export function MappingEditor({
             theme={theme}
             primary={eff.unmapped ? "" : eff.purl}
             alternates={eff.unmapped ? [] : eff.alternative_purls}
-            sourced={p.alternative_purls ?? p.auto?.alternative_purls ?? []}
+            sourced={sourceAlternativeMeta}
             isEdited={isEdited}
             onPromote={promoteAlt}
             onRemove={removeAlt}

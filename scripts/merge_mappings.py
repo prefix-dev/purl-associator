@@ -77,17 +77,63 @@ def _load_contributions(directory: Path) -> list[dict]:
     return entries
 
 
-def _apply_override(
-    merged: dict[str, dict], name: str, override: dict, attribution: dict
+REVIEWED_MAPPING_FIELDS = (
+    "purl",
+    "type",
+    "namespace",
+    "pkg_name",
+    "alternative_purls",
+    "unmapped",
+    "note",
+    "status",
+)
+
+
+def _auto_snapshot(auto_entry: dict) -> dict:
+    """Return the preserved automatic guess shown as secondary UI context."""
+    return {
+        "purl": auto_entry.get("purl"),
+        "type": auto_entry.get("type"),
+        "namespace": auto_entry.get("namespace"),
+        "pkg_name": auto_entry.get("pkg_name"),
+        "confidence": auto_entry.get("confidence", 0.0),
+        "sources": auto_entry.get("sources", []),
+        "alternative_purls": auto_entry.get("alternative_purls"),
+    }
+
+
+def _reviewed_mapping_patch(override: dict) -> dict:
+    """Return fields that a human review layer owns.
+
+    ``alternative_purls`` is intentionally replace-all when present. This is the
+    core #66 invariant: if a reviewer removes an auto-suggested PURL, the latest
+    reviewed list (even ``[]``) must replace the auto list rather than be merged
+    with it. Omitted fields keep the previous layer for backwards compatibility.
+    """
+    patch: dict = {}
+    for key in REVIEWED_MAPPING_FIELDS:
+        if key in override and override[key] is not None:
+            patch[key] = override[key]
+    patch.setdefault("status", "verified")
+    return patch
+
+
+def _apply_reviewed_override(
+    merged: dict[str, dict],
+    auto_packages: dict[str, dict],
+    name: str,
+    override: dict,
+    attribution: dict,
 ) -> None:
     base = merged.get(name, {"name": name})
     merged[name] = {
         **base,
-        **{k: v for k, v in override.items() if v is not None},
-        "status": override.get("status", "verified"),
+        **_reviewed_mapping_patch(override),
         "source": "manual",
         **attribution,
     }
+    if name in auto_packages:
+        merged[name]["auto"] = _auto_snapshot(auto_packages[name])
 
 
 def main(
@@ -114,24 +160,15 @@ def main(
         "approved_by": manual_data.get("updated_by"),
         "approved_at": manual_data.get("updated_at"),
     }
+    auto_packages = auto_data.get("packages", {})
     for name, override in manual_data.get("packages", {}).items():
-        _apply_override(
+        _apply_reviewed_override(
             merged,
+            auto_packages,
             name,
             override,
             {k: v for k, v in legacy_attribution.items() if v is not None},
         )
-        if name in auto_data.get("packages", {}):
-            a = auto_data["packages"][name]
-            merged[name]["auto"] = {
-                "purl": a.get("purl"),
-                "type": a.get("type"),
-                "namespace": a.get("namespace"),
-                "pkg_name": a.get("pkg_name"),
-                "confidence": a.get("confidence", 0.0),
-                "sources": a.get("sources", []),
-                "alternative_purls": a.get("alternative_purls"),
-            }
 
     # Layer 3: contributions, oldest → newest.
     for contrib in contrib_files:
@@ -140,18 +177,7 @@ def main(
             "approved_at": contrib.get("timestamp"),
         }
         for name, override in (contrib.get("packages") or {}).items():
-            _apply_override(merged, name, override, attribution)
-            if name in auto_data.get("packages", {}):
-                a = auto_data["packages"][name]
-                merged[name]["auto"] = {
-                    "purl": a.get("purl"),
-                    "type": a.get("type"),
-                    "namespace": a.get("namespace"),
-                    "pkg_name": a.get("pkg_name"),
-                    "confidence": a.get("confidence", 0.0),
-                    "sources": a.get("sources", []),
-                    "alternative_purls": a.get("alternative_purls"),
-                }
+            _apply_reviewed_override(merged, auto_packages, name, override, attribution)
 
     # Fallback for entries that don't carry ``download_count`` from auto.json
     # (e.g. manual-only or contribution-only names). Hydration of auto.json

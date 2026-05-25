@@ -290,8 +290,10 @@ function buildContributionFile(
         type: edit.type,
         namespace: edit.namespace || null,
         pkg_name: edit.pkgName,
-        alternative_purls:
-          edit.alternative_purls.length > 0 ? edit.alternative_purls : undefined,
+        // Always persist the list, including an empty one. Omitting this field
+        // lets merge_mappings keep auto-generated alternatives from the base
+        // layer, which makes reviewer removals ineffective.
+        alternative_purls: edit.alternative_purls,
         note: edit.note || undefined,
       };
     }
