@@ -1,5 +1,6 @@
 import { ReactNode, useState } from "react";
 import { PURL_TYPES } from "../data/loader";
+import type { SbomDetailPayload, SbomSummaryEntry } from "../data/sboms";
 import type { Edit, PackageEntry } from "../data/types";
 import {
   Btn,
@@ -21,6 +22,8 @@ type Props = {
   onResetAuto: () => void;
   isLoggedIn: boolean;
   onRequestLogin: () => void;
+  sbomSummary?: SbomSummaryEntry | null;
+  sbomDetail?: SbomDetailPayload | null;
 };
 
 function buildPurl(type: string, ns: string, name: string): string {
@@ -37,6 +40,8 @@ export function MappingEditor({
   onResetAuto,
   isLoggedIn,
   onRequestLogin,
+  sbomSummary,
+  sbomDetail,
 }: Props) {
   const t = theme.t;
   if (!pkg) {
@@ -534,7 +539,248 @@ export function MappingEditor({
             </div>
           </Section>
         )}
+
+        {sbomSummary && (
+          <SbomSection
+            theme={theme}
+            summary={sbomSummary}
+            detail={sbomDetail ?? null}
+          />
+        )}
       </div>
+    </div>
+  );
+}
+
+function SbomSection({
+  theme,
+  summary,
+  detail,
+}: {
+  theme: Theme;
+  summary: SbomSummaryEntry;
+  detail: SbomDetailPayload | null;
+}) {
+  const t = theme.t;
+  const hasCves = summary.advisory_count > 0;
+  const ecosystemLabel =
+    summary.ecosystem === "cargo"
+      ? "Rust (cargo-auditable)"
+      : summary.ecosystem === "golang"
+        ? "Go (buildinfo)"
+        : summary.ecosystem;
+
+  return (
+    <Section
+      title="Embedded SBOM"
+      subtitle="Components recovered directly from the shipped binary, joined to OSV"
+    >
+      <div
+        style={{
+          display: "flex",
+          gap: 10,
+          alignItems: "center",
+          marginBottom: hasCves ? 14 : 0,
+          padding: 12,
+          background: t.surface,
+          border: `1px solid ${t.border}`,
+          borderRadius: 12,
+          flexWrap: "wrap",
+        }}
+      >
+        <Glyph name="db" size={16} />
+        <div style={{ fontSize: 13, color: t.fg1 }}>
+          <strong>{summary.component_count}</strong> components ·{" "}
+          <span style={{ color: t.fg2 }}>{ecosystemLabel}</span>
+        </div>
+        <div style={{ flex: 1 }} />
+        {hasCves ? (
+          <SbomPill
+            theme={theme}
+            tone="red"
+            label={`${summary.advisory_count} advisories`}
+            sub={`across ${summary.vulnerable_component_count} components`}
+          />
+        ) : (
+          <SbomPill theme={theme} tone="green" label="No transitive CVEs" />
+        )}
+      </div>
+
+      {hasCves && detail && (
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 8,
+            maxHeight: 360,
+            overflow: "auto",
+          }}
+        >
+          {detail.advisories.slice(0, 60).map((a) => (
+            <SbomAdvisoryRow key={a.advisory_id} theme={theme} advisory={a} />
+          ))}
+          {detail.advisories.length > 60 && (
+            <div
+              style={{
+                fontSize: 12,
+                color: t.fg3,
+                padding: "4px 12px",
+                textAlign: "center",
+              }}
+            >
+              … and {detail.advisories.length - 60} more
+            </div>
+          )}
+        </div>
+      )}
+
+      {hasCves && !detail && (
+        <div style={{ fontSize: 12, color: t.fg3, padding: "8px 12px" }}>
+          Loading advisory detail…
+        </div>
+      )}
+    </Section>
+  );
+}
+
+function SbomPill({
+  theme,
+  tone,
+  label,
+  sub,
+}: {
+  theme: Theme;
+  tone: "red" | "green";
+  label: string;
+  sub?: string;
+}) {
+  const t = theme.t;
+  const palette =
+    tone === "red"
+      ? {
+          bg: theme.dark ? "#3a0d14" : "#fdecef",
+          fg: theme.dark ? "#ffb3bc" : "#a8112a",
+        }
+      : {
+          bg: theme.dark ? "#0e3b1f" : "#e6f6ec",
+          fg: theme.dark ? "#7ed3a3" : "#0d6b34",
+        };
+  return (
+    <div
+      style={{
+        background: palette.bg,
+        color: palette.fg,
+        border: `1px solid ${palette.fg}33`,
+        borderRadius: 999,
+        padding: "4px 10px",
+        fontSize: 11,
+        fontWeight: 600,
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 6,
+      }}
+    >
+      <span>{label}</span>
+      {sub && <span style={{ color: t.fg3, fontWeight: 400 }}>· {sub}</span>}
+    </div>
+  );
+}
+
+function severityBand(score?: number): { label: string; color: string } | null {
+  if (score == null) return null;
+  if (score >= 9) return { label: "critical", color: "#a8112a" };
+  if (score >= 7) return { label: "high", color: "#c9461c" };
+  if (score >= 4) return { label: "medium", color: "#a87a00" };
+  return { label: "low", color: "#7a7a7a" };
+}
+
+function SbomAdvisoryRow({
+  theme,
+  advisory,
+}: {
+  theme: Theme;
+  advisory: SbomDetailPayload["advisories"][number];
+}) {
+  const t = theme.t;
+  const score = advisory.severity?.find((s) => s.score_num != null)?.score_num;
+  const band = severityBand(score);
+  return (
+    <div
+      style={{
+        padding: "10px 12px",
+        background: t.surface,
+        border: `1px solid ${t.border}`,
+        borderRadius: 10,
+        display: "flex",
+        flexDirection: "column",
+        gap: 6,
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          flexWrap: "wrap",
+        }}
+      >
+        <a
+          href={`https://osv.dev/vulnerability/${advisory.advisory_id}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            fontFamily: "JetBrains Mono, monospace",
+            fontSize: 12,
+            color: t.link,
+            textDecoration: "none",
+          }}
+        >
+          {advisory.primary_id}
+        </a>
+        {band && (
+          <span
+            style={{
+              fontSize: 10,
+              fontWeight: 700,
+              textTransform: "uppercase",
+              color: band.color,
+              border: `1px solid ${band.color}55`,
+              borderRadius: 4,
+              padding: "1px 5px",
+            }}
+          >
+            {band.label}
+            {score != null && (
+              <span style={{ fontWeight: 400, marginLeft: 4 }}>
+                {score.toFixed(1)}
+              </span>
+            )}
+          </span>
+        )}
+        <span style={{ flex: 1 }} />
+        {advisory.components.map((c) => (
+          <code
+            key={c.purl}
+            title={c.purl}
+            style={{
+              fontFamily: "JetBrains Mono, monospace",
+              fontSize: 11,
+              color: t.fg2,
+              background: t.surface2,
+              border: `1px solid ${t.border}`,
+              borderRadius: 4,
+              padding: "1px 5px",
+            }}
+          >
+            {c.name}@{c.version}
+          </code>
+        ))}
+      </div>
+      {advisory.summary && (
+        <div style={{ fontSize: 12, color: t.fg2, lineHeight: 1.4 }}>
+          {advisory.summary}
+        </div>
+      )}
     </div>
   );
 }

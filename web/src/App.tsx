@@ -14,6 +14,12 @@ import { PRDrawer } from "./components/PRDrawer";
 import { Btn, Glyph, useTheme } from "./components/Primitives";
 import { config, repoFullName } from "./config";
 import { loadMappings, packagesAsList } from "./data/loader";
+import {
+  loadSbomDetail,
+  loadSbomSummary,
+  type SbomDetailPayload,
+  type SbomSummaryPayload,
+} from "./data/sboms";
 import type { Edit, GitHubUser, MappingsPayload, PackageEntry } from "./data/types";
 
 const EDITS_KEY = "purl-associator/staged_edits";
@@ -37,6 +43,10 @@ export function App() {
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<GitHubUser | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [sbomSummary, setSbomSummary] = useState<SbomSummaryPayload | null>(null);
+  const [sbomDetails, setSbomDetails] = useState<
+    Record<string, SbomDetailPayload | null>
+  >({});
 
   const t = theme.t;
 
@@ -47,7 +57,25 @@ export function App() {
         setPackages(packagesAsList(data));
       })
       .catch((err) => setLoadError(err instanceof Error ? err.message : String(err)));
+    loadSbomSummary().then(setSbomSummary);
   }, []);
+
+  // Lazy-load the per-package SBOM-CVE detail when a package with matches is
+  // focused. ``null`` means "we tried and there is no detail file" (i.e. the
+  // package has 0 transitive CVEs) so we can render the clean-bill section.
+  useEffect(() => {
+    if (!focusedId) return;
+    const summary = sbomSummary?.packages[focusedId];
+    if (!summary) return;
+    if (sbomDetails[focusedId] !== undefined) return;
+    if (summary.advisory_count === 0) {
+      setSbomDetails((prev) => ({ ...prev, [focusedId]: null }));
+      return;
+    }
+    loadSbomDetail(focusedId).then((d) =>
+      setSbomDetails((prev) => ({ ...prev, [focusedId]: d })),
+    );
+  }, [focusedId, sbomSummary, sbomDetails]);
 
   // Persist staged edits across the OAuth full-page redirect (sessionStorage
   // is per-tab and survives same-tab navigations).
@@ -503,6 +531,10 @@ export function App() {
               onResetAuto={handleResetAuto}
               isLoggedIn={isLoggedIn}
               onRequestLogin={() => setLoginOpen(true)}
+              sbomSummary={
+                focusedPkg ? sbomSummary?.packages[focusedPkg.name] ?? null : null
+              }
+              sbomDetail={focusedPkg ? sbomDetails[focusedPkg.name] ?? null : null}
             />
           )}
         </div>
