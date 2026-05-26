@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useGithubAuth } from "./auth/useGithubAuth";
 import { LocalDraftBanner } from "./components/LocalDraftBanner";
 import { LoginModal } from "./components/LoginModal";
@@ -10,8 +10,13 @@ import { CvePRDrawer } from "./components/CvePRDrawer";
 import { repoFullName } from "./config";
 import {
   advisoryVex,
+  bestSeverity,
   editFromVex,
+  isActiveOnLatest,
   isEditNonEmpty,
+  isFutureAffected,
+  primaryId,
+  type CvePackage,
   type ReviewEdit,
 } from "./data/cves";
 import { useCveData } from "./data/useCveData";
@@ -23,16 +28,87 @@ export function CveApp() {
     useCveData();
   const edits = useCveEditStore((state) => state.edits);
   const setEdits = useCveEditStore((state) => state.setEdits);
+  const [focusedAdvisoryId, setFocusedAdvisoryId] = useState<string | null>(null);
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "unreviewed" | "reviewed">(
     "all",
   );
-  const [view, setView] = useState<"browse" | "active">("browse");
+  const [view, setView] = useState<"browse" | "active">("active");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
   const { token, user, error: authError, isLoggedIn, signOut } = useGithubAuth();
 
   const t = theme.t;
+
+  // Packages that still have at least one unreviewed advisory shipping now
+  // (or affecting a future version). Ordered the same way the triage list
+  // is — worst severity first, "now" before "future" within ties — so the
+  // "next package" button walks through them in priority order. The
+  // per-package "first advisory" must match the row that CveActiveList
+  // shows at the top of the package's section, otherwise the jump appears
+  // to land on a random CVE.
+  const triageQueue = useMemo(() => {
+    const out: Array<{
+      pkg: CvePackage;
+      firstAdvId: string;
+      worst: number;
+      hasNow: boolean;
+    }> = [];
+    for (const pkg of packages) {
+      const rows: Array<{
+        adv: (typeof pkg.advisories)[number];
+        kind: "now" | "future";
+        score: number;
+        reviewed: boolean;
+      }> = [];
+      for (const adv of pkg.advisories) {
+        const now = isActiveOnLatest(pkg, adv);
+        const future = !now && isFutureAffected(pkg, adv);
+        if (!now && !future) continue;
+        const score = bestSeverity(adv)?.score_num ?? 0;
+        const key = `${pkg.package}::${adv.id}`;
+        const effective = edits[key]?.status ?? advisoryVex(adv)?.status;
+        const reviewed = !!effective && effective !== "under_investigation";
+        rows.push({ adv, kind: now ? "now" : "future", score, reviewed });
+      }
+      if (rows.length === 0) continue;
+      // Matches the per-package row sort in CveActiveList.
+      rows.sort((a, b) => {
+        if (a.score !== b.score) return b.score - a.score;
+        if (a.kind !== b.kind) return a.kind === "now" ? -1 : 1;
+        if (a.reviewed !== b.reviewed) return a.reviewed ? 1 : -1;
+        return primaryId(a.adv).localeCompare(primaryId(b.adv));
+      });
+      const firstUnreviewed = rows.find((r) => !r.reviewed);
+      if (!firstUnreviewed) continue;
+      out.push({
+        pkg,
+        firstAdvId: firstUnreviewed.adv.id,
+        worst: rows[0].score,
+        hasNow: rows.some((r) => r.kind === "now"),
+      });
+    }
+    out.sort((a, b) => {
+      if (a.worst !== b.worst) return b.worst - a.worst;
+      if (a.hasNow !== b.hasNow) return a.hasNow ? -1 : 1;
+      return a.pkg.package.localeCompare(b.pkg.package);
+    });
+    return out;
+  }, [packages, edits]);
+
+  const goToNextTriagePackage = useMemo<(() => void) | null>(() => {
+    if (triageQueue.length === 0) return null;
+    const idx = triageQueue.findIndex(
+      (entry) => entry.pkg.package === focusedPkg,
+    );
+    const nextIdx = idx === -1 ? 0 : idx + 1;
+    if (nextIdx >= triageQueue.length) return null;
+    const next = triageQueue[nextIdx];
+    return () => {
+      setFocusedPkg(next.pkg.package);
+      setFocusedAdvisoryId(next.firstAdvId);
+    };
+  }, [triageQueue, focusedPkg]);
 
   const editsCount = Object.keys(edits).length;
 
@@ -341,18 +417,18 @@ export function CveApp() {
           >
             <ViewTab
               theme={theme}
-              active={view === "browse"}
-              onClick={() => setView("browse")}
-            >
-              All packages
-            </ViewTab>
-            <ViewTab
-              theme={theme}
               active={view === "active"}
               onClick={() => setView("active")}
               accent
             >
-              <Glyph name="alert" size={11} /> Active on latest
+              <Glyph name="alert" size={11} /> Triage
+            </ViewTab>
+            <ViewTab
+              theme={theme}
+              active={view === "browse"}
+              onClick={() => setView("browse")}
+            >
+              All packages
             </ViewTab>
           </div>
           <div style={{ flex: 1, minHeight: 0 }}>
@@ -363,7 +439,10 @@ export function CveApp() {
                   packages={packages}
                   edits={edits}
                   focusedId={focusedPkg}
-                  setFocusedId={setFocusedPkg}
+                  setFocusedId={(id) => {
+                    setFocusedPkg(id);
+                    setFocusedAdvisoryId(null);
+                  }}
                   q={q}
                   setQ={setQ}
                   statusFilter={statusFilter}
@@ -375,13 +454,12 @@ export function CveApp() {
                   packages={packages}
                   edits={edits}
                   focusedPkg={focusedPkg}
+                  focusedAdvisoryId={focusedAdvisoryId}
+                  onNextTriagePackage={goToNextTriagePackage}
+                  triageRemaining={triageQueue.length}
                   onSelect={(pkgName, advisoryId) => {
                     setFocusedPkg(pkgName);
-                    requestAnimationFrame(() => {
-                      const el = document.getElementById(`adv-${advisoryId}`);
-                      if (el)
-                        el.scrollIntoView({ behavior: "smooth", block: "center" });
-                    });
+                    setFocusedAdvisoryId(advisoryId);
                   }}
                 />
               )
@@ -405,6 +483,8 @@ export function CveApp() {
             theme={theme}
             pkg={focusedPackage}
             edits={edits}
+            mode={view === "active" ? "triage" : "browse"}
+            focusedAdvisoryId={focusedAdvisoryId}
             onEdit={(advisoryId, edit) => {
               if (!focusedPackage) return;
               const advisory = focusedPackage.advisories.find(
@@ -435,6 +515,7 @@ export function CveApp() {
           }}
           onSelect={(pkg, advisoryId) => {
             setFocusedPkg(pkg);
+            setFocusedAdvisoryId(advisoryId);
             setDrawerOpen(false);
             // Scroll the advisory into view next tick.
             requestAnimationFrame(() => {
