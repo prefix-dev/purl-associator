@@ -202,20 +202,81 @@ class AutoEntry:
         return None
 
 
-def _load_auto(auto: Path) -> dict[str, AutoEntry]:
-    data = json.loads(auto.read_text())
-    pkgs = data.get("packages") or {}
+_PURL_FIELDS = ("purl", "type", "namespace", "pkg_name")
+
+
+def _overlay_purl(base: AutoEntry, override: dict) -> AutoEntry:
+    """Return a new AutoEntry with PURL-related fields replaced where the
+    override provides them. Mirrors ``merge_mappings``' replace-on-present
+    semantics for the PURL layer."""
+    if not any(k in override for k in _PURL_FIELDS):
+        return base
+    return AutoEntry(
+        purl=override.get("purl", base.purl),
+        purl_type=override.get("type", base.purl_type),
+        namespace=override.get("namespace", base.namespace),
+        pkg_name=override.get("pkg_name", base.pkg_name),
+        summary=base.summary,  # human reviews never change the conda summary
+    )
+
+
+def _load_effective_mappings(
+    auto: Path, manual: Path, contrib_dir: Path
+) -> dict[str, AutoEntry]:
+    """Return the merged ``{name: AutoEntry}`` view that ``merge_mappings``
+    would produce for the PURL fields.
+
+    Layered, newest wins: ``auto.json`` → ``manual.json`` → ``contributions``
+    (sorted by ``timestamp`` then filename). We only need the PURL portion
+    here — the ``cpes`` overrides are handled separately by
+    :func:`_load_existing_cpes`."""
     out: dict[str, AutoEntry] = {}
-    for name, entry in pkgs.items():
-        if not isinstance(entry, dict):
-            continue
-        out[name] = AutoEntry(
-            purl=entry.get("purl"),
-            purl_type=entry.get("type"),
-            namespace=entry.get("namespace"),
-            pkg_name=entry.get("pkg_name"),
-            summary=entry.get("summary"),
-        )
+
+    # Layer 1: auto.json
+    if auto.exists():
+        data = json.loads(auto.read_text())
+        for name, entry in (data.get("packages") or {}).items():
+            if not isinstance(entry, dict):
+                continue
+            out[name] = AutoEntry(
+                purl=entry.get("purl"),
+                purl_type=entry.get("type"),
+                namespace=entry.get("namespace"),
+                pkg_name=entry.get("pkg_name"),
+                summary=entry.get("summary"),
+            )
+
+    blank = AutoEntry(purl=None, purl_type=None, namespace=None, pkg_name=None, summary=None)
+
+    # Layer 2: manual.json
+    if manual.exists():
+        try:
+            mdata = json.loads(manual.read_text())
+        except json.JSONDecodeError:
+            mdata = {}
+        for name, override in (mdata.get("packages") or {}).items():
+            if not isinstance(override, dict):
+                continue
+            out[name] = _overlay_purl(out.get(name, blank), override)
+
+    # Layer 3: contributions, oldest → newest (chronological), so the
+    # newest reviewed override is what we see.
+    if contrib_dir.exists():
+        contribs: list[tuple[str, str, dict]] = []
+        for f in sorted(contrib_dir.glob("*.json")):
+            try:
+                cdata = json.loads(f.read_text())
+            except json.JSONDecodeError:
+                continue
+            ts = cdata.get("timestamp") if isinstance(cdata.get("timestamp"), str) else f.stem
+            contribs.append((ts, f.name, cdata))
+        contribs.sort(key=lambda t: (t[0], t[1]))
+        for _ts, _fname, cdata in contribs:
+            for name, override in (cdata.get("packages") or {}).items():
+                if not isinstance(override, dict):
+                    continue
+                out[name] = _overlay_purl(out.get(name, blank), override)
+
     return out
 
 
@@ -583,7 +644,7 @@ def main(
 ) -> None:
     """Discover CPE candidates for top-downloaded conda-forge packages."""
     download_rows = _load_top_downloads(top_downloads, top)
-    auto_data = _load_auto(auto)
+    auto_data = _load_effective_mappings(auto, manual, contributions)
     already_have_cpes = _load_existing_cpes(manual, contributions)
 
     candidates: list[tuple[str, int, AutoEntry | None]] = []
