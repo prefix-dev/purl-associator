@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   advisoryVex,
@@ -16,6 +16,9 @@ type Props = {
   packages: CvePackage[];
   edits: Record<string, ReviewEdit>;
   focusedPkg: string | null;
+  focusedAdvisoryId: string | null;
+  onNextTriagePackage: (() => void) | null;
+  triageRemaining: number;
   onSelect: (pkgName: string, advisoryId: string) => void;
 };
 
@@ -28,6 +31,21 @@ type Row = {
   score: number; // CVSS base score (0 when unknown)
   reviewed: boolean; // has a real VEX status other than under_investigation
 };
+
+type Group = {
+  pkg: CvePackage;
+  rows: Row[]; // filtered rows visible in the list
+  worst: number;
+  unreviewed: number;
+  hasNow: boolean;
+};
+
+type Item =
+  | { type: "header"; group: Group }
+  | { type: "row"; group: Group; row: Row };
+
+const HEADER_H = 38;
+const ROW_H = 68;
 
 const SEVERITY_BAND = (
   v: number,
@@ -47,6 +65,9 @@ export function CveActiveList({
   packages,
   edits,
   focusedPkg,
+  focusedAdvisoryId,
+  onNextTriagePackage,
+  triageRemaining,
   onSelect,
 }: Props) {
   const t = theme.t;
@@ -55,7 +76,8 @@ export function CveActiveList({
   const [kindFilter, setKindFilter] = useState<KindFilter>("all");
   const [onlyUnreviewed, setOnlyUnreviewed] = useState(true);
 
-  const rows = useMemo<Row[]>(() => {
+  // Compute all triage-relevant rows once, unfiltered, so totals stay stable.
+  const allRows = useMemo<Row[]>(() => {
     const out: Row[] = [];
     for (const pkg of packages) {
       for (const adv of pkg.advisories) {
@@ -63,9 +85,6 @@ export function CveActiveList({
         if (isActiveOnLatest(pkg, adv)) kind = "now";
         else if (isFutureAffected(pkg, adv)) kind = "future";
         if (!kind) continue;
-        // Editing in-memory takes precedence over the persisted VEX status, so
-        // a row the user has already triaged in this session drops out of
-        // "unreviewed" immediately.
         const key = `${pkg.package}::${adv.id}`;
         const editStatus = edits[key]?.status;
         const persisted = advisoryVex(adv)?.status;
@@ -80,14 +99,6 @@ export function CveActiveList({
         });
       }
     }
-    // Highest severity first; within a tie: shipping now > future > tied;
-    // then unreviewed first; then by package name for stable ordering.
-    out.sort((a, b) => {
-      if (a.score !== b.score) return b.score - a.score;
-      if (a.kind !== b.kind) return a.kind === "now" ? -1 : 1;
-      if (a.reviewed !== b.reviewed) return a.reviewed ? 1 : -1;
-      return a.pkg.package.localeCompare(b.pkg.package);
-    });
     return out;
   }, [packages, edits]);
 
@@ -97,43 +108,137 @@ export function CveActiveList({
     let unreviewed = 0;
     let now = 0;
     let future = 0;
-    for (const r of rows) {
+    for (const r of allRows) {
       if (r.score >= 9.0) critical++;
       if (r.score >= 7.0) high++;
       if (!r.reviewed) unreviewed++;
       if (r.kind === "now") now++;
       else future++;
     }
-    return { total: rows.length, critical, high, unreviewed, now, future };
-  }, [rows]);
+    return { total: allRows.length, critical, high, unreviewed, now, future };
+  }, [allRows]);
 
-  const filtered = useMemo(() => {
-    const ql = q.trim().toLowerCase();
-    return rows.filter((r) => {
-      if (sev === "critical" && r.score < 9.0) return false;
-      if (sev === "high+" && r.score < 7.0) return false;
-      if (kindFilter !== "all" && r.kind !== kindFilter) return false;
-      if (onlyUnreviewed && r.reviewed) return false;
-      if (ql) {
-        const inName = r.pkg.package.toLowerCase().includes(ql);
-        const inCve =
-          cveIds(r.adv).some((id) => id.toLowerCase().includes(ql)) ||
-          r.adv.id.toLowerCase().includes(ql);
-        const inSummary = (r.adv.summary || "").toLowerCase().includes(ql);
-        if (!inName && !inCve && !inSummary) return false;
+  const ql = q.trim().toLowerCase();
+  const passesFilter = (r: Row): boolean => {
+    if (sev === "critical" && r.score < 9.0) return false;
+    if (sev === "high+" && r.score < 7.0) return false;
+    if (kindFilter !== "all" && r.kind !== kindFilter) return false;
+    if (onlyUnreviewed && r.reviewed) return false;
+    if (ql) {
+      const inName = r.pkg.package.toLowerCase().includes(ql);
+      const inCve =
+        cveIds(r.adv).some((id) => id.toLowerCase().includes(ql)) ||
+        r.adv.id.toLowerCase().includes(ql);
+      const inSummary = (r.adv.summary || "").toLowerCase().includes(ql);
+      if (!inName && !inCve && !inSummary) return false;
+    }
+    return true;
+  };
+
+  // Group filtered rows by package; drop packages whose rows all got filtered.
+  const groups = useMemo<Group[]>(() => {
+    const byPkg = new Map<string, Group>();
+    for (const r of allRows) {
+      if (!passesFilter(r)) continue;
+      let g = byPkg.get(r.pkg.package);
+      if (!g) {
+        g = {
+          pkg: r.pkg,
+          rows: [],
+          worst: 0,
+          unreviewed: 0,
+          hasNow: false,
+        };
+        byPkg.set(r.pkg.package, g);
       }
-      return true;
+      g.rows.push(r);
+      if (r.score > g.worst) g.worst = r.score;
+      if (!r.reviewed) g.unreviewed++;
+      if (r.kind === "now") g.hasNow = true;
+    }
+    const out = [...byPkg.values()];
+    // Sort rows within a package: severity desc, then now > future, then
+    // unreviewed first, then primary id for stability.
+    for (const g of out) {
+      g.rows.sort((a, b) => {
+        if (a.score !== b.score) return b.score - a.score;
+        if (a.kind !== b.kind) return a.kind === "now" ? -1 : 1;
+        if (a.reviewed !== b.reviewed) return a.reviewed ? 1 : -1;
+        return primaryId(a.adv).localeCompare(primaryId(b.adv));
+      });
+    }
+    // Sort packages: worst severity desc, "shipping now" first within tie,
+    // then by name.
+    out.sort((a, b) => {
+      if (a.worst !== b.worst) return b.worst - a.worst;
+      if (a.hasNow !== b.hasNow) return a.hasNow ? -1 : 1;
+      return a.pkg.package.localeCompare(b.pkg.package);
     });
-  }, [rows, q, sev, kindFilter, onlyUnreviewed]);
+    return out;
+    // We intentionally re-derive on every filter change; the row build above
+    // is the expensive part and only depends on packages/edits.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allRows, ql, sev, kindFilter, onlyUnreviewed]);
+
+  const items = useMemo<Item[]>(() => {
+    const out: Item[] = [];
+    for (const g of groups) {
+      out.push({ type: "header", group: g });
+      for (const r of g.rows) out.push({ type: "row", group: g, row: r });
+    }
+    return out;
+  }, [groups]);
+
+  const visibleRowCount = useMemo(
+    () => groups.reduce((sum, g) => sum + g.rows.length, 0),
+    [groups],
+  );
 
   const scrollRef = useRef<HTMLDivElement>(null);
-  const ROW_H = 68;
   const virtualizer = useVirtualizer({
-    count: filtered.length,
+    count: items.length,
     getScrollElement: () => scrollRef.current,
-    estimateSize: () => ROW_H,
+    estimateSize: (i) => (items[i]?.type === "header" ? HEADER_H : ROW_H),
     overscan: 8,
   });
+
+  // Scroll the focused row into view when the selection changes — e.g. the
+  // "Next package" button or PR drawer. Only fires on focus change (items
+  // lives behind a ref to avoid re-running on every re-render); only
+  // scrolls if the focused row isn't already visible, so clicking an
+  // on-screen row doesn't yank the viewport.
+  const itemsRef = useRef(items);
+  itemsRef.current = items;
+  useEffect(() => {
+    if (!focusedAdvisoryId) return;
+    const list = scrollRef.current;
+    if (!list) return;
+    const arr = itemsRef.current;
+    // Match on (package, advisory) — adv.id alone is not unique across
+    // packages: e.g. several airflow-with-* feedstocks share the same
+    // upstream GHSA records.
+    const idx = arr.findIndex(
+      (it) =>
+        it.type === "row" &&
+        it.row.adv.id === focusedAdvisoryId &&
+        it.row.pkg.package === focusedPkg,
+    );
+    if (idx < 0) return;
+    let rowTop = 0;
+    let headerTop = 0;
+    for (let i = 0; i < idx; i++) {
+      if (arr[i].type === "header") headerTop = rowTop;
+      rowTop += arr[i].type === "header" ? HEADER_H : ROW_H;
+    }
+    const rowBottom = rowTop + ROW_H;
+    const view = list.scrollTop;
+    const viewBottom = view + list.clientHeight;
+    if (rowTop < view || rowBottom > viewBottom) {
+      // Anchor the package header to the top of the viewport so the user
+      // sees the whole group, not just a row floating mid-list.
+      list.scrollTo({ top: headerTop, behavior: "auto" });
+    }
+  }, [focusedAdvisoryId, focusedPkg]);
 
   return (
     <div
@@ -158,7 +263,7 @@ export function CveActiveList({
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <Glyph name="alert" size={15} />
           <div style={{ fontSize: 13, fontWeight: 600, color: t.fg1 }}>
-            Active on latest conda-forge
+            Triage
           </div>
           <div
             style={{
@@ -167,18 +272,45 @@ export function CveActiveList({
               fontVariantNumeric: "tabular-nums",
             }}
           >
-            {filtered.length.toLocaleString()}{" "}
+            {visibleRowCount.toLocaleString()}{" "}
             <span style={{ color: t.fg3 }}>
               / {counts.total.toLocaleString()}
             </span>
           </div>
+          <button
+            onClick={() => onNextTriagePackage?.()}
+            disabled={!onNextTriagePackage}
+            title={
+              onNextTriagePackage
+                ? `Jump to the next package with unreviewed advisories (${triageRemaining} left)`
+                : "Nothing left to triage."
+            }
+            style={{
+              marginLeft: "auto",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              background: onNextTriagePackage ? t.accent : t.surface2,
+              color: onNextTriagePackage ? t.accentFg : t.fg3,
+              border: `1px solid ${
+                onNextTriagePackage ? t.accent : t.border
+              }`,
+              borderRadius: 6,
+              padding: "4px 10px",
+              fontSize: 11.5,
+              fontWeight: 600,
+              cursor: onNextTriagePackage ? "pointer" : "not-allowed",
+              fontFamily: "Inter, sans-serif",
+            }}
+          >
+            Next package
+            <span style={{ fontSize: 13 }}>→</span>
+          </button>
         </div>
         <div style={{ fontSize: 11, color: t.fg3, lineHeight: 1.45 }}>
-          Advisories shipping on the newest conda-forge build (
-          <strong style={{ color: t.fg2 }}>now</strong>) plus ones targeting
-          a future version we don't have yet (
-          <strong style={{ color: t.fg2 }}>future</strong>) — block them
-          before they land.
+          Advisories hitting conda-forge's latest build (
+          <strong style={{ color: t.fg2 }}>now</strong>) or a version we
+          haven't shipped yet (<strong style={{ color: t.fg2 }}>future</strong>).
         </div>
 
         <div style={{ position: "relative" }}>
@@ -283,7 +415,7 @@ export function CveActiveList({
       </div>
 
       <div ref={scrollRef} style={{ flex: 1, overflowY: "auto" }}>
-        {filtered.length === 0 ? (
+        {items.length === 0 ? (
           <div
             style={{
               padding: 30,
@@ -303,13 +435,37 @@ export function CveActiveList({
             }}
           >
             {virtualizer.getVirtualItems().map((vi) => {
-              const r = filtered[vi.index];
+              const it = items[vi.index];
+              if (it.type === "header") {
+                const focused = focusedPkg === it.group.pkg.package;
+                return (
+                  <GroupHeader
+                    key={`hdr::${it.group.pkg.package}`}
+                    theme={theme}
+                    group={it.group}
+                    focused={focused}
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      height: HEADER_H,
+                      transform: `translateY(${vi.start}px)`,
+                    }}
+                    onClick={() =>
+                      onSelect(it.group.pkg.package, it.group.rows[0].adv.id)
+                    }
+                  />
+                );
+              }
+              const r = it.row;
+              const inFocusedGroup = focusedPkg === r.pkg.package;
               const focused =
-                focusedPkg === r.pkg.package;
+                inFocusedGroup && focusedAdvisoryId === r.adv.id;
               const band = SEVERITY_BAND(r.score);
               return (
                 <div
-                  key={`${r.pkg.package}::${r.adv.id}`}
+                  key={`row::${r.pkg.package}::${r.adv.id}`}
                   onClick={() => onSelect(r.pkg.package, r.adv.id)}
                   style={{
                     position: "absolute",
@@ -322,15 +478,27 @@ export function CveActiveList({
                     flexDirection: "column",
                     justifyContent: "center",
                     gap: 4,
-                    padding: "8px 14px",
+                    padding: "8px 14px 8px 28px",
                     borderBottom: `1px solid ${t.border}`,
                     background: focused ? t.rowSelected : "transparent",
                     cursor: "pointer",
                     borderLeft: focused
                       ? `3px solid ${t.accent}`
-                      : "3px solid transparent",
+                      : inFocusedGroup
+                        ? `3px solid ${t.border}`
+                        : "3px solid transparent",
                   }}
                 >
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: 14,
+                      top: 0,
+                      bottom: 0,
+                      width: 1,
+                      background: t.border,
+                    }}
+                  />
                   <div
                     style={{
                       display: "flex",
@@ -371,10 +539,11 @@ export function CveActiveList({
                         no score
                       </span>
                     )}
+                    <KindBadge theme={theme} kind={r.kind} />
                     <code
                       style={{
                         fontFamily: "JetBrains Mono, monospace",
-                        fontSize: 13,
+                        fontSize: 12,
                         fontWeight: 600,
                         color: t.fg1,
                         overflow: "hidden",
@@ -382,36 +551,9 @@ export function CveActiveList({
                         whiteSpace: "nowrap",
                       }}
                     >
-                      {r.pkg.package}
-                    </code>
-                    <KindBadge theme={theme} kind={r.kind} />
-                    <span
-                      style={{
-                        fontFamily: "JetBrains Mono, monospace",
-                        fontSize: 10.5,
-                        color: t.fg3,
-                        background: t.inset,
-                        padding: "1px 6px",
-                        borderRadius: 3,
-                      }}
-                      title={
-                        r.kind === "now"
-                          ? "Latest conda-forge version (affected)"
-                          : "Latest conda-forge version (not yet affected — newer version is)"
-                      }
-                    >
-                      {r.pkg.latest_version}
-                    </span>
-                    <code
-                      style={{
-                        fontFamily: "JetBrains Mono, monospace",
-                        fontSize: 11,
-                        color: t.fg2,
-                        marginLeft: "auto",
-                      }}
-                    >
                       {primaryId(r.adv)}
                     </code>
+                    <span style={{ flex: 1 }} />
                     {!r.reviewed && (
                       <span
                         style={{
@@ -448,6 +590,112 @@ export function CveActiveList({
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function GroupHeader({
+  theme,
+  group,
+  focused,
+  onClick,
+  style,
+}: {
+  theme: Theme;
+  group: Group;
+  focused: boolean;
+  onClick: () => void;
+  style: React.CSSProperties;
+}) {
+  const t = theme.t;
+  const band = SEVERITY_BAND(group.worst);
+  return (
+    <div
+      onClick={onClick}
+      style={{
+        ...style,
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        padding: "0 14px",
+        background: focused ? t.surface2 : t.inset,
+        borderTop: `1px solid ${t.border}`,
+        borderBottom: `1px solid ${t.border}`,
+        cursor: "pointer",
+        borderLeft: focused
+          ? `3px solid ${t.accent}`
+          : "3px solid transparent",
+      }}
+    >
+      <code
+        style={{
+          fontFamily: "JetBrains Mono, monospace",
+          fontSize: 12.5,
+          fontWeight: 700,
+          color: t.fg1,
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+          minWidth: 0,
+        }}
+      >
+        {group.pkg.package}
+      </code>
+      <span
+        style={{
+          fontFamily: "JetBrains Mono, monospace",
+          fontSize: 10.5,
+          color: t.fg3,
+        }}
+        title="Latest conda-forge version"
+      >
+        {group.pkg.latest_version}
+      </span>
+      <span style={{ flex: 1 }} />
+      {group.hasNow && (
+        <span
+          style={{
+            fontSize: 10,
+            fontWeight: 700,
+            padding: "1px 6px",
+            borderRadius: 3,
+            background: theme.dark ? "#2a1818" : "#ffe1d8",
+            color: theme.dark ? "#ff8e6a" : "#a8401b",
+            textTransform: "uppercase",
+            letterSpacing: ".02em",
+          }}
+        >
+          now
+        </span>
+      )}
+      <span
+        style={{
+          fontSize: 11,
+          color: t.fg2,
+          fontVariantNumeric: "tabular-nums",
+        }}
+      >
+        {group.rows.length} advisor{group.rows.length === 1 ? "y" : "ies"}
+      </span>
+      {band && (
+        <span
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            fontSize: 10.5,
+            fontWeight: 700,
+            padding: "1px 6px",
+            borderRadius: 3,
+            background: band.bg,
+            color: band.fg,
+            letterSpacing: ".02em",
+            textTransform: "uppercase",
+          }}
+          title="Worst CVSS score in this package"
+        >
+          {group.worst.toFixed(1)}
+        </span>
+      )}
     </div>
   );
 }
