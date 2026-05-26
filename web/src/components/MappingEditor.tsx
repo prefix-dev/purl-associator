@@ -16,6 +16,7 @@ import {
 } from "./DraftFields";
 import {
   ConfidenceBar,
+  CpeChip,
   Glyph,
   PurlChip,
   SourceTag,
@@ -519,6 +520,29 @@ export function MappingEditor({
             </Field>
           </div>
         </Section>
+
+        {p.cpes && p.cpes.length > 0 && (
+          <Section
+            title="CPE coordinates"
+            subtitle="Curated in manual.json. Drive NVD CVE matching for packages OSV doesn't cover."
+          >
+            <div
+              style={{
+                background: t.surface,
+                border: `1px solid ${t.border}`,
+                borderRadius: 12,
+                padding: 14,
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 8,
+              }}
+            >
+              {p.cpes.map((cpe) => (
+                <CpeChip key={cpe} cpe={cpe} theme={theme} />
+              ))}
+            </div>
+          </Section>
+        )}
 
         {p.status === "verified" && p.approved_by && !isEdited && (
           <Section title="Verification">

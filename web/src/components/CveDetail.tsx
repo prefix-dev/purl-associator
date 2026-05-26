@@ -30,7 +30,7 @@ import {
   handleDraftSubmit,
 } from "./DraftFields";
 import { cvssBaseMetrics } from "../data/cvssMetrics";
-import { Btn, Glyph, Theme } from "./Primitives";
+import { Btn, CpeChip, Glyph, Theme } from "./Primitives";
 
 type Props = {
   theme: Theme;
@@ -494,6 +494,32 @@ export function CveDetail({
             </code>
           ))}
         </div>
+        {pkg.cpes && pkg.cpes.length > 0 && (
+          <div
+            style={{
+              marginTop: 6,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              flexWrap: "wrap",
+            }}
+          >
+            <span
+              style={{
+                fontSize: 10,
+                fontWeight: 600,
+                color: t.fg3,
+                letterSpacing: ".04em",
+                textTransform: "uppercase",
+              }}
+            >
+              CPE
+            </span>
+            {pkg.cpes.map((cpe) => (
+              <CpeChip key={cpe} cpe={cpe} theme={theme} />
+            ))}
+          </div>
+        )}
       </div>
 
       <div style={{ maxWidth: 1000, margin: "0 auto", padding: "20px 24px 60px" }}>
@@ -826,6 +852,25 @@ function AdvisoryCard({
           )}
 
           <CvssBaseMetricsSection adv={adv} theme={theme} />
+
+          {(() => {
+            const nvd = adv.database_specific?.nvd;
+            const matched = nvd?.matched_via ?? [];
+            if (matched.length === 0) return null;
+            return (
+              <Section
+                title="Matched via NVD"
+                theme={theme}
+                hint="CPE coordinate(s) that surfaced this CVE from the NVD feeds."
+              >
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  {matched.map((cpe) => (
+                    <CpeChip key={cpe} cpe={cpe} theme={theme} />
+                  ))}
+                </div>
+              </Section>
+            );
+          })()}
 
           {osvRanges(adv).length > 0 && (
             <Section title="Upstream affected ranges" theme={theme}>

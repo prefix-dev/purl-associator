@@ -83,6 +83,7 @@ REVIEWED_MAPPING_FIELDS = (
     "namespace",
     "pkg_name",
     "alternative_purls",
+    "cpes",
     "unmapped",
     "note",
     "status",
