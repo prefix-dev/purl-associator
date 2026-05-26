@@ -321,6 +321,32 @@ class NvdIndex:
             return []
         return list(self.by_pp.get(head, []))
 
+    def products_matching(self, product: str) -> list[tuple[str, str, str]]:
+        """All ``(part, vendor, product)`` keys whose ``product`` segment
+        equals ``product`` exactly. Used by candidate discovery: given a
+        normalized conda name, return every CPE prefix NVD knows about
+        with that product, across all vendors."""
+        return [k for k in self.by_pp if k[2] == product]
+
+    def github_url_hit_rate(self, head: tuple[str, str, str], owner_repo: str) -> float:
+        """Fraction of CVEs at ``head`` whose ``references[].url`` contains
+        ``owner_repo`` (e.g. ``"openssl/openssl"``). Heuristic H1: a high
+        hit rate is strong evidence the CPE identifies the same upstream
+        as the conda package's GitHub PURL."""
+        cves = self.by_pp.get(head) or []
+        if not cves:
+            return 0.0
+        needle = owner_repo.lower()
+        hits = 0
+        for cve in cves:
+            refs = cve.get("references") or []
+            for r in refs:
+                url = r.get("url") if isinstance(r, dict) else None
+                if isinstance(url, str) and needle in url.lower():
+                    hits += 1
+                    break
+        return hits / len(cves)
+
     def total_cves(self) -> int:
         return len(self.by_id)
 
