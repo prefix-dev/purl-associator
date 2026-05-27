@@ -142,6 +142,16 @@ args = [
   { arg = "commit_every", default = "16" },
 ]
 
+[tasks.gh-cpe-discover]
+cmd = "gh workflow run cpe_discover.yml --ref {{ ref }} -f top='{{ top }}' -f only='{{ only }}' -f skip_vet='{{ skip_vet }}'"
+description = "Trigger the CPE discovery workflow"
+args = [
+  { arg = "ref", default = "main" },
+  { arg = "top", default = "100" },
+  { arg = "only", default = "" },
+  { arg = "skip_vet", default = "false" },
+]
+
 # Local app/Worker helpers.
 [tasks.install]
 depends-on = ["web-install", "worker-install"]
