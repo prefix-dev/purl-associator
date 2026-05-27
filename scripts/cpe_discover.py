@@ -3,7 +3,8 @@ that currently lack OSV-mappable PURLs.
 
 Pipeline (heuristics-only; no AI step):
 
-1. Read ``mappings/top_downloads.json`` and take the top ``--top`` names.
+1. Rank ``mappings/auto.json`` entries by ``download_count`` (already
+   populated by ``scripts.hydrate_downloads``) and take the top ``--top``.
 2. Skip names that are already mapped to an OSV ecosystem (PyPI, npm, etc.)
    or already carry a ``cpes`` list in ``manual.json`` or any contribution
    file. Remaining names are candidates for a CPE override.
@@ -60,7 +61,6 @@ app = typer.Typer(add_completion=False, help=__doc__)
 console = Console()
 
 ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_TOP_DOWNLOADS = ROOT / "mappings" / "top_downloads.json"
 DEFAULT_AUTO = ROOT / "mappings" / "auto.json"
 DEFAULT_MANUAL = ROOT / "mappings" / "manual.json"
 DEFAULT_CONTRIB_DIR = ROOT / "mappings" / "contributions"
@@ -149,15 +149,6 @@ def _token_re(token: str) -> re.Pattern[str]:
 # ---------- inputs ----------
 
 
-def _load_top_downloads(path: Path, top: int) -> list[dict]:
-    data = json.loads(path.read_text())
-    pkgs = data.get("packages") or []
-    # Already sorted by total_count desc when ``scripts.top_downloads`` writes
-    # the file, but resort defensively.
-    pkgs.sort(key=lambda r: -(r.get("total_count") or 0))
-    return pkgs[:top]
-
-
 def _load_existing_cpes(manual: Path, contrib_dir: Path) -> set[str]:
     """Names that already carry a ``cpes`` list in any reviewed source.
     These are skipped (we don't want to overwrite a curator's choice)."""
@@ -189,6 +180,7 @@ class AutoEntry:
     namespace: str | None
     pkg_name: str | None
     summary: str | None
+    download_count: int  # 0 when missing; used for top-N ranking
 
     @property
     def github_owner_repo(self) -> str | None:
@@ -217,6 +209,7 @@ def _overlay_purl(base: AutoEntry, override: dict) -> AutoEntry:
         namespace=override.get("namespace", base.namespace),
         pkg_name=override.get("pkg_name", base.pkg_name),
         summary=base.summary,  # human reviews never change the conda summary
+        download_count=base.download_count,
     )
 
 
@@ -232,21 +225,30 @@ def _load_effective_mappings(
     :func:`_load_existing_cpes`."""
     out: dict[str, AutoEntry] = {}
 
-    # Layer 1: auto.json
+    # Layer 1: auto.json — also carries the ``download_count`` we rank by.
     if auto.exists():
         data = json.loads(auto.read_text())
         for name, entry in (data.get("packages") or {}).items():
             if not isinstance(entry, dict):
                 continue
+            dc = entry.get("download_count")
             out[name] = AutoEntry(
                 purl=entry.get("purl"),
                 purl_type=entry.get("type"),
                 namespace=entry.get("namespace"),
                 pkg_name=entry.get("pkg_name"),
                 summary=entry.get("summary"),
+                download_count=dc if isinstance(dc, int) else 0,
             )
 
-    blank = AutoEntry(purl=None, purl_type=None, namespace=None, pkg_name=None, summary=None)
+    blank = AutoEntry(
+        purl=None,
+        purl_type=None,
+        namespace=None,
+        pkg_name=None,
+        summary=None,
+        download_count=0,
+    )
 
     # Layer 2: manual.json
     if manual.exists():
@@ -268,7 +270,11 @@ def _load_effective_mappings(
                 cdata = json.loads(f.read_text())
             except json.JSONDecodeError:
                 continue
-            ts = cdata.get("timestamp") if isinstance(cdata.get("timestamp"), str) else f.stem
+            ts = (
+                cdata.get("timestamp")
+                if isinstance(cdata.get("timestamp"), str)
+                else f.stem
+            )
             contribs.append((ts, f.name, cdata))
         contribs.sort(key=lambda t: (t[0], t[1]))
         for _ts, _fname, cdata in contribs:
@@ -606,9 +612,7 @@ def _process_candidate(
         # a (possibly wrong) auto-inferred PURL. Flag it so bucketing can
         # downgrade.
         matched_g = matched_guesses[head]
-        s.repo_fallback_only = bool(repo_fallback) and matched_g.issubset(
-            repo_fallback
-        )
+        s.repo_fallback_only = bool(repo_fallback) and matched_g.issubset(repo_fallback)
         _attach_h1(s, index, owner_repo)
         scored.append(s)
 
@@ -630,38 +634,44 @@ def _process_candidate(
 @app.command()
 def main(
     top: int = typer.Option(100, help="How many top-downloaded packages to consider"),
-    top_downloads: Path = typer.Option(DEFAULT_TOP_DOWNLOADS),
     auto: Path = typer.Option(DEFAULT_AUTO),
     manual: Path = typer.Option(DEFAULT_MANUAL),
     contributions: Path = typer.Option(DEFAULT_CONTRIB_DIR),
     out_dir: Path = typer.Option(DEFAULT_OUT_DIR),
     out: Path | None = typer.Option(
-        None, help="Explicit output path; default <out_dir>/<ISO>.json"
+        None, help="Explicit output path; default <out_dir>/latest.json"
     ),
     nvd_cache: Path = typer.Option(DEFAULT_NVD_CACHE),
     force_nvd: bool = typer.Option(False),
     nvd_max_age_hours: float = typer.Option(2.0),
 ) -> None:
     """Discover CPE candidates for top-downloaded conda-forge packages."""
-    download_rows = _load_top_downloads(top_downloads, top)
     auto_data = _load_effective_mappings(auto, manual, contributions)
     already_have_cpes = _load_existing_cpes(manual, contributions)
 
+    # Rank packages by ``download_count`` (already populated on every
+    # auto.json entry by ``scripts.hydrate_downloads``). Tie-break by name
+    # for deterministic output when many entries share count == 0.
+    ranked = sorted(
+        auto_data.items(),
+        key=lambda kv: (-kv[1].download_count, kv[0]),
+    )
+
     candidates: list[tuple[str, int, AutoEntry | None]] = []
-    for row in download_rows:
-        name = row.get("name")
-        if not isinstance(name, str):
-            continue
+    considered = 0
+    for name, entry in ranked:
+        if considered >= top:
+            break
+        considered += 1
         if name in already_have_cpes:
             continue
-        entry = auto_data.get(name)
         if not _is_cpe_candidate(name, entry):
             continue
-        candidates.append((name, row.get("total_count") or 0, entry))
+        candidates.append((name, entry.download_count, entry))
 
     console.log(
         f"Top {top}: {len(candidates)} CPE candidates after filtering "
-        f"({len(download_rows) - len(candidates)} skipped — OSV-mapped, "
+        f"({considered - len(candidates)} skipped — OSV-mapped, "
         f"already-CPE'd, or conda-infra)"
     )
 
