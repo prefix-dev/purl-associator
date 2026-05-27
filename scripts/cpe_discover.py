@@ -720,9 +720,12 @@ def main(
     }
 
     if out is None:
+        # Rolling snapshot: overwrite the same file on each run so git
+        # tracks evolution via that file's history. The full audit is
+        # always reproducible from (NVD state + mappings state), so
+        # there's no information lost compared to timestamped files.
         out_dir.mkdir(parents=True, exist_ok=True)
-        stamp = generated_at.replace(":", "-")
-        out = out_dir / f"{stamp}.json"
+        out = out_dir / "latest.json"
     out = out.resolve()
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(payload, indent=2) + "\n")
