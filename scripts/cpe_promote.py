@@ -36,6 +36,7 @@ console = Console()
 
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_CANDIDATES_DIR = ROOT / "mappings" / "cpe_candidates"
+DEFAULT_VET_DIR = ROOT / "mappings" / "cpe_vet"
 DEFAULT_CONTRIB_DIR = ROOT / "mappings" / "contributions"
 DEFAULT_AUTHOR = "cpe-pipeline"
 DEFAULT_AUTHOR_NAME = "Automated CPE discovery pipeline"
@@ -50,6 +51,35 @@ def _latest_candidates_file(directory: Path) -> Path | None:
         return None
     files = sorted(directory.glob("*.json"))
     return files[-1] if files else None
+
+
+def _latest_vet_file(directory: Path) -> Path | None:
+    """Return the most recently named vet file (``cpe_vet/<ts>--<id>.json``)."""
+    if not directory.exists():
+        return None
+    files = sorted(directory.glob("*.json"))
+    return files[-1] if files else None
+
+
+def _collect_vet_confident(payload: dict) -> dict[str, list[str]]:
+    """Return ``{conda_name: [cpe, ...]}`` for AI verdicts marked ``confident``.
+
+    ``uncertain`` and ``none`` verdicts are intentionally dropped here — the
+    promote step ships only what both the heuristic accept bucket OR a
+    confident AI verdict endorsed. Uncertain calls stay in the vet file
+    for a human to read and lift manually if desired."""
+    out: dict[str, list[str]] = {}
+    for v in payload.get("verdicts") or []:
+        if v.get("verdict") != "confident":
+            continue
+        name = v.get("conda_name")
+        cpes = v.get("selected_cpes") or []
+        if not isinstance(name, str) or not cpes:
+            continue
+        valid = [c for c in cpes if isinstance(c, str) and c.startswith("cpe:2.3:")]
+        if valid:
+            out[name] = valid
+    return out
 
 
 def _collect_accepts(payload: dict) -> dict[str, list[str]]:
@@ -74,10 +104,30 @@ def _collect_accepts(payload: dict) -> dict[str, list[str]]:
     return out
 
 
+def _merge_accepts_with_vet(
+    accepts: dict[str, list[str]], vet_confident: dict[str, list[str]]
+) -> dict[str, list[str]]:
+    """Union the heuristic accept bucket with confident AI verdicts.
+
+    When the same conda name appears in both (rare — AI vetting only ships
+    candidates from the ambiguous bucket, which by definition didn't reach
+    accept), CPEs are unioned preserving order: heuristic accepts first,
+    then any AI-only additions."""
+    merged: dict[str, list[str]] = {name: list(cpes) for name, cpes in accepts.items()}
+    for name, cpes in vet_confident.items():
+        existing = merged.setdefault(name, [])
+        seen = set(existing)
+        for c in cpes:
+            if c not in seen:
+                existing.append(c)
+                seen.add(c)
+    return merged
+
+
 def _build_contribution(
     *,
     accepts: dict[str, list[str]],
-    source_file: Path,
+    source_files: list[Path],
     author: str,
     author_name: str,
     timestamp: str,
@@ -88,13 +138,14 @@ def _build_contribution(
     reviewed fields are left to earlier layers. ``merge_mappings`` will
     union this contribution's ``cpes`` over whatever was previously
     merged, leaving everything else untouched."""
+    sources = ", ".join(s.name for s in source_files)
     return {
         "schema_version": 1,
         "title": "Add CPE mappings (automated discovery)",
         "author": author,
         "author_name": author_name,
         "timestamp": timestamp,
-        "source": f"scripts.cpe_promote from {source_file.name}",
+        "source": f"scripts.cpe_promote from {sources}",
         "packages": {name: {"cpes": cpes} for name, cpes in sorted(accepts.items())},
     }
 
@@ -113,6 +164,18 @@ def main(
         "--in",
         help="Candidates file to promote. Defaults to the newest file in "
         f"{DEFAULT_CANDIDATES_DIR.relative_to(ROOT)}/",
+    ),
+    vet_file: Path | None = typer.Option(
+        None,
+        "--vet-file",
+        help="AI vet file to merge in. Defaults to the newest file in "
+        f"{DEFAULT_VET_DIR.relative_to(ROOT)}/ if any exist; pass an empty "
+        "path or use --no-vet to skip.",
+    ),
+    no_vet: bool = typer.Option(
+        False,
+        "--no-vet",
+        help="Do not merge any AI vet verdicts even if a vet file exists",
     ),
     out: Path | None = typer.Option(
         None,
@@ -142,25 +205,48 @@ def main(
 
     payload = json.loads(candidates_file.read_text())
     accepts = _collect_accepts(payload)
+
+    # Layer in AI vet verdicts unless suppressed.
+    vet_used: Path | None = None
+    vet_confident: dict[str, list[str]] = {}
+    if not no_vet:
+        vet_used = vet_file or _latest_vet_file(DEFAULT_VET_DIR)
+        if vet_used is not None and vet_used.exists():
+            vet_payload = json.loads(vet_used.read_text())
+            vet_confident = _collect_vet_confident(vet_payload)
+            if vet_confident:
+                console.log(
+                    f"Merging {len(vet_confident)} confident AI verdict(s) "
+                    f"from {vet_used.relative_to(ROOT)}"
+                )
+
+    accepts = _merge_accepts_with_vet(accepts, vet_confident)
+
     if not accepts:
         console.log(
-            f"[yellow]No accept-bucket candidates in {candidates_file.name}; "
-            "nothing to promote.[/]"
+            f"[yellow]No accepts to promote in {candidates_file.name}; "
+            "nothing to do.[/]"
         )
         return
 
     cpe_count = sum(len(v) for v in accepts.values())
+    sources_log = candidates_file.relative_to(ROOT)
+    if vet_used is not None and vet_confident:
+        sources_log = f"{sources_log} + {vet_used.relative_to(ROOT)}"
     console.log(
         f"Promoting [bold]{len(accepts)}[/] packages "
-        f"({cpe_count} CPE entries) from {candidates_file.relative_to(ROOT)}"
+        f"({cpe_count} CPE entries) from {sources_log}"
     )
 
     timestamp = (
         datetime.now(UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z")
     )
+    source_files = [candidates_file]
+    if vet_used is not None and vet_confident:
+        source_files.append(vet_used)
     contribution = _build_contribution(
         accepts=accepts,
-        source_file=candidates_file,
+        source_files=source_files,
         author=author,
         author_name=author_name,
         timestamp=timestamp,
