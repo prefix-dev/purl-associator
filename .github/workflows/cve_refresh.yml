@@ -70,6 +70,18 @@ jobs:
           fi
           pixi run python -m scripts.cve_match "${ARGS[@]}"
 
+      - name: Match NVD CVEs for CPE-mapped packages
+        # Runs AFTER cve_match because cve_match's --clean-stale would prune
+        # CPE-only CVE files if it ran second. CPE-mapped packages
+        # (manual.json entries with a ``cpes`` list) don't carry an
+        # OSV-indexed PURL, so cve_match never sees them; nvd_prototype
+        # fills in those gaps from NVD by CPE.
+        run: |
+          set -euo pipefail
+          ARGS=()
+          if [ -n "${{ inputs.only }}" ]; then ARGS+=(--only "${{ inputs.only }}"); fi
+          pixi run python -m scripts.nvd_prototype "${ARGS[@]}"
+
       - name: Merge CVEs + reviewer contributions for the SPA
         run: pixi run python -m scripts.merge_cves
 

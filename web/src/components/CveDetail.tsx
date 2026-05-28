@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type {
   Advisory,
   CvePackage,
@@ -15,21 +15,31 @@ import {
   bestSeverity,
   cveIds,
   editFromVex,
+  isActiveOnLatest,
   isEditNonEmpty,
+  isFutureAffected,
   osvRanges,
   osvUrl,
   primaryId,
 } from "../data/cves";
-import { Btn, Glyph, Theme } from "./Primitives";
+import {
+  DraftSelect,
+  DraftTextArea,
+  DraftTextInput,
+  draftClick,
+  handleDraftSubmit,
+} from "./DraftFields";
+import { cvssBaseMetrics } from "../data/cvssMetrics";
+import { Btn, CpeChip, Glyph, Theme } from "./Primitives";
 
 type Props = {
   theme: Theme;
   pkg: CvePackage | null;
   edits: Record<string, ReviewEdit>;
+  mode: "triage" | "browse";
+  focusedAdvisoryId: string | null;
   onEdit: (advisoryId: string, next: ReviewEdit) => void;
   onResetEdit: (advisoryId: string) => void;
-  isLoggedIn: boolean;
-  onRequestLogin: () => void;
 };
 
 function severityLevel(v: number): {
@@ -69,6 +79,53 @@ function SeverityPill({ adv }: { adv: Advisory }) {
     >
       {lvl.label}
     </span>
+  );
+}
+
+function CvssBaseMetricsSection({ adv, theme }: { adv: Advisory; theme: Theme }) {
+  const [showNone, setShowNone] = useState(false);
+  const metrics = cvssBaseMetrics(bestSeverity(adv));
+  if (!metrics) return null;
+
+  const visible = metrics.items.filter((item) => item.value !== "None");
+  const none = metrics.items.filter((item) => item.value === "None");
+  const shown = showNone ? metrics.items : visible;
+  const rows = shown.map((item) => ({
+    key: item.metricCode,
+    label: item.metric,
+    value: item.value,
+  }));
+  const hiddenNone = none.length > 0 && !showNone;
+
+  return (
+    <Section
+      title="CVSS base metrics"
+      theme={theme}
+      hint={metrics.versionLabel}
+      hintHref={metrics.metricsUrl}
+      action={
+        none.length > 0 ? (
+          <button
+            onClick={() => setShowNone(!showNone)}
+            style={{
+              background: "transparent",
+              border: 0,
+              color: theme.t.link,
+              padding: 0,
+              fontSize: 11,
+              fontFamily: "Inter, sans-serif",
+              cursor: "pointer",
+            }}
+          >
+            {hiddenNone
+              ? `Show ${none.length} none metric${none.length === 1 ? "" : "s"}`
+              : `Hide none metric${none.length === 1 ? "" : "s"}`}
+          </button>
+        ) : undefined
+      }
+    >
+      <KeyValueTable theme={theme} rows={rows} />
+    </Section>
   );
 }
 
@@ -247,10 +304,10 @@ export function CveDetail({
   theme,
   pkg,
   edits,
+  mode,
+  focusedAdvisoryId,
   onEdit,
   onResetEdit,
-  isLoggedIn,
-  onRequestLogin,
 }: Props) {
   const t = theme.t;
 
@@ -261,7 +318,7 @@ export function CveDetail({
   // version overrides / notes would re-rank the row the user is editing
   // and yank it out from under their cursor. Re-sorting happens naturally
   // when ``pkg`` changes (user picks another package, or data reloads).
-  const advisories = useMemo(
+  const sortedAdvisories = useMemo(
     () =>
       pkg
         ? [...pkg.advisories].sort((a, b) => {
@@ -270,20 +327,72 @@ export function CveDetail({
             const rb = advisoryVex(b)?.status;
             if (!ra && rb) return -1;
             if (ra && !rb) return 1;
-            const sevA = bestSeverity(a)?.score;
-            const sevB = bestSeverity(b)?.score;
-            const sa = sevA
-              ? parseFloat(sevA.match(/(\d+\.\d+)/)?.[1] || "0")
-              : 0;
-            const sb = sevB
-              ? parseFloat(sevB.match(/(\d+\.\d+)/)?.[1] || "0")
-              : 0;
+            const sa = bestSeverity(a)?.score_num ?? 0;
+            const sb = bestSeverity(b)?.score_num ?? 0;
             if (sa !== sb) return sb - sa;
             return (b.modified || "").localeCompare(a.modified || "");
           })
         : [],
     [pkg],
   );
+
+  // In triage mode, split the package's advisories into the ones that are
+  // actually live (active on latest, or affecting a version we haven't
+  // shipped) and the rest — historical / fixed entries — which we tuck
+  // behind a disclosure so they don't drown out the actionable set.
+  const { activeAdvisories, inactiveAdvisories } = useMemo(() => {
+    if (!pkg || mode !== "triage") {
+      return {
+        activeAdvisories: sortedAdvisories,
+        inactiveAdvisories: [] as typeof sortedAdvisories,
+      };
+    }
+    const active: typeof sortedAdvisories = [];
+    const inactive: typeof sortedAdvisories = [];
+    for (const adv of sortedAdvisories) {
+      if (isActiveOnLatest(pkg, adv) || isFutureAffected(pkg, adv)) {
+        active.push(adv);
+      } else {
+        inactive.push(adv);
+      }
+    }
+    return { activeAdvisories: active, inactiveAdvisories: inactive };
+  }, [pkg, mode, sortedAdvisories]);
+
+  // In triage mode, pull the focused advisory to the top so the user always
+  // sees the card they just clicked — even if it isn't the highest-severity
+  // one in the package. Browse mode keeps the natural sort.
+  const advisories = useMemo(() => {
+    const base = mode === "triage" ? activeAdvisories : sortedAdvisories;
+    if (mode !== "triage" || !focusedAdvisoryId) return base;
+    const idx = base.findIndex((a) => a.id === focusedAdvisoryId);
+    if (idx <= 0) return base;
+    return [base[idx], ...base.slice(0, idx), ...base.slice(idx + 1)];
+  }, [mode, activeAdvisories, sortedAdvisories, focusedAdvisoryId]);
+
+  // Effective focus: prefer the explicit selection if it's in the visible
+  // (active) set, otherwise fall back to the first active advisory so the
+  // detail pane always opens with *something* expanded.
+  const effectiveFocusId = useMemo(() => {
+    if (mode !== "triage") return null;
+    if (focusedAdvisoryId && advisories.some((a) => a.id === focusedAdvisoryId))
+      return focusedAdvisoryId;
+    return advisories[0]?.id ?? null;
+  }, [mode, focusedAdvisoryId, advisories]);
+
+  const [showInactive, setShowInactive] = useState(false);
+  // Reset the disclosure when navigating to a different package.
+  useEffect(() => {
+    setShowInactive(false);
+  }, [pkg?.package, mode]);
+
+  // Reset the detail-pane scroll whenever the user picks a different
+  // advisory or package — the focused card is sorted to the top, so we
+  // want the user back at the top to see it.
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+  }, [pkg?.package, focusedAdvisoryId, mode]);
 
   if (!pkg) {
     return (
@@ -319,7 +428,10 @@ export function CveDetail({
   }
 
   return (
-    <div style={{ flex: 1, overflowY: "auto", background: t.page }}>
+    <div
+      ref={scrollRef}
+      style={{ flex: 1, overflowY: "auto", background: t.page }}
+    >
       <div
         style={{
           position: "sticky",
@@ -382,10 +494,53 @@ export function CveDetail({
             </code>
           ))}
         </div>
+        {pkg.cpes && pkg.cpes.length > 0 && (
+          <div
+            style={{
+              marginTop: 6,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              flexWrap: "wrap",
+            }}
+          >
+            <span
+              style={{
+                fontSize: 10,
+                fontWeight: 600,
+                color: t.fg3,
+                letterSpacing: ".04em",
+                textTransform: "uppercase",
+              }}
+            >
+              CPE
+            </span>
+            {pkg.cpes.map((cpe) => (
+              <CpeChip key={cpe} cpe={cpe} theme={theme} />
+            ))}
+          </div>
+        )}
       </div>
 
       <div style={{ maxWidth: 1000, margin: "0 auto", padding: "20px 24px 60px" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {advisories.length === 0 && mode === "triage" && (
+            <div
+              style={{
+                padding: "30px 20px",
+                textAlign: "center",
+                color: t.fg3,
+                fontSize: 13,
+                background: t.surface,
+                border: `1px solid ${t.border}`,
+                borderRadius: 12,
+              }}
+            >
+              Nothing active for this package on the latest conda-forge build.
+              {inactiveAdvisories.length > 0 &&
+                ` ${inactiveAdvisories.length} historical advisor${inactiveAdvisories.length === 1 ? "y" : "ies"} below.`}
+            </div>
+          )}
           {advisories.map((adv) => (
             <AdvisoryCard
               key={adv.id}
@@ -393,12 +548,64 @@ export function CveDetail({
               pkgName={pkg.package}
               adv={adv}
               edit={edits[`${pkg.package}::${adv.id}`]}
+              defaultExpanded={
+                mode === "triage" ? adv.id === effectiveFocusId : true
+              }
               onEdit={(next) => onEdit(adv.id, next)}
               onReset={() => onResetEdit(adv.id)}
-              isLoggedIn={isLoggedIn}
-              onRequestLogin={onRequestLogin}
             />
           ))}
+
+          {mode === "triage" && inactiveAdvisories.length > 0 && (
+            <>
+              <button
+                onClick={() => setShowInactive(!showInactive)}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 6,
+                  alignSelf: "center",
+                  marginTop: 6,
+                  padding: "6px 12px",
+                  background: t.surface,
+                  border: `1px solid ${t.border}`,
+                  borderRadius: 999,
+                  color: t.fg2,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  fontFamily: "Inter, sans-serif",
+                }}
+              >
+                <span
+                  style={{
+                    transform: showInactive ? "rotate(180deg)" : "none",
+                    transition: "transform 150ms",
+                    display: "inline-flex",
+                  }}
+                >
+                  <Glyph name="chev" size={12} />
+                </span>
+                {showInactive ? "Hide" : "Show"} {inactiveAdvisories.length}{" "}
+                inactive advisor
+                {inactiveAdvisories.length === 1 ? "y" : "ies"}
+              </button>
+              {showInactive &&
+                inactiveAdvisories.map((adv) => (
+                  <AdvisoryCard
+                    key={adv.id}
+                    theme={theme}
+                    pkgName={pkg.package}
+                    adv={adv}
+                    edit={edits[`${pkg.package}::${adv.id}`]}
+                    defaultExpanded={false}
+                    onEdit={(next) => onEdit(adv.id, next)}
+                    onReset={() => onResetEdit(adv.id)}
+                  />
+                ))}
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -410,22 +617,25 @@ function AdvisoryCard({
   pkgName: _pkgName,
   adv,
   edit,
+  defaultExpanded = true,
   onEdit,
   onReset,
-  isLoggedIn,
-  onRequestLogin,
 }: {
   theme: Theme;
   pkgName: string;
   adv: Advisory;
   edit: ReviewEdit | undefined;
+  defaultExpanded?: boolean;
   onEdit: (next: ReviewEdit) => void;
   onReset: () => void;
-  isLoggedIn: boolean;
-  onRequestLogin: () => void;
 }) {
   const t = theme.t;
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(defaultExpanded);
+  // Re-sync when the caller changes focus to a different advisory in this
+  // package — the previously-focused card collapses, the new one opens.
+  useEffect(() => {
+    setExpanded(defaultExpanded);
+  }, [defaultExpanded]);
 
   const baseVex: Vex | undefined = advisoryVex(adv);
   const eff: ReviewEdit = edit ?? editFromVex(baseVex);
@@ -433,14 +643,10 @@ function AdvisoryCard({
   const status: VexStatus | undefined = edit?.status ?? baseVex?.status;
 
   function setField<K extends keyof ReviewEdit>(key: K, value: ReviewEdit[K]): void {
-    if (!isLoggedIn && !edit) {
-      onRequestLogin();
-    }
     onEdit({ ...eff, [key]: value });
   }
 
   function toggleNotAffected(version: string): void {
-    if (!isLoggedIn && !edit) onRequestLogin();
     const cur = new Set(eff.version_overrides.not_affected);
     const aff = new Set(eff.version_overrides.affected);
     if (cur.has(version)) cur.delete(version);
@@ -458,7 +664,6 @@ function AdvisoryCard({
   }
 
   function toggleManuallyAffected(version: string): void {
-    if (!isLoggedIn && !edit) onRequestLogin();
     const cur = new Set(eff.version_overrides.affected);
     const not = new Set(eff.version_overrides.not_affected);
     if (cur.has(version)) cur.delete(version);
@@ -646,6 +851,27 @@ function AdvisoryCard({
             </details>
           )}
 
+          <CvssBaseMetricsSection adv={adv} theme={theme} />
+
+          {(() => {
+            const nvd = adv.database_specific?.nvd;
+            const matched = nvd?.matched_via ?? [];
+            if (matched.length === 0) return null;
+            return (
+              <Section
+                title="Matched via NVD"
+                theme={theme}
+                hint="CPE coordinate(s) that surfaced this CVE from the NVD feeds."
+              >
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  {matched.map((cpe) => (
+                    <CpeChip key={cpe} cpe={cpe} theme={theme} />
+                  ))}
+                </div>
+              </Section>
+            );
+          })()}
+
           {osvRanges(adv).length > 0 && (
             <Section title="Upstream affected ranges" theme={theme}>
               <div
@@ -709,7 +935,7 @@ function AdvisoryCard({
                     theme={theme}
                     version={v}
                     state={removed ? "removed" : "affected"}
-                    onClick={() => toggleNotAffected(v)}
+                    onClick={draftClick(() => toggleNotAffected(v))}
                     title={
                       removed
                         ? `Override: not affected. Click to undo.`
@@ -726,7 +952,7 @@ function AdvisoryCard({
                     theme={theme}
                     version={v}
                     state="added"
-                    onClick={() => toggleManuallyAffected(v)}
+                    onClick={draftClick(() => toggleManuallyAffected(v))}
                     title="Manually added. Click to remove."
                   />
                 ))}
@@ -744,7 +970,7 @@ function AdvisoryCard({
               {VEX_STATUSES.map((s) => (
                 <button
                   key={s.id}
-                  onClick={() => setField("status", s.id)}
+                  onClick={draftClick(() => setField("status", s.id))}
                   style={{
                     background: eff.status === s.id ? t.accent : t.surface2,
                     color: eff.status === s.id ? t.accentFg : t.fg1,
@@ -769,13 +995,10 @@ function AdvisoryCard({
                     — required for a “not affected” claim
                   </span>
                 </div>
-                <select
+                <DraftSelect
                   value={eff.justification}
-                  onChange={(e) =>
-                    setField(
-                      "justification",
-                      e.target.value as VexJustification,
-                    )
+                  onDraftChange={(justification) =>
+                    setField("justification", justification as VexJustification)
                   }
                   style={{
                     width: "100%",
@@ -794,47 +1017,26 @@ function AdvisoryCard({
                       {j.label}
                     </option>
                   ))}
-                </select>
+                </DraftSelect>
               </div>
             )}
             {eff.status === "affected" && (
-              <input
+              <DraftTextInput
                 value={eff.action_statement}
-                onChange={(e) => setField("action_statement", e.target.value)}
+                onDraftChange={(action) => setField("action_statement", action)}
                 placeholder="Action statement — e.g. 'Upgrade to requests ≥ 2.32.4.'"
-                style={{
-                  width: "100%",
-                  background: t.surface2,
-                  color: t.fg1,
-                  border: `1px solid ${t.border}`,
-                  borderRadius: 8,
-                  padding: "8px 10px",
-                  fontSize: 13,
-                  fontFamily: "Inter, sans-serif",
-                  outline: "none",
-                  marginBottom: 10,
-                }}
+                theme={theme}
+                style={{ background: t.surface2, marginBottom: 10 }}
               />
             )}
-            <textarea
+            <DraftTextArea
               value={eff.notes}
-              onChange={(e) => setField("notes", e.target.value)}
+              onDraftChange={(notes) => setField("notes", notes)}
               placeholder={
                 "Optional status note. e.g. 'Conda patches CVE-XXXX in build 1.21.5-py39_2.'"
               }
-              style={{
-                width: "100%",
-                background: t.surface2,
-                color: t.fg1,
-                border: `1px solid ${t.border}`,
-                borderRadius: 8,
-                padding: "8px 10px",
-                fontSize: 13,
-                fontFamily: "Inter, sans-serif",
-                outline: "none",
-                minHeight: 56,
-                resize: "vertical",
-              }}
+              theme={theme}
+              style={{ background: t.surface2, minHeight: 56 }}
             />
             {baseVex?.author && (
               <div
@@ -904,14 +1106,56 @@ function AdvisoryCard({
   );
 }
 
+function KeyValueTable({
+  theme,
+  rows,
+}: {
+  theme: Theme;
+  rows: { key: string; label: React.ReactNode; value: React.ReactNode }[];
+}) {
+  const t = theme.t;
+  return (
+    <div
+      style={{
+        border: `1px solid ${t.border}`,
+        borderRadius: 8,
+        overflow: "hidden",
+        background: t.surface2,
+      }}
+    >
+      {rows.map((row, index) => (
+        <div
+          key={row.key}
+          style={{
+            display: "grid",
+            gridTemplateColumns: "minmax(180px, 1fr) minmax(140px, 1fr)",
+            gap: 12,
+            alignItems: "center",
+            padding: "7px 10px",
+            borderTop: index === 0 ? 0 : `1px solid ${t.border}`,
+            fontSize: 12,
+          }}
+        >
+          <div style={{ color: t.fg2 }}>{row.label}</div>
+          <div style={{ color: t.fg1, fontWeight: 600 }}>{row.value}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function Section({
   title,
   hint,
+  hintHref,
+  action,
   theme,
   children,
 }: {
   title: string;
   hint?: string;
+  hintHref?: string;
+  action?: React.ReactNode;
   theme: Theme;
   children: React.ReactNode;
 }) {
@@ -920,29 +1164,57 @@ function Section({
     <div>
       <div
         style={{
-          fontSize: 11,
-          fontWeight: 600,
-          color: t.fg2,
-          letterSpacing: ".04em",
-          textTransform: "uppercase",
+          display: "flex",
+          alignItems: "baseline",
+          gap: 8,
           marginBottom: 6,
         }}
       >
-        {title}
-        {hint && (
-          <span
-            style={{
-              fontWeight: 400,
-              textTransform: "none",
-              letterSpacing: 0,
-              fontSize: 11,
-              color: t.fg3,
-              marginLeft: 8,
-            }}
-          >
-            {hint}
-          </span>
-        )}
+        <div
+          style={{
+            fontSize: 11,
+            fontWeight: 600,
+            color: t.fg2,
+            letterSpacing: ".04em",
+            textTransform: "uppercase",
+          }}
+        >
+          {title}
+          {hint &&
+            (hintHref ? (
+              <a
+                href={hintHref}
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  fontWeight: 400,
+                  textTransform: "none",
+                  letterSpacing: 0,
+                  fontSize: 11,
+                  color: t.link,
+                  marginLeft: 8,
+                  textDecoration: "none",
+                }}
+                title="Open CVSS base metrics documentation"
+              >
+                {hint}
+              </a>
+            ) : (
+              <span
+                style={{
+                  fontWeight: 400,
+                  textTransform: "none",
+                  letterSpacing: 0,
+                  fontSize: 11,
+                  color: t.fg3,
+                  marginLeft: 8,
+                }}
+              >
+                {hint}
+              </span>
+            ))}
+        </div>
+        {action && <div style={{ marginLeft: "auto" }}>{action}</div>}
       </div>
       {children}
     </div>
@@ -960,29 +1232,29 @@ function AddVersionInline({
   const [draft, setDraft] = useState("");
   return (
     <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        const v = draft.trim();
-        if (v) {
-          onAdd(v);
-          setDraft("");
-        }
-      }}
+      onSubmit={(e) =>
+        handleDraftSubmit(e, () => {
+          const v = draft.trim();
+          if (v) {
+            onAdd(v);
+            setDraft("");
+          }
+        })
+      }
       style={{ display: "inline-flex", alignItems: "center", gap: 4 }}
     >
-      <input
+      <DraftTextInput
         value={draft}
-        onChange={(e) => setDraft(e.target.value)}
+        onDraftChange={setDraft}
         placeholder="+ add version"
-        style={{
+        theme={theme}
+        mono
+        style={{ 
           background: "transparent",
-          color: t.fg1,
           border: `1px dashed ${t.border}`,
           borderRadius: 4,
           padding: "2px 7px",
           fontSize: 11,
-          fontFamily: "JetBrains Mono, monospace",
-          outline: "none",
           width: 110,
         }}
       />

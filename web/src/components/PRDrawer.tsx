@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { repoFullName } from "../config";
+import { purlFromAlternative, purlsFromAlternatives } from "../data/purlAlternatives";
 import { submitEditsAsPR } from "../github/api";
 import type { Edit, GitHubUser, PackageEntry } from "../data/types";
 import {
@@ -69,9 +70,9 @@ export function PRDrawer({
       // kept as a secondary reference when the merged state is a manual
       // override.
       const beforePrimary = pkg.purl ?? null;
-      const beforeAlts = (pkg.alternative_purls ?? pkg.auto?.alternative_purls ?? [])
-        .map((a) => a.purl)
-        .filter((p) => p !== beforePrimary);
+      const beforeAlts = purlsFromAlternatives(
+        pkg.alternative_purls ?? pkg.auto?.alternative_purls,
+      ).filter((p) => p !== beforePrimary);
       const beforeSet = new Set<string>();
       if (beforePrimary) beforeSet.add(beforePrimary);
       for (const a of beforeAlts) beforeSet.add(a);
@@ -297,15 +298,15 @@ export function PRDrawer({
                     const pkg = packages.find((p) => p.name === id);
                     if (!pkg) return null;
 
-                    // "Before" PURLs: whatever the package currently presents
-                    // — the auto guess plus its alternatives.
+                    // "Before" PURLs: whatever the package currently presents.
                     const beforePurls: string[] = [];
-                    const beforePrimary = pkg.auto?.purl ?? pkg.purl;
+                    const beforePrimary = pkg.purl ?? pkg.auto?.purl;
                     if (beforePrimary) beforePurls.push(beforePrimary);
-                    for (const alt of pkg.auto?.alternative_purls ??
-                      pkg.alternative_purls ??
+                    for (const alt of pkg.alternative_purls ??
+                      pkg.auto?.alternative_purls ??
                       []) {
-                      if (alt.purl !== beforePrimary) beforePurls.push(alt.purl);
+                      const purl = purlFromAlternative(alt);
+                      if (purl !== beforePrimary) beforePurls.push(purl);
                     }
 
                     const afterPurls = e.unmapped

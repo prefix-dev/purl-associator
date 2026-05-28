@@ -46,8 +46,10 @@ merge = "python -m scripts.merge_mappings"
 download-counts-refresh = { cmd = "python -m scripts.hydrate_downloads --concurrency {{ concurrency }} --channel {{ channel }} && python -m scripts.merge_mappings", description = "Refresh prefix.dev download counts locally and rebuild the frontend mappings payload", args = [{ arg = "concurrency", default = "16" }, { arg = "channel", default = "conda-forge" }] }
 ai-vet = "python -m scripts.ai_vet"
 osv-fetch = "python -m scripts.osv_fetch"
+nvd-fetch = "python -m scripts.nvd_fetch"
 cve-match = "python -m scripts.cve_match"
 sbom-extract = "python -m scripts.sbom_extract"
+nvd-cve-match = "python -m scripts.nvd_prototype"
 lint = { cmd = "ruff check scripts && ruff format --check scripts", env = {} }
 fmt = "ruff format scripts"
 
@@ -197,4 +199,3 @@ cmd = "npm run typecheck"
 cwd = "worker"
 depends-on = ["worker-install"]
 description = "Typecheck the Cloudflare Worker"
-
