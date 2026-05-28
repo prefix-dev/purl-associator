@@ -315,14 +315,35 @@ async def _vet_chunk(
         console.log(f"[red]Could not parse response for chunk of {len(chunk)}[/]")
         return []
 
-    if len(verdicts) != len(chunk):
+    # Index verdicts by the echoed package_name so a reordered or partial
+    # response still gets matched to the right conda package (positional zip
+    # would silently mismatch when Haiku drops a middle package).
+    by_name: dict[str, dict] = {}
+    unexpected: list[str] = []
+    sent_names = {pkg.conda_name for pkg in chunk}
+    for v in verdicts:
+        name = v.get("package_name")
+        if isinstance(name, str) and name in sent_names and name not in by_name:
+            by_name[name] = v
+        elif isinstance(name, str):
+            unexpected.append(name)
+
+    missing = [pkg.conda_name for pkg in chunk if pkg.conda_name not in by_name]
+    if missing:
         console.log(
-            f"[yellow]chunk size mismatch: sent {len(chunk)}, got {len(verdicts)} — matching by position[/]"
+            f"[yellow]chunk: {len(missing)} package(s) missing from response: {missing}[/]"
+        )
+    if unexpected:
+        console.log(
+            f"[yellow]chunk: ignoring {len(unexpected)} unexpected/duplicate package_name(s) in response: {unexpected}[/]"
         )
 
     now = datetime.now(UTC).isoformat(timespec="seconds")
     out: list[VetVerdict] = []
-    for pkg, v in zip(chunk, verdicts, strict=False):
+    for pkg in chunk:
+        v = by_name.get(pkg.conda_name)
+        if v is None:
+            continue
         candidate_cpes = [c["cpe"] for c in pkg.candidates]
         selected = _validate_selected(
             v.get("selected_cpes") or [], candidate_cpes, pkg.conda_name

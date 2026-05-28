@@ -307,6 +307,10 @@ class NvdIndex:
     feeds: list[FeedFile]
     by_pp: dict[tuple[str, str, str], list[dict]] = field(default_factory=dict)
     by_id: dict[str, dict] = field(default_factory=dict)
+    # Secondary index: product → list of (part, vendor, product) heads with
+    # that exact product segment. Built once by ``_build_index`` so
+    # ``products_matching`` is O(1) lookup instead of an O(|by_pp|) scan.
+    by_product: dict[str, list[tuple[str, str, str]]] = field(default_factory=dict)
 
     def for_cpe(self, cpe: str) -> list[dict]:
         """Return all CVEs whose ``cpeMatch.criteria`` shares the
@@ -326,7 +330,7 @@ class NvdIndex:
         equals ``product`` exactly. Used by candidate discovery: given a
         normalized conda name, return every CPE prefix NVD knows about
         with that product, across all vendors."""
-        return [k for k in self.by_pp if k[2] == product]
+        return list(self.by_product.get(product, ()))
 
     def github_url_hit_rate(self, head: tuple[str, str, str], owner_repo: str) -> float:
         """Fraction of CVEs at ``head`` whose ``references[].url`` contains
@@ -384,7 +388,12 @@ def _build_index(feeds: list[FeedFile]) -> NvdIndex:
             count += 1
         feed.cve_count = count
 
-    return NvdIndex(feeds=feeds, by_pp=by_pp, by_id=by_id)
+    # Secondary product → heads index, built once now that by_pp is final.
+    by_product: dict[str, list[tuple[str, str, str]]] = {}
+    for head in by_pp:
+        by_product.setdefault(head[2], []).append(head)
+
+    return NvdIndex(feeds=feeds, by_pp=by_pp, by_id=by_id, by_product=by_product)
 
 
 async def fetch_index(

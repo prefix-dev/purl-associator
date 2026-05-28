@@ -283,6 +283,9 @@ def _load_effective_mappings(
 
     # Layer 1: auto.json — also carries the ``download_count`` we rank by
     # and the ``alternative_purls`` we check for OSV-mappable fallbacks.
+    # Intentionally unwrapped: a corrupt auto.json is a hard failure because
+    # ranking depends entirely on it. Reviewed layers below tolerate broken
+    # JSON because losing one contribution shouldn't break a discovery run.
     if auto.exists():
         data = json.loads(auto.read_text())
         for name, entry in (data.get("packages") or {}).items():
@@ -375,8 +378,6 @@ def _is_cpe_candidate(name: str, entry: AutoEntry | None) -> bool:
     # means cve_match already produces a CVE file for this package.
     if entry.has_osv_alternative:
         return False
-    if not entry.purl:
-        return True
     return True
 
 
@@ -506,24 +507,25 @@ def _score_candidate(
             vendor == owner.lower() or product == repo.lower()
         )
 
-    # H6: conda name appears as a token in the top CVE's description.
+    # H6: conda name appears as a token in any CVE's description. We check
+    # every CVE — picking just one (e.g. the longest description) lets the
+    # token hide there even when it shows up clearly in others, and the
+    # whole-list scan is still O(n) over an already-bounded list.
     if cves:
-        top = max(cves, key=lambda c: _summary_for(c) and len(_summary_for(c)))
-        desc = _summary_for(top)
-        if desc and _token_re(conda_name).search(desc):
-            score.h6_desc_mentions_name = True
-        # Collect a few sample descriptions for the audit file.
+        token_re = _token_re(conda_name)
         seen_ids: set[str] = set()
         for cve in cves:
             cid = cve.get("id")
             if not isinstance(cid, str) or cid in seen_ids:
                 continue
             seen_ids.add(cid)
-            d = _summary_for(cve)
-            if d:
-                score.sample_summaries.append(f"{cid}: {d[:160]}")
-            if len(score.sample_summaries) >= 3:
-                break
+            desc = _summary_for(cve)
+            if not desc:
+                continue
+            if not score.h6_desc_mentions_name and token_re.search(desc):
+                score.h6_desc_mentions_name = True
+            if len(score.sample_summaries) < 3:
+                score.sample_summaries.append(f"{cid}: {desc[:160]}")
 
     return score
 
