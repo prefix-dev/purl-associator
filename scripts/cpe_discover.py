@@ -181,6 +181,12 @@ class AutoEntry:
     pkg_name: str | None
     summary: str | None
     download_count: int  # 0 when missing; used for top-N ranking
+    # ``alternative_purls`` entries flattened to their ``type`` strings. Used
+    # to detect packages that already have an OSV-mappable path even when
+    # their primary PURL is github/generic — those packages should NOT get
+    # CPE coverage, since nvd_prototype would overwrite the OSV-derived
+    # mappings/cves/<name>.json that cve_match produces.
+    alternative_purl_types: tuple[str, ...] = ()
 
     @property
     def github_owner_repo(self) -> str | None:
@@ -193,16 +199,65 @@ class AutoEntry:
             return f"{self.namespace}/{self.pkg_name}"
         return None
 
+    @property
+    def has_osv_alternative(self) -> bool:
+        """True if any alternative PURL would be picked up by cve_match's
+        OSV ecosystem dispatch. Such packages must be excluded from CPE
+        discovery — nvd_prototype writes mappings/cves/<name>.json from
+        scratch and would overwrite cve_match's OSV-derived file."""
+        return any(t in OSV_PURL_TYPES for t in self.alternative_purl_types)
+
 
 _PURL_FIELDS = ("purl", "type", "namespace", "pkg_name")
+
+
+def _extract_alt_types(entry: dict) -> tuple[str, ...]:
+    """Pull the ``type`` field out of each entry in ``alternative_purls``.
+    Handles both the auto.json shape ([{purl, type, namespace, ...}, ...])
+    and the simpler review-side shape ([purl-string, ...]) by parsing the
+    type prefix when needed."""
+    out: list[str] = []
+    alts = entry.get("alternative_purls")
+    if not isinstance(alts, list):
+        return ()
+    for a in alts:
+        if isinstance(a, dict):
+            t = a.get("type")
+            if isinstance(t, str) and t:
+                out.append(t)
+                continue
+            # Fall through to parsing the purl string if type missing.
+            purl = a.get("purl")
+        elif isinstance(a, str):
+            purl = a
+        else:
+            continue
+        if isinstance(purl, str) and purl.startswith("pkg:"):
+            head, _, _ = purl[4:].partition("/")
+            if head:
+                out.append(head)
+    return tuple(out)
 
 
 def _overlay_purl(base: AutoEntry, override: dict) -> AutoEntry:
     """Return a new AutoEntry with PURL-related fields replaced where the
     override provides them. Mirrors ``merge_mappings``' replace-on-present
-    semantics for the PURL layer."""
-    if not any(k in override for k in _PURL_FIELDS):
+    semantics for the PURL layer.
+
+    ``alternative_purls`` follows the same replace-on-present rule the
+    merge layer uses (see ``merge_mappings._reviewed_mapping_patch``): a
+    contribution that explicitly provides an alternative_purls list
+    replaces the base; absent means inherit. An empty list explicitly
+    clears the alternatives."""
+    if (
+        not any(k in override for k in _PURL_FIELDS)
+        and "alternative_purls" not in override
+    ):
         return base
+    if "alternative_purls" in override and override["alternative_purls"] is not None:
+        alt_types = _extract_alt_types(override)
+    else:
+        alt_types = base.alternative_purl_types
     return AutoEntry(
         purl=override.get("purl", base.purl),
         purl_type=override.get("type", base.purl_type),
@@ -210,6 +265,7 @@ def _overlay_purl(base: AutoEntry, override: dict) -> AutoEntry:
         pkg_name=override.get("pkg_name", base.pkg_name),
         summary=base.summary,  # human reviews never change the conda summary
         download_count=base.download_count,
+        alternative_purl_types=alt_types,
     )
 
 
@@ -225,7 +281,8 @@ def _load_effective_mappings(
     :func:`_load_existing_cpes`."""
     out: dict[str, AutoEntry] = {}
 
-    # Layer 1: auto.json — also carries the ``download_count`` we rank by.
+    # Layer 1: auto.json — also carries the ``download_count`` we rank by
+    # and the ``alternative_purls`` we check for OSV-mappable fallbacks.
     if auto.exists():
         data = json.loads(auto.read_text())
         for name, entry in (data.get("packages") or {}).items():
@@ -239,6 +296,7 @@ def _load_effective_mappings(
                 pkg_name=entry.get("pkg_name"),
                 summary=entry.get("summary"),
                 download_count=dc if isinstance(dc, int) else 0,
+                alternative_purl_types=_extract_alt_types(entry),
             )
 
     blank = AutoEntry(
@@ -248,6 +306,7 @@ def _load_effective_mappings(
         pkg_name=None,
         summary=None,
         download_count=0,
+        alternative_purl_types=(),
     )
 
     # Layer 2: manual.json
@@ -290,15 +349,34 @@ def _load_effective_mappings(
 
 
 def _is_cpe_candidate(name: str, entry: AutoEntry | None) -> bool:
-    """A package is a CPE candidate if the OSV → cve_match pipeline cannot
-    cover it: no PURL at all, or a PURL whose type isn't OSV-mappable."""
+    """A package is a CPE candidate when the OSV → cve_match pipeline
+    cannot cover it via *any* PURL it carries.
+
+    Both the primary PURL and the ``alternative_purls`` list count:
+    ``scripts.cve_match`` walks alternatives (cve_match.py:473) and will
+    match against any OSV-indexed type it finds. Shipping a CPE for such a
+    package would cause ``nvd_prototype`` to overwrite cve_match's
+    OSV-derived ``mappings/cves/<name>.json``, dropping coverage that's
+    already populated.
+
+    A package qualifies only when:
+      * no primary PURL, or primary PURL is non-OSV (github, generic, …)
+      * AND no alternative_purls entry is OSV-mappable
+      * AND not a conda-build internal feedstock
+    """
     # Skip conda-build internal feedstocks.
     if name.startswith("_") or name.startswith("python_abi"):
         return False
-    if entry is None or not entry.purl:
+    if entry is None:
         return True
     if entry.purl_type in OSV_PURL_TYPES:
         return False
+    # Even if the primary PURL is github/generic, an OSV-mappable alternative
+    # means cve_match already produces a CVE file for this package.
+    if entry.has_osv_alternative:
+        return False
+    if not entry.purl:
+        return True
     return True
 
 
