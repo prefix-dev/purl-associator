@@ -13,6 +13,11 @@ export type SbomSummaryEntry = {
   name: string;
   version: string;
   ecosystem: "cargo" | "golang" | string;
+  expected_ecosystems?: string[] | null;
+  signals?: string[] | null;
+  status?: "ok" | "no-sbom" | "no-paths-json" | "error" | string | null;
+  warning?: string | null;
+  binary_path?: string | null;
   component_count: number;
   matched_component_count: number;
   advisory_count: number;
