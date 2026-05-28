@@ -80,13 +80,21 @@ Rules:
    multiple vendor names (e.g. `gnu:ncurses` + `invisible-island:ncurses`
    for older + newer records). When candidates are aliases for the same
    software, select ALL of them.
-3. **Reject lookalikes.** Some candidate products share a name with the
+3. **Trust the conda summary.** Each package shows a `conda summary` line
+   describing the conda package itself — use it to tell related-but-distinct
+   software apart. Sample CVE descriptions describe the candidate CPE's
+   software; if they disagree with the conda summary, the candidate is
+   probably wrong.
+4. **Reject lookalikes.** Some candidate products share a name with the
    conda package but are unrelated (e.g. a CPE for a WordPress plugin named
-   "ninja" is NOT the build tool `ninja`). Use the sample CVE descriptions
-   and the conda summary to tell them apart.
-4. **`none` is fine.** If no candidate matches, return `verdict="none"` with
+   "ninja" is NOT the build tool `ninja`).
+5. **Reject language-binding mismatches.** When the conda name implies
+   language bindings (`*-python`, `python-*`, `py-*`, `*-rs`, etc.) and
+   the candidate CPE is for the underlying C/C++ library, return `none`.
+   Their version spaces diverge, so any version intersection is broken.
+6. **`none` is fine.** If no candidate matches, return `verdict="none"` with
    `selected_cpes=[]`. Better to skip than to pick wrong.
-5. **`uncertain` is for borderline cases** — pick what you'd lean toward
+7. **`uncertain` is for borderline cases** — pick what you'd lean toward
    but flag that the auto-promote step should NOT take it. Humans review
    uncertain verdicts later."""
 
@@ -140,6 +148,7 @@ class AmbiguousPackage:
     """One conda package with its ambiguous-bucket CPE candidates."""
 
     conda_name: str
+    conda_summary: str | None
     current_purl: str | None
     github_owner_repo: str | None
     candidates: list[dict]  # full candidate dicts from cpe_candidates.json
@@ -159,6 +168,7 @@ def _load_ambiguous(payload: dict, only: set[str] | None) -> list[AmbiguousPacka
         out.append(
             AmbiguousPackage(
                 conda_name=name,
+                conda_summary=pkg.get("conda_summary"),
                 current_purl=pkg.get("current_purl"),
                 github_owner_repo=pkg.get("github_owner_repo"),
                 candidates=ambiguous,
@@ -210,10 +220,12 @@ def _format_package_block(idx: int, pkg: AmbiguousPackage) -> str:
     cands = "\n".join(
         _format_candidate_block(i, c) for i, c in enumerate(pkg.candidates)
     )
+    summary_line = pkg.conda_summary or "(none)"
     purl_line = pkg.current_purl or "(none)"
     repo_line = pkg.github_owner_repo or "(none)"
     return (
         f"[{idx}] package_name: {pkg.conda_name}\n"
+        f"    conda summary: {summary_line}\n"
         f"    current PURL: {purl_line}\n"
         f"    github owner/repo: {repo_line}\n"
         f"    candidates:\n{cands}"
@@ -401,6 +413,9 @@ def main(
             "No candidates file found. Run `pixi run cpe-discover` first."
         )
     payload = json.loads(candidates_file.read_text())
+    # Stamp from the candidates file so cpe_promote can detect whether this
+    # vet output is current with the latest discover run.
+    candidates_generated_at = payload.get("generated_at")
 
     only_set = {n.strip() for n in only.split(",") if n.strip()} if only else None
     targets = _load_ambiguous(payload, only_set)
@@ -453,6 +468,10 @@ def main(
         "schema_version": SCHEMA_VERSION,
         "generated_at": generated_at,
         "source_candidates": str(candidates_file.relative_to(ROOT)),
+        # The candidates file's own generated_at — copied so cpe_promote can
+        # tell whether a tracked vet file is still current vs. left over
+        # from a prior discover run that has since been overwritten.
+        "source_candidates_generated_at": candidates_generated_at,
         "model": MODEL,
         "summary": summary,
         "verdicts": [_verdict_to_dict(v) for v in verdicts],

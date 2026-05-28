@@ -475,13 +475,21 @@ def _bucket_candidates(
     Acceptance rules — any of:
       A1. H1 (GitHub-URL hit rate) ≥ 0.5
       A2. H2 ∧ H4 (vendor matches owner/repo AND vendor == product)
-      A3. H3 (single survivor) ∧ (H4 ∨ H5)
-      A4. H5 ∧ H7 (trusted vendor with ≥ 3 CVEs) when only one candidate
-          shares this product across all vendors
+      A3. H3 (single survivor) ∧ H4
+      A4. H3 (single survivor) ∧ H5 ∧ H7   (trusted vendor needs ≥3 CVEs)
+      A5. H5 ∧ product_unique ∧ H7        (trusted vendor needs ≥3 CVEs)
+      A6. H5 ∧ H1>0                       (trusted vendor + any URL corroboration)
+
+    H5 (trusted-vendor allowlist) is intentionally **not** a stand-alone
+    shipping gate. The allowlist is hard-coded in this file, so trusting
+    it alone for single-CVE matches would let a stale or wrong entry ship
+    without any non-allowlist evidence. Pair H5 with H7 (≥3 CVEs from
+    NVD corroborates a real product), H1 (the conda PURL's repo appears
+    in the NVD references), or push to the AI vet step.
 
     Ambiguous: anything with at least one fired heuristic that isn't
-    decisive (H2 alone, H4 alone, H5 alone, H6 alone, or multiple
-    competing vendors).
+    decisive (H2 alone, H4 alone, H5 alone, H6 alone, H5+single-CVE,
+    or multiple competing vendors).
 
     Drop: nothing fires.
     """
@@ -489,14 +497,14 @@ def _bucket_candidates(
     ambiguous: list[CandidateScore] = []
     drop: list[CandidateScore] = []
 
-    # H3 inputs: how many candidates remain after H7/H8 filtering.
-    # ``candidates`` is already post-H8/H7 (caller filtered), so this is
-    # just len-based.
+    # candidates list is the post-H8 (part='a', not in BANNED_VENDORS) set
+    # surfaced by _process_candidate. H7 (≥3 CVEs) is **not** a filter
+    # here — it's a per-candidate score we check at acceptance time.
     n = len(candidates)
     unique_survivor = n == 1
 
-    # Group by product to apply A4 (trusted vendor + single vendor for
-    # that product among survivors).
+    # Group by product to apply A5 (trusted vendor + only one vendor for
+    # that product among survivors + enough CVEs).
     by_product: dict[str, list[CandidateScore]] = {}
     for c in candidates:
         by_product.setdefault(c.product, []).append(c)
@@ -514,14 +522,16 @@ def _bucket_candidates(
             accepted_via = f"H1 github-url-rate={c.h1_github_url_rate:.2f}"
         elif c.h2_owner_or_repo_match and c.h4_vendor_eq_product:
             accepted_via = "H2+H4 owner-match AND vendor==product"
-        elif unique_survivor and (c.h4_vendor_eq_product or c.h5_trusted_vendor):
+        elif unique_survivor and c.h4_vendor_eq_product:
+            accepted_via = "H3+H4 unique-survivor AND vendor==product"
+        elif unique_survivor and c.h5_trusted_vendor and c.h7_cve_count_ok:
+            accepted_via = "H3+H5+H7 unique-survivor AND trusted-vendor AND ≥3 CVEs"
+        elif c.h5_trusted_vendor and product_unique and c.h7_cve_count_ok:
+            accepted_via = "H5+H7 trusted-vendor AND single vendor AND ≥3 CVEs"
+        elif c.h5_trusted_vendor and c.h1_github_url_rate > 0:
             accepted_via = (
-                "H3+H4 unique-survivor AND vendor==product"
-                if c.h4_vendor_eq_product
-                else "H3+H5 unique-survivor AND trusted-vendor"
+                f"H5+H1 trusted-vendor AND github-url-rate={c.h1_github_url_rate:.2f}"
             )
-        elif c.h5_trusted_vendor and product_unique:
-            accepted_via = "H5 trusted-vendor AND single vendor for product"
 
         if accepted_via:
             c.triggers.append(accepted_via)
@@ -622,6 +632,10 @@ def _process_candidate(
         "conda_name": conda_name,
         "download_count": download_count,
         "current_purl": auto_entry.purl if auto_entry else None,
+        # Conda summary is small but powerful disambiguation signal for the
+        # AI vet step — passing it through here so cpe_vet doesn't need to
+        # reload auto.json.
+        "conda_summary": auto_entry.summary if auto_entry else None,
         "github_owner_repo": owner_repo,
         "product_guesses": guesses,
         "matched_heads": len(scored),
@@ -634,6 +648,12 @@ def _process_candidate(
 @app.command()
 def main(
     top: int = typer.Option(100, help="How many top-downloaded packages to consider"),
+    only: str | None = typer.Option(
+        None,
+        help="Comma-separated conda names to process. When set, only these "
+        "names are considered regardless of --top (still filtered by the "
+        "OSV-mappable and already-CPE'd checks).",
+    ),
     auto: Path = typer.Option(DEFAULT_AUTO),
     manual: Path = typer.Option(DEFAULT_MANUAL),
     contributions: Path = typer.Option(DEFAULT_CONTRIB_DIR),
@@ -649,6 +669,8 @@ def main(
     auto_data = _load_effective_mappings(auto, manual, contributions)
     already_have_cpes = _load_existing_cpes(manual, contributions)
 
+    only_set = {n.strip() for n in only.split(",") if n.strip()} if only else None
+
     # Rank packages by ``download_count`` (already populated on every
     # auto.json entry by ``scripts.hydrate_downloads``). Tie-break by name
     # for deterministic output when many entries share count == 0.
@@ -660,8 +682,14 @@ def main(
     candidates: list[tuple[str, int, AutoEntry | None]] = []
     considered = 0
     for name, entry in ranked:
-        if considered >= top:
-            break
+        # ``--only`` bypasses the top-N cutoff: callers asking for a
+        # specific name want that name considered regardless of rank.
+        if only_set is not None:
+            if name not in only_set:
+                continue
+        else:
+            if considered >= top:
+                break
         considered += 1
         if name in already_have_cpes:
             continue
@@ -669,8 +697,9 @@ def main(
             continue
         candidates.append((name, entry.download_count, entry))
 
+    scope_desc = f"--only set ({len(only_set)} names)" if only_set else f"top {top}"
     console.log(
-        f"Top {top}: {len(candidates)} CPE candidates after filtering "
+        f"{scope_desc}: {len(candidates)} CPE candidates after filtering "
         f"({considered - len(candidates)} skipped — OSV-mapped, "
         f"already-CPE'd, or conda-infra)"
     )

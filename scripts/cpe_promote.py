@@ -205,20 +205,59 @@ def main(
 
     payload = json.loads(candidates_file.read_text())
     accepts = _collect_accepts(payload)
+    candidates_generated_at = payload.get("generated_at")
 
     # Layer in AI vet verdicts unless suppressed.
     vet_used: Path | None = None
     vet_confident: dict[str, list[str]] = {}
     if not no_vet:
+        explicit_vet = vet_file is not None
         vet_used = vet_file or _latest_vet_file(DEFAULT_VET_DIR)
+        if vet_used is not None:
+            # Resolve to an absolute path so later .relative_to(ROOT) calls
+            # never raise on a relative --vet-file argument.
+            vet_used = vet_used.resolve()
         if vet_used is not None and vet_used.exists():
             vet_payload = json.loads(vet_used.read_text())
-            vet_confident = _collect_vet_confident(vet_payload)
-            if vet_confident:
+            # Freshness check: ``cpe_vet`` stamps the candidates file's
+            # generated_at into ``source_candidates_generated_at``. If that
+            # doesn't match the current latest.json, the vet file is left
+            # over from a prior discover run and its verdicts may no longer
+            # apply (the prior ambiguous set is gone). Refuse to use it
+            # unless --vet-file was passed explicitly (an explicit override
+            # is treated as "I know what I'm doing").
+            vet_source_at = vet_payload.get("source_candidates_generated_at")
+            # Three stale cases:
+            #   1. Vet file pre-dates this freshness check (no stamp at all).
+            #   2. Stamps differ.
+            #   3. Candidates file has no generated_at (unexpected; can't verify).
+            # Treat any of them as stale unless --vet-file was passed.
+            stale = (
+                vet_source_at is None
+                or candidates_generated_at is None
+                or (vet_source_at != candidates_generated_at)
+            )
+            if stale and not explicit_vet:
                 console.log(
-                    f"Merging {len(vet_confident)} confident AI verdict(s) "
-                    f"from {vet_used.relative_to(ROOT)}"
+                    f"[yellow]Ignoring stale vet file {vet_used.relative_to(ROOT)}: "
+                    f"recorded source_candidates_generated_at={vet_source_at!r} "
+                    f"!= current candidates generated_at={candidates_generated_at!r}. "
+                    f"Pass --vet-file explicitly to override.[/]"
                 )
+                vet_used = None
+            else:
+                if stale and explicit_vet:
+                    console.log(
+                        "[yellow]Vet file is stale relative to current "
+                        "candidates, but --vet-file was passed explicitly — "
+                        "using it anyway.[/]"
+                    )
+                vet_confident = _collect_vet_confident(vet_payload)
+                if vet_confident:
+                    console.log(
+                        f"Merging {len(vet_confident)} confident AI verdict(s) "
+                        f"from {vet_used.relative_to(ROOT)}"
+                    )
 
     accepts = _merge_accepts_with_vet(accepts, vet_confident)
 

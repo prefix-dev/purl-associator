@@ -49,22 +49,39 @@ jobs:
           pixi run cpe-discover "${ARGS[@]}"
 
       - name: AI tiebreaker for ambiguous bucket
+        id: vet
         if: ${{ inputs.skip_vet != 'true' }}
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           set -euo pipefail
-          ARGS=()
+          ARGS=(--out mappings/cpe_vet/_workflow.json)
           if [ -n "${{ inputs.only }}" ]; then ARGS+=(--only "${{ inputs.only }}"); fi
           # cpe_vet exits cleanly with "nothing to do" when the ambiguous
-          # bucket is empty, so this step is safe to run unconditionally.
+          # bucket is empty; record whether a fresh file was actually
+          # written so the promote step can avoid stale-file reuse.
+          rm -f mappings/cpe_vet/_workflow.json
           pixi run cpe-vet "${ARGS[@]}"
+          if [ -f mappings/cpe_vet/_workflow.json ]; then
+            echo "vet_file=mappings/cpe_vet/_workflow.json" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Promote accepts (+ confident AI verdicts) to a contribution
         run: |
           set -euo pipefail
           ARGS=()
-          if [ "${{ inputs.skip_vet }}" = "true" ]; then ARGS+=(--no-vet); fi
+          if [ "${{ inputs.skip_vet }}" = "true" ]; then
+            ARGS+=(--no-vet)
+          elif [ -n "${{ steps.vet.outputs.vet_file || '' }}" ]; then
+            # Belt-and-braces: pin the vet file produced by this run, so
+            # cpe_promote can't accidentally reuse a tracked vet file from
+            # a prior discover/vet run.
+            ARGS+=(--vet-file "${{ steps.vet.outputs.vet_file }}")
+          else
+            # No fresh vet file this run; explicitly skip the AI layer so
+            # we don't fall back to a tracked stale one.
+            ARGS+=(--no-vet)
+          fi
           pixi run cpe-promote "${ARGS[@]}"
 
       - name: Merge mappings for the SPA
