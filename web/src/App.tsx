@@ -49,7 +49,7 @@ export function App() {
     loadSbomSummary().then(setSbomSummary);
   }, []);
 
-  // Lazy-load the per-package SBOM-CVE detail when a package with matches is
+  // Lazy-load the per-artifact SBOM-CVE detail when a package with matches is
   // focused. ``null`` means "we tried and there is no detail file" (i.e. the
   // package has 0 transitive CVEs) so we can render the clean-bill section.
   useEffect(() => {
@@ -61,7 +61,7 @@ export function App() {
       setSbomDetails((prev) => ({ ...prev, [focusedId]: null }));
       return;
     }
-    loadSbomDetail(focusedId).then((d) =>
+    loadSbomDetail(summary).then((d) =>
       setSbomDetails((prev) => ({ ...prev, [focusedId]: d })),
     );
   }, [focusedId, sbomSummary, sbomDetails]);

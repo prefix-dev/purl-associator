@@ -206,6 +206,8 @@ function SbomSection({
 
       {summary.warning && <Warning theme={theme}>{summary.warning}</Warning>}
 
+      <ArtifactMeta theme={theme} summary={summary} />
+
       {summary.signals && summary.signals.length > 0 && (
         <SignalList theme={theme} signals={summary.signals} />
       )}
@@ -241,6 +243,66 @@ function SbomSection({
           Loading advisory detail...
         </div>
       )}
+    </div>
+  );
+}
+
+function ArtifactMeta({
+  theme,
+  summary,
+}: {
+  theme: Theme;
+  summary: SbomSummaryEntry;
+}) {
+  const t = theme.t;
+  const items = [
+    summary.version ? ["version", summary.version] : null,
+    summary.build ? ["build", summary.build] : null,
+    summary.subdir ? ["subdir", summary.subdir] : null,
+    summary.binary_path ? ["binary", summary.binary_path] : null,
+    summary.package_filename ? ["artifact", summary.package_filename] : null,
+  ].filter(Boolean) as [string, string][];
+  if (items.length === 0) return null;
+  return (
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+        gap: 8,
+        padding: 12,
+        background: t.surface,
+        border: `1px solid ${t.border}`,
+        borderRadius: 8,
+      }}
+    >
+      {items.map(([label, value]) => (
+        <div key={label} style={{ minWidth: 0 }}>
+          <div
+            style={{
+              color: t.fg3,
+              fontSize: 10,
+              textTransform: "uppercase",
+              fontWeight: 700,
+            }}
+          >
+            {label}
+          </div>
+          <div
+            title={value}
+            style={{
+              marginTop: 2,
+              color: t.fg1,
+              fontFamily: "JetBrains Mono, monospace",
+              fontSize: 11,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {value}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

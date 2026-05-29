@@ -7,10 +7,11 @@ For every CycloneDX document under ``mappings/sboms/`` (produced by
 2. Looks the package up in the OSV index (``crates.io`` / ``Go`` ecosystems).
 3. Checks whether the *specific component version* falls inside any of the
    advisory's affected ranges — reusing :func:`scripts.cve_match.version_in_affected_entry`.
-4. Writes one JSON file per conda package to ``mappings/sbom_cves/<name>.json``
+4. Writes one JSON file per conda artifact to ``mappings/sbom_cves/<artifact>.json``
    with the matched advisory ids, the offending component, and the affected
-   version range. Also writes a single ``web/public/sboms.json`` summary so
-   the frontend can show transitive component / CVE counts per package.
+   version range. Also writes a single ``mappings/sboms.json`` summary so
+   the frontend can show transitive component / CVE counts per package after
+   ``scripts.merge_sboms`` publishes it into ``web/public``.
 
 Unlike :mod:`scripts.cve_match` which matches the package's own PURL, this
 script surfaces vulnerabilities in *transitive* dependencies baked into the
@@ -48,7 +49,7 @@ ROOT = Path(__file__).resolve().parent.parent
 SBOM_DIR = ROOT / "mappings" / "sboms"
 OUT_DIR = ROOT / "mappings" / "sbom_cves"
 INSPECTIONS_IN = ROOT / "mappings" / "sbom_inspections.json"
-SUMMARY_OUT = ROOT / "web" / "public" / "sboms.json"
+SUMMARY_OUT = ROOT / "mappings" / "sboms.json"
 OSV_CACHE = ROOT / "osv_cache"
 
 # OSV ecosystems we care about for SBOM components.
@@ -108,6 +109,31 @@ def _conda_version_from_sbom(sbom: dict) -> str | None:
     if isinstance(comp.get("version"), str):
         return comp["version"]
     return None
+
+
+def _metadata_properties(sbom: dict) -> dict[str, str]:
+    properties = sbom.get("metadata", {}).get("properties", [])
+    out: dict[str, str] = {}
+    for prop in properties:
+        if not isinstance(prop, dict):
+            continue
+        name = prop.get("name")
+        value = prop.get("value")
+        if isinstance(name, str) and isinstance(value, str):
+            out[name] = value
+    return out
+
+
+def _conda_artifact_from_sbom(sbom: dict) -> dict[str, str]:
+    props = _metadata_properties(sbom)
+    return {
+        "artifact_id": props.get("purl-associator:conda-artifact-id", ""),
+        "build": props.get("purl-associator:conda-build", ""),
+        "subdir": props.get("purl-associator:conda-subdir", ""),
+        "package_url": props.get("purl-associator:conda-package-url", ""),
+        "package_filename": props.get("purl-associator:conda-package-filename", ""),
+        "binary_path": props.get("purl-associator:binary-path", ""),
+    }
 
 
 def _load_inspections(path: Path) -> dict[str, dict]:
@@ -206,6 +232,13 @@ async def _async_main(
             {
                 "name": name,
                 "version": entry.get("version", ""),
+                "build": entry.get("build"),
+                "subdir": entry.get("subdir"),
+                "artifact_id": entry.get("artifact_id"),
+                "sbom_path": entry.get("sbom_path"),
+                "detail_path": entry.get("detail_path"),
+                "package_url": entry.get("package_url"),
+                "package_filename": entry.get("package_filename"),
                 "ecosystem": entry.get("ecosystem") or "",
                 "expected_ecosystems": entry.get("expected_ecosystems"),
                 "signals": entry.get("signals"),
@@ -233,8 +266,12 @@ async def _async_main(
         transient=False,
     ) as progress:
         task_id = progress.add_task("Matching components…", total=len(sboms))
-        for conda_name, sbom in sboms.items():
+        written_artifact_ids: set[str] = set()
+        for file_stem, sbom in sboms.items():
+            conda_name = _conda_name_from_sbom(sbom) or file_stem
             components = _components_of(sbom)
+            artifact = _conda_artifact_from_sbom(sbom)
+            artifact_id = artifact.get("artifact_id") or file_stem
             ecosystem = next(
                 (
                     p["value"]
@@ -290,12 +327,23 @@ async def _async_main(
                 {
                     "name": conda_name,
                     "version": conda_version,
+                    "artifact_id": artifact_id,
+                    "build": artifact.get("build") or base_summary.get("build"),
+                    "subdir": artifact.get("subdir") or base_summary.get("subdir"),
+                    "sbom_path": base_summary.get("sbom_path")
+                    or f"sboms/{artifact_id}.json",
+                    "detail_path": (f"sbom_cves/{artifact_id}.json" if hits else None),
+                    "package_url": artifact.get("package_url")
+                    or base_summary.get("package_url"),
+                    "package_filename": artifact.get("package_filename")
+                    or base_summary.get("package_filename"),
                     "ecosystem": ecosystem,
                     "expected_ecosystems": base_summary.get("expected_ecosystems"),
                     "signals": base_summary.get("signals"),
                     "status": "ok",
                     "warning": base_summary.get("warning"),
-                    "binary_path": base_summary.get("binary_path"),
+                    "binary_path": artifact.get("binary_path")
+                    or base_summary.get("binary_path"),
                     "component_count": len(sbom.get("components", [])),
                     "matched_component_count": len(components),
                     "advisory_count": len(hits),
@@ -310,22 +358,35 @@ async def _async_main(
                     "schema_version": 1,
                     "package": conda_name,
                     "package_version": conda_version,
+                    "artifact_id": artifact_id,
+                    "package_build": artifact.get("build")
+                    or base_summary.get("build")
+                    or "",
+                    "package_subdir": artifact.get("subdir")
+                    or base_summary.get("subdir")
+                    or "",
+                    "package_url": artifact.get("package_url")
+                    or base_summary.get("package_url")
+                    or "",
+                    "package_filename": artifact.get("package_filename")
+                    or base_summary.get("package_filename")
+                    or "",
                     "ecosystem": ecosystem,
                     "generated_at": generated_at,
                     "component_count": len(sbom.get("components", [])),
                     "matched_component_count": len(components),
                     "advisories": hits,
                 }
-                (out_dir / f"{conda_name}.json").write_text(
+                (out_dir / f"{artifact_id}.json").write_text(
                     json.dumps(payload, indent=2) + "\n"
                 )
+                written_artifact_ids.add(artifact_id)
                 written += 1
-            else:
-                # Remove stale file from a previous run.
-                stale = out_dir / f"{conda_name}.json"
-                if stale.exists():
-                    stale.unlink()
             progress.advance(task_id)
+
+    for stale in out_dir.glob("*.json"):
+        if stale.stem not in written_artifact_ids:
+            stale.unlink()
 
     summary_payload = {
         "schema_version": 1,

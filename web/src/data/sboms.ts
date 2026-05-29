@@ -2,8 +2,9 @@
  *
  * scripts/sbom_extract.py writes CycloneDX docs to mappings/sboms/.
  * scripts/sbom_cve_match.py joins those component PURLs with OSV and emits:
- *   - web/public/sboms.json (summary keyed by conda name)
- *   - mappings/sbom_cves/<name>.json (per-package match detail, only if hits)
+ *   - mappings/sboms.json (summary keyed by conda name)
+ *   - mappings/sbom_cves/<artifact-id>.json (per-artifact match detail)
+ * scripts/merge_sboms.py publishes those files into web/public for Vite.
  *
  * The frontend reads the summary at startup and lazy-loads per-package detail
  * when a user focuses a package with transitive matches.
@@ -12,6 +13,13 @@
 export type SbomSummaryEntry = {
   name: string;
   version: string;
+  artifact_id?: string | null;
+  build?: string | null;
+  subdir?: string | null;
+  sbom_path?: string | null;
+  detail_path?: string | null;
+  package_url?: string | null;
+  package_filename?: string | null;
   ecosystem: "cargo" | "golang" | string;
   expected_ecosystems?: string[] | null;
   signals?: string[] | null;
@@ -44,6 +52,11 @@ export type SbomDetailPayload = {
   schema_version: number;
   package: string;
   package_version: string;
+  artifact_id?: string | null;
+  package_build?: string | null;
+  package_subdir?: string | null;
+  package_url?: string | null;
+  package_filename?: string | null;
   ecosystem: string;
   generated_at: string;
   component_count: number;
@@ -65,18 +78,15 @@ export async function loadSbomSummary(
   }
 }
 
-/** Per-package SBOM-CVE files live at /mappings/sbom_cves/<name>.json. The
- *  pages build also copies these into web/public, so the frontend can fetch
- *  them at the same relative path layout.
+/** Per-artifact SBOM-CVE files live under /sbom_cves in the built frontend.
+ *  The summary index carries the exact artifact-specific path.
  */
 export async function loadSbomDetail(
-  name: string,
-  base = "./sbom_cves",
+  summary: SbomSummaryEntry,
 ): Promise<SbomDetailPayload | null> {
+  if (!summary.detail_path) return null;
   try {
-    const res = await fetch(`${base}/${encodeURIComponent(name)}.json`, {
-      cache: "no-cache",
-    });
+    const res = await fetch(`./${summary.detail_path}`, { cache: "no-cache" });
     if (!res.ok) return null;
     return (await res.json()) as SbomDetailPayload;
   } catch {

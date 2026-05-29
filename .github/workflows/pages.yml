@@ -42,6 +42,9 @@ jobs:
       - name: Refresh served cves.json (per-package CVE files + contributions)
         run: pixi run -e lite merge-cves
 
+      - name: Refresh served SBOM inspection data
+        run: pixi run -e lite merge-sboms
+
       - name: Validate CVE data against the OSV + OpenVEX schemas
         run: pixi run -e lite validate
 

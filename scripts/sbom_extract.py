@@ -35,6 +35,7 @@ import uuid
 import zlib
 from datetime import UTC, datetime
 from pathlib import Path
+from urllib.parse import quote, unquote, urlparse
 
 import typer
 from rattler.networking import Client
@@ -247,6 +248,74 @@ def go_components(buildinfo: dict) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
+# Conda artifact identity
+# ---------------------------------------------------------------------------
+
+
+def _artifact_filename(url: str) -> str:
+    path = unquote(urlparse(url).path)
+    return Path(path).name
+
+
+def _artifact_subdir(url: str) -> str:
+    path = unquote(urlparse(url).path)
+    parent = Path(path).parent.name
+    return parent if parent else ""
+
+
+def _artifact_build(conda_name: str, conda_version: str, filename: str) -> str:
+    stem = _artifact_stem(filename)
+    prefix = f"{conda_name}-{conda_version}-"
+    return stem[len(prefix) :] if stem.startswith(prefix) else ""
+
+
+def _artifact_stem(filename: str) -> str:
+    stem = filename
+    for suffix in (".tar.bz2", ".conda"):
+        if stem.endswith(suffix):
+            stem = stem[: -len(suffix)]
+            break
+    return stem
+
+
+def _artifact_id(filename: str, subdir: str) -> str:
+    stem = _artifact_stem(filename)
+    raw = f"{subdir}__{stem}" if subdir else stem
+    return quote(raw, safe="-_.+~")
+
+
+def _artifact_identity(
+    conda_name: str, conda_version: str, url: str, entry: dict
+) -> dict[str, str]:
+    filename = _artifact_filename(url)
+    subdir = str(entry.get("subdir") or _artifact_subdir(url))
+    return {
+        "url": url,
+        "filename": filename,
+        "subdir": subdir,
+        "build": str(
+            entry.get("build") or _artifact_build(conda_name, conda_version, filename)
+        ),
+        "id": _artifact_id(filename, subdir),
+    }
+
+
+def _conda_purl(conda_name: str, conda_version: str, artifact: dict[str, str]) -> str:
+    qualifiers = {
+        "build": artifact.get("build", ""),
+        "channel": "conda-forge",
+        "subdir": artifact.get("subdir", ""),
+    }
+    query = "&".join(
+        f"{quote(k, safe='')}={quote(v, safe='')}"
+        for k, v in sorted(qualifiers.items())
+        if v
+    )
+    suffix = f"?{query}" if query else ""
+    return f"pkg:conda/{quote(conda_name, safe='')}@{quote(conda_version, safe='')}{suffix}"
+
+
+# ---------------------------------------------------------------------------
 # Network: fetch info/paths.json + bin/*
 # ---------------------------------------------------------------------------
 
@@ -301,6 +370,7 @@ def cyclonedx(
     conda_name: str,
     conda_version: str,
     binary_path: str,
+    artifact: dict[str, str],
     ecosystem: str,
     components: list[dict],
     extra_props: list[dict] | None = None,
@@ -317,11 +387,31 @@ def cyclonedx(
                 "type": "application",
                 "name": conda_name,
                 "version": conda_version,
-                "purl": (f"pkg:conda/{conda_name}@{conda_version}?channel=conda-forge"),
+                "purl": _conda_purl(conda_name, conda_version, artifact),
             },
             "properties": [
                 {"name": "purl-associator:source-ecosystem", "value": ecosystem},
                 {"name": "purl-associator:binary-path", "value": binary_path},
+                {
+                    "name": "purl-associator:conda-artifact-id",
+                    "value": artifact.get("id", ""),
+                },
+                {
+                    "name": "purl-associator:conda-subdir",
+                    "value": artifact.get("subdir", ""),
+                },
+                {
+                    "name": "purl-associator:conda-build",
+                    "value": artifact.get("build", ""),
+                },
+                {
+                    "name": "purl-associator:conda-package-filename",
+                    "value": artifact.get("filename", ""),
+                },
+                {
+                    "name": "purl-associator:conda-package-url",
+                    "value": artifact.get("url", ""),
+                },
                 *(extra_props or []),
             ],
         },
@@ -341,14 +431,23 @@ async def _process_one(
     conda_name: str,
     conda_version: str,
     url: str,
+    artifact: dict[str, str],
     expected: dict | None,
 ) -> dict:
     """Return a status dict for logging plus the SBOM document (or None)."""
+    base_result = {
+        "name": conda_name,
+        "build": artifact.get("build", ""),
+        "subdir": artifact.get("subdir", ""),
+        "artifact_id": artifact.get("id", ""),
+        "package_url": artifact.get("url", url),
+        "package_filename": artifact.get("filename", ""),
+    }
     async with semaphore:
         try:
             paths = await _fetch_paths(client, url)
         except Exception as exc:  # noqa: BLE001
-            return {"name": conda_name, "status": "no-paths-json", "detail": str(exc)}
+            return {**base_result, "status": "no-paths-json", "detail": str(exc)}
 
         for candidate in _binary_candidates(paths, conda_name):
             try:
@@ -365,6 +464,7 @@ async def _process_one(
                     conda_name=conda_name,
                     conda_version=conda_version,
                     binary_path=candidate,
+                    artifact=artifact,
                     ecosystem="cargo",
                     components=rust_components(rust),
                     extra_props=[
@@ -375,11 +475,12 @@ async def _process_one(
                     ],
                 )
                 return {
-                    "name": conda_name,
+                    **base_result,
                     "status": "ok",
                     "ecosystem": "cargo",
                     "components": len(bom["components"]),
                     "binary_path": candidate,
+                    "sbom_path": f"sboms/{artifact.get('id', '')}.json",
                     "bom": bom,
                 }
 
@@ -389,6 +490,7 @@ async def _process_one(
                     conda_name=conda_name,
                     conda_version=conda_version,
                     binary_path=candidate,
+                    artifact=artifact,
                     ecosystem="golang",
                     components=go_components(go),
                     extra_props=[
@@ -399,15 +501,16 @@ async def _process_one(
                     ],
                 )
                 return {
-                    "name": conda_name,
+                    **base_result,
                     "status": "ok",
                     "ecosystem": "golang",
                     "components": len(bom["components"]),
                     "binary_path": candidate,
+                    "sbom_path": f"sboms/{artifact.get('id', '')}.json",
                     "bom": bom,
                 }
 
-        result = {"name": conda_name, "status": "no-sbom"}
+        result = {**base_result, "status": "no-sbom"}
         if expected:
             result["expected_ecosystems"] = expected.get("ecosystems") or []
             result["signals"] = expected.get("signals") or []
@@ -433,8 +536,8 @@ def _load_auto(path: Path) -> dict[str, dict]:
 
 def _resolve_targets(
     auto: dict[str, dict], *, only: list[str] | None, candidates: bool
-) -> list[tuple[str, str, str, dict | None]]:
-    """Return list of (name, version, url, expected) tuples to process."""
+) -> list[tuple[str, str, str, dict[str, str], dict | None]]:
+    """Return list of (name, version, url, artifact, expected) tuples to process."""
     if only:
         wanted = set(only)
     elif candidates:
@@ -481,7 +584,7 @@ def _resolve_targets(
     else:
         wanted = set(auto)
 
-    out: list[tuple[str, str, str, dict | None]] = []
+    out: list[tuple[str, str, str, dict[str, str], dict | None]] = []
     for name in sorted(wanted):
         entry = auto.get(name)
         if not entry:
@@ -491,9 +594,16 @@ def _resolve_targets(
         version = entry.get("version", "")
         if not url:
             continue
+        artifact = _artifact_identity(name, version, url, entry)
         expected = entry.get("deep_inspection")
         out.append(
-            (name, version, url, expected if isinstance(expected, dict) else None)
+            (
+                name,
+                version,
+                url,
+                artifact,
+                expected if isinstance(expected, dict) else None,
+            )
         )
     return out
 
@@ -561,7 +671,11 @@ async def _async_main(
         task_id = progress.add_task("Scanning binaries…", total=len(targets))
 
         async def runner(
-            name: str, version: str, url: str, expected: dict | None
+            name: str,
+            version: str,
+            url: str,
+            artifact: dict[str, str],
+            expected: dict | None,
         ) -> dict:
             try:
                 result = await _process_one(
@@ -570,6 +684,7 @@ async def _async_main(
                     conda_name=name,
                     conda_version=version,
                     url=url,
+                    artifact=artifact,
                     expected=expected,
                 )
             except Exception as exc:  # noqa: BLE001
@@ -579,7 +694,10 @@ async def _async_main(
             return result
 
         results = await asyncio.gather(
-            *(runner(n, v, u, expected) for n, v, u, expected in targets)
+            *(
+                runner(n, v, u, artifact, expected)
+                for n, v, u, artifact, expected in targets
+            )
         )
 
     for result in results:
@@ -587,8 +705,13 @@ async def _async_main(
         summary.append(result)
         if bom is None:
             continue
-        out_path = out_dir / f"{result['name']}.json"
+        out_path = out_dir / f"{result['artifact_id']}.json"
         out_path.write_text(json.dumps(bom, indent=2) + "\n")
+
+    active_artifacts = {r.get("artifact_id") for r in summary if r.get("artifact_id")}
+    for stale in out_dir.glob("*.json"):
+        if stale.stem not in active_artifacts:
+            stale.unlink()
 
     generated_at = datetime.now(UTC).isoformat(timespec="seconds")
     inspection_payload = {
@@ -598,6 +721,12 @@ async def _async_main(
             r["name"]: {
                 "name": r["name"],
                 "version": auto_packages.get(r["name"], {}).get("version", ""),
+                "build": r.get("build"),
+                "subdir": r.get("subdir"),
+                "artifact_id": r.get("artifact_id"),
+                "sbom_path": r.get("sbom_path"),
+                "package_url": r.get("package_url"),
+                "package_filename": r.get("package_filename"),
                 "status": r.get("status"),
                 "ecosystem": r.get("ecosystem"),
                 "expected_ecosystems": r.get("expected_ecosystems"),
