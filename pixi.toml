@@ -117,6 +117,18 @@ args = [
   { arg = "ref", default = "main" },
 ]
 
+[tasks.gh-sbom-refresh]
+cmd = "gh workflow run sbom_refresh.yml --ref {{ ref }} -f only='{{ only }}' -f refresh_automap='{{ refresh_automap }}' -f automap_top_downloads='{{ automap_top_downloads }}' -f force_osv='{{ force_osv }}' -f parallel='{{ parallel }}'"
+description = "Trigger the embedded SBOM inspection refresh workflow"
+args = [
+  { arg = "only", default = "" },
+  { arg = "refresh_automap", default = "true" },
+  { arg = "automap_top_downloads", default = "1000" },
+  { arg = "force_osv", default = "false" },
+  { arg = "parallel", default = "8" },
+  { arg = "ref", default = "main" },
+]
+
 [tasks.gh-pages]
 cmd = "gh workflow run pages.yml --ref {{ ref }}"
 description = "Trigger the GitHub Pages deployment workflow"
