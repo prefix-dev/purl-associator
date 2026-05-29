@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useGithubAuth } from "./auth/useGithubAuth";
 import { BulkPanel } from "./components/BulkPanel";
+import { DeepInspectionPanel } from "./components/DeepInspectionPanel";
 import { LocalDraftBanner } from "./components/LocalDraftBanner";
 import { LoginModal } from "./components/LoginModal";
 import { MappingEditor } from "./components/MappingEditor";
@@ -8,6 +9,12 @@ import { PackageTable } from "./components/PackageTable";
 import { PRDrawer } from "./components/PRDrawer";
 import { Btn, Glyph, useTheme } from "./components/Primitives";
 import { repoFullName } from "./config";
+import {
+  loadSbomDetail,
+  loadSbomSummary,
+  type SbomDetailPayload,
+  type SbomSummaryPayload,
+} from "./data/sboms";
 import { purlsFromAlternatives } from "./data/purlAlternatives";
 import type { Edit, PackageEntry } from "./data/types";
 import { useMappingsData } from "./data/useMappingsData";
@@ -24,13 +31,40 @@ export function App() {
   const [filters, setFilters] = useState({
     unmappedOnly: false,
     unverifiedOnly: false,
+    deepOnly: false,
     ecosystem: "all",
   });
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
   const { token, user, error: authError, isLoggedIn, signOut } = useGithubAuth();
+  const [activeView, setActiveView] = useState<"mapper" | "deep">("mapper");
+  const [sbomSummary, setSbomSummary] = useState<SbomSummaryPayload | null>(null);
+  const [sbomDetails, setSbomDetails] = useState<
+    Record<string, SbomDetailPayload | null>
+  >({});
 
   const t = theme.t;
+
+  useEffect(() => {
+    loadSbomSummary().then(setSbomSummary);
+  }, []);
+
+  // Lazy-load the per-artifact SBOM-CVE detail when a package with matches is
+  // focused. ``null`` means "we tried and there is no detail file" (i.e. the
+  // package has 0 transitive CVEs) so we can render the clean-bill section.
+  useEffect(() => {
+    if (!focusedId) return;
+    const summary = sbomSummary?.packages[focusedId];
+    if (!summary) return;
+    if (sbomDetails[focusedId] !== undefined) return;
+    if (summary.advisory_count === 0) {
+      setSbomDetails((prev) => ({ ...prev, [focusedId]: null }));
+      return;
+    }
+    loadSbomDetail(summary).then((d) =>
+      setSbomDetails((prev) => ({ ...prev, [focusedId]: d })),
+    );
+  }, [focusedId, sbomSummary, sbomDetails]);
 
   // Default: when packages first arrive, focus the first row (but don't
   // mark it as selected — selection is the checkbox state).
@@ -49,6 +83,17 @@ export function App() {
     () => packages.filter((p) => selectedSet.has(p.name)),
     [packages, selectedSet],
   );
+
+  const deepInspectionNames = useMemo(() => {
+    const names = new Set<string>();
+    for (const p of packages) {
+      if (p.deep_inspection?.candidate) names.add(p.name);
+    }
+    for (const name of Object.keys(sbomSummary?.packages ?? {})) {
+      names.add(name);
+    }
+    return names;
+  }, [packages, sbomSummary]);
 
   const editsCount = Object.keys(edits).length;
   const showBulk = selectedSet.size > 1;
@@ -152,6 +197,27 @@ export function App() {
     });
   }
 
+  function showDeepInspections(): void {
+    setActiveView("deep");
+    setQ("");
+    setFilters({
+      unmappedOnly: false,
+      unverifiedOnly: false,
+      deepOnly: true,
+      ecosystem: "all",
+    });
+    const first = packages.find((p) => deepInspectionNames.has(p.name));
+    if (first) {
+      setFocusedId(first.name);
+      setSelectedSet(new Set());
+    }
+  }
+
+  function showPurlMapper(): void {
+    setActiveView("mapper");
+    setFilters((prev) => ({ ...prev, deepOnly: false }));
+  }
+
   return (
     <div
       className={theme.dark ? "dark-scope" : ""}
@@ -191,16 +257,22 @@ export function App() {
               paddingLeft: 14,
             }}
           >
-            <span
+            <button
+              onClick={showPurlMapper}
               style={{
-                color: t.fg1,
+                color: activeView === "mapper" ? t.fg1 : t.fg2,
                 padding: "4px 8px",
                 borderRadius: 6,
-                background: t.inset,
+                background: activeView === "mapper" ? t.inset : "transparent",
+                border: 0,
+                font: "inherit",
+                textTransform: "inherit",
+                letterSpacing: "inherit",
+                cursor: "pointer",
               }}
             >
               PURL Mapper
-            </span>
+            </button>
             <a
               href="./cve.html"
               style={{
@@ -212,6 +284,23 @@ export function App() {
             >
               CVE Dashboard
             </a>
+            <button
+              onClick={showDeepInspections}
+              style={{
+                color: activeView === "deep" ? t.fg1 : t.fg2,
+                background: activeView === "deep" ? t.inset : "transparent",
+                border: 0,
+                textDecoration: "none",
+                padding: "4px 8px",
+                borderRadius: 6,
+                font: "inherit",
+                textTransform: "inherit",
+                letterSpacing: "inherit",
+                cursor: "pointer",
+              }}
+            >
+              Deep Package Inspection
+            </button>
           </nav>
           <div
             style={{
@@ -382,8 +471,18 @@ export function App() {
         </div>
       )}
 
-      <div style={{ flex: 1, display: "flex", minHeight: 0 }}>
-        <div style={{ flex: "0 0 60%", minWidth: 0 }}>
+      <div
+        style={{
+          flex: 1,
+          display: "grid",
+          gridTemplateColumns:
+            activeView === "deep"
+              ? "minmax(0, 48fr) minmax(0, 52fr)"
+              : "minmax(0, 60fr) minmax(0, 40fr)",
+          minHeight: 0,
+        }}
+      >
+        <div style={{ minWidth: 0 }}>
           {payload ? (
             <PackageTable
               theme={theme}
@@ -397,6 +496,7 @@ export function App() {
               setQ={setQ}
               filters={filters}
               setFilters={setFilters}
+              deepInspectionNames={deepInspectionNames}
             />
           ) : (
             <div
@@ -412,28 +512,41 @@ export function App() {
           )}
         </div>
 
-        <div style={{ flex: 1, minWidth: 0, display: "flex" }}>
-          {showBulk ? (
-            <BulkPanel
-              theme={theme}
-              selectedPackages={selectedPackages}
-              edits={edits}
-              onApproveAll={handleBulkApprove}
-              onMarkUnmappedAll={handleBulkMarkUnmapped}
-              onResetSelected={handleBulkResetSelected}
-              onClearSelection={() => setSelectedSet(new Set())}
-            />
-          ) : (
-            <MappingEditor
+        {activeView === "mapper" ? (
+          <div style={{ minWidth: 0, display: "flex" }}>
+            {showBulk ? (
+              <BulkPanel
+                theme={theme}
+                selectedPackages={selectedPackages}
+                edits={edits}
+                onApproveAll={handleBulkApprove}
+                onMarkUnmappedAll={handleBulkMarkUnmapped}
+                onResetSelected={handleBulkResetSelected}
+                onClearSelection={() => setSelectedSet(new Set())}
+              />
+            ) : (
+              <MappingEditor
+                theme={theme}
+                pkg={focusedPkg}
+                edit={focusedPkg ? edits[focusedPkg.name] : undefined}
+                onEdit={handleEdit}
+                onApprove={handleApprove}
+                onResetAuto={handleResetAuto}
+              />
+            )}
+          </div>
+        ) : (
+          <div style={{ minWidth: 0, display: "flex" }}>
+            <DeepInspectionPanel
               theme={theme}
               pkg={focusedPkg}
-              edit={focusedPkg ? edits[focusedPkg.name] : undefined}
-              onEdit={handleEdit}
-              onApprove={handleApprove}
-              onResetAuto={handleResetAuto}
+              summary={
+                focusedPkg ? sbomSummary?.packages[focusedPkg.name] ?? null : null
+              }
+              detail={focusedPkg ? sbomDetails[focusedPkg.name] ?? null : null}
             />
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {drawerOpen && (

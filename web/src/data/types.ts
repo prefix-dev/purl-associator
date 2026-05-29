@@ -62,6 +62,13 @@ export type PackageEntry = {
   auto?: AutoMapping;
   /** total downloads on prefix.dev for this package (null if not ranked) */
   download_count?: number | null;
+  deep_inspection?: {
+    candidate: boolean;
+    ecosystems: string[];
+    signals: string[];
+    uses_cargo_auditable: boolean | null;
+    warning: string | null;
+  } | null;
 };
 
 export type MappingsPayload = {

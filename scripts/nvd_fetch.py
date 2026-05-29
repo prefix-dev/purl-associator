@@ -31,9 +31,8 @@ import hashlib
 import json
 import re
 import time
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterator
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
 from pathlib import Path
 
 import httpx
@@ -132,11 +131,7 @@ async def _download_feed(
     """Download ``nvdcve-2.0-<name>.json.gz`` if the local sha256 doesn't
     match ``expected_sha256``. Otherwise reuse the cached file."""
     target = _gz_path(cache_dir, name)
-    if (
-        expected_sha256
-        and target.exists()
-        and _sha256_of(target) == expected_sha256
-    ):
+    if expected_sha256 and target.exists() and _sha256_of(target) == expected_sha256:
         return target  # cache hit — same content, skip the network
 
     url = f"{FEED_BASE}/nvdcve-2.0-{name}.json.gz"
@@ -145,7 +140,9 @@ async def _download_feed(
     async with client.stream("GET", url, follow_redirects=True) as resp:
         if resp.status_code != 200:
             progress.update(task_id, visible=False)
-            raise RuntimeError(f"NVD feed download failed for {name}: {resp.status_code}")
+            raise RuntimeError(
+                f"NVD feed download failed for {name}: {resp.status_code}"
+            )
         total = int(resp.headers.get("Content-Length") or 0) or None
         progress.update(task_id, total=total)
         progress.start_task(task_id)
@@ -418,7 +415,9 @@ async def fetch_index(
 @app.command()
 def main(
     cache_dir: Path = typer.Option(DEFAULT_CACHE, help="Where to store NVD feed files"),
-    force: bool = typer.Option(False, help="Re-download every feed regardless of sha256"),
+    force: bool = typer.Option(
+        False, help="Re-download every feed regardless of sha256"
+    ),
     max_modified_age_hours: float = typer.Option(
         2.0, help="Re-download the modified feed if older than this"
     ),
