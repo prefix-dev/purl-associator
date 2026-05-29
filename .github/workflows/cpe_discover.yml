@@ -1,0 +1,140 @@
+name: Discover CPE mappings
+
+on:
+  workflow_dispatch:
+    inputs:
+      top:
+        description: "Top-N most-downloaded packages to consider"
+        required: false
+        default: "100"
+      only:
+        description: "Comma-separated package names (blank = all)"
+        required: false
+        default: ""
+      skip_vet:
+        description: "Skip the AI vet step (heuristics only)"
+        required: false
+        default: "false"
+        type: boolean
+  schedule:
+    # Weekly, Mondays at 06:13 UTC. Off the hour to avoid the cron rush,
+    # staggered from automap (03:17 daily) and cve_refresh (04:37 daily).
+    - cron: "13 6 * * 1"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: cpe-discover
+  cancel-in-progress: false
+
+jobs:
+  cpe-discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: prefix-dev/setup-pixi@v0.9.5
+        with:
+          pixi-version: latest
+          cache: true
+
+      - name: Run heuristic discovery
+        run: |
+          set -euo pipefail
+          ARGS=(--top "${{ inputs.top || '100' }}")
+          if [ -n "${{ inputs.only }}" ]; then ARGS+=(--only "${{ inputs.only }}"); fi
+          pixi run cpe-discover "${ARGS[@]}"
+
+      - name: AI tiebreaker for ambiguous bucket
+        id: vet
+        if: ${{ inputs.skip_vet != 'true' }}
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          set -euo pipefail
+          # Fixed _workflow.json output path is safe only because the
+          # ``concurrency: cpe-discover`` group above serializes runs. Two
+          # parallel runs would race on this file — keep the concurrency
+          # group in place if you change anything here.
+          ARGS=(--out mappings/cpe_vet/_workflow.json)
+          if [ -n "${{ inputs.only }}" ]; then ARGS+=(--only "${{ inputs.only }}"); fi
+          # cpe_vet exits cleanly with "nothing to do" when the ambiguous
+          # bucket is empty; record whether a fresh file was actually
+          # written so the promote step can avoid stale-file reuse.
+          rm -f mappings/cpe_vet/_workflow.json
+          pixi run cpe-vet "${ARGS[@]}"
+          if [ -f mappings/cpe_vet/_workflow.json ]; then
+            echo "vet_file=mappings/cpe_vet/_workflow.json" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Promote accepts (+ confident AI verdicts) to a contribution
+        run: |
+          set -euo pipefail
+          ARGS=()
+          if [ "${{ inputs.skip_vet }}" = "true" ]; then
+            ARGS+=(--no-vet)
+          elif [ -n "${{ steps.vet.outputs.vet_file || '' }}" ]; then
+            # Belt-and-braces: pin the vet file produced by this run, so
+            # cpe_promote can't accidentally reuse a tracked vet file from
+            # a prior discover/vet run.
+            ARGS+=(--vet-file "${{ steps.vet.outputs.vet_file }}")
+          else
+            # No fresh vet file this run; explicitly skip the AI layer so
+            # we don't fall back to a tracked stale one.
+            ARGS+=(--no-vet)
+          fi
+          pixi run cpe-promote "${ARGS[@]}"
+
+      - name: Merge mappings for the SPA
+        # Confirms the new contribution flows through merge_mappings cleanly.
+        # The output (web/public/mappings.json) is gitignored — pages.yml
+        # regenerates it on deploy.
+        run: pixi run -e lite merge
+
+      - name: Open / update PR
+        uses: peter-evans/create-pull-request@v8
+        with:
+          # Audit artifacts (candidates + vet) and the shipping contribution.
+          # web/public/mappings.json is gitignored so won't be added even if
+          # it appears in the workspace.
+          add-paths: |
+            mappings/cpe_candidates/**
+            mappings/cpe_vet/**
+            mappings/contributions/*--cpe-pipeline--*.json
+          branch: cpe-pipeline/refresh
+          base: main
+          title: "cpe: refresh CPE mappings (automated)"
+          commit-message: "cpe: refresh CPE mappings"
+          delete-branch: true
+          body: |
+            Automated discovery + AI vet of CPE coordinates for top-downloaded
+            conda-forge packages that lack OSV-mappable PURLs.
+
+            ## Pipeline
+
+            1. `scripts.cpe_discover` — scores NVD index lookups against H1–H8
+               heuristics, buckets into accept / ambiguous / drop.
+            2. `scripts.cpe_vet` — Claude Haiku tiebreaker on the ambiguous
+               bucket (skipped when `skip_vet=true`).
+            3. `scripts.cpe_promote` — writes one contribution file unioning
+               heuristic accepts + confident AI verdicts.
+
+            ## Files in this PR
+
+            - `mappings/contributions/*--cpe-pipeline--*.json` — shipping
+              payload; the CPEs that will appear on `mappings.json` after
+              merge.
+            - `mappings/cpe_candidates/<ts>.json` — full audit of every
+              candidate seen, including drops, with per-heuristic scores.
+            - `mappings/cpe_vet/<ts>--<id>.json` — Haiku verdicts for the
+              ambiguous bucket (when AI vet ran).
+
+            Review the contribution file first; the audit files exist for
+            reference but don't directly change behaviour.
+
+            Re-running discover is naturally idempotent — already-CPE'd
+            packages are skipped by `_load_existing_cpes` before NVD is even
+            queried, so this PR won't propose duplicates on subsequent runs.

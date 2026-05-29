@@ -49,6 +49,9 @@ osv-fetch = "python -m scripts.osv_fetch"
 nvd-fetch = "python -m scripts.nvd_fetch"
 cve-match = "python -m scripts.cve_match"
 nvd-cve-match = "python -m scripts.nvd_prototype"
+cpe-discover = "python -m scripts.cpe_discover"
+cpe-vet = "python -m scripts.cpe_vet"
+cpe-promote = "python -m scripts.cpe_promote"
 lint = { cmd = "ruff check scripts && ruff format --check scripts", env = {} }
 fmt = "ruff format scripts"
 
@@ -137,6 +140,16 @@ args = [
   { arg = "only", default = "" },
   { arg = "ai_batch_size", default = "15" },
   { arg = "commit_every", default = "16" },
+]
+
+[tasks.gh-cpe-discover]
+cmd = "gh workflow run cpe_discover.yml --ref {{ ref }} -f top='{{ top }}' -f only='{{ only }}' -f skip_vet='{{ skip_vet }}'"
+description = "Trigger the CPE discovery workflow"
+args = [
+  { arg = "ref", default = "main" },
+  { arg = "top", default = "100" },
+  { arg = "only", default = "" },
+  { arg = "skip_vet", default = "false" },
 ]
 
 # Local app/Worker helpers.
