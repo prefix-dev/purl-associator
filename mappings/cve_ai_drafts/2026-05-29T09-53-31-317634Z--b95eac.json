@@ -1,0 +1,1222 @@
+{
+  "assessments": {
+    "crawl4ai::GHSA-5882-5rx9-xgxp": {
+      "advisory_id": "GHSA-5882-5rx9-xgxp",
+      "affected_versions": {
+        "agrees_with_match": true,
+        "reasoning": "The OSV ECOSYSTEM range has a single event pair: introduced=0, fixed=0.8.0. All conda-forge releases through 0.7.2 fall within this range, and the 19 versions listed in the match (0.3.4 through 0.7.2) align correctly with the PyPI versions in the OSV record. The `affects_future: True` flag is appropriate because conda-forge has not yet packaged 0.8.0, so new installs from conda-forge will continue to land on affected versions until the feedstock is updated. No additions or removals are warranted.",
+        "suggested_adds": [],
+        "suggested_removes": []
+      },
+      "notes": "Both advisories supplied are identical duplicates of GHSA-5882-5rx9-xgxp; a single assessment covers both. The conda-forge feedstock maintainer should track the 0.8.0 PyPI release and expedite the recipe bump given the CRITICAL rating. The `affects_future: True` flag should be cleared once 0.8.0 is published to conda-forge.",
+      "openvex_action_statement": "Upgrade to crawl4ai 0.8.0 once available in conda-forge. In the interim, users running the Docker API server should either disable the API, block the `/crawl` endpoint at the network or firewall level, or add authentication in front of it. Users consuming crawl4ai purely as a Python library (not running the Docker API server) are not directly reachable via this attack vector but should still upgrade when the fix lands.",
+      "openvex_impact_statement": null,
+      "openvex_justification": null,
+      "openvex_status": "affected",
+      "package": "crawl4ai",
+      "rationale": "The conda-forge crawl4ai package is pinned at 0.7.2, which falls squarely within the OSV ECOSYSTEM range [0, 0.8.0), and 0.7.2 is explicitly listed among the affected versions. The fix landed in 0.8.0 (removal of `__import__` from `allowed_builtins` in `hook_manager.py` and hooks-disabled-by-default), and that version is not yet present in conda-forge, so the current conda artifact ships the vulnerable code. The vulnerability is real and correctly attributed: the `hook_manager.py` path is part of the installable Python package, not a Docker image-only artifact. However, exploitability requires that the user actually runs the crawl4ai Docker API server (exposing `/crawl` over the network); users who import crawl4ai as a library in their own scripts never instantiate the unauthenticated HTTP endpoint and are not reachable via this attack vector. The CVSS 10.0 score is calibrated for an internet-exposed API deployment, which is a specific and non-universal deployment pattern for a conda-installed package. Until conda-forge ships 0.8.0, all conda versions of crawl4ai ship vulnerable code, and users running the Docker API server should apply mitigations immediately.",
+      "runtime_applicability": {
+        "applies": "partial",
+        "reasoning": "The vulnerable code (`hook_manager.py` and the `/crawl` HTTP endpoint) is shipped as part of the Python package installed by conda, so it is present on disk after installation. However, the attack surface only opens when the user explicitly runs crawl4ai in Docker API server mode \u2014 the unauthenticated `/crawl` endpoint is not activated by merely importing the library. Conda users deploying crawl4ai as an API server are fully exposed; conda users using it as a scraping library in their own code are not reachable via this network attack vector. This makes applicability partial rather than universal."
+      },
+      "severity_in_conda_context": {
+        "assessment": "lower",
+        "reasoning": "The CVSS 4.0 score of 10.0 is appropriate for an internet-facing, unauthenticated Docker API deployment. In the conda ecosystem, crawl4ai is predominantly consumed as a Python library rather than deployed as a network API server, so the realistic attacker reach is narrower than the CVSS vector implies. Users who do run the Docker API server face the full severity; but a blanket CRITICAL label on the conda package may overstate risk for the majority of library-mode users. The severity is correctly stated for the worst-case deployment, but should be contextualized as lower for typical conda library usage."
+      },
+      "severity_seen": {
+        "cvss": 10.0,
+        "level": "CRITICAL"
+      }
+    },
+    "deepdiff::GHSA-mw26-5g2v-hqw3": {
+      "advisory_id": "GHSA-mw26-5g2v-hqw3",
+      "affected_versions": {
+        "agrees_with_match": true,
+        "reasoning": "All 33 versions listed (5.0.0 through 8.6.0) fall within the OSV ECOSYSTEM range [introduced: 5.0.0, fixed: 8.6.1]. The conda-forge latest (9.1.0) is not listed and correctly sits outside the affected range. The affects_future: false flag is consistent. No conda-forge releases appear to be missing from or incorrectly included in the match.",
+        "suggested_adds": [],
+        "suggested_removes": []
+      },
+      "notes": "The fix (commit c69c06c) adds dunder-attribute traversal guards in `_get_nested_obj` and related paths. Conda-forge already ships 9.1.0 which is post-fix. Maintainers of downstream packages that depend on deepdiff and use the `Delta` API should audit whether user-controlled input can reach `Delta.__init__` \u2014 if so, upgrading is urgent regardless of the conda-forge version pin. The pydash advisory (github.com/dgilland/pydash/issues/180) is cited as prior art for the class-pollution pattern and its mitigation approach.",
+      "openvex_action_statement": "Upgrade to deepdiff >= 8.6.1 (conda-forge latest 9.1.0 is already fixed). For any application that passes user-controlled input to the Delta class, treat prior versions as critically vulnerable and upgrade immediately.",
+      "openvex_impact_statement": null,
+      "openvex_justification": null,
+      "openvex_status": "fixed",
+      "package": "deepdiff",
+      "rationale": "The OSV range covers deepdiff 5.0.0 through 8.6.0 (fixed in 8.6.1), and the current conda-forge release is 9.1.0 \u2014 well past the fix point. The 33 affected versions listed in the match all fall within the OSV range, and the fix commit (c69c06c) landed before 8.6.1. Critically, the conda-forge artifact at its latest version (9.1.0) is not vulnerable; older conda builds in the 5.x\u20138.6.0 range are. The vulnerability is a real, critical class pollution flaw: an attacker who can supply a crafted dictionary or pickle bytes to the `Delta` constructor can pollute `SAFE_TO_IMPORT` and achieve RCE via deserialization, or corrupt builtins for DoS. However, exploitation requires the downstream application to explicitly instantiate `Delta` with untrusted, user-controlled input \u2014 ordinary deepdiff comparison workflows (`DeepDiff(a, b)`) do not trigger this path. The CVSS 4.0 score of 10.0 reflects the worst-case deployment (Delta exposed to raw network input), but this is an atypical usage pattern for most conda-forge consumers of deepdiff.",
+      "runtime_applicability": {
+        "applies": "partial",
+        "reasoning": "The vulnerable code path lives in `deepdiff.delta.Delta` and `deepdiff.path._get_nested_obj`, which are part of the installed runtime package \u2014 not build-time only. However, the vulnerability is only reachable when a downstream application explicitly constructs a `Delta` object from user-supplied data (bytes for pickle or a crafted dictionary). Standard deepdiff usage \u2014 calling `DeepDiff(a, b)` to compare two Python objects \u2014 does not invoke Delta in a vulnerable way. Many conda-forge consumers use deepdiff purely for test assertions or data diffing utilities and never expose `Delta` to external input, meaning the vulnerable code is present but the attack surface is not exercised."
+      },
+      "severity_in_conda_context": {
+        "assessment": "lower",
+        "reasoning": "The CVSS 4.0 score of 10.0 (AV:N/AC:L/AT:N/PR:N/UI:N) models a scenario where Delta is directly network-reachable with no authentication, which is the worst-case deployment. In practice, deepdiff is predominantly used as a utility library for testing, data comparison, and diff generation \u2014 not as part of a network-facing service boundary where raw Delta input arrives from untrusted clients. Reaching the vulnerable code requires a deliberate application design choice to expose Delta to external input. For the subset of deployments that do expose Delta to network-supplied data, the full 10.0 severity applies; for the majority of conda-forge consumers, the effective risk is substantially lower."
+      },
+      "severity_seen": {
+        "cvss": 10.0,
+        "level": "CRITICAL"
+      }
+    },
+    "fastmcp::GHSA-vv7q-7jx5-f767": {
+      "advisory_id": "GHSA-vv7q-7jx5-f767",
+      "affected_versions": {
+        "agrees_with_match": false,
+        "reasoning": "The OSV range fixes at 3.2.0, and the conda-forge package ships 3.3.1, which falls outside the affected range. The auto-derived match flagged the package without accounting for the current conda version exceeding the fix boundary. No conda versions at or above 3.2.0 appear in the OSV affected versions list, so the match overclaims for the currently shipped conda artifact. Older conda pins at versions <= 3.1.0 would be legitimately affected.",
+        "suggested_adds": [],
+        "suggested_removes": []
+      },
+      "notes": "The upstream fix is commit 40bdfb6b1de0ce30609ee9ba5bb95ecd04a9fb71, tagged in v3.2.0. conda-forge already ships 3.3.1, two minor releases past the fix. No action is needed for current conda-forge users. Environments that pin fastmcp to any version <= 3.1.0 and use the OpenAPIProvider feature should be flagged as legitimately affected and upgraded to >= 3.2.0.",
+      "openvex_action_statement": null,
+      "openvex_impact_statement": null,
+      "openvex_justification": null,
+      "openvex_status": "fixed",
+      "package": "fastmcp",
+      "rationale": "The OSV ECOSYSTEM range for GHSA-vv7q-7jx5-f767 is unambiguous: introduced='0', fixed='3.2.0'. The conda-forge package ships version 3.3.1, which is two minor versions above the fix boundary, so the conda artifact is not vulnerable to this advisory. The 28 affected versions enumerated in the OSV record top out at 3.1.0; 3.3.1 does not appear among them, and affects_future is explicitly False. The vulnerability resides in the OpenAPIProvider's RequestDirector._build_url() method and is only reachable when a consumer explicitly configures an OpenAPIProvider to proxy MCP tool calls to a backend REST service\u2014a non-default, specialised integration mode. Even for historically vulnerable versions, an attacker would need to be an authenticated MCP client able to supply crafted path parameter values, materially limiting the network-facing exposure implied by the AV:N/PR:N vector. The fix (URL-encoding via urllib.parse.quote before urljoin substitution) shipped in v3.2.0 and is present in the conda artifact at 3.3.1.",
+      "runtime_applicability": {
+        "applies": "partial",
+        "reasoning": "The vulnerable code path in fastmcp/utilities/openapi/director.py is only exercised when the OpenAPIProvider is explicitly instantiated to proxy MCP tool calls to an external REST API. Standard FastMCP usage\u2014declaring tools with @tool decorators, running a plain MCP server or client\u2014never reaches RequestDirector._build_url(). Only deployments that deliberately use the OpenAPI integration feature are exposed, making this a partial rather than universal runtime concern."
+      },
+      "severity_in_conda_context": {
+        "assessment": "lower",
+        "reasoning": "The conda artifact at 3.3.1 is past the fix point, so the CVSS 4.0 score of 10.0 does not apply to the shipped package. For historically affected conda pins (<3.2.0), the practical severity would still be lower than the headline score suggests: exploitation requires an operator-configured OpenAPIProvider (non-default) and an attacker who is already an authorised MCP client with the ability to control path parameter values\u2014not the anonymous, network-adjacent adversary the AV:N/PR:N/AT:N vector implies."
+      },
+      "severity_seen": {
+        "cvss": 10.0,
+        "level": "CRITICAL"
+      }
+    },
+    "mlflow-pipelines::GHSA-554w-xh4j-8w64": {
+      "advisory_id": "GHSA-554w-xh4j-8w64",
+      "affected_versions": {
+        "agrees_with_match": true,
+        "reasoning": "The OSV range 'introduced: 0, fixed: 2.9.2' covers all three conda-forge mlflow-pipelines versions (1.28.0, 1.29.0, 1.30.0). The listed affected_versions set is correct and complete for the conda-forge release history of this package.",
+        "suggested_adds": [],
+        "suggested_removes": []
+      },
+      "notes": "GHSA-554w-xh4j-8w64 and GHSA-5p3h-7fwh-92rc were both fixed in the 2.9.2 release and share the same remediation path; mlflow-pipelines 1.30.0 users are simultaneously exposed to both. The conda-forge mlflow-pipelines feedstock has been effectively abandoned at 1.30.0 with no planned future releases.",
+      "openvex_action_statement": "Upgrade mlflow to >= 2.9.2 by migrating to the mlflow-recipes conda package, which is the 2.x successor to mlflow-pipelines. Do not expose the MLflow tracking server to untrusted networks until the upgrade is complete.",
+      "openvex_impact_statement": null,
+      "openvex_justification": null,
+      "openvex_status": "affected",
+      "package": "mlflow-pipelines",
+      "rationale": "mlflow-pipelines 1.30.0 installs mlflow 1.30.0 as its core dependency, and version 1.30.0 falls squarely within the OSV affected range (introduced: 0, fixed: 2.9.2). The CVE-2023-6831 path traversal bug is in the MLflow tracking server's artifact file-serving path, patched in commit 1da75dfce. mlflow-pipelines users who deploy the MLflow tracking server to persist and share pipeline run artifacts are directly exposed; the server code ships inside the mlflow package that mlflow-pipelines depends on. The conda-forge mlflow-pipelines package was frozen at 1.30.0 (the pipeline feature was renamed mlflow-recipes in the 2.x line), so no fixed version is available under this package name. All three conda versions (1.28.0, 1.29.0, 1.30.0) fall in the vulnerable range, and no remediation exists short of migrating to the mlflow-recipes package at mlflow >= 2.9.2.",
+      "runtime_applicability": {
+        "applies": "yes",
+        "reasoning": "The vulnerable code resides in the MLflow tracking server artifact-serving layer, which is bundled in the mlflow Python package that mlflow-pipelines depends on. Users running the mlflow tracking server to record and share pipeline run artifacts are directly exposed. mlflow-pipelines encourages use of a centralized tracking server for team workflows, making this a realistic runtime attack vector."
+      },
+      "severity_in_conda_context": {
+        "assessment": "same",
+        "reasoning": "The CVSS 10.0 Critical rating reflects unauthenticated remote path traversal enabling arbitrary writes on the server (AV:N/AC:L/PR:N/UI:N). For mlflow-pipelines deployments that expose the tracking server over a network, this severity is accurate. Deployments using only a local file-based tracking URI reduce the network attack surface, but the vulnerable code is still present and the rating is appropriate for the general shared-server usage pattern."
+      },
+      "severity_seen": {
+        "cvss": 10.0,
+        "level": "CRITICAL"
+      }
+    },
+    "mlflow-pipelines::GHSA-5p3h-7fwh-92rc": {
+      "advisory_id": "GHSA-5p3h-7fwh-92rc",
+      "affected_versions": {
+        "agrees_with_match": true,
+        "reasoning": "All three conda-forge versions (1.28.0, 1.29.0, 1.30.0) fall within the OSV affected range 'introduced: 0, fixed: 2.9.2' and below the last_known_affected ceiling of 2.8.1. The listed affected_versions set is correct and complete for the conda-forge release history.",
+        "suggested_adds": [],
+        "suggested_removes": []
+      },
+      "notes": "CVE-2023-6018 and CVE-2023-6831 are both present simultaneously in mlflow-pipelines 1.30.0 and share the same fix release (2.9.2). Neither can be patched within the mlflow-pipelines 1.x conda line; full remediation requires migrating to mlflow-recipes on conda-forge.",
+      "openvex_action_statement": "Upgrade mlflow to >= 2.9.2 by migrating to the mlflow-recipes conda package (the 2.x successor to mlflow-pipelines). Until upgraded, restrict network access to the MLflow tracking server to trusted, authenticated clients only.",
+      "openvex_impact_statement": null,
+      "openvex_justification": null,
+      "openvex_status": "affected",
+      "package": "mlflow-pipelines",
+      "rationale": "mlflow-pipelines 1.30.0 depends on mlflow 1.30.0, which lies within the OSV affected range (introduced: 0, fixed: 2.9.2; last_known_affected: 2.8.1). CVE-2023-6018 is an arbitrary file-write vulnerability in the MLflow web server's model upload endpoint, patched in commit 55c72d023. Because mlflow-pipelines ships the full mlflow package including its server components, any deployment running the MLflow tracking server is directly exposed. The impact is severe: the advisory documents that an attacker with network access can overwrite arbitrary files writable by the server process, including shell initialization files, to achieve persistent code execution. All three conda versions (1.28.0, 1.29.0, 1.30.0) are in the vulnerable range. No fix is available within the mlflow-pipelines conda line since the package was frozen at 1.30.0.",
+      "runtime_applicability": {
+        "applies": "yes",
+        "reasoning": "The arbitrary file-write vulnerability lives in the MLflow tracking server's file upload endpoint, code that is present in the mlflow package bundled with mlflow-pipelines. Any deployment running mlflow server or mlflow ui is exposed at runtime. Team-oriented mlflow-pipelines usage commonly involves a shared tracking server, making this a realistic and high-priority attack vector."
+      },
+      "severity_in_conda_context": {
+        "assessment": "same",
+        "reasoning": "The CVSS 10.0 Critical score (AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H) correctly characterizes the risk: unauthenticated network-reachable arbitrary file write leading to full system compromise. For network-exposed mlflow server deployments \u2014 a common pattern for mlflow-pipelines users coordinating across machines \u2014 this severity is accurate. Local-only tracking reduces the attack surface but does not eliminate the vulnerable code."
+      },
+      "severity_seen": {
+        "cvss": 10.0,
+        "level": "CRITICAL"
+      }
+    },
+    "mlflow-pipelines::GHSA-5q6c-ffvg-xcm9": {
+      "advisory_id": "GHSA-5q6c-ffvg-xcm9",
+      "affected_versions": {
+        "agrees_with_match": false,
+        "reasoning": "The OSV range 'introduced: 0, fixed: 2.9.0' is technically a correct version-number interval but is misleading: the `mlflow.data.http_dataset_source` module containing the vulnerability was not introduced until MLflow 2.2.0. None of the 1.x conda versions (1.28.0, 1.29.0, 1.30.0) contain the affected code. All three should be removed from the affected set; the realistic affected window is mlflow 2.2.0 through 2.8.1.",
+        "suggested_adds": [],
+        "suggested_removes": [
+          "1.28.0",
+          "1.29.0",
+          "1.30.0"
+        ]
+      },
+      "notes": "The OSV 'introduced: 0' range appears to be an over-classification that should be corrected to 'introduced: 2.2.0'. A maintainer may want to flag this upstream to the OSV/GitHub Advisory Database. The mlflow-pipelines conda package is not affected by this CVE and should be excluded from any automated patch-urgency workflows triggered by GHSA-5q6c-ffvg-xcm9.",
+      "openvex_action_statement": null,
+      "openvex_impact_statement": "The `mlflow.data.http_dataset_source` module that contains the CVE-2024-0520 vulnerability was introduced in mlflow 2.2.0 and does not exist in mlflow 1.30.0. Since mlflow-pipelines 1.30.0 depends on mlflow 1.30.0, the vulnerable code is not present in this conda artifact and cannot be reached at runtime.",
+      "openvex_justification": "vulnerable_code_not_present",
+      "openvex_status": "not_affected",
+      "package": "mlflow-pipelines",
+      "rationale": "CVE-2024-0520 is a command injection / path traversal vulnerability specifically within `mlflow.data.http_dataset_source.py`, a module that was introduced in the mlflow 2.x series as part of the dataset-tracking API (first shipped around MLflow 2.2.0). mlflow-pipelines 1.30.0 depends on mlflow 1.30.0, which predates the entire `mlflow.data` subpackage \u2014 the module `mlflow.data.http_dataset_source` simply does not exist in any 1.x release. Although the OSV record states an affected range of 'introduced: 0', this is an over-broad classification; the vulnerable code path cannot be reached in mlflow 1.30.0 because the module was never shipped in that release. The fixed version is 2.9.0, and the realistic attack surface is mlflow 2.2.0 through 2.8.1. mlflow-pipelines 1.30.0 is not affected by this specific CVE.",
+      "runtime_applicability": {
+        "applies": "no",
+        "reasoning": "The module `mlflow.data.http_dataset_source` does not exist in mlflow 1.30.0. The `mlflow.data` dataset-tracking API was introduced in the mlflow 2.x series and is absent from the 1.x release line entirely. There is no code path through which the CVE-2024-0520 injection can be triggered in mlflow-pipelines 1.30.0."
+      },
+      "severity_in_conda_context": {
+        "assessment": "lower",
+        "reasoning": "For mlflow-pipelines 1.30.0 specifically, the effective severity is zero \u2014 the vulnerable module does not exist in this release. The CVSS 10.0 Critical rating is accurate for mlflow 2.x deployments (2.2.0\u20132.8.1) where `mlflow.data.http_dataset_source` is present and reachable, but does not apply here."
+      },
+      "severity_seen": {
+        "cvss": 10.0,
+        "level": "CRITICAL"
+      }
+    },
+    "mlflow-pipelines::GHSA-f798-qm4r-23r5": {
+      "advisory_id": "GHSA-f798-qm4r-23r5",
+      "affected_versions": {
+        "agrees_with_match": true,
+        "reasoning": "The OSV ECOSYSTEM range event 'introduced: 0 / fixed: 2.8.1' covers 1.28.0, 1.29.0, and 1.30.0 without ambiguity. All three listed conda versions predate the fix by a wide margin. No version adjustments are warranted.",
+        "suggested_adds": [],
+        "suggested_removes": []
+      },
+      "notes": "Since mlflow-pipelines on conda-forge appears to be pinned at the 1.x series with no further releases, there is effectively no upgrade path within this conda package. Maintainers should consider EOL-marking the feedstock or redirecting users to the mainline mlflow conda-forge package.",
+      "openvex_action_statement": "No fixed version of mlflow-pipelines is available on conda-forge (latest is 1.30.0, fix requires >= 2.8.1). Users should restrict network access to the MLflow tracking server to trusted hosts only, or migrate to the mainline mlflow conda-forge package at a version >= 2.8.1. Avoid exposing the tracking server on untrusted or public networks.",
+      "openvex_impact_statement": null,
+      "openvex_justification": null,
+      "openvex_status": "affected",
+      "package": "mlflow-pipelines",
+      "rationale": "The OSV range spans all versions from 0 through 2.8.1 (exclusive), placing mlflow-pipelines 1.30.0 unambiguously in the vulnerable window. This vulnerability permits an unauthenticated remote attacker to PUT arbitrary files to the server filesystem via the MLflow tracking server's REST endpoint. The mlflow-pipelines package at 1.30.0 is built on the full mlflow runtime, which bundles the tracking server; Pipelines workflows are specifically designed to log runs and artifacts against a running tracking server, so the vulnerable endpoint is squarely on the runtime path. The fix commit (cf83dad4) targeted the 2.x branch only, and no backport exists for the 1.x line shipped on conda-forge. With no patched conda artifact available and the server component actively exercised by typical mlflow-pipelines usage, this is a confirmed affected match.",
+      "runtime_applicability": {
+        "applies": "yes",
+        "reasoning": "The vulnerable endpoint lives in the MLflow tracking server REST API, which is a core runtime component of mlflow-pipelines 1.30.0. MLflow Pipelines is specifically designed to record runs against a tracking server; running the server is on the standard usage path, not an optional or build-time-only feature. The vulnerable file-upload handler is reachable as soon as the server is started."
+      },
+      "severity_in_conda_context": {
+        "assessment": "same",
+        "reasoning": "CVSS 10.0 (AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H) reflects unauthenticated arbitrary file write on a network service. MLflow tracking servers are routinely exposed to team networks or cloud subnets; the score correctly captures the impact when the server is reachable. There is no conda-specific packaging decision that would reduce attack surface here."
+      },
+      "severity_seen": {
+        "cvss": 10.0,
+        "level": "CRITICAL"
+      }
+    },
+    "mlflow-pipelines::GHSA-fmxj-6h9g-6vw3": {
+      "advisory_id": "GHSA-fmxj-6h9g-6vw3",
+      "affected_versions": {
+        "agrees_with_match": true,
+        "reasoning": "OSV range 'introduced: 0 / fixed: 2.5.0' directly encompasses 1.28.0, 1.29.0, and 1.30.0. The listed conda versions are correct and complete for the conda-forge release history of this package.",
+        "suggested_adds": [],
+        "suggested_removes": []
+      },
+      "notes": "Both CVE-2023-6015 and CVE-2023-3765 affect the same server component at overlapping version ranges. A single upgrade to >= 2.8.1 (the higher of the two fix versions) would remediate both. The conda-forge mlflow-pipelines feedstock should be flagged for EOL or migration guidance.",
+      "openvex_action_statement": "No patched mlflow-pipelines release exists on conda-forge. Users should either restrict the tracking server to localhost or a trusted VPN segment, or migrate to the mainline mlflow conda-forge package at >= 2.5.0. Directory traversal payloads can reach this endpoint without authentication, so network-level controls are the only mitigation available at this version.",
+      "openvex_impact_statement": null,
+      "openvex_justification": null,
+      "openvex_status": "affected",
+      "package": "mlflow-pipelines",
+      "rationale": "The OSV range covers all versions from 0 through 2.5.0 (exclusive), and mlflow-pipelines 1.30.0 falls well within this window. The absolute path traversal vulnerability allows an unauthenticated remote attacker to read or write files outside the intended artifact root through the MLflow tracking server. As with CVE-2023-6015, the mlflow-pipelines package bundles the full MLflow server runtime, and running a tracking server is a normal part of using MLflow Pipelines to log pipeline runs. The fix was committed at 6dde9375 and released in 2.5.0; no backport to the 1.x series was produced. The severity and the auto-derived version list are both consistent with the OSV record and the package's actual behaviour.",
+      "runtime_applicability": {
+        "applies": "yes",
+        "reasoning": "Path traversal in the tracking server's artifact or file-serving endpoint is exploitable whenever the server process is running and network-reachable. The MLflow tracking server is a first-class runtime component of mlflow-pipelines, not a dev-only or build-time dependency. No optional feature flag gates the vulnerable code path."
+      },
+      "severity_in_conda_context": {
+        "assessment": "same",
+        "reasoning": "CVSS 10.0 (AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H) is justified: unauthenticated path traversal can lead to full host compromise when the server process has broad filesystem access, which is common in MLflow deployments. The conda packaging does not apply any filesystem sandboxing that would reduce this risk."
+      },
+      "severity_seen": {
+        "cvss": 10.0,
+        "level": "CRITICAL"
+      }
+    },
+    "mlflow-pipelines::GHSA-r23q-823p-vmf7": {
+      "advisory_id": "GHSA-r23q-823p-vmf7",
+      "affected_versions": {
+        "agrees_with_match": false,
+        "reasoning": "The OSV 'introduced: 0' event over-broad. The advisory text constrains the actual scope to version 3.8.0 (fixed in 3.8.1). All three conda versions in the current affected list are from the 1.x series and should be removed. No 3.x builds of mlflow-pipelines exist on conda-forge, so there are no affected conda versions to add.",
+        "suggested_adds": [],
+        "suggested_removes": [
+          "1.28.0",
+          "1.29.0",
+          "1.30.0"
+        ]
+      },
+      "notes": "The discrepancy between the OSV 'introduced: 0' range event and the advisory text 'affects versions 3.8.0' should be flagged to the OSV maintainers or the GitHub Advisory Database for correction. The auto-match pipeline should be reviewed for over-broad OSV range events where the advisory narrative provides a tighter bound. No action is required for the mlflow-pipelines 1.30.0 conda artifact with respect to this CVE.",
+      "openvex_action_statement": null,
+      "openvex_impact_statement": "The `_install_model_dependencies_to_env()` function in the form described by the advisory \u2014 specifically the shell-interpolation of unsanitized `python_env.yaml` dependency strings under `env_manager=LOCAL` \u2014 is not present in mlflow 1.30.0. The advisory text explicitly identifies version 3.8.0 as the affected release and 3.8.1 as the fix, placing the vulnerable code well beyond the 1.x codebase shipped in the mlflow-pipelines 1.30.0 conda artifact.",
+      "openvex_justification": "vulnerable_code_not_present",
+      "openvex_status": "not_affected",
+      "package": "mlflow-pipelines",
+      "rationale": "The OSV range lists 'introduced: 0 / fixed: 3.8.1', which would nominally include mlflow-pipelines 1.30.0, but the advisory's own description directly contradicts this: it states 'The vulnerability affects versions 3.8.0 and is fixed in version 3.8.1.' This internal inconsistency is a strong signal that the 'introduced: 0' event is an over-broad placeholder rather than a well-researched introduction point. The vulnerable code path is the `_install_model_dependencies_to_env()` function, which parses `python_env.yaml` from a model artifact and interpolates dependency strings into a shell command with `env_manager=LOCAL`. This function and the `python_env.yaml`-driven model environment management system were substantially redesigned across the 2.x and 3.x series; the specific insecure interpolation described is implausible in the 1.x codebase, which predates the affected series by approximately 2.5 major versions. The auto-derived affected_versions list (1.28.0, 1.29.0, 1.30.0) flows mechanically from the over-broad OSV range and does not reflect the actual introduction point of the vulnerable code.",
+      "runtime_applicability": {
+        "applies": "no",
+        "reasoning": "The specific vulnerable function `_install_model_dependencies_to_env()` with the described `python_env.yaml` shell-interpolation behaviour does not exist in mlflow 1.30.0. The 1.x series predates the model-serving infrastructure refactor that introduced this code path. Even if an analogous function exists, it would not exhibit the same unsanitized shell interpolation described in the advisory without the 3.8.0-era code changes."
+      },
+      "severity_in_conda_context": {
+        "assessment": "unknown",
+        "reasoning": "Because the vulnerable code is not present in 1.30.0, a severity assessment for the conda context is not applicable. For the versions that are actually affected (around 3.8.0), the CVSS 10.0 rating would be appropriate given that command injection via a malicious model artifact can achieve arbitrary code execution on the serving host."
+      },
+      "severity_seen": {
+        "cvss": 10.0,
+        "level": "CRITICAL"
+      }
+    },
+    "mlflow-ui::GHSA-r23q-823p-vmf7": {
+      "advisory_id": "GHSA-r23q-823p-vmf7",
+      "affected_versions": {
+        "agrees_with_match": false,
+        "reasoning": "All 49 auto-derived affected versions should be removed. The OSV ECOSYSTEM range targets pkg:pypi/mlflow, but the mlflow-ui conda package does not contain the Python model serving code where the vulnerability resides. The version number overlap is coincidental: mlflow-ui 2.10.2 through 3.8.0 share version strings with the affected PyPI mlflow releases but ship entirely different artifacts (frontend static files only). There are no versions of mlflow-ui that should carry this CVE assertion.",
+        "suggested_adds": [],
+        "suggested_removes": [
+          "2.10.2",
+          "2.11.0",
+          "2.11.1",
+          "2.11.2",
+          "2.11.3",
+          "2.12.1",
+          "2.12.2",
+          "2.13.0",
+          "2.13.1",
+          "2.13.2",
+          "2.14.0",
+          "2.14.1",
+          "2.14.2",
+          "2.14.3",
+          "2.15.0",
+          "2.15.1",
+          "2.16.0",
+          "2.16.1",
+          "2.16.2",
+          "2.17.0",
+          "2.17.1",
+          "2.17.2",
+          "2.18.0",
+          "2.19.0",
+          "2.20.0",
+          "2.20.1",
+          "2.20.2",
+          "2.20.3",
+          "2.20.4",
+          "2.21.0",
+          "2.21.1",
+          "2.21.2",
+          "2.21.3",
+          "2.22.0",
+          "3.1.0",
+          "3.1.1",
+          "3.1.2",
+          "3.1.3",
+          "3.1.4",
+          "3.2.0",
+          "3.3.0",
+          "3.3.1",
+          "3.3.2",
+          "3.4.0",
+          "3.5.0",
+          "3.5.1",
+          "3.6.0",
+          "3.7.0",
+          "3.8.0"
+        ]
+      },
+      "notes": "The advisory details text ('The vulnerability affects versions 3.8.0 and is fixed in version 3.8.1') suggests the vulnerability was introduced in 3.8.0, which conflicts with the OSV ECOSYSTEM range of 'introduced: 0, fixed: 3.8.1'. This discrepancy is worth investigating when assessing the full mlflow conda package (a separate feedstock). The mlflow-ui match appears to be a systematic false positive: the OSV record lists pkg:pypi/mlflow-ui as a source_purl, and the tooling matched the conda mlflow-ui package by name, but the mlflow-ui PyPI package is itself a UI-assets-only distribution that also lacks the vulnerable Python code. The mlflow-ui feedstock maintainers should confirm package contents and close this finding as not-affected.",
+      "openvex_action_statement": null,
+      "openvex_impact_statement": "The mlflow-ui conda package ships only pre-built UI static assets (HTML, JavaScript bundles, CSS). The vulnerable Python function _install_model_dependencies_to_env() is part of MLflow's model serving backend and is not present or executable from this package at any version.",
+      "openvex_justification": "vulnerable_code_not_in_execute_path",
+      "openvex_status": "not_affected",
+      "package": "mlflow-ui",
+      "rationale": "The mlflow-ui conda package is a frontend-only split package that ships pre-built JavaScript/React static assets for the MLflow tracking UI; it does not include the Python backend server code. CVE-2025-15379 is a command injection flaw in _install_model_dependencies_to_env(), a Python function in MLflow's model serving infrastructure that interpolates unsanitized content from python_env.yaml into a shell command during model deployment with env_manager=LOCAL. This code path is entirely absent from the mlflow-ui artifact, making the auto-derived match a false positive driven solely by shared version numbers between the mlflow-ui conda package and the PyPI mlflow releases. Additionally, the OSV fix event places remediation at 3.8.1 and the current conda version is 3.12.0, so even the full mlflow Python package at this pinned version would not be affected. One internal inconsistency in the advisory is worth flagging: the details section states 'The vulnerability affects versions 3.8.0 and is fixed in version 3.8.1,' implying introduction at 3.8.0, while the OSV ECOSYSTEM range records 'introduced: 0, fixed: 3.8.1,' implying all historical versions are affected \u2014 this discrepancy is moot for mlflow-ui but matters for assessing the full mlflow conda package.",
+      "runtime_applicability": {
+        "applies": "no",
+        "reasoning": "The exploitable function _install_model_dependencies_to_env() is a Python backend routine invoked during model deployment. The mlflow-ui conda package contains only pre-built frontend static files (HTML, JavaScript bundles, CSS) served by the MLflow tracking UI web interface. No Python execution code \u2014 and certainly not the model serving or environment management modules \u2014 is shipped, installed, or importable from this package. There is no code path in mlflow-ui that could trigger this vulnerability."
+      },
+      "severity_in_conda_context": {
+        "assessment": "lower",
+        "reasoning": "The CVSS 10.0 CRITICAL score (AV:N/AC:L/PR:N/UI:N/S:C) accurately characterizes the risk for the full mlflow Python package where an unauthenticated attacker supplying a malicious model artifact can achieve remote command execution. For mlflow-ui, which carries no Python backend code, the effective severity is zero \u2014 the exploitable component is not present in the artifact and cannot be reached by any attacker targeting this package."
+      },
+      "severity_seen": {
+        "cvss": 10.0,
+        "level": "CRITICAL"
+      }
+    }
+  },
+  "backend": "claude-cli",
+  "draft": true,
+  "generated_at": "2026-05-29T10:03:57+00:00",
+  "model": "claude-sonnet-4-6",
+  "openvex": {
+    "@context": "https://openvex.dev/ns/v0.2.0",
+    "@id": "https://github.com/prefix-dev/purl-associator/ai-draft/b95eac",
+    "author": "purl-associator AI reviewer (claude-sonnet-4-6)",
+    "statements": [
+      {
+        "action_statement": "Upgrade to crawl4ai 0.8.0 once available in conda-forge. In the interim, users running the Docker API server should either disable the API, block the `/crawl` endpoint at the network or firewall level, or add authentication in front of it. Users consuming crawl4ai purely as a Python library (not running the Docker API server) are not directly reachable via this attack vector but should still upgrade when the fix lands.",
+        "products": [
+          {
+            "@id": "pkg:conda/crawl4ai?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-5882-5rx9-xgxp"
+        }
+      },
+      {
+        "action_statement": "Upgrade to deepdiff >= 8.6.1 (conda-forge latest 9.1.0 is already fixed). For any application that passes user-controlled input to the Delta class, treat prior versions as critically vulnerable and upgrade immediately.",
+        "products": [
+          {
+            "@id": "pkg:conda/deepdiff?channel=conda-forge"
+          }
+        ],
+        "status": "fixed",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-mw26-5g2v-hqw3"
+        }
+      },
+      {
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp?channel=conda-forge"
+          }
+        ],
+        "status": "fixed",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "Upgrade mlflow to >= 2.9.2 by migrating to the mlflow-recipes conda package, which is the 2.x successor to mlflow-pipelines. Do not expose the MLflow tracking server to untrusted networks until the upgrade is complete.",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-pipelines?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-554w-xh4j-8w64"
+        }
+      },
+      {
+        "action_statement": "Upgrade mlflow to >= 2.9.2 by migrating to the mlflow-recipes conda package (the 2.x successor to mlflow-pipelines). Until upgraded, restrict network access to the MLflow tracking server to trusted, authenticated clients only.",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-pipelines?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-5p3h-7fwh-92rc"
+        }
+      },
+      {
+        "impact_statement": "The `mlflow.data.http_dataset_source` module that contains the CVE-2024-0520 vulnerability was introduced in mlflow 2.2.0 and does not exist in mlflow 1.30.0. Since mlflow-pipelines 1.30.0 depends on mlflow 1.30.0, the vulnerable code is not present in this conda artifact and cannot be reached at runtime.",
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-pipelines?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-5q6c-ffvg-xcm9"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-pipelines@1.28.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-5q6c-ffvg-xcm9"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-pipelines@1.29.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-5q6c-ffvg-xcm9"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-pipelines@1.30.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-5q6c-ffvg-xcm9"
+        }
+      },
+      {
+        "action_statement": "No fixed version of mlflow-pipelines is available on conda-forge (latest is 1.30.0, fix requires >= 2.8.1). Users should restrict network access to the MLflow tracking server to trusted hosts only, or migrate to the mainline mlflow conda-forge package at a version >= 2.8.1. Avoid exposing the tracking server on untrusted or public networks.",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-pipelines?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-f798-qm4r-23r5"
+        }
+      },
+      {
+        "action_statement": "No patched mlflow-pipelines release exists on conda-forge. Users should either restrict the tracking server to localhost or a trusted VPN segment, or migrate to the mainline mlflow conda-forge package at >= 2.5.0. Directory traversal payloads can reach this endpoint without authentication, so network-level controls are the only mitigation available at this version.",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-pipelines?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-fmxj-6h9g-6vw3"
+        }
+      },
+      {
+        "impact_statement": "The `_install_model_dependencies_to_env()` function in the form described by the advisory \u2014 specifically the shell-interpolation of unsanitized `python_env.yaml` dependency strings under `env_manager=LOCAL` \u2014 is not present in mlflow 1.30.0. The advisory text explicitly identifies version 3.8.0 as the affected release and 3.8.1 as the fix, placing the vulnerable code well beyond the 1.x codebase shipped in the mlflow-pipelines 1.30.0 conda artifact.",
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-pipelines?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-pipelines@1.28.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-pipelines@1.29.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-pipelines@1.30.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "impact_statement": "The mlflow-ui conda package ships only pre-built UI static assets (HTML, JavaScript bundles, CSS). The vulnerable Python function _install_model_dependencies_to_env() is part of MLflow's model serving backend and is not present or executable from this package at any version.",
+        "justification": "vulnerable_code_not_in_execute_path",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@2.10.2?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@2.11.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@2.11.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@2.11.2?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@2.11.3?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@2.12.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@2.12.2?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@2.13.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@2.13.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@2.13.2?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@2.14.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@2.14.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@2.14.2?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@2.14.3?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@2.15.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@2.15.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@2.16.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@2.16.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@2.16.2?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@2.17.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@2.17.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@2.17.2?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@2.18.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@2.19.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@2.20.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@2.20.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@2.20.2?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@2.20.3?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@2.20.4?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@2.21.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@2.21.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@2.21.2?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@2.21.3?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@2.22.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@3.1.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@3.1.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@3.1.2?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@3.1.3?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@3.1.4?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@3.2.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@3.3.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@3.3.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@3.3.2?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@3.4.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@3.5.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@3.5.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@3.6.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@3.7.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui@3.8.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-05-29T10:03:57+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      }
+    ],
+    "timestamp": "2026-05-29T10:03:57+00:00",
+    "tooling": "purl-associator/scripts.cve_ai_review",
+    "version": 1
+  },
+  "run_id": "b95eac",
+  "schema_version": 1,
+  "skipped": [
+    {
+      "advisory_id": "PYSEC-2026-33",
+      "package": "crawl4ai",
+      "reason": "no_assessment_in_reply"
+    },
+    {
+      "advisory_id": "PYSEC-2025-70",
+      "package": "langchain-community",
+      "reason": "no_assessment_in_reply"
+    },
+    {
+      "advisory_id": "PYSEC-2023-308",
+      "package": "mlflow-pipelines",
+      "reason": "no_assessment_in_reply"
+    }
+  ]
+}
