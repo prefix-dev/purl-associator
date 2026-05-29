@@ -13,9 +13,9 @@ on:
         default: "true"
         type: boolean
       automap_top_downloads:
-        description: "When refreshing recipes without 'only', process top-N downloads"
+        description: "Optional top-N recipe refresh limit for test runs (blank = all conda-forge)"
         required: false
-        default: "1000"
+        default: ""
       force_osv:
         description: "Force re-download of OSV dumps"
         required: false
@@ -37,7 +37,7 @@ concurrency:
 jobs:
   sbom-refresh:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v6
 
@@ -53,7 +53,7 @@ jobs:
           ARGS=(--force)
           if [ -n "${{ inputs.only }}" ]; then
             ARGS+=(--only "${{ inputs.only }}")
-          else
+          elif [ -n "${{ inputs.automap_top_downloads }}" ]; then
             ARGS+=(--top-downloads "${{ inputs.automap_top_downloads }}")
           fi
           pixi run python -m scripts.automap "${ARGS[@]}"

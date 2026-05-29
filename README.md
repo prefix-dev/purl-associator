@@ -320,7 +320,7 @@ flowchart LR
 |---|---|---|
 | `automap.yml` | schedule and manual dispatch | run automap, merge mappings, open refresh PR |
 | `cve_refresh.yml` | schedule and manual dispatch | match OSV advisories, merge OpenVEX reviews, validate, open refresh PR |
-| `sbom_refresh.yml` | manual dispatch | refresh recipe-derived deep-inspection candidates, extract embedded SBOMs, match transitive CVEs, open refresh PR |
+| `sbom_refresh.yml` | manual dispatch | refresh recipe-derived deep-inspection candidates across all conda-forge, extract embedded SBOMs, match transitive CVEs, open refresh PR |
 | `pages.yml` | push to `main` and manual dispatch | regenerate served JSON, publish SBOM inspection index, validate, build Vite app, deploy Pages |
 
 Worker deployment is done with Wrangler from `worker/`.
