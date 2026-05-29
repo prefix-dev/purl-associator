@@ -217,6 +217,17 @@ export function CveApp() {
             >
               CVE Dashboard
             </span>
+            <a
+              href="./deep.html"
+              style={{
+                color: t.fg2,
+                textDecoration: "none",
+                padding: "4px 8px",
+                borderRadius: 6,
+              }}
+            >
+              Deep Package Inspection
+            </a>
           </nav>
           <div
             style={{
