@@ -34,6 +34,7 @@ import time
 import uuid
 import zlib
 from datetime import UTC, datetime
+from fnmatch import fnmatch
 from pathlib import Path
 from urllib.parse import quote, unquote, urlparse
 
@@ -326,12 +327,27 @@ async def _fetch_paths(client: Client, url: str) -> list[dict]:
     return payload.get("paths", [])
 
 
+# Native shared objects worth scanning for embedded SBOMs. ``fnmatch``'s ``*``
+# spans ``/``, so these patterns reach arbitrarily nested files. ``*.so*`` also
+# covers versioned libraries (``foo.so.1``).
+_SHARED_OBJECT_GLOBS = (
+    "lib/*.so*",
+    "lib/*.dylib",
+    "site-packages/*.so*",
+    "site-packages/*.dylib",
+    "site-packages/*.pyd",
+)
+
+
 def _binary_candidates(paths: list[dict], conda_name: str) -> list[str]:
     """Return likely ELF binary paths from ``info/paths.json``.
 
     Picks executable commands under ``bin/`` and native shared objects under
-    ``lib/``. The latter catches Python packages backed by Rust extensions,
-    such as py-rattler.
+    ``lib/`` or ``site-packages/``. The latter catches Python packages backed
+    by Rust extensions, such as polars and py-rattler — conda stores their
+    extension module (e.g. ``site-packages/polars/polars.abi3.so``) under
+    ``site-packages/`` in the archive and only relocates it into
+    ``lib/pythonX.Y/site-packages/`` at install time.
     """
     out: list[str] = []
     for entry in paths:
@@ -343,7 +359,7 @@ def _binary_candidates(paths: list[dict], conda_name: str) -> list[str]:
             if any(leaf.endswith(ext) for ext in (".sh", ".py", ".bat", ".ps1")):
                 continue
             out.append(p)
-        elif p.startswith("lib/") and (".so" in p or p.endswith(".dylib")):
+        elif any(fnmatch(p, pat) for pat in _SHARED_OBJECT_GLOBS):
             out.append(p)
     # Heuristic: if a binary matches the conda name (or a known alias), float
     # it to the front so the simple case still works when there are many bins.
@@ -708,35 +724,47 @@ async def _async_main(
         out_path = out_dir / f"{result['artifact_id']}.json"
         out_path.write_text(json.dumps(bom, indent=2) + "\n")
 
-    active_artifacts = {r.get("artifact_id") for r in summary if r.get("artifact_id")}
-    for stale in out_dir.glob("*.json"):
-        if stale.stem not in active_artifacts:
-            stale.unlink()
+    # A partial run (``--only``) is additive: it must not prune SBOMs or
+    # inspection entries for packages it never looked at. Only a full sweep
+    # owns the complete set and may delete stale artifacts.
+    partial = only is not None
+    if not partial:
+        active_artifacts = {
+            r.get("artifact_id") for r in summary if r.get("artifact_id")
+        }
+        for stale in out_dir.glob("*.json"):
+            if stale.stem not in active_artifacts:
+                stale.unlink()
 
     generated_at = datetime.now(UTC).isoformat(timespec="seconds")
+    records = {
+        r["name"]: {
+            "name": r["name"],
+            "version": auto_packages.get(r["name"], {}).get("version", ""),
+            "build": r.get("build"),
+            "subdir": r.get("subdir"),
+            "artifact_id": r.get("artifact_id"),
+            "sbom_path": r.get("sbom_path"),
+            "package_url": r.get("package_url"),
+            "package_filename": r.get("package_filename"),
+            "status": r.get("status"),
+            "ecosystem": r.get("ecosystem"),
+            "expected_ecosystems": r.get("expected_ecosystems"),
+            "signals": r.get("signals"),
+            "warning": r.get("warning"),
+            "binary_path": r.get("binary_path"),
+            "component_count": r.get("components"),
+        }
+        for r in summary
+    }
+    if partial and inspections_out.exists():
+        existing = json.loads(inspections_out.read_text()).get("packages", {})
+        existing.update(records)
+        records = existing
     inspection_payload = {
         "schema_version": 1,
         "generated_at": generated_at,
-        "packages": {
-            r["name"]: {
-                "name": r["name"],
-                "version": auto_packages.get(r["name"], {}).get("version", ""),
-                "build": r.get("build"),
-                "subdir": r.get("subdir"),
-                "artifact_id": r.get("artifact_id"),
-                "sbom_path": r.get("sbom_path"),
-                "package_url": r.get("package_url"),
-                "package_filename": r.get("package_filename"),
-                "status": r.get("status"),
-                "ecosystem": r.get("ecosystem"),
-                "expected_ecosystems": r.get("expected_ecosystems"),
-                "signals": r.get("signals"),
-                "warning": r.get("warning"),
-                "binary_path": r.get("binary_path"),
-                "component_count": r.get("components"),
-            }
-            for r in sorted(summary, key=lambda x: x["name"])
-        },
+        "packages": {name: records[name] for name in sorted(records)},
     }
     inspections_out.parent.mkdir(parents=True, exist_ok=True)
     inspections_out.write_text(json.dumps(inspection_payload, indent=2) + "\n")
