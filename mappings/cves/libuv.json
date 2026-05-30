@@ -1,0 +1,417 @@
+{
+  "schema_version": 1,
+  "package": "libuv",
+  "purls": [
+    "pkg:github/libuv/libuv"
+  ],
+  "cpes": [
+    "cpe:2.3:a:libuv:libuv",
+    "cpe:2.3:a:libuv_project:libuv"
+  ],
+  "generated_at": "2026-05-27T12:56:07+00:00",
+  "conda_versions_total": 40,
+  "latest_version": "1.52.1",
+  "advisories": [
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2024-24806",
+      "published": "2024-02-07T22:15:10.173Z",
+      "modified": "2024-11-21T08:59:45.137Z",
+      "aliases": [],
+      "summary": "libuv is a multi-platform support library with a focus on asynchronous I/O.",
+      "details": "libuv is a multi-platform support library with a focus on asynchronous I/O. The `uv_getaddrinfo` function in `src/unix/getaddrinfo.c` (and its windows counterpart `src/win/getaddrinfo.c`), truncates hostnames to 256 characters before calling `getaddrinfo`. This behavior can be exploited to create addresses like `0x00007f000001`, which are considered valid by `getaddrinfo` and could allow an attacker to craft payloads that resolve to unintended IP addresses, bypassing developer checks. The vulnerability arises due to how the `hostname_ascii` variable (with a length of 256 bytes) is handled in `uv_getaddrinfo` and subsequently in `uv__idna_toascii`. When the hostname exceeds 256 characters, it gets truncated without a terminating null byte. As a result attackers may be able to access internal APIs or for websites (similar to MySpace) that allows users to have `username.example.com` pages. Internal services that crawl or cache these user pages can be exposed to SSRF attacks if a malicious user chooses a long vulnerable username. This issue has been addressed in release version 1.48.0. Users are advised to upgrade. There are no known workarounds for this vulnerability.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "libuv",
+            "purl": "pkg:generic/libuv/libuv"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "1.24.0"
+                },
+                {
+                  "fixed": "1.48.0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2024/02/08/2"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2024/02/11/1"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2024/03/11/1"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/libuv/libuv/commit/0f2d7e784a256b54b2385043438848047bc2a629"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/libuv/libuv/commit/3530bcc30350d4a6ccf35d2f7b33e23292b9de70"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/libuv/libuv/commit/c858a147643de38a09dd4164758ae5b685f2b488"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/libuv/libuv/commit/e0327e1d508b8207c9150b6e582f0adf26213c39"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/libuv/libuv/security/advisories/GHSA-f74f-cvh7-c6q6"
+        },
+        {
+          "type": "WEB",
+          "url": "https://gitlab.kitware.com/cmake/cmake/-/issues/26112"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2024/03/msg00005.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.netapp.com/advisory/ntap-20240605-0008/"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2024/02/08/2"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2024/02/11/1"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2024/03/11/1"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/libuv/libuv/commit/0f2d7e784a256b54b2385043438848047bc2a629"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/libuv/libuv/commit/3530bcc30350d4a6ccf35d2f7b33e23292b9de70"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/libuv/libuv/commit/c858a147643de38a09dd4164758ae5b685f2b488"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/libuv/libuv/commit/e0327e1d508b8207c9150b6e582f0adf26213c39"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/libuv/libuv/security/advisories/GHSA-f74f-cvh7-c6q6"
+        },
+        {
+          "type": "WEB",
+          "url": "https://gitlab.kitware.com/cmake/cmake/-/issues/26112"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2024/03/msg00005.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.netapp.com/advisory/ntap-20240605-0008/"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libuv",
+          "purl": "pkg:conda/libuv?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/libuv/libuv"
+          ],
+          "affected_versions": [
+            "1.24.0",
+            "1.24.1",
+            "1.25.0",
+            "1.26.0",
+            "1.28.0",
+            "1.29.0",
+            "1.29.1",
+            "1.30.0",
+            "1.30.1",
+            "1.31.0",
+            "1.32.0",
+            "1.33.1",
+            "1.34.0",
+            "1.38.0",
+            "1.39.0",
+            "1.40.0",
+            "1.41.0",
+            "1.41.1",
+            "1.42.0",
+            "1.43.0",
+            "1.44.2",
+            "1.46.0",
+            "1.47.0"
+          ],
+          "conda_versions_total": 40,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-05-27T12:56:07+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:libuv:libuv",
+            "cpe:2.3:a:libuv_project:libuv"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:libuv:libuv"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2014-9748",
+      "published": "2020-02-11T17:15:11.780Z",
+      "modified": "2024-11-21T02:21:34.833Z",
+      "aliases": [],
+      "summary": "The uv_rwlock_t fallback implementation for Windows XP and Server 2003 in libuv before 1.7.4 does not properly prevent threads from releasing the locks of other threads, which allows attackers to caus",
+      "details": "The uv_rwlock_t fallback implementation for Windows XP and Server 2003 in libuv before 1.7.4 does not properly prevent threads from releasing the locks of other threads, which allows attackers to cause a denial of service (deadlock) or possibly have unspecified other impact by leveraging a race condition.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "libuv",
+            "purl": "pkg:generic/libuv/libuv"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "1.7.4"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/libuv/libuv/issues/515"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/libuv/libuv/pull/516"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/nodejs/node/pull/2723"
+        },
+        {
+          "type": "WEB",
+          "url": "https://groups.google.com/forum/#%21msg/libuv/KyNnGEXR0OA/NWb605ev2LUJ"
+        },
+        {
+          "type": "WEB",
+          "url": "https://groups.google.com/forum/#%21topic/libuv/WO2cl9zasN8"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/libuv/libuv/issues/515"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/libuv/libuv/pull/516"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/nodejs/node/pull/2723"
+        },
+        {
+          "type": "WEB",
+          "url": "https://groups.google.com/forum/#%21msg/libuv/KyNnGEXR0OA/NWb605ev2LUJ"
+        },
+        {
+          "type": "WEB",
+          "url": "https://groups.google.com/forum/#%21topic/libuv/WO2cl9zasN8"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H"
+        },
+        {
+          "type": "CVSS_V2",
+          "score": "AV:N/AC:M/Au:N/C:P/I:P/A:P"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libuv",
+          "purl": "pkg:conda/libuv?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/libuv/libuv"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 40,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-05-27T12:56:07+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:libuv:libuv",
+            "cpe:2.3:a:libuv_project:libuv"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:libuv:libuv"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2015-0278",
+      "published": "2015-05-18T15:59:02.713Z",
+      "modified": "2026-05-06T22:30:45.220Z",
+      "aliases": [],
+      "summary": "libuv before 0.10.34 does not properly drop group privileges, which allows context-dependent attackers to gain privileges via unspecified vectors.",
+      "details": "libuv before 0.10.34 does not properly drop group privileges, which allows context-dependent attackers to gain privileges via unspecified vectors.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "libuv",
+            "purl": "pkg:generic/libuv/libuv"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "last_affected": "0.10.33"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "http://advisories.mageia.org/MGASA-2015-0186.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.mandriva.com/security/advisories?name=MDVSA-2015:228"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/libuv/libuv/commit/66ab38918c911bcff025562cf06237d7fedaba0c"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/libuv/libuv/pull/215"
+        },
+        {
+          "type": "WEB",
+          "url": "https://groups.google.com/forum/#%21msg/libuv/0JZxwLMtsMI/jraczskYWWQJ"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/pipermail/package-announce/2015-February/150526.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.gentoo.org/glsa/201611-10"
+        },
+        {
+          "type": "WEB",
+          "url": "http://advisories.mageia.org/MGASA-2015-0186.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.mandriva.com/security/advisories?name=MDVSA-2015:228"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/libuv/libuv/commit/66ab38918c911bcff025562cf06237d7fedaba0c"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/libuv/libuv/pull/215"
+        },
+        {
+          "type": "WEB",
+          "url": "https://groups.google.com/forum/#%21msg/libuv/0JZxwLMtsMI/jraczskYWWQJ"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/pipermail/package-announce/2015-February/150526.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.gentoo.org/glsa/201611-10"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V2",
+          "score": "AV:N/AC:L/Au:N/C:C/I:C/A:C"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libuv",
+          "purl": "pkg:conda/libuv?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/libuv/libuv"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 40,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-05-27T12:56:07+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:libuv:libuv",
+            "cpe:2.3:a:libuv_project:libuv"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:libuv_project:libuv"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    }
+  ]
+}

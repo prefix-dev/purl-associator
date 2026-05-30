@@ -44,6 +44,8 @@ jobs:
 
       - name: Refresh served cve_ai_drafts.json + cve_ai_queue.json sidecars
         run: pixi run -e lite merge-ai-drafts
+      - name: Refresh served SBOM inspection data
+        run: pixi run -e lite merge-sboms
 
       - name: Validate CVE data against the OSV + OpenVEX schemas
         run: pixi run -e lite validate

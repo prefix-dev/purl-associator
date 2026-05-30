@@ -31,6 +31,7 @@ jsonschema = ">=4.20,<5"
 [feature.lite.tasks]
 merge = "python -m scripts.merge_mappings"
 merge-cves = "python -m scripts.merge_cves"
+merge-sboms = "python -m scripts.merge_sboms"
 validate = "python -m scripts.validate"
 # AI CVE review SPA sidecars + PR-body summary — pure stdlib, can run in lite.
 merge-ai-drafts = "python -m scripts.merge_ai_drafts"
@@ -51,11 +52,17 @@ ai-vet = "python -m scripts.ai_vet"
 osv-fetch = "python -m scripts.osv_fetch"
 nvd-fetch = "python -m scripts.nvd_fetch"
 cve-match = "python -m scripts.cve_match"
+sbom-extract = "python -m scripts.sbom_extract"
 nvd-cve-match = "python -m scripts.nvd_prototype"
 cve-ai-review = "python -m scripts.cve_ai_review"
 cve-ai-enqueue = { cmd = "python -m scripts.cve_ai_enqueue --package {{ package }} --advisory {{ advisory }}", description = "Append one (package, advisory) pair to the AI review queue", args = [{ arg = "package" }, { arg = "advisory" }] }
 cve-ai-auto-enqueue = "python -m scripts.cve_ai_auto_enqueue"
 promote-ai-draft = { cmd = "python -m scripts.promote_ai_draft --package {{ package }} --advisory {{ advisory }}", description = "Promote an AI draft into mappings/cve_contributions/ as authoritative OpenVEX", args = [{ arg = "package" }, { arg = "advisory" }] }
+sbom-cve-match = "python -m scripts.sbom_cve_match"
+merge-sboms = "python -m scripts.merge_sboms"
+cpe-discover = "python -m scripts.cpe_discover"
+cpe-vet = "python -m scripts.cpe_vet"
+cpe-promote = "python -m scripts.cpe_promote"
 lint = { cmd = "ruff check scripts && ruff format --check scripts", env = {} }
 fmt = "ruff format scripts"
 
@@ -123,6 +130,18 @@ args = [
   { arg = "ref", default = "main" },
 ]
 
+[tasks.gh-sbom-refresh]
+cmd = "gh workflow run sbom_refresh.yml --ref {{ ref }} -f only='{{ only }}' -f refresh_automap='{{ refresh_automap }}' -f automap_top_downloads='{{ automap_top_downloads }}' -f force_osv='{{ force_osv }}' -f parallel='{{ parallel }}'"
+description = "Trigger the embedded SBOM inspection refresh workflow (default: all conda-forge)"
+args = [
+  { arg = "only", default = "" },
+  { arg = "refresh_automap", default = "true" },
+  { arg = "automap_top_downloads", default = "" },
+  { arg = "force_osv", default = "false" },
+  { arg = "parallel", default = "8" },
+  { arg = "ref", default = "main" },
+]
+
 [tasks.gh-pages]
 cmd = "gh workflow run pages.yml --ref {{ ref }}"
 description = "Trigger the GitHub Pages deployment workflow"
@@ -163,6 +182,16 @@ args = [
   { arg = "redraft", default = "false" },
   { arg = "ai_batch_size", default = "3" },
   { arg = "commit_every", default = "8" },
+]
+
+[tasks.gh-cpe-discover]
+cmd = "gh workflow run cpe_discover.yml --ref {{ ref }} -f top='{{ top }}' -f only='{{ only }}' -f skip_vet='{{ skip_vet }}'"
+description = "Trigger the CPE discovery workflow"
+args = [
+  { arg = "ref", default = "main" },
+  { arg = "top", default = "100" },
+  { arg = "only", default = "" },
+  { arg = "skip_vet", default = "false" },
 ]
 
 # Local app/Worker helpers.
@@ -224,4 +253,3 @@ cmd = "npm run typecheck"
 cwd = "worker"
 depends-on = ["worker-install"]
 description = "Typecheck the Cloudflare Worker"
-

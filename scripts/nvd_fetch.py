@@ -31,9 +31,8 @@ import hashlib
 import json
 import re
 import time
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterator
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
 from pathlib import Path
 
 import httpx
@@ -132,11 +131,7 @@ async def _download_feed(
     """Download ``nvdcve-2.0-<name>.json.gz`` if the local sha256 doesn't
     match ``expected_sha256``. Otherwise reuse the cached file."""
     target = _gz_path(cache_dir, name)
-    if (
-        expected_sha256
-        and target.exists()
-        and _sha256_of(target) == expected_sha256
-    ):
+    if expected_sha256 and target.exists() and _sha256_of(target) == expected_sha256:
         return target  # cache hit — same content, skip the network
 
     url = f"{FEED_BASE}/nvdcve-2.0-{name}.json.gz"
@@ -145,7 +140,9 @@ async def _download_feed(
     async with client.stream("GET", url, follow_redirects=True) as resp:
         if resp.status_code != 200:
             progress.update(task_id, visible=False)
-            raise RuntimeError(f"NVD feed download failed for {name}: {resp.status_code}")
+            raise RuntimeError(
+                f"NVD feed download failed for {name}: {resp.status_code}"
+            )
         total = int(resp.headers.get("Content-Length") or 0) or None
         progress.update(task_id, total=total)
         progress.start_task(task_id)
@@ -307,6 +304,10 @@ class NvdIndex:
     feeds: list[FeedFile]
     by_pp: dict[tuple[str, str, str], list[dict]] = field(default_factory=dict)
     by_id: dict[str, dict] = field(default_factory=dict)
+    # Secondary index: product → list of (part, vendor, product) heads with
+    # that exact product segment. Built once by ``_build_index`` so
+    # ``products_matching`` is O(1) lookup instead of an O(|by_pp|) scan.
+    by_product: dict[str, list[tuple[str, str, str]]] = field(default_factory=dict)
 
     def for_cpe(self, cpe: str) -> list[dict]:
         """Return all CVEs whose ``cpeMatch.criteria`` shares the
@@ -320,6 +321,32 @@ class NvdIndex:
         if head is None:
             return []
         return list(self.by_pp.get(head, []))
+
+    def products_matching(self, product: str) -> list[tuple[str, str, str]]:
+        """All ``(part, vendor, product)`` keys whose ``product`` segment
+        equals ``product`` exactly. Used by candidate discovery: given a
+        normalized conda name, return every CPE prefix NVD knows about
+        with that product, across all vendors."""
+        return list(self.by_product.get(product, ()))
+
+    def github_url_hit_rate(self, head: tuple[str, str, str], owner_repo: str) -> float:
+        """Fraction of CVEs at ``head`` whose ``references[].url`` contains
+        ``owner_repo`` (e.g. ``"openssl/openssl"``). Heuristic H1: a high
+        hit rate is strong evidence the CPE identifies the same upstream
+        as the conda package's GitHub PURL."""
+        cves = self.by_pp.get(head) or []
+        if not cves:
+            return 0.0
+        needle = owner_repo.lower()
+        hits = 0
+        for cve in cves:
+            refs = cve.get("references") or []
+            for r in refs:
+                url = r.get("url") if isinstance(r, dict) else None
+                if isinstance(url, str) and needle in url.lower():
+                    hits += 1
+                    break
+        return hits / len(cves)
 
     def total_cves(self) -> int:
         return len(self.by_id)
@@ -358,7 +385,12 @@ def _build_index(feeds: list[FeedFile]) -> NvdIndex:
             count += 1
         feed.cve_count = count
 
-    return NvdIndex(feeds=feeds, by_pp=by_pp, by_id=by_id)
+    # Secondary product → heads index, built once now that by_pp is final.
+    by_product: dict[str, list[tuple[str, str, str]]] = {}
+    for head in by_pp:
+        by_product.setdefault(head[2], []).append(head)
+
+    return NvdIndex(feeds=feeds, by_pp=by_pp, by_id=by_id, by_product=by_product)
 
 
 async def fetch_index(
@@ -383,7 +415,9 @@ async def fetch_index(
 @app.command()
 def main(
     cache_dir: Path = typer.Option(DEFAULT_CACHE, help="Where to store NVD feed files"),
-    force: bool = typer.Option(False, help="Re-download every feed regardless of sha256"),
+    force: bool = typer.Option(
+        False, help="Re-download every feed regardless of sha256"
+    ),
     max_modified_age_hours: float = typer.Option(
         2.0, help="Re-download the modified feed if older than this"
     ),

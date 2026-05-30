@@ -341,6 +341,47 @@ export function PurlChip({
   );
 }
 
+/** Display chip for a CPE 2.3 identifier (``cpe:2.3:<part>:<vendor>:<product>``).
+ *  The vendor and product are highlighted because they're the segments the NVD
+ *  matcher actually keys on; the ``cpe:2.3:a:`` prefix is dimmed.
+ *  Trailing wildcard/version segments (after ``product``) are stripped from
+ *  display since the curated entries in ``manual.json`` only fix the head. */
+export function CpeChip({ cpe, theme }: { cpe: string; theme: Theme }) {
+  const t = theme.t;
+  const m = cpe.match(/^(cpe:2\.3:)([aoh]):([^:]+):([^:]+)/);
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        fontFamily: "JetBrains Mono, monospace",
+        fontSize: 12,
+        padding: "3px 7px",
+        borderRadius: 6,
+        background: theme.dark ? "#0a0d11" : "#f5f1e7",
+        border: `1px solid ${t.border}`,
+        color: t.fg1,
+        letterSpacing: "-0.01em",
+        whiteSpace: "nowrap",
+      }}
+      title={cpe}
+    >
+      {m ? (
+        <>
+          <span style={{ color: t.fg3 }}>{m[1]}</span>
+          <span style={{ color: t.fg3 }}>{m[2]}</span>
+          <span style={{ color: t.fg3 }}>:</span>
+          <span style={{ color: t.fg1, fontWeight: 600 }}>{m[3]}</span>
+          <span style={{ color: t.fg3 }}>:</span>
+          <span style={{ color: t.fg1, fontWeight: 600 }}>{m[4]}</span>
+        </>
+      ) : (
+        <span>{cpe}</span>
+      )}
+    </span>
+  );
+}
+
 export function Avatar({
   user,
   size = 22,

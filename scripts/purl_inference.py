@@ -287,6 +287,14 @@ _PYTHON_BUILD_SIGNALS = {
 }
 _RUST_BUILD_SIGNALS = {"cargo", "rust", "rust_compiler", "maturin"}
 _NPM_BUILD_SIGNALS = {"nodejs", "yarn", "pnpm"}
+_GO_BUILD_SIGNALS = {
+    "go",
+    "go-cgo",
+    "go-nocgo",
+    "go-compiler",
+    "go-licenses",
+    "golang",
+}
 
 
 def derive_recipe_context(
@@ -322,6 +330,70 @@ def derive_recipe_context(
             conda_name=conda_name, ecosystem_hint="npm", inferred_name=conda_name
         )
     return RecipeContext(conda_name=conda_name)
+
+
+def derive_deep_inspection(
+    *, host_deps: list[str], build_deps: list[str], build_scripts: list[str]
+) -> dict | None:
+    """Return recipe-derived Rust/Go binary-inspection hints.
+
+    These hints are deliberately separate from PURL inference. A Python package
+    can be correctly mapped to PyPI while still compiling a Rust extension that
+    is worth probing for embedded dependency metadata.
+    """
+    deps_norm = {
+        d.split()[0].split("=")[0].strip().lower() for d in host_deps + build_deps
+    }
+    scripts_norm = "\n".join(build_scripts).lower()
+
+    ecosystems: list[str] = []
+    signals: list[str] = []
+
+    rust_deps = sorted(deps_norm & _RUST_BUILD_SIGNALS)
+    if rust_deps or "cargo build" in scripts_norm or "cargo auditable" in scripts_norm:
+        ecosystems.append("cargo")
+        for dep in rust_deps:
+            signals.append(f"recipe dependency: {dep}")
+        if "cargo build" in scripts_norm:
+            signals.append("build script invokes cargo build")
+        if "cargo auditable" in scripts_norm:
+            signals.append("build script invokes cargo auditable")
+
+    go_deps = sorted(deps_norm & _GO_BUILD_SIGNALS)
+    if go_deps or "go build" in scripts_norm or "go install" in scripts_norm:
+        ecosystems.append("golang")
+        for dep in go_deps:
+            signals.append(f"recipe dependency: {dep}")
+        if "go build" in scripts_norm:
+            signals.append("build script invokes go build")
+        if "go install" in scripts_norm:
+            signals.append("build script invokes go install")
+
+    if not ecosystems:
+        return None
+
+    uses_cargo_auditable = None
+    warning = None
+    if "cargo" in ecosystems:
+        uses_cargo_auditable = (
+            "cargo-auditable" in deps_norm
+            or "rust-audit-info" in deps_norm
+            or "cargo auditable" in scripts_norm
+            or "cargo-auditable" in scripts_norm
+        )
+        if not uses_cargo_auditable:
+            warning = (
+                "Rust compiler detected in recipe, but cargo-auditable was not "
+                "detected; embedded Rust dependency metadata may be unavailable."
+            )
+
+    return {
+        "candidate": True,
+        "ecosystems": ecosystems,
+        "signals": signals,
+        "uses_cargo_auditable": uses_cargo_auditable,
+        "warning": warning,
+    }
 
 
 _RECIPE_HINT_TEMPLATES = {

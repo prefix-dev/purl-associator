@@ -24,6 +24,7 @@ export function App() {
   const [filters, setFilters] = useState({
     unmappedOnly: false,
     unverifiedOnly: false,
+    deepOnly: false,
     ecosystem: "all",
   });
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -49,6 +50,14 @@ export function App() {
     () => packages.filter((p) => selectedSet.has(p.name)),
     [packages, selectedSet],
   );
+
+  const deepInspectionNames = useMemo(() => {
+    const names = new Set<string>();
+    for (const p of packages) {
+      if (p.deep_inspection?.candidate) names.add(p.name);
+    }
+    return names;
+  }, [packages]);
 
   const editsCount = Object.keys(edits).length;
   const showBulk = selectedSet.size > 1;
@@ -211,6 +220,17 @@ export function App() {
               }}
             >
               CVE Dashboard
+            </a>
+            <a
+              href="./deep.html"
+              style={{
+                color: t.fg2,
+                textDecoration: "none",
+                padding: "4px 8px",
+                borderRadius: 6,
+              }}
+            >
+              Deep Package Inspection
             </a>
           </nav>
           <div
@@ -382,8 +402,15 @@ export function App() {
         </div>
       )}
 
-      <div style={{ flex: 1, display: "flex", minHeight: 0 }}>
-        <div style={{ flex: "0 0 60%", minWidth: 0 }}>
+      <div
+        style={{
+          flex: 1,
+          display: "grid",
+          gridTemplateColumns: "minmax(0, 60fr) minmax(0, 40fr)",
+          minHeight: 0,
+        }}
+      >
+        <div style={{ minWidth: 0 }}>
           {payload ? (
             <PackageTable
               theme={theme}
@@ -397,6 +424,7 @@ export function App() {
               setQ={setQ}
               filters={filters}
               setFilters={setFilters}
+              deepInspectionNames={deepInspectionNames}
             />
           ) : (
             <div
@@ -412,7 +440,7 @@ export function App() {
           )}
         </div>
 
-        <div style={{ flex: 1, minWidth: 0, display: "flex" }}>
+        <div style={{ minWidth: 0, display: "flex" }}>
           {showBulk ? (
             <BulkPanel
               theme={theme}

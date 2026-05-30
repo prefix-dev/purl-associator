@@ -16,13 +16,20 @@ export type SortDir = "asc" | "desc";
 type EcosystemFilter = "all" | (string & {});
 type EditsByName = Record<string, Edit>;
 type EffectiveStatus = PackageEntry["status"];
-type CountKey = "all" | "unmapped" | "unverified" | "verified" | "edited";
+type CountKey =
+  | "all"
+  | "unmapped"
+  | "unverified"
+  | "verified"
+  | "edited"
+  | "deep";
 type PackageCounts = Record<CountKey, number>;
 type PackagePredicate = (p: PackageEntry, edits: EditsByName) => boolean;
 
 type Filters = {
   unmappedOnly: boolean;
   unverifiedOnly: boolean;
+  deepOnly: boolean;
   ecosystem: EcosystemFilter;
 };
 
@@ -38,6 +45,7 @@ type Props = {
   setQ: (v: string) => void;
   filters: Filters;
   setFilters: (f: Filters) => void;
+  deepInspectionNames: Set<string>;
 };
 
 function effectiveStatus(p: PackageEntry, edits: EditsByName): EffectiveStatus {
@@ -74,7 +82,7 @@ const COUNT_BUCKETS = {
   unmapped: isUnmapped,
   unverified: isUnverified,
   verified: isVerified,
-} satisfies Record<Exclude<CountKey, "all" | "edited">, PackagePredicate>;
+} satisfies Record<Exclude<CountKey, "all" | "edited" | "deep">, PackagePredicate>;
 
 const EMPTY_COUNTS = {
   all: 0,
@@ -82,6 +90,7 @@ const EMPTY_COUNTS = {
   unverified: 0,
   verified: 0,
   edited: 0,
+  deep: 0,
 } satisfies PackageCounts;
 
 const STATUS_RANK: Record<EffectiveStatus, number> = {
@@ -104,6 +113,7 @@ export function PackageTable({
   setQ,
   filters,
   setFilters,
+  deepInspectionNames,
 }: Props) {
   const t = theme.t;
   const [sortKey, setSortKey] = useState<SortKey>("downloads");
@@ -116,6 +126,7 @@ export function PackageTable({
       if (filters.unmappedOnly && !isUnmapped(p, edits)) return false;
       if (filters.unverifiedOnly && isVerified(p, edits) && !edits[p.name])
         return false;
+      if (filters.deepOnly && !deepInspectionNames.has(p.name)) return false;
       if (!matchesEcosystem(p, edits, filters.ecosystem)) return false;
       if (!ql) return true;
       const purl = edits[p.name]?.purl ?? p.purl ?? "";
@@ -154,7 +165,7 @@ export function PackageTable({
       return cmp * dir;
     });
     return out;
-  }, [packages, q, filters, edits, sortKey, sortDir]);
+  }, [packages, q, filters, edits, sortKey, sortDir, deepInspectionNames]);
 
   const counts = useMemo<PackageCounts>(() => {
     const scoped = packages.filter((p) =>
@@ -164,13 +175,14 @@ export function PackageTable({
     for (const p of scoped) {
       if (edits[p.name]) c.edited++;
       for (const [key, matches] of Object.entries(COUNT_BUCKETS) as Array<
-        [Exclude<CountKey, "all" | "edited">, PackagePredicate]
+        [Exclude<CountKey, "all" | "edited" | "deep">, PackagePredicate]
       >) {
         if (matches(p, edits)) c[key]++;
       }
     }
+    c.deep = scoped.filter((p) => deepInspectionNames.has(p.name)).length;
     return c;
-  }, [packages, edits, filters.ecosystem]);
+  }, [packages, edits, filters.ecosystem, deepInspectionNames]);
 
   // Virtualizer
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -364,9 +376,16 @@ export function PackageTable({
         <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
           <FilterChip
             theme={theme}
-            active={!filters.unmappedOnly && !filters.unverifiedOnly}
+            active={
+              !filters.unmappedOnly && !filters.unverifiedOnly && !filters.deepOnly
+            }
             onClick={() =>
-              setFilters({ ...filters, unmappedOnly: false, unverifiedOnly: false })
+              setFilters({
+                ...filters,
+                unmappedOnly: false,
+                unverifiedOnly: false,
+                deepOnly: false,
+              })
             }
           >
             All <Count active={false} theme={theme}>{counts.all}</Count>
@@ -379,6 +398,7 @@ export function PackageTable({
                 ...filters,
                 unmappedOnly: !filters.unmappedOnly,
                 unverifiedOnly: false,
+                deepOnly: false,
               })
             }
           >
@@ -395,12 +415,30 @@ export function PackageTable({
                 ...filters,
                 unverifiedOnly: !filters.unverifiedOnly,
                 unmappedOnly: false,
+                deepOnly: false,
               })
             }
           >
             Unverified{" "}
             <Count active={filters.unverifiedOnly} theme={theme}>
               {counts.unverified}
+            </Count>
+          </FilterChip>
+          <FilterChip
+            theme={theme}
+            active={filters.deepOnly}
+            onClick={() =>
+              setFilters({
+                ...filters,
+                deepOnly: !filters.deepOnly,
+                unmappedOnly: false,
+                unverifiedOnly: false,
+              })
+            }
+          >
+            Deep{" "}
+            <Count active={filters.deepOnly} theme={theme}>
+              {counts.deep}
             </Count>
           </FilterChip>
 

@@ -37,10 +37,9 @@ from scripts.cve_match import (
     _affects_future_version,
     _aggregate_conda_versions,
     _gather_records,
-    _safe_version,
     version_in_affected_entry,
 )
-from scripts.nvd_fetch import NvdIndex, fetch_index
+from scripts.nvd_fetch import fetch_index
 from scripts.osv_fetch import Advisory
 
 app = typer.Typer(add_completion=False, help=__doc__)
@@ -86,9 +85,7 @@ def _load_cpe_mappings(mappings_path: Path) -> dict[str, CpeMapping]:
         if not valid:
             continue
         purl = entry.get("purl") if isinstance(entry, dict) else None
-        out[name] = CpeMapping(
-            cpes=valid, purl=purl if isinstance(purl, str) else None
-        )
+        out[name] = CpeMapping(cpes=valid, purl=purl if isinstance(purl, str) else None)
     return out
 
 
@@ -463,7 +460,9 @@ async def _async_main(
         repo_records = records_by_name.get(conda_name) or []
         versions = _aggregate_conda_versions(repo_records)
         if not versions:
-            console.log(f"[yellow]{conda_name}: no conda-forge versions found, skipping[/]")
+            console.log(
+                f"[yellow]{conda_name}: no conda-forge versions found, skipping[/]"
+            )
             continue
         latest_parsed = versions[-1].parsed
 
@@ -507,7 +506,9 @@ async def _async_main(
         target = out_dir / f"{conda_name}.json"
         target.write_text(json.dumps(payload, indent=2, sort_keys=False) + "\n")
         hit_count = sum(
-            1 for a in advisories if a["database_specific"]["conda-forge"]["affected_versions"]
+            1
+            for a in advisories
+            if a["database_specific"]["conda-forge"]["affected_versions"]
         )
         console.log(
             f"[green]{conda_name}[/]: wrote {target.relative_to(ROOT)} "
