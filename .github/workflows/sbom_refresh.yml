@@ -79,6 +79,16 @@ jobs:
       - name: Validate generated data
         run: pixi run validate
 
+      - name: Drop stale refresh branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # create-pull-request hardcodes `git push --force-with-lease`, which
+          # rejects with "stale info" when a previous sboms/refresh branch is
+          # left over from a merged/closed PR. Delete it first so the action
+          # always recreates it cleanly (effectively a plain force push).
+          git push origin --delete sboms/refresh || true
+
       - name: Open / update PR if SBOM data changed
         uses: peter-evans/create-pull-request@v8
         with:

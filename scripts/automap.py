@@ -468,9 +468,15 @@ async def _process_record(
 async def _gather_records(
     *, channel: str, platforms: Iterable[str], names: Iterable[str] | None = None
 ) -> list[RepoDataRecord]:
+    # Sharded repodata fetches one `.msgpack.zst` per package name. That is a
+    # win for a small subset, but querying every conda-forge name means tens of
+    # thousands of shard requests, which anaconda.org rate-limits with a 403.
+    # For the full-channel scan, pull the monolithic `repodata.json` instead:
+    # one download per platform.
+    use_sharded = bool(names)
     gateway = Gateway(
         default_config=SourceConfig(
-            sharded_enabled=True, cache_action="cache-or-fetch"
+            sharded_enabled=use_sharded, cache_action="cache-or-fetch"
         ),
         show_progress=False,
     )
