@@ -35,6 +35,9 @@ import { Btn, CpeChip, Glyph, Theme } from "./Primitives";
 type Props = {
   theme: Theme;
   pkg: CvePackage | null;
+  /** Conda packages collapsed into this representative (incl. itself).
+   *  When >1, a review here fans out to all of them on PR submit. */
+  variants: string[];
   edits: Record<string, ReviewEdit>;
   mode: "triage" | "browse";
   focusedAdvisoryId: string | null;
@@ -303,6 +306,7 @@ function VersionChip({
 export function CveDetail({
   theme,
   pkg,
+  variants,
   edits,
   mode,
   focusedAdvisoryId,
@@ -494,6 +498,49 @@ export function CveDetail({
             </code>
           ))}
         </div>
+        {variants.length > 1 && (
+          <details style={{ marginTop: 8 }}>
+            <summary
+              style={{
+                cursor: "pointer",
+                fontSize: 11.5,
+                color: t.fg2,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              <Glyph name="branch" size={11} />
+              Shared by <strong>{variants.length}</strong> conda packages with the
+              same PURL &amp; version — a review here applies to all of them.
+            </summary>
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 6,
+                marginTop: 8,
+              }}
+            >
+              {variants.map((name) => (
+                <code
+                  key={name}
+                  style={{
+                    fontFamily: "JetBrains Mono, monospace",
+                    fontSize: 11,
+                    color: name === pkg.package ? t.fg1 : t.fg2,
+                    background: t.inset,
+                    border: `1px solid ${t.border}`,
+                    borderRadius: 4,
+                    padding: "1px 6px",
+                  }}
+                >
+                  {name}
+                </code>
+              ))}
+            </div>
+          </details>
+        )}
         {pkg.cpes && pkg.cpes.length > 0 && (
           <div
             style={{

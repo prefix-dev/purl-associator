@@ -16,6 +16,9 @@ type Props = {
   theme: Theme;
   edits: Record<string, ReviewEdit>;
   packages: Record<string, CvePackage>;
+  /** Representative package name → every conda package collapsed into it
+   *  (including the representative). Reviews fan out across the members. */
+  membersByRep: Map<string, string[]>;
   onClose: () => void;
   onCommit: () => void;
   onSelect: (pkg: string, advisoryId: string) => void;
@@ -43,6 +46,7 @@ export function CvePRDrawer({
   theme,
   edits,
   packages,
+  membersByRep,
   onClose,
   onCommit,
   onSelect,
@@ -103,9 +107,19 @@ export function CvePRDrawer({
       statBits.push(`${stats.underInvestigation} under-investigation`);
 
     const total = editEntries.length;
+    // Packages the reviews actually land on once fanned out across every
+    // member that shares a representative's PURL & version.
+    const fanned = new Set<string>();
+    for (const pkg of byPkg.keys()) {
+      for (const m of membersByRep.get(pkg) ?? [pkg]) fanned.add(m);
+    }
+    const fanNote =
+      fanned.size > byPkg.size
+        ? `, fanned out to **${fanned.size}** conda packages sharing those PURLs`
+        : "";
     lines.push(
       `This PR reviews **${total}** CVE assignment${total === 1 ? "" : "s"} ` +
-        `across ${byPkg.size} package${byPkg.size === 1 ? "" : "s"}` +
+        `across ${byPkg.size} package${byPkg.size === 1 ? "" : "s"}${fanNote}` +
         (statBits.length ? ` — ${statBits.join(", ")}.` : "."),
     );
     if (versionOverrideCount > 0) {
@@ -140,6 +154,14 @@ export function CvePRDrawer({
       const purl = pkg?.purls?.[0] || "";
       lines.push(`### ${pkgName}${purl ? ` · \`${purl}\`` : ""}`);
       lines.push("");
+      const members = membersByRep.get(pkgName) ?? [pkgName];
+      if (members.length > 1) {
+        lines.push(
+          `_Applies to ${members.length} conda packages sharing this PURL: ` +
+            `${members.map((m) => `\`${m}\``).join(", ")}._`,
+        );
+        lines.push("");
+      }
 
       for (const [advisoryId, edit] of items) {
         const adv = pkg?.advisories.find((a) => a.id === advisoryId);
@@ -209,6 +231,7 @@ export function CvePRDrawer({
       const result = await submitCveReviewsAsPR({
         token,
         edits,
+        membersByRep,
         title,
         body: body.trim() === "" ? generateBody() : body,
       });
@@ -334,6 +357,7 @@ export function CvePRDrawer({
                     const adv = packages[pkg]?.advisories.find(
                       (a) => a.id === advisoryId,
                     );
+                    const memberCount = (membersByRep.get(pkg) ?? [pkg]).length;
                     return (
                       <div
                         key={key}
@@ -392,6 +416,21 @@ export function CvePRDrawer({
                             {STATUS_LABELS[e.status] || e.status}
                           </span>
                         </div>
+                        {memberCount > 1 && (
+                          <div
+                            style={{
+                              fontSize: 11,
+                              color: t.fg2,
+                              marginBottom: 4,
+                            }}
+                          >
+                            applies to{" "}
+                            <strong style={{ color: t.fg1 }}>
+                              {memberCount}
+                            </strong>{" "}
+                            packages sharing this PURL
+                          </div>
+                        )}
                         {adv?.summary && (
                           <div
                             style={{

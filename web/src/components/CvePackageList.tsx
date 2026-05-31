@@ -7,6 +7,10 @@ import { Glyph, Theme } from "./Primitives";
 type Props = {
   theme: Theme;
   packages: CvePackage[];
+  /** Representative package name → every conda package collapsed into it
+   *  (including the representative). Used for the "×N" badge and to let the
+   *  search match collapsed variant names. */
+  membersByRep: Map<string, string[]>;
   edits: Record<string, ReviewEdit>;
   focusedId: string | null;
   setFocusedId: (id: string) => void;
@@ -39,6 +43,7 @@ function packageStats(p: CvePackage, edits: Record<string, ReviewEdit>) {
 export function CvePackageList({
   theme,
   packages,
+  membersByRep,
   edits,
   focusedId,
   setFocusedId,
@@ -53,7 +58,11 @@ export function CvePackageList({
     const ql = q.trim().toLowerCase();
     return packages.filter((p) => {
       if (ql) {
-        const inName = p.package.toLowerCase().includes(ql);
+        const inName =
+          p.package.toLowerCase().includes(ql) ||
+          (membersByRep.get(p.package) ?? []).some((m) =>
+            m.toLowerCase().includes(ql),
+          );
         const inCve = p.advisories.some(
           (a) =>
             cveIds(a).some((id) => id.toLowerCase().includes(ql)) ||
@@ -244,6 +253,7 @@ export function CvePackageList({
               const p = filtered[vi.index];
               const focused = focusedId === p.package;
               const s = packageStats(p, edits);
+              const variants = membersByRep.get(p.package) ?? [];
               return (
                 <div
                   key={p.package}
@@ -289,6 +299,23 @@ export function CvePackageList({
                     >
                       {p.package}
                     </code>
+                    {variants.length > 1 && (
+                      <span
+                        style={{
+                          fontSize: 10,
+                          fontWeight: 600,
+                          padding: "1px 6px",
+                          borderRadius: 3,
+                          background: t.inset,
+                          color: t.fg2,
+                          border: `1px solid ${t.border}`,
+                          whiteSpace: "nowrap",
+                        }}
+                        title={`Same PURL & version as ${variants.length} conda packages — a review here applies to all of them:\n${variants.join("\n")}`}
+                      >
+                        ×{variants.length}
+                      </span>
+                    )}
                     {s.editsHere > 0 && (
                       <span
                         style={{
