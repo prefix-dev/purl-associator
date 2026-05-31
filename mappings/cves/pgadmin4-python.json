@@ -5,7 +5,7 @@
     "pkg:pypi/pgadmin4-python",
     "pkg:pypi/pgadmin4"
   ],
-  "generated_at": "2026-05-23T06:52:34+00:00",
+  "generated_at": "2026-05-31T06:04:18+00:00",
   "conda_versions_total": 10,
   "latest_version": "9.15",
   "advisories": [
@@ -168,7 +168,7 @@
           "conda_versions_total": 10,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-05-23T06:52:34+00:00"
+          "generated_at": "2026-05-31T06:04:18+00:00"
         }
       },
       "severity": [
@@ -183,9 +183,12 @@
       "schema_version": "1.7.5",
       "id": "GHSA-4rhg-h8f2-v4jm",
       "published": "2026-05-11T18:31:44Z",
-      "modified": "2026-05-18T15:17:13.168659Z",
+      "modified": "2026-05-27T01:14:19.804980766Z",
       "aliases": [
         "CVE-2026-7818"
+      ],
+      "related": [
+        "CGA-xv69-m2fc-3fwg"
       ],
       "summary": "pgAdmin 4 has deserialization of untrusted data in its FileBackedSessionManager",
       "details": "Deserialization of untrusted data (CWE-502) in pgAdmin 4 FileBackedSessionManager.\n\nThe session manager performed unsafe deserialization of session-file contents (using Python's standard object-serialization module) before performing any HMAC integrity check. Any file dropped into the sessions directory was deserialized unconditionally. An authenticated user with write access to the sessions directory (whether by misconfiguration or in combination with another path-traversal flaw) could plant a crafted serialized payload to achieve operating-system level remote code execution under the pgAdmin process identity.\n\nFix prepends a 64-byte hex SHA-256 HMAC over the session body, computed with SECRET_KEY, and verifies it via hmac.compare_digest before any deserialization. The check is raised (rather than asserted) on empty SECRET_KEY so it is not stripped under -O.\n\nThis issue affects pgAdmin 4: before 9.15.",
@@ -340,7 +343,7 @@
           "conda_versions_total": 10,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-05-23T06:52:34+00:00"
+          "generated_at": "2026-05-31T06:04:18+00:00"
         }
       },
       "severity": [
@@ -506,7 +509,7 @@
           "conda_versions_total": 10,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-05-23T06:52:34+00:00"
+          "generated_at": "2026-05-31T06:04:18+00:00"
         }
       },
       "severity": [
@@ -521,9 +524,12 @@
       "schema_version": "1.7.5",
       "id": "GHSA-6p2c-69cv-3fxq",
       "published": "2026-05-11T18:31:44Z",
-      "modified": "2026-05-18T14:47:00.247953Z",
+      "modified": "2026-05-27T01:14:20.459226421Z",
       "aliases": [
         "CVE-2026-7814"
+      ],
+      "related": [
+        "CGA-6m9h-q7pj-66qh"
       ],
       "summary": "pgAdmin 4: Stored cross-site scripting (XSS) vulnerability in Browser Tree and Explain Visualizer modules",
       "details": "Stored cross-site scripting (XSS) vulnerability in pgAdmin 4 Browser Tree and Explain Visualizer modules.\n\nUser-controlled PostgreSQL object names (database, schema, table, column, etc.) were assigned to DOM elements via innerHTML, allowing crafted object names containing HTML markup to execute attacker-supplied JavaScript in the browser of any pgAdmin user who navigated to or executed EXPLAIN over the malicious object.\n\nFix replaces innerHTML with textContent.\n\nThis issue affects pgAdmin 4: before 9.15.",
@@ -678,7 +684,7 @@
           "conda_versions_total": 10,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-05-23T06:52:34+00:00"
+          "generated_at": "2026-05-31T06:04:18+00:00"
         }
       },
       "severity": [
@@ -849,7 +855,7 @@
           "conda_versions_total": 10,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-05-23T06:52:34+00:00"
+          "generated_at": "2026-05-31T06:04:18+00:00"
         }
       },
       "severity": [
@@ -1025,7 +1031,7 @@
           "conda_versions_total": 10,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-05-23T06:52:34+00:00"
+          "generated_at": "2026-05-31T06:04:18+00:00"
         }
       },
       "severity": [
@@ -1191,7 +1197,7 @@
           "conda_versions_total": 10,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-05-23T06:52:34+00:00"
+          "generated_at": "2026-05-31T06:04:18+00:00"
         }
       },
       "severity": [
@@ -1206,9 +1212,12 @@
       "schema_version": "1.7.5",
       "id": "GHSA-h2x2-q2mc-24gw",
       "published": "2026-05-11T18:31:44Z",
-      "modified": "2026-05-18T15:36:47.453682Z",
+      "modified": "2026-05-27T01:14:19.638099897Z",
       "aliases": [
         "CVE-2026-7813"
+      ],
+      "related": [
+        "CGA-fqw7-h8cr-5wfq"
       ],
       "summary": "pgAdmin 4 server mode has an authorization vulnerability affecting Server Groups, Servers, Shared Servers, Background Processes, and Debugger modules",
       "details": "Authorization vulnerability in pgAdmin 4 server mode affecting Server Groups, Servers, Shared Servers, Background Processes, and Debugger modules.\n\nMultiple endpoints fetched user-owned objects without filtering by the requesting user's identity. An authenticated user could access another user's private servers, server groups, background processes, and debugger function arguments by guessing object IDs.\n\nAdditionally, the Shared Servers feature contained multiple issues including credential leakage (passexec_cmd, passfile, SSL keys), privilege escalation via writable passexec_cmd (a shell command executed when establishing the connection) allowing arbitrary command execution in the owner's process context, and owner-data corruption via SQLAlchemy session mutations. Several owner-only fields (passexec_cmd, passexec_expiration, db_res, db_res_type) were writable by non-owners through the API, and additional fields (kerberos_conn, tags, post_connection_sql) lacked per-user persistence so non-owner edits mutated the owner's record.\n\nFix centralises access control via a new server_access module, scopes all user-owned models with a UserScopedMixin, returns HTTP 410 from connection_manager when access is denied in server mode, suppresses owner-only fields for non-owners across the merge / API response / ServerManager paths, and adds an explicit owner-only write guard. The remediation landed in two pull requests; both are referenced.\n\nThis issue affects pgAdmin 4: before 9.15.",
@@ -1363,7 +1372,7 @@
           "conda_versions_total": 10,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-05-23T06:52:34+00:00"
+          "generated_at": "2026-05-31T06:04:18+00:00"
         }
       },
       "severity": [
@@ -1383,9 +1392,12 @@
       "schema_version": "1.7.5",
       "id": "GHSA-hp84-p2gq-6fvr",
       "published": "2026-05-11T18:31:44Z",
-      "modified": "2026-05-18T14:34:11.233404Z",
+      "modified": "2026-05-27T03:29:17.615394417Z",
       "aliases": [
         "CVE-2026-7815"
+      ],
+      "related": [
+        "CGA-xmfg-pj8f-whq5"
       ],
       "summary": "SQL injection vulnerability in pgAdmin 4 Maintenance Tool",
       "details": "SQL injection vulnerability in pgAdmin 4 Maintenance Tool.\n\nFour user-supplied JSON fields (buffer_usage_limit, vacuum_parallel, vacuum_index_cleanup, reindex_tablespace) were concatenated directly into the rendered VACUUM/ANALYZE/REINDEX command and passed to psql --command. An authenticated user with the tools_maintenance permission could break out of the option syntax and execute arbitrary SQL on the connected PostgreSQL server. The injected SQL could in turn invoke COPY ... TO PROGRAM to escalate to operating-system command execution on the database host.\n\nFix introduces server-side allow-listing of all four fields and switches reindex_tablespace from manual quoting to the qtIdent filter.\n\nThis issue affects pgAdmin 4: before 9.15.",
@@ -1540,7 +1552,7 @@
           "conda_versions_total": 10,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-05-23T06:52:34+00:00"
+          "generated_at": "2026-05-31T06:04:18+00:00"
         }
       },
       "severity": [
@@ -1560,9 +1572,12 @@
       "schema_version": "1.7.5",
       "id": "GHSA-hr4r-fwpv-c95j",
       "published": "2026-05-11T18:31:44Z",
-      "modified": "2026-05-18T15:03:46.282496Z",
+      "modified": "2026-05-27T03:29:17.696716586Z",
       "aliases": [
         "CVE-2026-7819"
+      ],
+      "related": [
+        "CGA-h94h-5r36-f293"
       ],
       "summary": " pgAdmin 4 File Manager has symbolic-link path traversal",
       "details": "Symbolic-link path traversal (CWE-61, CWE-22) in pgAdmin 4 File Manager.\n\ncheck_access_permission used os.path.abspath, which resolves '..' but does not resolve symbolic links, while the subsequent kernel write follows symlinks. An authenticated user could plant a symbolic link inside their own storage directory pointing outside it and induce pgAdmin to write to any path reachable by the pgAdmin process.\n\nFix switches the access check to os.path.realpath for both source and destination, and adds an _open_upload_target helper that opens the target with O_NOFOLLOW (mode 0o600) to close the leaf-component TOCTOU between the access check and the open. File mode is hardened from 0o644 to 0o600.\n\nThis issue affects pgAdmin 4: before 9.15.",
@@ -1717,7 +1732,7 @@
           "conda_versions_total": 10,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-05-23T06:52:34+00:00"
+          "generated_at": "2026-05-31T06:04:18+00:00"
         }
       },
       "severity": [
@@ -1737,9 +1752,12 @@
       "schema_version": "1.7.5",
       "id": "GHSA-hv9p-2pqf-r5w3",
       "published": "2026-05-11T18:31:44Z",
-      "modified": "2026-05-18T15:18:23.557725Z",
+      "modified": "2026-05-27T03:29:17.532551231Z",
       "aliases": [
         "CVE-2026-7820"
+      ],
+      "related": [
+        "CGA-m586-p9mx-62v4"
       ],
       "summary": "pgAdmin 4: Improper restriction of excessive authentication attempts",
       "details": "Improper restriction of excessive authentication attempts (CWE-307) in pgAdmin 4.\n\npgAdmin enforces MAX_LOGIN_ATTEMPTS only inside its custom /authenticate/login view. Flask-Security's default /login view, which is registered automatically by security.init_app() and is reachable on every server, never consulted the User.locked field: pgAdmin's User model relied on Flask-Security's UserMixin.is_locked() (which always returns 'not locked') and Flask-Login's is_active (which only checks the active column, not locked). An attacker who triggered an account lockout via /authenticate/login could therefore obtain a session by re-submitting valid credentials directly to /login, defeating the brute-force-protection control for accounts using the INTERNAL authentication source. The same bypass also means that login attempts via /login are never rate-limited, so an attacker can perform an unbounded online password-guessing attack against INTERNAL accounts regardless of MAX_LOGIN_ATTEMPTS.\n\nFix overrides User.is_active and User.is_locked() so the locked column is enforced on every authentication path. LDAP, OAuth2, Kerberos, and Webserver users are not reachable by this bypass because they have no local password and are rejected by Flask-Security's LoginForm.validate before the locked check; the lockout itself is also internal-only (the /authenticate/login view filters by auth_source=INTERNAL).\n\nThis issue affects pgAdmin 4: before 9.15.",
@@ -1894,7 +1912,7 @@
           "conda_versions_total": 10,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-05-23T06:52:34+00:00"
+          "generated_at": "2026-05-31T06:04:18+00:00"
         }
       },
       "severity": [
@@ -1914,9 +1932,12 @@
       "schema_version": "1.7.5",
       "id": "GHSA-j74f-g7vx-fh4x",
       "published": "2026-05-11T18:31:44Z",
-      "modified": "2026-05-18T14:48:09.825957Z",
+      "modified": "2026-05-27T01:14:20.593471627Z",
       "aliases": [
         "CVE-2026-7816"
+      ],
+      "related": [
+        "CGA-7mqv-2cf3-9c6w"
       ],
       "summary": "pgAdmin 4: OS command injection vulnerability in Import/Export query export",
       "details": "OS command injection (CWE-78) vulnerability in pgAdmin 4 Import/Export query export.\n\nUser-supplied input was interpolated directly into a psql \\copy metacommand template without sanitization. An authenticated user could inject \") TO PROGRAM 'cmd'\" to break out of the \\copy (...) context and achieve arbitrary command execution on the pgAdmin server, or \") TO '/path'\" for arbitrary file write. Additional fields (format, on_error, log_verbosity) were also raw-interpolated and exploitable.\n\nFix adds a parens-balance parser modeled on psql's strtokx tokenizer, allow-lists format/on_error/log_verbosity, rejects null bytes in the query, and tightens type and gating checks.\n\nThis issue affects pgAdmin 4: before 9.15.",
@@ -2071,7 +2092,7 @@
           "conda_versions_total": 10,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-05-23T06:52:34+00:00"
+          "generated_at": "2026-05-31T06:04:18+00:00"
         }
       },
       "severity": [
@@ -2091,9 +2112,12 @@
       "schema_version": "1.7.5",
       "id": "GHSA-p58c-q354-6c4f",
       "published": "2026-05-11T18:31:44Z",
-      "modified": "2026-05-18T15:03:54.473566Z",
+      "modified": "2026-05-27T01:14:20.287642614Z",
       "aliases": [
         "CVE-2026-7817"
+      ],
+      "related": [
+        "CGA-592h-v4g4-f479"
       ],
       "summary": "pgAdmin 4 contains local file inclusion (LFI) and server-side request forgery (SSRF) vulnerabilities",
       "details": "Local file inclusion (LFI) and server-side request forgery (SSRF) vulnerabilities in pgAdmin 4 LLM API configuration endpoints.\n\nUser-supplied api_key_file and api_url preferences were passed to the LLM provider clients without validation. An authenticated user could read arbitrary server-side files by pointing api_key_file at any path readable by the pgAdmin process, or coerce pgAdmin into making requests to internal targets (e.g. cloud metadata services such as 169.254.169.254) by setting api_url, exploiting the chat path and model-list endpoints.\n\nFix restricts api_key_file to the user's private storage (server mode) or home directory (desktop mode), enforces a printable-ASCII key shape and a 1024-byte read cap, and gates api_url against a configurable allow-list (config.ALLOWED_LLM_API_URLS) at every entry point.\n\nThis issue affects pgAdmin 4: before 9.15.",
@@ -2248,7 +2272,7 @@
           "conda_versions_total": 10,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-05-23T06:52:34+00:00"
+          "generated_at": "2026-05-31T06:04:18+00:00"
         }
       },
       "severity": [
@@ -2419,7 +2443,7 @@
           "conda_versions_total": 10,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-05-23T06:52:34+00:00"
+          "generated_at": "2026-05-31T06:04:18+00:00"
         }
       },
       "severity": [
@@ -2584,7 +2608,7 @@
           "conda_versions_total": 10,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-05-23T06:52:34+00:00"
+          "generated_at": "2026-05-31T06:04:18+00:00"
         }
       },
       "severity": [
@@ -2733,7 +2757,7 @@
           "conda_versions_total": 10,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-05-23T06:52:34+00:00"
+          "generated_at": "2026-05-31T06:04:18+00:00"
         }
       },
       "severity": [
@@ -2876,7 +2900,7 @@
           "conda_versions_total": 10,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-05-23T06:52:34+00:00"
+          "generated_at": "2026-05-31T06:04:18+00:00"
         }
       },
       "severity": [
@@ -3030,7 +3054,7 @@
           "conda_versions_total": 10,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-05-23T06:52:34+00:00"
+          "generated_at": "2026-05-31T06:04:18+00:00"
         }
       },
       "severity": [
@@ -3153,7 +3177,7 @@
           "conda_versions_total": 10,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-05-23T06:52:34+00:00"
+          "generated_at": "2026-05-31T06:04:18+00:00"
         }
       },
       "severity": [
@@ -3289,7 +3313,7 @@
           "conda_versions_total": 10,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-05-23T06:52:34+00:00"
+          "generated_at": "2026-05-31T06:04:18+00:00"
         }
       },
       "severity": [
@@ -3416,7 +3440,7 @@
           "conda_versions_total": 10,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-05-23T06:52:34+00:00"
+          "generated_at": "2026-05-31T06:04:18+00:00"
         }
       },
       "severity": [
@@ -3541,7 +3565,7 @@
           "conda_versions_total": 10,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-05-23T06:52:34+00:00"
+          "generated_at": "2026-05-31T06:04:18+00:00"
         }
       },
       "severity": [
@@ -3650,7 +3674,7 @@
           "conda_versions_total": 10,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-05-23T06:52:34+00:00"
+          "generated_at": "2026-05-31T06:04:18+00:00"
         }
       },
       "severity": [
@@ -3799,7 +3823,7 @@
           "conda_versions_total": 10,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-05-23T06:52:34+00:00"
+          "generated_at": "2026-05-31T06:04:18+00:00"
         }
       },
       "severity": [
@@ -3941,7 +3965,7 @@
           "conda_versions_total": 10,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-05-23T06:52:34+00:00"
+          "generated_at": "2026-05-31T06:04:18+00:00"
         }
       },
       "severity": [
@@ -4085,7 +4109,7 @@
           "conda_versions_total": 10,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-05-23T06:52:34+00:00"
+          "generated_at": "2026-05-31T06:04:18+00:00"
         }
       },
       "severity": [
@@ -4231,7 +4255,7 @@
           "conda_versions_total": 10,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-05-23T06:52:34+00:00"
+          "generated_at": "2026-05-31T06:04:18+00:00"
         }
       },
       "severity": [
@@ -4379,7 +4403,7 @@
           "conda_versions_total": 10,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-05-23T06:52:34+00:00"
+          "generated_at": "2026-05-31T06:04:18+00:00"
         }
       },
       "severity": [
