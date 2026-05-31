@@ -4,10 +4,204 @@
   "purls": [
     "pkg:pypi/redshift-connector"
   ],
-  "generated_at": "2026-05-23T06:52:34+00:00",
+  "generated_at": "2026-05-31T06:04:18+00:00",
   "conda_versions_total": 41,
   "latest_version": "2.1.10",
   "advisories": [
+    {
+      "schema_version": "1.7.5",
+      "id": "GHSA-29h4-r29x-hchv",
+      "published": "2026-05-29T19:32:28Z",
+      "modified": "2026-05-29T19:45:18.993066626Z",
+      "aliases": [
+        "CVE-2026-8838"
+      ],
+      "summary": "amazon-redshift-python-driver vulnerable to Remote Code Execution via eval() Injection",
+      "details": "### Summary\namazon-redshift-python-driver is the official Python connector for Amazon Redshift. In versions 2.1.13 and earlier, the driver insufficiently validates data received from the server during query result processing. A rogue server or man-in-the-middle could leverage this to execute arbitrary code on the client.\n\n### Impact\nWhen a client connects to a rogue server implementing the PostgreSQL wire protocol, the server can send specially crafted query responses that the driver processes without adequate input validation. This could result in arbitrary code execution in the client process, potentially enabling command execution, file system access, or credential theft with the privileges of the client application.\n\nImpacted versions: <=2.1.13\n\n### Patches\nThis has been addressed in amazon-redshift-python-driver version 2.1.14 (https://github.com/aws/amazon-redshift-python-driver/releases/tag/v2.1.14). Amazon Redshift recommends upgrading to the latest version and ensuring any forked or derivative code is patched to incorporate the new fixes.\n\n### References\nIf there are any questions or comments about this advisory, contact AWS Security via the issue reporting page or directly via email to aws-security@amazon.com. Please do not create a public GitHub issue.\n\n### Acknowledgement\nAmazon Redshift would like to thank Kexin Chen (@ckx-sec) for collaborating through the coordinated disclosure process.",
+      "affected": [
+        {
+          "package": {
+            "name": "redshift-connector",
+            "ecosystem": "PyPI",
+            "purl": "pkg:pypi/redshift-connector"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "2.1.14"
+                }
+              ]
+            }
+          ],
+          "versions": [
+            "2.0.384",
+            "2.0.389",
+            "2.0.393",
+            "2.0.399",
+            "2.0.405",
+            "2.0.659",
+            "2.0.711",
+            "2.0.872",
+            "2.0.873",
+            "2.0.874",
+            "2.0.875",
+            "2.0.876",
+            "2.0.877",
+            "2.0.878",
+            "2.0.879",
+            "2.0.880",
+            "2.0.881",
+            "2.0.882",
+            "2.0.883",
+            "2.0.884",
+            "2.0.885",
+            "2.0.886",
+            "2.0.887",
+            "2.0.888",
+            "2.0.889",
+            "2.0.900",
+            "2.0.901",
+            "2.0.902",
+            "2.0.903",
+            "2.0.904",
+            "2.0.905",
+            "2.0.906",
+            "2.0.907",
+            "2.0.908",
+            "2.0.909",
+            "2.0.910",
+            "2.0.911",
+            "2.0.912",
+            "2.0.913",
+            "2.0.914",
+            "2.0.915",
+            "2.0.916",
+            "2.0.917",
+            "2.0.918",
+            "2.1.0",
+            "2.1.1",
+            "2.1.10",
+            "2.1.11",
+            "2.1.12",
+            "2.1.13",
+            "2.1.2",
+            "2.1.3",
+            "2.1.4",
+            "2.1.5",
+            "2.1.6",
+            "2.1.7",
+            "2.1.8",
+            "2.1.9"
+          ],
+          "database_specific": {
+            "last_known_affected_version_range": "<= 2.1.13",
+            "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/05/GHSA-29h4-r29x-hchv/GHSA-29h4-r29x-hchv.json"
+          }
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/aws/amazon-redshift-python-driver/security/advisories/GHSA-29h4-r29x-hchv"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-8838"
+        },
+        {
+          "type": "WEB",
+          "url": "https://aws.amazon.com/security/security-bulletins/2026-033-aws"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/aws/amazon-redshift-python-driver"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/aws/amazon-redshift-python-driver/releases/tag/v2.1.14"
+        }
+      ],
+      "database_specific": {
+        "cwe_ids": [
+          "CWE-94"
+        ],
+        "github_reviewed": true,
+        "github_reviewed_at": "2026-05-29T19:32:28Z",
+        "nvd_published_at": "2026-05-18T21:16:41Z",
+        "severity": "CRITICAL",
+        "conda-forge": {
+          "package": "redshift_connector",
+          "purl": "pkg:conda/redshift_connector?channel=conda-forge",
+          "source_purls": [
+            "pkg:pypi/redshift-connector"
+          ],
+          "affected_versions": [
+            "2.0.872",
+            "2.0.873",
+            "2.0.874",
+            "2.0.875",
+            "2.0.876",
+            "2.0.877",
+            "2.0.878",
+            "2.0.879",
+            "2.0.880",
+            "2.0.881",
+            "2.0.882",
+            "2.0.883",
+            "2.0.884",
+            "2.0.885",
+            "2.0.886",
+            "2.0.887",
+            "2.0.889",
+            "2.0.900",
+            "2.0.901",
+            "2.0.902",
+            "2.0.903",
+            "2.0.904",
+            "2.0.905",
+            "2.0.906",
+            "2.0.907",
+            "2.0.908",
+            "2.0.909",
+            "2.0.910",
+            "2.0.911",
+            "2.0.912",
+            "2.0.913",
+            "2.0.914",
+            "2.0.915",
+            "2.0.916",
+            "2.0.917",
+            "2.0.918",
+            "2.1.0",
+            "2.1.2",
+            "2.1.4",
+            "2.1.5",
+            "2.1.10"
+          ],
+          "conda_versions_total": 41,
+          "affects_future": true,
+          "derived_by": "purl-associator/scripts.cve_match",
+          "generated_at": "2026-05-31T06:04:18+00:00"
+        }
+      },
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+          "score_num": 9.8
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N",
+          "score_num": 9.3
+        }
+      ]
+    },
     {
       "schema_version": "1.7.3",
       "id": "GHSA-8gc2-vq6m-rwjw",
@@ -91,7 +285,7 @@
           "conda_versions_total": 41,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-05-23T06:52:34+00:00"
+          "generated_at": "2026-05-31T06:04:18+00:00"
         }
       },
       "severity": [
@@ -277,7 +471,7 @@
           "conda_versions_total": 41,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-05-23T06:52:34+00:00"
+          "generated_at": "2026-05-31T06:04:18+00:00"
         }
       },
       "severity": [
