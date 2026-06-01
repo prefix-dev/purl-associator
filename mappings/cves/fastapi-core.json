@@ -4,10 +4,111 @@
   "purls": [
     "pkg:pypi/fastapi"
   ],
-  "generated_at": "2026-05-23T06:52:34+00:00",
-  "conda_versions_total": 52,
-  "latest_version": "0.136.1",
+  "generated_at": "2026-05-31T06:04:18+00:00",
+  "conda_versions_total": 53,
+  "latest_version": "0.136.3",
   "advisories": [
+    {
+      "schema_version": "1.7.5",
+      "id": "MAL-2026-4750",
+      "published": "2026-05-23T19:14:13Z",
+      "modified": "2026-05-27T00:32:10.069549016Z",
+      "withdrawn": "2026-05-26T13:04:03Z",
+      "summary": "Malicious code in fastapi (PyPI)",
+      "details": "\n---\n_-= Per source details. Do not edit below this line.=-_\n\n## Source: amazon-inspector (a753fd569a7bb908b7cdf82fe0228dc0e24dcc253b67993af5dd5c30b61f4411)\nThis release of fastapi 0.136.3 modifies pyproject.toml and PKG-INFO to add an undocumented dependency 'fastar>=0.9.0' to the [project.optional-dependencies] standard group (pyproject.toml line 67: `\"fastar >= 0.9.0\",`; PKG-INFO line 47: `Requires-Dist: fastar>=0.9.0; extra == \"standard\"`). The README documents every other dependency in the [standard] group (httpx, jinja2, python-multipart, uvicorn, fastapi-cli, email-validator, pydantic-settings, pydantic-extra-types) but does not mention 'fastar'. Because the documented recommended install command is `pip install \"fastapi[standard]\"`, every user following the official documentation silently pulls the unrelated 'fastar' package onto their developer or CI machine. The name 'fastar' is a typosquat-shaped substitution against 'fastapi'/'fastapi-*' namespaces, and its insertion into the canonical install path of one of PyPI's most-installed web frameworks constitutes a dependency-confusion / namespace-abuse vector regardless of what 'fastar' currently contains. Whoever controls 'fastar' on PyPI gains code execution at install time on a very large user base.\n",
+      "affected": [
+        {
+          "package": {
+            "name": "fastapi",
+            "ecosystem": "PyPI",
+            "purl": "pkg:pypi/fastapi"
+          },
+          "versions": [
+            "0.136.3"
+          ],
+          "database_specific": {
+            "cwes": [
+              {
+                "cweId": "CWE-506",
+                "description": "The product contains code that appears to be malicious in nature.",
+                "name": "Embedded Malicious Code"
+              }
+            ],
+            "indicators": {
+              "evidence_files": [
+                {
+                  "path": "pyproject.toml",
+                  "sha256": "ea0180f65c21d699804d214af7461e2fb07d6178283e2a2767490bca95f5a14e",
+                  "tlsh": "cd22ef67d4ac9eb13b8170e9c188134189956023bd06358c77cd814e9f4eaef937da3e"
+                }
+              ],
+              "package_integrity": [
+                {
+                  "filename": "fastapi-0.136.3-py3-none-any.whl",
+                  "hashes": {
+                    "blake2b_256": "e08245359b62a067409bd929ae8a56b8ed13e5a8c8a61194b3c236920999ab83",
+                    "md5": "51f97b50ece91fc6f78e673f55ed0c4e",
+                    "sha256": "3d2a69bdf04b7e9f3afa292c3bc7a98816bbfafa10bc9b45f3f3700d2f761620"
+                  }
+                },
+                {
+                  "filename": "fastapi-0.136.3.tar.gz",
+                  "hashes": {
+                    "blake2b_256": "812dff8d91d7b564d464629a0fd50a4489c97fcb836ac230bf3a7269232a9b1f",
+                    "md5": "5e22f728ab9ea5c99a29a0137b4b8b55",
+                    "sha256": "e487fae93ad408e6f47641ee4dfe389864fd7bec92e547ea8498fc13f43e83ab"
+                  }
+                }
+              ]
+            },
+            "source": "https://github.com/ossf/malicious-packages/blob/main/osv/withdrawn/pypi/fastapi/MAL-2026-4750.json"
+          }
+        }
+      ],
+      "references": [
+        {
+          "type": "PACKAGE",
+          "url": "https://pypi.org/project/fastapi/0.136.3/"
+        }
+      ],
+      "database_specific": {
+        "malicious-packages-origins": [
+          {
+            "id": "IN-MAL-2026-004380",
+            "import_time": "2026-05-26T05:52:29.184410944Z",
+            "modified_time": "2026-05-23T19:14:13Z",
+            "sha256": "a753fd569a7bb908b7cdf82fe0228dc0e24dcc253b67993af5dd5c30b61f4411",
+            "source": "amazon-inspector",
+            "versions": [
+              "0.136.3"
+            ]
+          }
+        ],
+        "conda-forge": {
+          "package": "fastapi-core",
+          "purl": "pkg:conda/fastapi-core?channel=conda-forge",
+          "source_purls": [
+            "pkg:pypi/fastapi"
+          ],
+          "affected_versions": [
+            "0.136.3"
+          ],
+          "conda_versions_total": 53,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.cve_match",
+          "generated_at": "2026-05-31T06:04:18+00:00"
+        }
+      },
+      "credits": [
+        {
+          "name": "Amazon Inspector",
+          "contact": [
+            "actran@amazon.com"
+          ],
+          "type": "FINDER"
+        }
+      ]
+    },
     {
       "schema_version": "1.7.5",
       "id": "GHSA-8h2j-cgx8-6xv7",
@@ -206,10 +307,10 @@
             "pkg:pypi/fastapi"
           ],
           "affected_versions": [],
-          "conda_versions_total": 52,
+          "conda_versions_total": 53,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-05-23T06:52:34+00:00"
+          "generated_at": "2026-05-31T06:04:18+00:00"
         }
       },
       "severity": [
@@ -519,10 +620,10 @@
             "pkg:pypi/fastapi"
           ],
           "affected_versions": [],
-          "conda_versions_total": 52,
+          "conda_versions_total": 53,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-05-23T06:52:34+00:00"
+          "generated_at": "2026-05-31T06:04:18+00:00"
         }
       },
       "severity": [
@@ -720,10 +821,10 @@
             "pkg:pypi/fastapi"
           ],
           "affected_versions": [],
-          "conda_versions_total": 52,
+          "conda_versions_total": 53,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-05-23T06:52:34+00:00"
+          "generated_at": "2026-05-31T06:04:18+00:00"
         }
       }
     },
@@ -994,10 +1095,10 @@
             "pkg:pypi/fastapi"
           ],
           "affected_versions": [],
-          "conda_versions_total": 52,
+          "conda_versions_total": 53,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-05-23T06:52:34+00:00"
+          "generated_at": "2026-05-31T06:04:18+00:00"
         }
       }
     }

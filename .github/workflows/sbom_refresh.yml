@@ -1,0 +1,114 @@
+name: Refresh embedded SBOM inspections
+
+on:
+  workflow_dispatch:
+    inputs:
+      only:
+        description: "Comma-separated package names (blank = all SBOM candidates)"
+        required: false
+        default: ""
+      refresh_automap:
+        description: "Refresh recipe metadata before extracting SBOMs"
+        required: false
+        default: "true"
+        type: boolean
+      automap_top_downloads:
+        description: "Optional top-N recipe refresh limit for test runs (blank = all conda-forge)"
+        required: false
+        default: ""
+      force_osv:
+        description: "Force re-download of OSV dumps"
+        required: false
+        default: "false"
+        type: boolean
+      parallel:
+        description: "Parallel binary fetches"
+        required: false
+        default: "8"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: sbom-refresh
+  cancel-in-progress: false
+
+jobs:
+  sbom-refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: prefix-dev/setup-pixi@v0.9.5
+        with:
+          pixi-version: latest
+          cache: true
+
+      - name: Refresh recipe-derived deep-inspection candidates
+        if: ${{ inputs.refresh_automap }}
+        run: |
+          set -euo pipefail
+          ARGS=(--force)
+          if [ -n "${{ inputs.only }}" ]; then
+            ARGS+=(--only "${{ inputs.only }}")
+          elif [ -n "${{ inputs.automap_top_downloads }}" ]; then
+            ARGS+=(--top-downloads "${{ inputs.automap_top_downloads }}")
+          fi
+          pixi run python -m scripts.automap "${ARGS[@]}"
+          pixi run -e lite merge
+
+      - name: Extract embedded SBOMs from candidate artifacts
+        run: |
+          set -euo pipefail
+          ARGS=(--parallel "${{ inputs.parallel }}")
+          if [ -n "${{ inputs.only }}" ]; then ARGS+=(--only "${{ inputs.only }}"); fi
+          pixi run python -m scripts.sbom_extract "${ARGS[@]}"
+
+      - name: Match embedded SBOM components against OSV
+        run: |
+          set -euo pipefail
+          ARGS=()
+          if [ "${{ inputs.force_osv }}" = "true" ]; then ARGS+=(--force-osv); fi
+          pixi run python -m scripts.sbom_cve_match "${ARGS[@]}"
+
+      - name: Publish SBOM data for the SPA
+        run: pixi run -e lite merge-sboms
+
+      - name: Validate generated data
+        run: pixi run validate
+
+      - name: Drop stale refresh branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # create-pull-request hardcodes `git push --force-with-lease`, which
+          # rejects with "stale info" when a previous sboms/refresh branch is
+          # left over from a merged/closed PR. Delete it first so the action
+          # always recreates it cleanly (effectively a plain force push).
+          git push origin --delete sboms/refresh || true
+
+      - name: Open / update PR if SBOM data changed
+        uses: peter-evans/create-pull-request@v8
+        with:
+          add-paths: |
+            mappings/auto.json
+            mappings/sbom_inspections.json
+            mappings/sboms.json
+            mappings/sboms/**
+            mappings/sbom_cves/**
+          branch: sboms/refresh
+          base: main
+          title: "sboms: refresh embedded inspections"
+          commit-message: "sboms: refresh embedded inspections"
+          delete-branch: true
+          body: |
+            Refresh embedded Rust/Go dependency inspections.
+
+            Pipeline:
+
+            1. Optionally refresh recipe-derived `deep_inspection` candidates.
+            2. Extract embedded `cargo-auditable` / Go buildinfo SBOMs.
+            3. Match extracted component PURLs against OSV.
+            4. Update the committed `mappings/` SBOM inspection artifacts.

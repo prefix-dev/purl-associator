@@ -1,99 +1,37 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  consumeOauthCallback,
-  fetchUser,
-  hasOauthCallback,
-  loadStoredToken,
-  logout,
-} from "./auth/github";
+import { useGithubAuth } from "./auth/useGithubAuth";
 import { BulkPanel } from "./components/BulkPanel";
+import { LocalDraftBanner } from "./components/LocalDraftBanner";
 import { LoginModal } from "./components/LoginModal";
 import { MappingEditor } from "./components/MappingEditor";
 import { PackageTable } from "./components/PackageTable";
 import { PRDrawer } from "./components/PRDrawer";
 import { Btn, Glyph, useTheme } from "./components/Primitives";
-import { config, repoFullName } from "./config";
-import { loadMappings, packagesAsList } from "./data/loader";
-import type { Edit, GitHubUser, MappingsPayload, PackageEntry } from "./data/types";
-
-const EDITS_KEY = "purl-associator/staged_edits";
+import { repoFullName } from "./config";
+import { purlsFromAlternatives } from "./data/purlAlternatives";
+import type { Edit, PackageEntry } from "./data/types";
+import { useMappingsData } from "./data/useMappingsData";
+import { usePurlEditStore } from "./stores/userState";
 
 export function App() {
   const theme = useTheme();
-  const [payload, setPayload] = useState<MappingsPayload | null>(null);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [packages, setPackages] = useState<PackageEntry[]>([]);
+  const { payload, packages, loadError } = useMappingsData();
   const [selectedSet, setSelectedSet] = useState<Set<string>>(new Set());
   const [focusedId, setFocusedId] = useState<string | null>(null);
-  const [edits, setEdits] = useState<Record<string, Edit>>({});
+  const edits = usePurlEditStore((state) => state.edits);
+  const setEdits = usePurlEditStore((state) => state.setEdits);
   const [q, setQ] = useState("");
   const [filters, setFilters] = useState({
     unmappedOnly: false,
     unverifiedOnly: false,
+    deepOnly: false,
     ecosystem: "all",
   });
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
-  const [token, setToken] = useState<string | null>(null);
-  const [user, setUser] = useState<GitHubUser | null>(null);
-  const [authError, setAuthError] = useState<string | null>(null);
+  const { token, user, error: authError, isLoggedIn, signOut } = useGithubAuth();
 
   const t = theme.t;
-
-  useEffect(() => {
-    loadMappings(config.mappingsUrl)
-      .then((data) => {
-        setPayload(data);
-        setPackages(packagesAsList(data));
-      })
-      .catch((err) => setLoadError(err instanceof Error ? err.message : String(err)));
-  }, []);
-
-  // Persist staged edits across the OAuth full-page redirect (sessionStorage
-  // is per-tab and survives same-tab navigations).
-  useEffect(() => {
-    try {
-      const stored = sessionStorage.getItem(EDITS_KEY);
-      if (stored) setEdits(JSON.parse(stored));
-    } catch {
-      // ignore
-    }
-  }, []);
-  useEffect(() => {
-    try {
-      if (Object.keys(edits).length === 0) sessionStorage.removeItem(EDITS_KEY);
-      else sessionStorage.setItem(EDITS_KEY, JSON.stringify(edits));
-    } catch {
-      // ignore
-    }
-  }, [edits]);
-
-  useEffect(() => {
-    const stored = loadStoredToken();
-    if (stored) {
-      setToken(stored);
-      fetchUser(stored)
-        .then(setUser)
-        .catch(() => {
-          logout();
-          setToken(null);
-        });
-      return;
-    }
-    if (hasOauthCallback()) {
-      consumeOauthCallback()
-        .then(async (newToken) => {
-          if (!newToken) return;
-          setToken(newToken);
-          try {
-            setUser(await fetchUser(newToken));
-          } catch (err) {
-            setAuthError(err instanceof Error ? err.message : String(err));
-          }
-        })
-        .catch((err) => setAuthError(err instanceof Error ? err.message : String(err)));
-    }
-  }, []);
 
   // Default: when packages first arrive, focus the first row (but don't
   // mark it as selected — selection is the checkbox state).
@@ -113,34 +51,32 @@ export function App() {
     [packages, selectedSet],
   );
 
+  const deepInspectionNames = useMemo(() => {
+    const names = new Set<string>();
+    for (const p of packages) {
+      if (p.deep_inspection?.candidate) names.add(p.name);
+    }
+    return names;
+  }, [packages]);
+
   const editsCount = Object.keys(edits).length;
-  const isLoggedIn = Boolean(token && user);
   const showBulk = selectedSet.size > 1;
 
   function handleEdit(newEdit: Edit): void {
-    if (!isLoggedIn) setLoginOpen(true);
     if (!focusedPkg) return;
-    const auto = focusedPkg.auto ?? {
-      purl: focusedPkg.purl,
-      type: focusedPkg.type,
-      namespace: focusedPkg.namespace,
-      pkg_name: focusedPkg.pkg_name,
-      alternative_purls: focusedPkg.alternative_purls,
-    };
-    const autoAltSet = new Set(
-      (auto.alternative_purls ?? []).map((a) => a.purl).sort(),
+    const currentAltSet = new Set(
+      purlsFromAlternatives(focusedPkg.alternative_purls).sort(),
     );
     const editAltSet = new Set([...newEdit.alternative_purls].sort());
     const altsMatch =
-      autoAltSet.size === editAltSet.size &&
-      [...autoAltSet].every((p) => editAltSet.has(p));
+      currentAltSet.size === editAltSet.size &&
+      [...currentAltSet].every((p) => editAltSet.has(p));
     const isSame =
-      auto.purl &&
       !newEdit.unmapped &&
-      newEdit.purl === auto.purl &&
-      newEdit.type === auto.type &&
-      (newEdit.namespace || "") === (auto.namespace || "") &&
-      newEdit.pkgName === auto.pkg_name &&
+      newEdit.purl === (focusedPkg.purl ?? "") &&
+      newEdit.type === (focusedPkg.type ?? "") &&
+      (newEdit.namespace || "") === (focusedPkg.namespace || "") &&
+      newEdit.pkgName === (focusedPkg.pkg_name ?? focusedPkg.name) &&
       altsMatch &&
       !newEdit.note;
     setEdits((prev) => {
@@ -165,7 +101,7 @@ export function App() {
       type: auto.type ?? "pypi",
       namespace: auto.namespace ?? "",
       pkgName: auto.pkg_name ?? p.name,
-      alternative_purls: (auto.alternative_purls ?? []).map((a) => a.purl),
+      alternative_purls: purlsFromAlternatives(auto.alternative_purls),
       unmapped: false,
       note: "",
       approved: true,
@@ -173,7 +109,6 @@ export function App() {
   }
 
   function handleApprove(): void {
-    if (!isLoggedIn) setLoginOpen(true);
     if (!focusedPkg) return;
     const e = approveOne(focusedPkg);
     if (!e) return;
@@ -224,12 +159,6 @@ export function App() {
       for (const p of selectedPackages) delete next[p.name];
       return next;
     });
-  }
-
-  function handleSignOut(): void {
-    logout();
-    setToken(null);
-    setUser(null);
   }
 
   return (
@@ -291,6 +220,17 @@ export function App() {
               }}
             >
               CVE Dashboard
+            </a>
+            <a
+              href="./deep.html"
+              style={{
+                color: t.fg2,
+                textDecoration: "none",
+                padding: "4px 8px",
+                borderRadius: 6,
+              }}
+            >
+              Deep Package Inspection
             </a>
           </nav>
           <div
@@ -364,7 +304,7 @@ export function App() {
                 @{user.login}
               </span>
               <button
-                onClick={handleSignOut}
+                onClick={signOut}
                 title="Sign out"
                 style={{
                   background: "transparent",
@@ -391,12 +331,24 @@ export function App() {
         </div>
       </header>
 
+      <LocalDraftBanner
+        theme={theme}
+        count={editsCount}
+        noun="change"
+        onReview={() => setDrawerOpen(true)}
+        onDiscard={() => {
+          if (window.confirm("Discard all locally saved staged changes?")) {
+            setEdits({});
+          }
+        }}
+      />
+
       {!isLoggedIn && (
         <div
           style={{
             padding: "7px 18px",
-            background: theme.dark ? "#1f1a0d" : "#fff7d6",
-            borderBottom: `1px solid ${theme.dark ? "#3a3416" : "#f0e2a3"}`,
+            background: theme.dark ? "#151c26" : "#eaf3ff",
+            borderBottom: `1px solid ${theme.dark ? "#26364a" : "#c7daf2"}`,
             fontSize: 12,
             color: t.fg1,
             display: "flex",
@@ -404,8 +356,8 @@ export function App() {
             gap: 8,
           }}
         >
-          <Glyph name="eye" size={13} />
-          You're browsing in read-only mode.
+          <Glyph name="edit" size={13} />
+          You can stage local mapping changes without signing in.
           <button
             onClick={() => setLoginOpen(true)}
             style={{
@@ -420,7 +372,7 @@ export function App() {
           >
             Sign in with GitHub
           </button>
-          to edit mappings.
+          when you're ready to open a PR.
         </div>
       )}
 
@@ -450,8 +402,15 @@ export function App() {
         </div>
       )}
 
-      <div style={{ flex: 1, display: "flex", minHeight: 0 }}>
-        <div style={{ flex: "0 0 60%", minWidth: 0 }}>
+      <div
+        style={{
+          flex: 1,
+          display: "grid",
+          gridTemplateColumns: "minmax(0, 60fr) minmax(0, 40fr)",
+          minHeight: 0,
+        }}
+      >
+        <div style={{ minWidth: 0 }}>
           {payload ? (
             <PackageTable
               theme={theme}
@@ -465,6 +424,7 @@ export function App() {
               setQ={setQ}
               filters={filters}
               setFilters={setFilters}
+              deepInspectionNames={deepInspectionNames}
             />
           ) : (
             <div
@@ -480,14 +440,12 @@ export function App() {
           )}
         </div>
 
-        <div style={{ flex: 1, minWidth: 0, display: "flex" }}>
+        <div style={{ minWidth: 0, display: "flex" }}>
           {showBulk ? (
             <BulkPanel
               theme={theme}
               selectedPackages={selectedPackages}
               edits={edits}
-              isLoggedIn={isLoggedIn}
-              onRequestLogin={() => setLoginOpen(true)}
               onApproveAll={handleBulkApprove}
               onMarkUnmappedAll={handleBulkMarkUnmapped}
               onResetSelected={handleBulkResetSelected}
@@ -501,8 +459,6 @@ export function App() {
               onEdit={handleEdit}
               onApprove={handleApprove}
               onResetAuto={handleResetAuto}
-              isLoggedIn={isLoggedIn}
-              onRequestLogin={() => setLoginOpen(true)}
             />
           )}
         </div>

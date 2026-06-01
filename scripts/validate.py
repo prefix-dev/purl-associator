@@ -11,6 +11,9 @@ This is the standards-compliance gate. It checks:
 * ``web/public/cves.json`` — the merged bundle against
   ``schemas/cves-bundle.schema.json`` plus the OSV schema per advisory.
   Skipped if absent (it is a generated artifact).
+* ``web/public/mappings.json`` — manual/contribution PURL alternative lists are
+  checked against the merged bundle so reviewed removals cannot be silently
+  reintroduced from auto-generated suggestions.
 
 Run standalone or via ``pixi run validate``; exits non-zero on any failure so
 the ``cve-refresh`` workflow can block a bad refresh.
@@ -30,6 +33,9 @@ SCHEMA_DIR = ROOT / "schemas"
 DEFAULT_CVES_DIR = ROOT / "mappings" / "cves"
 DEFAULT_CONTRIB_DIR = ROOT / "mappings" / "cve_contributions"
 DEFAULT_BUNDLE = ROOT / "web" / "public" / "cves.json"
+DEFAULT_MANUAL_MAPPINGS = ROOT / "mappings" / "manual.json"
+DEFAULT_MAPPING_CONTRIB_DIR = ROOT / "mappings" / "contributions"
+DEFAULT_MAPPINGS_BUNDLE = ROOT / "web" / "public" / "mappings.json"
 
 
 def _load(path: Path) -> dict:
@@ -88,6 +94,77 @@ def validate_contributions(contrib_dir: Path, errors: list[str]) -> int:
     return len(files)
 
 
+def _purl_list(value) -> list[str]:
+    out: list[str] = []
+    for item in value or []:
+        if isinstance(item, str):
+            out.append(item)
+        elif isinstance(item, dict) and isinstance(item.get("purl"), str):
+            out.append(item["purl"])
+    return out
+
+
+def _load_mapping_contributions(directory: Path) -> list[dict]:
+    if not directory.exists():
+        return []
+    entries: list[dict] = []
+    for path in sorted(directory.glob("*.json")):
+        try:
+            data = _load(path)
+        except json.JSONDecodeError:
+            # merge_mappings skips invalid JSON too; schema validation for these
+            # files can be added separately when a schema is introduced.
+            continue
+        data.setdefault("_filename", path.name)
+        if not isinstance(data.get("timestamp"), str):
+            data["timestamp"] = path.stem
+        entries.append(data)
+    entries.sort(key=lambda d: (d.get("timestamp") or "", d.get("_filename")))
+    return entries
+
+
+def validate_mapping_alternatives(
+    manual_path: Path,
+    contrib_dir: Path,
+    mappings_path: Path,
+    errors: list[str],
+) -> bool:
+    """Ensure reviewed alternative removals survive the mappings merge."""
+    if not mappings_path.exists():
+        return False
+    try:
+        merged = _load(mappings_path)
+    except json.JSONDecodeError as exc:
+        errors.append(f"{mappings_path.relative_to(ROOT)}: invalid JSON: {exc}")
+        return True
+
+    expected: dict[str, list[str]] = {}
+    if manual_path.exists():
+        try:
+            manual = _load(manual_path)
+        except json.JSONDecodeError as exc:
+            errors.append(f"{manual_path.relative_to(ROOT)}: invalid JSON: {exc}")
+            manual = {}
+        for name, override in (manual.get("packages") or {}).items():
+            if isinstance(override, dict) and "alternative_purls" in override:
+                expected[name] = _purl_list(override.get("alternative_purls"))
+
+    for contrib in _load_mapping_contributions(contrib_dir):
+        for name, override in (contrib.get("packages") or {}).items():
+            if isinstance(override, dict) and "alternative_purls" in override:
+                expected[name] = _purl_list(override.get("alternative_purls"))
+
+    packages = merged.get("packages") or {}
+    for name, wanted in expected.items():
+        got = _purl_list((packages.get(name) or {}).get("alternative_purls"))
+        if got != wanted:
+            errors.append(
+                f"{mappings_path.relative_to(ROOT)}:{name}: alternative_purls "
+                f"merged as {got!r}, expected latest reviewed list {wanted!r}"
+            )
+    return True
+
+
 def validate_bundle(bundle_path: Path, errors: list[str]) -> bool:
     """Validate the merged cves.json bundle. Returns False if it is absent."""
     if not bundle_path.exists():
@@ -118,12 +195,20 @@ def main() -> None:
     parser.add_argument("--cves-dir", type=Path, default=DEFAULT_CVES_DIR)
     parser.add_argument("--contributions", type=Path, default=DEFAULT_CONTRIB_DIR)
     parser.add_argument("--bundle", type=Path, default=DEFAULT_BUNDLE)
+    parser.add_argument("--mappings", type=Path, default=DEFAULT_MAPPINGS_BUNDLE)
+    parser.add_argument(
+        "--mapping-contributions", type=Path, default=DEFAULT_MAPPING_CONTRIB_DIR
+    )
+    parser.add_argument("--manual-mappings", type=Path, default=DEFAULT_MANUAL_MAPPINGS)
     args = parser.parse_args()
 
     errors: list[str] = []
     n_cves = validate_cves(args.cves_dir, errors)
     n_contrib = validate_contributions(args.contributions, errors)
     has_bundle = validate_bundle(args.bundle, errors)
+    has_mappings = validate_mapping_alternatives(
+        args.manual_mappings, args.mapping_contributions, args.mappings, errors
+    )
 
     if errors:
         print(f"✗ {len(errors)} schema violation(s):", file=sys.stderr)
@@ -134,7 +219,8 @@ def main() -> None:
     print(
         f"✓ {n_cves} per-package CVE file(s) valid (OSV schema + envelope), "
         f"{n_contrib} OpenVEX contribution(s) valid, "
-        f"bundle {'valid' if has_bundle else 'absent (skipped)'}"
+        f"CVE bundle {'valid' if has_bundle else 'absent (skipped)'}, "
+        f"mapping removals {'valid' if has_mappings else 'absent (skipped)'}"
     )
 
 

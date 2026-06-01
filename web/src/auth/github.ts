@@ -7,14 +7,12 @@
  * 3. Frontend POSTs the code to a tiny Cloudflare Worker which holds the
  *    client_secret and calls https://github.com/login/oauth/access_token.
  * 4. Worker returns { access_token, token_type, scope }; we cache it in
- *    sessionStorage. The token is used directly against api.github.com (which
- *    is CORS-enabled, unlike the OAuth endpoints).
+ *    tab-local browser storage. The token is used directly against
+ *    api.github.com (which is CORS-enabled, unlike the OAuth endpoints).
  */
 import { config } from "../config";
 import type { GitHubUser } from "../data/types";
-
-const TOKEN_KEY = "purl-associator/gh_token";
-const STATE_KEY = "purl-associator/oauth_state";
+import { browserStorage } from "../storage/browserStorage";
 // GitHub Apps don't use OAuth scopes — permissions are configured at App
 // registration. Leaving this empty makes the consent screen narrow:
 // "PURL Associator wants to: Read your public profile".
@@ -26,27 +24,15 @@ export type AuthState =
   | { kind: "configuring"; reason: string };
 
 export function loadStoredToken(): string | null {
-  try {
-    return sessionStorage.getItem(TOKEN_KEY);
-  } catch {
-    return null;
-  }
+  return browserStorage.loadGithubToken();
 }
 
 export function clearStoredToken(): void {
-  try {
-    sessionStorage.removeItem(TOKEN_KEY);
-  } catch {
-    // ignore
-  }
+  browserStorage.clearGithubToken();
 }
 
 function storeToken(token: string): void {
-  try {
-    sessionStorage.setItem(TOKEN_KEY, token);
-  } catch {
-    // ignore
-  }
+  browserStorage.saveGithubToken(token);
 }
 
 export function isOauthConfigured(): boolean {
@@ -58,7 +44,7 @@ export function startLogin(): void {
     throw new Error("GitHub client ID not configured");
   }
   const state = crypto.randomUUID();
-  sessionStorage.setItem(STATE_KEY, state);
+  browserStorage.saveOauthState(state);
   const redirectUri = `${location.origin}${location.pathname}`;
   const url = new URL("https://github.com/login/oauth/authorize");
   url.searchParams.set("client_id", config.githubClientId);
@@ -88,11 +74,11 @@ export async function consumeOauthCallback(): Promise<string | null> {
   const cleanUrl = `${location.origin}${location.pathname}`;
   history.replaceState({}, "", cleanUrl);
 
-  const expected = sessionStorage.getItem(STATE_KEY);
+  const expected = browserStorage.loadOauthState();
   if (expected && expected !== state) {
     throw new Error("OAuth state mismatch — possible CSRF, refusing to continue.");
   }
-  sessionStorage.removeItem(STATE_KEY);
+  browserStorage.clearOauthState();
 
   if (!config.oauthWorkerUrl) {
     throw new Error("OAuth worker URL not configured");

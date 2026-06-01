@@ -7,6 +7,7 @@ those mappings to derive CVE assignment data.
 |---|---|---|
 | `web/public/mappings.json` | `scripts.merge_mappings` | Served package to PURL mapping data |
 | `web/public/cves.json` | `scripts.merge_cves` | Served CVE dashboard data |
+| `web/public/sboms.json` | `scripts.merge_sboms` | Served deep-inspection summary index |
 | mapping PRs | Worker `POST /api/submit` | Human review of PURL mapping edits |
 | CVE review PRs | Worker `POST /api/submit-cves` | Human review of OpenVEX CVE statements |
 
@@ -33,8 +34,16 @@ flowchart LR
   PackageCves --> MergeCves
   MergeCves --> Cves[web/public/cves.json]
 
+  Auto --> SbomExtract[scripts.sbom_extract]
+  SbomExtract --> Sboms[mappings/sboms/*.json]
+  Sboms --> SbomCves[scripts.sbom_cve_match]
+  SbomCves --> SbomIndex[mappings/sboms.json]
+  SbomIndex --> MergeSboms[scripts.merge_sboms]
+  MergeSboms --> PublicSboms[web/public/sboms.json]
+
   Mappings --> Web[GitHub Pages app]
   Cves --> Web
+  PublicSboms --> Web
 ```
 
 ## PURL Mapping Pipeline
@@ -311,7 +320,8 @@ flowchart LR
 |---|---|---|
 | `automap.yml` | schedule and manual dispatch | run automap, merge mappings, open refresh PR |
 | `cve_refresh.yml` | schedule and manual dispatch | match OSV advisories, merge OpenVEX reviews, validate, open refresh PR |
-| `pages.yml` | push to `main` and manual dispatch | regenerate served JSON, validate, build Vite app, deploy Pages |
+| `sbom_refresh.yml` | manual dispatch | refresh recipe-derived deep-inspection candidates across all conda-forge, extract embedded SBOMs, match transitive CVEs, open refresh PR |
+| `pages.yml` | push to `main` and manual dispatch | regenerate served JSON, publish SBOM inspection index, validate, build Vite app, deploy Pages |
 
 Worker deployment is done with Wrangler from `worker/`.
 

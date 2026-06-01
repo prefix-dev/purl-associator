@@ -1,14 +1,26 @@
 import { ReactNode, useState } from "react";
 import { PURL_TYPES } from "../data/loader";
+import {
+  alternativeMetas,
+  effectiveAlternativeValues,
+  purlsFromAlternatives,
+} from "../data/purlAlternatives";
 import type { Edit, PackageEntry } from "../data/types";
 import {
-  Btn,
+  DraftButton,
+  DraftCheckbox,
+  DraftSelect,
+  DraftTextArea,
+  DraftTextInput,
+  handleDraftSubmit,
+} from "./DraftFields";
+import {
   ConfidenceBar,
+  CpeChip,
   Glyph,
   PurlChip,
   SourceTag,
   StatusPill,
-  TextInput,
   Theme,
 } from "./Primitives";
 
@@ -19,8 +31,6 @@ type Props = {
   onEdit: (e: Edit) => void;
   onApprove: () => void;
   onResetAuto: () => void;
-  isLoggedIn: boolean;
-  onRequestLogin: () => void;
 };
 
 function buildPurl(type: string, ns: string, name: string): string {
@@ -35,8 +45,6 @@ export function MappingEditor({
   onEdit,
   onApprove,
   onResetAuto,
-  isLoggedIn,
-  onRequestLogin,
 }: Props) {
   const t = theme.t;
   if (!pkg) {
@@ -83,15 +91,21 @@ export function MappingEditor({
     sources: p.sources,
   };
 
-  const autoAlts = (p.auto?.alternative_purls ?? p.alternative_purls ?? []).map(
-    (a) => a.purl,
-  );
+  // Prefer the package's current approved alternatives over the preserved
+  // auto snapshot. For manual overrides this is what records reviewer removals;
+  // falling back to p.auto here would silently resurrect rejected auto PURLs.
+  const sourceAlternatives = effectiveAlternativeValues({
+    reviewed: p.alternative_purls,
+    auto: p.auto?.alternative_purls,
+  });
+  const currentAlternativePurls = purlsFromAlternatives(sourceAlternatives);
+  const sourceAlternativeMeta = alternativeMetas(sourceAlternatives);
   const eff: Edit = {
-    type: edit?.type ?? auto.type ?? p.type ?? "pypi",
-    namespace: edit?.namespace ?? auto.namespace ?? p.namespace ?? "",
-    pkgName: edit?.pkgName ?? auto.pkg_name ?? p.pkg_name ?? p.name,
-    purl: edit?.purl ?? auto.purl ?? p.purl ?? "",
-    alternative_purls: edit?.alternative_purls ?? autoAlts,
+    type: edit?.type ?? p.type ?? auto.type ?? "pypi",
+    namespace: edit?.namespace ?? p.namespace ?? auto.namespace ?? "",
+    pkgName: edit?.pkgName ?? p.pkg_name ?? auto.pkg_name ?? p.name,
+    purl: edit?.purl ?? p.purl ?? auto.purl ?? "",
+    alternative_purls: edit?.alternative_purls ?? currentAlternativePurls,
     unmapped: edit?.unmapped ?? p.unmapped ?? p.purl === null,
     note: edit?.note ?? "",
   };
@@ -101,15 +115,16 @@ export function MappingEditor({
     (p.status === "verified" || p.status === "auto-verified") && !isEdited;
 
   function updatePart(patch: Partial<Edit>): void {
+    const editsMapping =
+      "type" in patch || "namespace" in patch || "pkgName" in patch || "purl" in patch;
     const next: Edit = { ...eff, ...patch };
+    if (editsMapping && !("unmapped" in patch)) next.unmapped = false;
     if (!("purl" in patch)) next.purl = buildPurl(next.type, next.namespace, next.pkgName);
     onEdit(next);
   }
 
   function promoteAlt(purl: string): void {
-    const alt = (p.alternative_purls ?? p.auto?.alternative_purls ?? []).find(
-      (a) => a.purl === purl,
-    );
+    const alt = sourceAlternativeMeta.find((a) => a.purl === purl);
     if (!alt) return;
     // Promoting an alternative: it becomes the primary; the previous primary
     // demotes into the alternatives list.
@@ -124,6 +139,7 @@ export function MappingEditor({
       namespace: alt.namespace ?? "",
       pkgName: alt.pkg_name,
       alternative_purls: newAlternates,
+      unmapped: false,
     });
   }
 
@@ -137,12 +153,16 @@ export function MappingEditor({
   function addAlt(purl: string): void {
     if (!purl.startsWith("pkg:")) return;
     if (eff.alternative_purls.includes(purl) || eff.purl === purl) return;
-    onEdit({ ...eff, alternative_purls: [...eff.alternative_purls, purl] });
+    onEdit({
+      ...eff,
+      alternative_purls: [...eff.alternative_purls, purl],
+      unmapped: false,
+    });
   }
 
   function updatePurlString(str: string): void {
     const m = str.match(/^pkg:([^/]+)\/(?:([^/]+)\/)?(.+)$/);
-    const next: Edit = { ...eff, purl: str };
+    const next: Edit = { ...eff, purl: str, unmapped: false };
     if (m) {
       next.type = m[1];
       next.namespace = m[2] ?? "";
@@ -257,25 +277,25 @@ export function MappingEditor({
 
           <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
             {isEdited && (
-              <Btn
+              <DraftButton
                 theme={theme}
                 variant="ghost"
                 size="sm"
                 icon="undo"
-                onClick={onResetAuto}
+                onDraft={onResetAuto}
               >
                 Reset
-              </Btn>
+              </DraftButton>
             )}
             {!isVerified && !eff.unmapped && (
-              <Btn
+              <DraftButton
                 theme={theme}
                 variant="primary"
                 icon="check"
-                onClick={isLoggedIn ? onApprove : onRequestLogin}
+                onDraft={onApprove}
               >
                 Approve mapping
-              </Btn>
+              </DraftButton>
             )}
           </div>
         </div>
@@ -394,7 +414,7 @@ export function MappingEditor({
             theme={theme}
             primary={eff.unmapped ? "" : eff.purl}
             alternates={eff.unmapped ? [] : eff.alternative_purls}
-            sourced={p.alternative_purls ?? p.auto?.alternative_purls ?? []}
+            sourced={sourceAlternativeMeta}
             isEdited={isEdited}
             onPromote={promoteAlt}
             onRemove={removeAlt}
@@ -412,9 +432,9 @@ export function MappingEditor({
             }}
           >
             <Field label="Type">
-              <select
+              <DraftSelect
                 value={eff.type}
-                onChange={(e) => updatePart({ type: e.target.value })}
+                onDraftChange={(type) => updatePart({ type })}
                 style={selectStyle(theme)}
               >
                 {PURL_TYPES.map((p) => (
@@ -422,24 +442,24 @@ export function MappingEditor({
                     {p.label}
                   </option>
                 ))}
-              </select>
+              </DraftSelect>
             </Field>
             <Field
               label="Namespace"
               hint="Optional. e.g. owner for github, scope for npm."
             >
-              <TextInput
+              <DraftTextInput
                 value={eff.namespace}
-                onChange={(v) => updatePart({ namespace: v })}
+                onDraftChange={(namespace) => updatePart({ namespace })}
                 theme={theme}
                 mono
                 placeholder="(none)"
               />
             </Field>
             <Field label="Package name">
-              <TextInput
+              <DraftTextInput
                 value={eff.pkgName}
-                onChange={(v) => updatePart({ pkgName: v })}
+                onDraftChange={(pkgName) => updatePart({ pkgName })}
                 theme={theme}
                 mono
                 placeholder={p.name}
@@ -449,9 +469,9 @@ export function MappingEditor({
 
           <div style={{ marginTop: 14 }}>
             <Field label="Raw PURL" hint="Edit directly — fields above will sync.">
-              <TextInput
+              <DraftTextInput
                 value={eff.purl}
-                onChange={updatePurlString}
+                onDraftChange={updatePurlString}
                 theme={theme}
                 mono
                 placeholder="pkg:type/namespace/name"
@@ -473,10 +493,9 @@ export function MappingEditor({
               userSelect: "none",
             }}
           >
-            <input
-              type="checkbox"
+            <DraftCheckbox
               checked={eff.unmapped}
-              onChange={(e) => onEdit({ ...eff, unmapped: e.target.checked })}
+              onDraftChange={(unmapped) => onEdit({ ...eff, unmapped })}
               style={{ accentColor: t.accent, width: 14, height: 14 }}
             />
             <span style={{ fontSize: 13, color: t.fg1 }}>
@@ -491,27 +510,39 @@ export function MappingEditor({
 
           <div style={{ marginTop: 14 }}>
             <Field label="Note" hint="Optional context — shown on the PR.">
-              <textarea
+              <DraftTextArea
                 value={eff.note}
-                onChange={(e) => onEdit({ ...eff, note: e.target.value })}
+                onDraftChange={(note) => onEdit({ ...eff, note })}
                 placeholder="e.g. 'Upstream uses fossil, not git — mapping to pkg:generic.'"
-                style={{
-                  background: t.surface,
-                  color: t.fg1,
-                  border: `1px solid ${t.border}`,
-                  borderRadius: 8,
-                  padding: "8px 10px",
-                  fontSize: 13,
-                  width: "100%",
-                  fontFamily: "Inter, sans-serif",
-                  outline: "none",
-                  minHeight: 64,
-                  resize: "vertical",
-                }}
+                theme={theme}
+                style={{ minHeight: 64 }}
               />
             </Field>
           </div>
         </Section>
+
+        {p.cpes && p.cpes.length > 0 && (
+          <Section
+            title="CPE coordinates"
+            subtitle="Curated in manual.json. Drive NVD CVE matching for packages OSV doesn't cover."
+          >
+            <div
+              style={{
+                background: t.surface,
+                border: `1px solid ${t.border}`,
+                borderRadius: 12,
+                padding: 14,
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 8,
+              }}
+            >
+              {p.cpes.map((cpe) => (
+                <CpeChip key={cpe} cpe={cpe} theme={theme} />
+              ))}
+            </div>
+          </Section>
+        )}
 
         {p.status === "verified" && p.approved_by && !isEdited && (
           <Section title="Verification">
@@ -853,13 +884,14 @@ function ResultingPurls({
         ))}
 
         <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (draft.trim()) {
-              onAdd(draft.trim());
-              setDraft("");
-            }
-          }}
+          onSubmit={(e) =>
+            handleDraftSubmit(e, () => {
+              if (draft.trim()) {
+                onAdd(draft.trim());
+                setDraft("");
+              }
+            })
+          }
           style={{ display: "flex", gap: 6, marginTop: 4 }}
         >
           <input

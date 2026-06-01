@@ -67,6 +67,16 @@ export type CondaForgeBlock = {
   vex?: Vex;
 };
 
+/** NVD/CPE metadata for advisories that came from the NVD feeds rather
+ *  than OSV. Set by scripts/nvd_prototype.py — ``matched_via`` is the
+ *  subset of the package's curated ``cpes`` that actually surfaced this
+ *  particular CVE. */
+export type NvdBlock = {
+  cpes?: string[];
+  matched_via?: string[];
+  source?: string;
+};
+
 /** A verbatim OSV record carrying the conda-forge match in database_specific. */
 export type Advisory = {
   schema_version?: string;
@@ -83,6 +93,7 @@ export type Advisory = {
   references?: OsvReference[];
   database_specific?: {
     "conda-forge"?: CondaForgeBlock;
+    nvd?: NvdBlock;
     [key: string]: unknown;
   };
 };
@@ -91,6 +102,7 @@ export type CvePackage = {
   schema_version: number;
   package: string;
   purls: string[];
+  cpes?: string[];
   generated_at: string;
   conda_versions_total: number;
   /** Newest conda-forge version of this package by rattler version order. */
