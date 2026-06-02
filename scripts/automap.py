@@ -51,7 +51,23 @@ from scripts.top_downloads import fetch_top_names
 app = typer.Typer(add_completion=False, help=__doc__)
 console = Console()
 
-DEFAULT_PLATFORMS = ("linux-64", "noarch")
+# Scan the full conda-forge platform matrix. Name enumeration in
+# ``_gather_records`` is platform-scoped (``gateway.names(platforms=...)``), so
+# a package that ships on none of these subdirs is never discovered. Limiting
+# this to linux-64/noarch silently dropped Windows/macOS/arch-only packages such
+# as ``pywin32-ctypes`` (win-only). See issue #106. ``_pick_latest`` dedups by
+# name across platforms, so multi-platform packages are not reprocessed — only
+# genuinely platform-exclusive names are added.
+DEFAULT_PLATFORMS = (
+    "noarch",
+    "linux-64",
+    "linux-aarch64",
+    "linux-ppc64le",
+    "osx-64",
+    "osx-arm64",
+    "win-64",
+    "win-32",
+)
 DEFAULT_CHANNEL = "conda-forge"
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_OUT = ROOT / "mappings" / "auto.json"
