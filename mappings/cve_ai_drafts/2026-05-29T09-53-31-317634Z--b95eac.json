@@ -728,8 +728,8 @@
       },
       "notes": "This match is a false positive caused by the OSV record attributing a Sqoop provider CVE to the core apache-airflow package. Maintainers may want to file an upstream correction with the pypa advisory database (https://github.com/pypa/advisory-database/blob/main/vulns/apache-airflow/PYSEC-2023-314.yaml) to change the affected package to pkg:pypi/apache-airflow-providers-sqoop. The fix PR referenced (apache/airflow#29500) was a Sqoop provider change, not a core airflow change. Additionally, 'affects_future: True' in the match metadata should be treated as unreliable for the same reason.",
       "openvex_action_statement": null,
-      "openvex_impact_statement": null,
-      "openvex_justification": "vulnerable_code_not_in_execute_path: The vulnerability resides in apache-airflow-providers-sqoop, which is not installed by the airflow-with-apache-flink conda artifact. Only the Apache Flink provider (apache-airflow-providers-apache-flink) is included; the Sqoop provider code is never present in this environment.",
+      "openvex_impact_statement": "The vulnerability resides in apache-airflow-providers-sqoop, which is not installed by the airflow-with-apache-flink conda artifact. Only the Apache Flink provider (apache-airflow-providers-apache-flink) is included; the Sqoop provider code is never present in this environment.",
+      "openvex_justification": "vulnerable_code_not_in_execute_path",
       "openvex_status": "not_affected",
       "package": "airflow-with-apache-flink",
       "rationale": "CVE-2023-25693 is an improper input validation flaw specifically in the Apache Airflow Sqoop Provider (apache-airflow-providers-sqoop), fixed in Sqoop provider version 3.1.1. The conda package airflow-with-apache-flink installs apache-airflow with the Apache Flink provider extras (apache-airflow-providers-apache-flink), which is an entirely separate provider from the Sqoop provider \u2014 the Sqoop provider is not installed, vendored, or reachable via any entry point of this artifact. The OSV record's attribution to pkg:pypi/apache-airflow (core) with a fixed version of 3.1.1 appears to conflate the Sqoop provider's own semantic versioning (provider 3.1.1) with the airflow core version numbering, which is a known PYSEC tracking limitation for Airflow provider packages. Airflow core 3.1.1 has not yet been released (only release candidates appear in the PyPI version list), making the 'affects_future: True' flag and the auto-derived conda affected-versions set (3.0.0, 3.0.1) artifacts of this mis-mapping rather than evidence of genuine exposure. Because the vulnerable code path (Sqoop operator input handling) is categorically absent from the Flink extras installation, this match should be rejected.",
@@ -5560,7 +5560,8 @@
         }
       },
       {
-        "justification": "vulnerable_code_not_in_execute_path: The vulnerability resides in apache-airflow-providers-sqoop, which is not installed by the airflow-with-apache-flink conda artifact. Only the Apache Flink provider (apache-airflow-providers-apache-flink) is included; the Sqoop provider code is never present in this environment.",
+        "impact_statement": "The vulnerability resides in apache-airflow-providers-sqoop, which is not installed by the airflow-with-apache-flink conda artifact. Only the Apache Flink provider (apache-airflow-providers-apache-flink) is included; the Sqoop provider code is never present in this environment.",
+        "justification": "vulnerable_code_not_in_execute_path",
         "products": [
           {
             "@id": "pkg:conda/airflow-with-apache-flink?channel=conda-forge"
