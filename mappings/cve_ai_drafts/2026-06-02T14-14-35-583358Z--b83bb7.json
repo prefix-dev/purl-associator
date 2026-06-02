@@ -1,0 +1,410 @@
+{
+  "assessments": {
+    "deepdiff::GHSA-mw26-5g2v-hqw3": {
+      "advisory_id": "GHSA-mw26-5g2v-hqw3",
+      "affected_versions": {
+        "agrees_with_match": true,
+        "reasoning": "The OSV range lists versions 5.2.0, 6.4.0, 7.0.0, 8.1.0, and 8.3.0 as affected in the full versions list but they are missing from the conda affected_versions set. These should be added if conda-forge shipped those versions. The upper bound is correct: 8.6.0 is the last affected version, and 8.6.1 is the fix. No versions should be removed.",
+        "suggested_adds": [
+          "5.2.0",
+          "6.4.0",
+          "7.0.0",
+          "8.1.0",
+          "8.3.0"
+        ]
+      },
+      "inputs_seen": {
+        "hash": "ead93145bd5b409f0a4b0947f70f0b13af5103bc89df1743b440e595e86f30c2"
+      },
+      "notes": "The latest conda-forge version 9.1.0 exceeds the fixed version 8.6.1, so current users of the latest conda-forge build are not affected. The fix involves blocking traversal of dunder attributes in deepdiff's path resolution code. The affected_versions list in the advisory is missing some versions that appear in the OSV full versions list (5.2.0, 6.4.0, 7.0.0, 8.1.0, 8.3.0).",
+      "openvex_action_statement": "Upgrade to deepdiff >= 8.6.1 (latest conda-forge: 9.1.0 is already fixed). All conda-forge builds of deepdiff from 5.0.0 through 8.6.0 are affected and should be avoided in environments where untrusted user input may be passed to the Delta class constructor.",
+      "openvex_impact_statement": null,
+      "openvex_justification": null,
+      "openvex_status": "affected",
+      "package": "deepdiff",
+      "prompt_version": "2026-06-02.openvex-status-history-v1",
+      "rationale": "This advisory directly targets the deepdiff PyPI package itself \u2014 it is not a dependency vulnerability but a flaw in deepdiff's own Delta class. The OSV range covers versions 5.0.0 through 8.6.0 (fixed in 8.6.1), and the conda-forge package currently ships version 9.1.0, which is beyond 8.6.1. The fix was introduced in 8.6.1 per the upstream release notes and the referenced commit (c69c06c13f75e849c770ade3f556cd16209fd183). All conda-forge versions in the affected_versions list (5.x through 8.6.0) are genuinely vulnerable; the current latest conda-forge version 9.1.0 is not in the affected range and is therefore fixed. Historical conda-forge builds at those 33 listed versions remain affected. The vulnerability requires user-controlled input to be passed to the Delta constructor, which is an application-level concern, but the flaw is in deepdiff itself.",
+      "runtime_applicability": {
+        "applies": "partial",
+        "reasoning": "The vulnerability is in the Delta class, which is a specific feature of deepdiff used for applying computed diffs as patch operations. It only affects applications that pass user-controlled input directly into Delta. Not all users of deepdiff use the Delta class; many only use DeepDiff for comparison. However, since the Delta class is part of the installed package and is importable, any application that uses it with untrusted input is at risk."
+      },
+      "severity_in_conda_context": {
+        "assessment": "same",
+        "reasoning": "The CVSS 4.0 score of 10.0 (Critical) reflects the theoretical maximum impact \u2014 network-accessible RCE with no authentication. In the conda context, the severity is the same because deepdiff is a general-purpose library and the Delta class is fully present and functional in the conda artifact. The exploitation condition (user-controlled input to Delta) is an application-level constraint, but CVSS 4.0 already accounts for this in its attack vector scoring."
+      },
+      "severity_seen": {
+        "cvss": 10.0,
+        "level": "CRITICAL"
+      }
+    },
+    "fastmcp::GHSA-vv7q-7jx5-f767": {
+      "advisory_id": "GHSA-vv7q-7jx5-f767",
+      "affected_versions": {
+        "agrees_with_match": true,
+        "reasoning": "The OSV range specifies 'introduced: 0, fixed: 3.2.0', meaning all versions before 3.2.0 are affected. The listed affected_versions (2.3.4, 2.8.1, 2.9.0, 2.9.2, 2.10.1\u20132.10.6, 2.11.0\u20132.11.3, 2.12.0\u20132.12.5, 2.13.0.2\u20132.13.3, 2.14.0\u20132.14.3, 3.0.2, 3.1.0) all fall within this range and are correctly identified as affected. The latest conda-forge version 3.3.1 is above 3.2.0 and is therefore not in the affected set, which is also correct.",
+        "suggested_adds": [],
+        "suggested_removes": []
+      },
+      "inputs_seen": {
+        "hash": "e7f1bc4fc7f273453ea98e2b1a632b83342e246fcfbd760b7b164194d7cb2799"
+      },
+      "notes": "The fix is confirmed in the upstream changelog at v3.2.0 (commit 40bdfb6b1de0ce30609ee9ba5bb95ecd04a9fb71, PR #3507). The conda-forge package at 3.3.1 is already fixed. Maintainers should ensure older pinned versions are flagged for upgrade. The vulnerability only manifests when the OpenAPIProvider feature is actively used with user-controlled inputs.",
+      "openvex_action_statement": "Upgrade fastmcp to version 3.2.0 or later (the current conda-forge latest is 3.3.1, which is fixed). All conda-forge builds prior to 3.2.0 remain vulnerable to path traversal and SSRF via the OpenAPIProvider's _build_url() method.",
+      "openvex_impact_statement": null,
+      "openvex_justification": null,
+      "openvex_status": "affected",
+      "package": "fastmcp",
+      "prompt_version": "2026-06-02.openvex-status-history-v1",
+      "rationale": "This advisory describes a path traversal / SSRF vulnerability in the `OpenAPIProvider` component of fastmcp, specifically in the `_build_url()` method within `fastmcp/utilities/openapi/director.py`. The OSV range covers all versions from 0 (introduced) up to but not including 3.2.0, and the fix was released in v3.2.0. The current latest conda-forge version is 3.3.1, which is well above the fixed version 3.2.0, so the latest conda build is not vulnerable. However, historical conda-forge builds at versions below 3.2.0 that appear in the affected_versions list (e.g., 2.3.4, 2.8.1, 2.9.0, 2.9.2, 2.10.x, 2.11.x, 2.12.x, 2.13.x, 2.14.x, 3.0.2, 3.1.0) remain affected. The vulnerability is directly in the fastmcp package itself \u2014 no vendored dependency is involved \u2014 and the `OpenAPIProvider` is a core runtime feature. The CVSS 4.0 score of 10.0 (Critical) is plausible given that it allows unauthenticated SSRF with full credential forwarding, though exploitation requires an attacker to control path parameter values passed through an MCP client to a deployed OpenAPI-backed MCP server, which is a realistic attack surface for internet-facing deployments.",
+      "runtime_applicability": {
+        "applies": "yes",
+        "reasoning": "The vulnerable code resides in fastmcp's own `utilities/openapi/director.py`, which is part of the OpenAPIProvider feature \u2014 a runtime component used when MCP servers are configured to proxy OpenAPI-based backends. This is not a build-time-only code path; it executes when the OpenAPIProvider handles incoming MCP tool calls at runtime. The vulnerability is in the core package itself, not in a vendored dependency, so it applies directly to the conda artifact."
+      },
+      "severity_in_conda_context": {
+        "assessment": "same",
+        "reasoning": "The CVSS 4.0 score of 10.0 Critical reflects an unauthenticated network-accessible SSRF with full impact on confidentiality, integrity, and availability. In the conda context, fastmcp is installed and run as a server/client framework, and the OpenAPIProvider is a legitimate runtime feature. Deployments using OpenAPIProvider with user-controlled path parameters face the full described risk, making the Critical rating appropriate for this use case."
+      },
+      "severity_seen": {
+        "cvss": 10.0,
+        "level": "CRITICAL"
+      }
+    },
+    "mlflow-ui::GHSA-r23q-823p-vmf7": {
+      "advisory_id": "GHSA-r23q-823p-vmf7",
+      "affected_versions": {
+        "agrees_with_match": true,
+        "reasoning": "The OSV range specifies introduced=0 and fixed=3.8.1, meaning all versions before 3.8.1 are affected. The listed conda affected versions (2.10.2 through 3.8.0) fall within this range. The current conda-forge version 3.12.0 is above 3.8.1 and is therefore not in the affected set, which is consistent with the affects_future=False flag."
+      },
+      "inputs_seen": {
+        "hash": "0b5f1931df252adf0ffc912b5dd8da15af614eb7bfe16c6ab2722e2c6f203c75"
+      },
+      "notes": "The advisory details text states 'The vulnerability affects versions 3.8.0 and is fixed in version 3.8.1', but the OSV range covers all versions from 0 to <3.8.1, indicating the vulnerable code existed across a much wider range. The conda-forge latest version 3.12.0 is patched. Operators running any conda-forge mlflow-ui build older than 3.8.1 should upgrade immediately.",
+      "openvex_action_statement": "Upgrade mlflow-ui to version 3.8.1 or later (e.g., the current conda-forge latest 3.12.0) to obtain the fix. Historical conda-forge builds at versions 2.10.2 through 3.8.0 remain vulnerable to this command injection.",
+      "openvex_impact_statement": null,
+      "openvex_justification": null,
+      "openvex_status": "affected",
+      "package": "mlflow-ui",
+      "prompt_version": "2026-06-02.openvex-status-history-v1",
+      "rationale": "The OSV range covers all versions from 0 to < 3.8.1, with the fix landing in 3.8.1. The conda-forge mlflow-ui package is currently at version 3.12.0, which is well above the fixed version 3.8.1, so the latest conda-forge build is not affected. However, historical conda-forge builds at versions listed in the affected_versions set (2.10.2 through 3.8.0) are genuinely vulnerable. The vulnerability is a command injection in `_install_model_dependencies_to_env()` triggered when deploying models with `env_manager=LOCAL`, which is a runtime server-side code path present in the mlflow/mlflow-ui package. The affected_versions list provided covers conda versions from 2.10.2 through 3.8.0, which aligns with the OSV range (introduced=0, fixed=3.8.1), and the current latest conda-forge version 3.12.0 is above the fix threshold. Users still running older conda-forge builds of mlflow-ui should upgrade to 3.8.1 or later.",
+      "runtime_applicability": {
+        "applies": "yes",
+        "reasoning": "The vulnerability exists in model serving runtime code (`_install_model_dependencies_to_env()`) that executes when a model is deployed with env_manager=LOCAL. This is a runtime code path in the mlflow package, not a build-time-only concern, so it applies to deployed conda-forge mlflow-ui instances running affected versions."
+      },
+      "severity_in_conda_context": {
+        "assessment": "same",
+        "reasoning": "The CVSS score of 10.0 (CRITICAL) reflects a network-accessible command injection with no authentication required, high impact on confidentiality, integrity, and availability, and scope change. In the conda context, this severity is appropriate as mlflow is commonly deployed as a server-side model serving platform where remote attackers could supply malicious model artifacts."
+      },
+      "severity_seen": {
+        "cvss": 10.0,
+        "level": "CRITICAL"
+      }
+    },
+    "mlflow::GHSA-554w-xh4j-8w64": {
+      "advisory_id": "GHSA-554w-xh4j-8w64",
+      "affected_versions": {
+        "agrees_with_match": true,
+        "reasoning": "The OSV range specifies introduced=0 and fixed=2.9.2. The conda affected_versions list covers all conda-forge published versions up to 2.9.1, which aligns with the OSV range. No additions or removals are needed."
+      },
+      "inputs_seen": {
+        "hash": "23d163bd61698f0b06dc8c70fa8e358a9d8c328255ea4a44475a687e6afbe1d0"
+      },
+      "notes": "The fix commit is 1da75dfcecd4d169e34809ade55748384e8af6c1. Conda-forge versions >= 2.9.2 are fixed. Historical builds remain vulnerable.",
+      "openvex_action_statement": "Upgrade mlflow to version 2.9.2 or later. The current latest conda-forge version (3.12.0) is patched. Users of any conda-forge mlflow build prior to 2.9.2 should upgrade immediately.",
+      "openvex_impact_statement": null,
+      "openvex_justification": null,
+      "openvex_status": "affected",
+      "package": "mlflow",
+      "prompt_version": "2026-06-02.openvex-status-history-v1",
+      "rationale": "This advisory covers a path traversal vulnerability in mlflow versions prior to 2.9.2. The OSV range is introduced=0, fixed=2.9.2, which means all conda-forge mlflow builds before 2.9.2 are affected. The latest conda-forge version is 3.12.0, which is well past the 2.9.2 fix point, so the current version is patched. However, historical conda-forge builds of mlflow up through 2.9.1 remain vulnerable. The affected_versions list in the advisory correctly identifies all pre-2.9.2 releases. The vulnerability is in the MLflow server's file handling, which is core runtime functionality, not a build-time or optional feature. Users running older conda-forge mlflow installations are genuinely at risk and should upgrade.",
+      "runtime_applicability": {
+        "applies": "yes",
+        "reasoning": "The path traversal vulnerability is in the MLflow server's artifact handling code, which is core runtime functionality. Any user running the MLflow tracking server or using artifact APIs from an affected build is exposed."
+      },
+      "severity_in_conda_context": {
+        "assessment": "same",
+        "reasoning": "The CVSS score of 10.0 (Critical) reflects that this is a network-accessible path traversal with no authentication required, allowing arbitrary file writes. This assessment is appropriate for conda users who run the MLflow server component."
+      },
+      "severity_seen": {
+        "cvss": 10.0,
+        "level": "CRITICAL"
+      }
+    },
+    "mlflow::GHSA-5p3h-7fwh-92rc": {
+      "advisory_id": "GHSA-5p3h-7fwh-92rc",
+      "affected_versions": {
+        "agrees_with_match": true,
+        "reasoning": "The OSV range is introduced=0, fixed=2.9.2. The database_specific note says last_known_affected_version_range <= 2.8.1, but the fixed event in the range is 2.9.2, so versions 2.9.0 and 2.9.1 may also be affected. The conda affected_versions list includes all releases up to 2.9.1, which is consistent with the OSV range. The match is sensible."
+      },
+      "inputs_seen": {
+        "hash": "2434b83bebcb8b4790633ca9e2b2cf083ec5f5363fa7a0c454fcce83970b9572"
+      },
+      "notes": "The fix commit is 55c72d02380e8db8118595a4fdae7879cb7ac5bd. The database_specific last_known_affected_version_range of <= 2.8.1 is slightly inconsistent with the fixed=2.9.2 event; the OSV fixed event should be treated as authoritative, meaning 2.9.0 and 2.9.1 may also be affected.",
+      "openvex_action_statement": "Upgrade mlflow to version 2.9.2 or later to remediate this arbitrary file write / RCE vulnerability. The current latest conda-forge version (3.12.0) is patched. All conda-forge builds prior to 2.9.2 remain vulnerable.",
+      "openvex_impact_statement": null,
+      "openvex_justification": null,
+      "openvex_status": "affected",
+      "package": "mlflow",
+      "prompt_version": "2026-06-02.openvex-status-history-v1",
+      "rationale": "This advisory describes a full-controlled file write vulnerability in mlflow's web server that enables remote code execution for versions prior to 2.9.2. The OSV range specifies introduced=0 and fixed=2.9.2, with a database_specific note indicating last_known_affected_version_range of <= 2.8.1, suggesting the vulnerability was introduced and confirmed through 2.8.1 but the official fix landed in 2.9.2. The conda-forge latest version (3.12.0) is well past the fix point. All historical conda-forge builds before 2.9.2 are covered by this advisory and remain vulnerable. The vulnerability is in the MLflow server's file handling code path, which is core runtime functionality present in all versions in scope.",
+      "runtime_applicability": {
+        "applies": "yes",
+        "reasoning": "This vulnerability is in the MLflow web server's file upload/write handling, which is a core server-side runtime feature. Any deployment of the MLflow tracking server using an affected conda-forge build is exposed to this RCE vector."
+      },
+      "severity_in_conda_context": {
+        "assessment": "same",
+        "reasoning": "CVSS 10.0 Critical is appropriate. The vulnerability allows unauthenticated remote attackers to write arbitrary files and achieve RCE on systems running the MLflow server, which is the primary use case for many conda-forge installations of mlflow."
+      },
+      "severity_seen": {
+        "cvss": 10.0,
+        "level": "CRITICAL"
+      }
+    },
+    "mlflow::GHSA-5q6c-ffvg-xcm9": {
+      "advisory_id": "GHSA-5q6c-ffvg-xcm9",
+      "affected_versions": {
+        "agrees_with_match": true,
+        "reasoning": "The OSV range specifies introduced=0, fixed=2.9.0. The conda affected_versions list correctly includes all releases up to 2.8.1, stopping before 2.9.0 where the fix was applied. This is accurate and no changes are needed."
+      },
+      "inputs_seen": {
+        "hash": "c8b07eb6ca125431acd51e4a31e182c7410bd1fed42da48f6a5d062638e38c49"
+      },
+      "notes": "The fix commit is 400c226953b4568f4361bc0a0c223511652c2b9d. Note that the advisory details mention 'version 8.2.1' which appears to be a copy-paste error in the advisory text; the actual affected range and fixed version (2.9.0) are correctly captured in the OSV data.",
+      "openvex_action_statement": "Upgrade mlflow to version 2.9.0 or later. The current latest conda-forge version (3.12.0) is patched. All conda-forge builds prior to 2.9.0 are vulnerable to this command injection via malicious HTTP dataset source URLs.",
+      "openvex_impact_statement": null,
+      "openvex_justification": null,
+      "openvex_status": "affected",
+      "package": "mlflow",
+      "prompt_version": "2026-06-02.openvex-status-history-v1",
+      "rationale": "This advisory covers a command injection / arbitrary file write vulnerability in mlflow's `mlflow.data.http_dataset_source.py` module, fixed in version 2.9.0. The OSV range is introduced=0, fixed=2.9.0, meaning all conda-forge builds of mlflow before 2.9.0 are affected. The affected_versions list correctly stops at 2.8.1, which is the last pre-2.9.0 release. The current conda-forge latest version (3.12.0) is well past the fix. The vulnerable code path is in the HTTP dataset source loader, which is triggered when a user loads a dataset from an HTTP URL \u2014 this is runtime functionality available to any user of the package. The match is well-scoped and accurate.",
+      "runtime_applicability": {
+        "applies": "yes",
+        "reasoning": "The vulnerability is in mlflow.data.http_dataset_source.py, which is a runtime module used when loading datasets from HTTP sources. This is a standard user-facing API, not a build-time or optional component, so users of affected conda-forge builds who load HTTP datasets are exposed."
+      },
+      "severity_in_conda_context": {
+        "assessment": "same",
+        "reasoning": "CVSS 10.0 Critical is appropriate. An attacker who can serve a malicious HTTP response with a crafted Content-Disposition header can cause arbitrary file writes leading to RCE on the machine running mlflow. This is a realistic attack vector for data science workflows using mlflow's dataset loading features."
+      },
+      "severity_seen": {
+        "cvss": 10.0,
+        "level": "CRITICAL"
+      }
+    }
+  },
+  "backend": "api",
+  "draft": true,
+  "generated_at": "2026-06-02T14:15:45+00:00",
+  "model": "claude-sonnet-4-6",
+  "openvex": {
+    "@context": "https://openvex.dev/ns/v0.2.0",
+    "@id": "https://github.com/prefix-dev/purl-associator/ai-draft/b83bb7",
+    "author": "purl-associator AI reviewer (claude-sonnet-4-6)",
+    "statements": [
+      {
+        "action_statement": "Upgrade to deepdiff >= 8.6.1 (latest conda-forge: 9.1.0 is already fixed). All conda-forge builds of deepdiff from 5.0.0 through 8.6.0 are affected and should be avoided in environments where untrusted user input may be passed to the Delta class constructor.",
+        "products": [
+          {
+            "@id": "pkg:conda/deepdiff?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-02T14:15:45+00:00",
+        "vulnerability": {
+          "name": "GHSA-mw26-5g2v-hqw3"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/deepdiff@5.2.0?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-02T14:15:45+00:00",
+        "vulnerability": {
+          "name": "GHSA-mw26-5g2v-hqw3"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/deepdiff@6.4.0?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-02T14:15:45+00:00",
+        "vulnerability": {
+          "name": "GHSA-mw26-5g2v-hqw3"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/deepdiff@7.0.0?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-02T14:15:45+00:00",
+        "vulnerability": {
+          "name": "GHSA-mw26-5g2v-hqw3"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/deepdiff@8.1.0?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-02T14:15:45+00:00",
+        "vulnerability": {
+          "name": "GHSA-mw26-5g2v-hqw3"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/deepdiff@8.3.0?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-02T14:15:45+00:00",
+        "vulnerability": {
+          "name": "GHSA-mw26-5g2v-hqw3"
+        }
+      },
+      {
+        "action_statement": "Upgrade fastmcp to version 3.2.0 or later (the current conda-forge latest is 3.3.1, which is fixed). All conda-forge builds prior to 3.2.0 remain vulnerable to path traversal and SSRF via the OpenAPIProvider's _build_url() method.",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-02T14:15:45+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "Upgrade mlflow-ui to version 3.8.1 or later (e.g., the current conda-forge latest 3.12.0) to obtain the fix. Historical conda-forge builds at versions 2.10.2 through 3.8.0 remain vulnerable to this command injection.",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow-ui?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-02T14:15:45+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "action_statement": "Upgrade mlflow to version 2.9.2 or later. The current latest conda-forge version (3.12.0) is patched. Users of any conda-forge mlflow build prior to 2.9.2 should upgrade immediately.",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-02T14:15:45+00:00",
+        "vulnerability": {
+          "name": "GHSA-554w-xh4j-8w64"
+        }
+      },
+      {
+        "action_statement": "Upgrade mlflow to version 2.9.2 or later to remediate this arbitrary file write / RCE vulnerability. The current latest conda-forge version (3.12.0) is patched. All conda-forge builds prior to 2.9.2 remain vulnerable.",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-02T14:15:45+00:00",
+        "vulnerability": {
+          "name": "GHSA-5p3h-7fwh-92rc"
+        }
+      },
+      {
+        "action_statement": "Upgrade mlflow to version 2.9.0 or later. The current latest conda-forge version (3.12.0) is patched. All conda-forge builds prior to 2.9.0 are vulnerable to this command injection via malicious HTTP dataset source URLs.",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-02T14:15:45+00:00",
+        "vulnerability": {
+          "name": "GHSA-5q6c-ffvg-xcm9"
+        }
+      }
+    ],
+    "timestamp": "2026-06-02T14:15:45+00:00",
+    "tooling": "purl-associator/scripts.cve_ai_review",
+    "version": 1
+  },
+  "prompt_version": "2026-06-02.openvex-status-history-v1",
+  "run_id": "b83bb7",
+  "schema_version": 1,
+  "skipped": [
+    {
+      "advisory_id": "GHSA-5882-5rx9-xgxp",
+      "package": "crawl4ai",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-554w-xh4j-8w64",
+      "package": "mlflow-pipelines",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-5p3h-7fwh-92rc",
+      "package": "mlflow-pipelines",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-5q6c-ffvg-xcm9",
+      "package": "mlflow-pipelines",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-f798-qm4r-23r5",
+      "package": "mlflow-pipelines",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-fmxj-6h9g-6vw3",
+      "package": "mlflow-pipelines",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-r23q-823p-vmf7",
+      "package": "mlflow-pipelines",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2026-33",
+      "package": "crawl4ai",
+      "reason": "no_assessment_in_reply"
+    },
+    {
+      "advisory_id": "PYSEC-2025-70",
+      "package": "langchain-community",
+      "reason": "no_assessment_in_reply"
+    },
+    {
+      "advisory_id": "PYSEC-2023-308",
+      "package": "mlflow-pipelines",
+      "reason": "no_assessment_in_reply"
+    },
+    {
+      "advisory_id": "PYSEC-2023-308",
+      "package": "mlflow",
+      "reason": "no_assessment_in_reply"
+    }
+  ]
+}
