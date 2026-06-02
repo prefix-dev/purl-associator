@@ -1,12 +1,11 @@
 import { useMemo, useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { advisoryVex, affectedVersions, cveIds } from "../data/cves";
-import type { CvePackage, ReviewEdit } from "../data/cves";
+import type { CvePackageIndex, ReviewEdit } from "../data/cves";
 import { Glyph, Theme } from "./Primitives";
 
 type Props = {
   theme: Theme;
-  packages: CvePackage[];
+  packages: CvePackageIndex[];
   /** Representative package name → every conda package collapsed into it
    *  (including the representative). Used for the "×N" badge and to let the
    *  search match collapsed variant names. */
@@ -20,23 +19,21 @@ type Props = {
   setStatusFilter: (s: "all" | "unreviewed" | "reviewed") => void;
 };
 
-function packageStats(p: CvePackage, edits: Record<string, ReviewEdit>) {
+function packageStats(p: CvePackageIndex, edits: Record<string, ReviewEdit>) {
   let unreviewed = 0;
   let editsHere = 0;
-  const unique = new Set<string>();
   for (const adv of p.advisories) {
     const edit = edits[`${p.package}::${adv.id}`];
-    const status = edit?.status ?? advisoryVex(adv)?.status;
+    const status = edit?.status ?? adv.vex_status;
     if (edit) editsHere++;
     // No status, or an explicit "under investigation", counts as unreviewed.
     if (!status || status === "under_investigation") unreviewed++;
-    for (const v of affectedVersions(adv)) unique.add(v);
   }
   return {
     total: p.advisories.length,
     unreviewed,
     editsHere,
-    uniqueVersions: unique.size,
+    uniqueVersions: p.unique_affected_version_count,
   };
 }
 
@@ -65,7 +62,7 @@ export function CvePackageList({
           );
         const inCve = p.advisories.some(
           (a) =>
-            cveIds(a).some((id) => id.toLowerCase().includes(ql)) ||
+            (a.cve_ids ?? []).some((id) => id.toLowerCase().includes(ql)) ||
             a.id.toLowerCase().includes(ql) ||
             (a.aliases ?? []).some((al) => al.toLowerCase().includes(ql)),
         );

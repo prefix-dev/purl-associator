@@ -1,17 +1,61 @@
-import type { MappingsPayload, PackageEntry } from "./types";
+import type {
+  MappingPackageIndex,
+  MappingsIndexPayload,
+  MappingsPayload,
+  PackageEntry,
+} from "./types";
 
 const DEFAULT_PATH = "./mappings.json";
+const DEFAULT_INDEX_PATH = "./mappings-index.json";
 
-export async function loadMappings(path = DEFAULT_PATH): Promise<MappingsPayload> {
-  const res = await fetch(path, { cache: "no-cache" });
-  if (!res.ok) {
-    throw new Error(`Failed to load ${path}: ${res.status} ${res.statusText}`);
-  }
-  return res.json();
+const jsonCache = new Map<string, Promise<unknown>>();
+
+async function loadJsonCached<T>(path: string): Promise<T> {
+  const cached = jsonCache.get(path);
+  if (cached) return cached as Promise<T>;
+  const promise = fetch(path, { cache: "no-cache" }).then((res) => {
+    if (!res.ok) {
+      throw new Error(`Failed to load ${path}: ${res.status} ${res.statusText}`);
+    }
+    return res.json() as Promise<T>;
+  });
+  jsonCache.set(path, promise);
+  promise.catch(() => jsonCache.delete(path));
+  return promise;
 }
 
-export function packagesAsList(payload: MappingsPayload): PackageEntry[] {
-  const out: PackageEntry[] = [];
+export async function loadMappings(path = DEFAULT_PATH): Promise<MappingsPayload> {
+  return loadJsonCached<MappingsPayload>(path);
+}
+
+export async function loadMappingsIndex(
+  path = DEFAULT_INDEX_PATH,
+): Promise<MappingsIndexPayload> {
+  return loadJsonCached<MappingsIndexPayload>(path);
+}
+
+export async function loadMappingPackageDetail(
+  pkgOrPath: MappingPackageIndex | string,
+): Promise<PackageEntry> {
+  if (typeof pkgOrPath === "string") {
+    return loadJsonCached<PackageEntry>(pkgOrPath);
+  }
+  const path = `./${pkgOrPath.detail_path}`;
+  const data = await loadJsonCached<
+    PackageEntry | { packages: Record<string, PackageEntry> }
+  >(path);
+  if ("packages" in data) {
+    const detail = data.packages[pkgOrPath.name];
+    if (!detail) throw new Error(`Missing ${pkgOrPath.name} in ${path}`);
+    return detail;
+  }
+  return data;
+}
+
+export function packagesAsList<T extends { name: string }>(payload: {
+  packages: Record<string, T>;
+}): T[] {
+  const out: T[] = [];
   for (const [name, entry] of Object.entries(payload.packages)) {
     out.push({ ...entry, name });
   }

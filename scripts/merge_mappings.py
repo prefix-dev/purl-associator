@@ -10,12 +10,15 @@ payload the frontend consumes.
    unique name, so concurrent PRs never conflict on disk; the merge below
    resolves them in chronological order.
 
-Output: ``web/public/mappings.json``.
+Output: ``web/public/mappings.json`` for backwards compatibility, plus the split
+payload ``web/public/mappings-index.json`` and sharded
+``web/public/mapping_packages/*.json`` detail files.
 """
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from datetime import UTC, datetime
 from pathlib import Path
@@ -26,6 +29,8 @@ DEFAULT_MANUAL = ROOT / "mappings" / "manual.json"
 DEFAULT_CONTRIB_DIR = ROOT / "mappings" / "contributions"
 DEFAULT_DOWNLOADS = ROOT / "mappings" / "top_downloads.json"
 DEFAULT_OUT = ROOT / "web" / "public" / "mappings.json"
+DEFAULT_INDEX_OUT = ROOT / "web" / "public" / "mappings-index.json"
+DEFAULT_DETAIL_DIR = ROOT / "web" / "public" / "mapping_packages"
 
 
 def _load_json(path: Path, default: dict) -> dict:
@@ -137,12 +142,64 @@ def _apply_reviewed_override(
         merged[name]["auto"] = _auto_snapshot(auto_packages[name])
 
 
+def _index_package(name: str, entry: dict, detail_path: str) -> dict:
+    out = {
+        "name": name,
+        "version": entry.get("version"),
+        "purl": entry.get("purl"),
+        "type": entry.get("type"),
+        "namespace": entry.get("namespace"),
+        "pkg_name": entry.get("pkg_name"),
+        "status": entry.get("status"),
+        "download_count": entry.get("download_count"),
+        "detail_path": detail_path,
+    }
+    for key in ("alternative_purls", "unmapped", "cpes"):
+        if key in entry and entry.get(key) is not None:
+            out[key] = entry.get(key)
+    deep = entry.get("deep_inspection")
+    if isinstance(deep, dict):
+        out["deep_inspection"] = {"candidate": bool(deep.get("candidate"))}
+    return out
+
+
+def _write_split_payload(payload: dict, index_out: Path, detail_dir: Path) -> None:
+    detail_dir.mkdir(parents=True, exist_ok=True)
+    for stale in detail_dir.glob("*.json"):
+        stale.unlink()
+
+    index_packages: dict[str, dict] = {}
+    shards: dict[str, dict[str, dict]] = {}
+    for name, entry in sorted((payload.get("packages") or {}).items()):
+        shard = hashlib.sha256(name.encode()).hexdigest()[:2]
+        detail_path = f"mapping_packages/{shard}.json"
+        detail = {**entry, "name": name}
+        shards.setdefault(shard, {})[name] = detail
+        index_packages[name] = _index_package(name, entry, detail_path)
+
+    for shard, packages in sorted(shards.items()):
+        shard_payload = {"schema_version": 1, "packages": packages}
+        (detail_dir / f"{shard}.json").write_text(
+            json.dumps(shard_payload, separators=(",", ":")) + "\n"
+        )
+
+    index_payload = {
+        **{k: v for k, v in payload.items() if k != "packages"},
+        "schema_version": 2,
+        "packages": index_packages,
+    }
+    index_out.parent.mkdir(parents=True, exist_ok=True)
+    index_out.write_text(json.dumps(index_payload, separators=(",", ":")) + "\n")
+
+
 def main(
     auto: Path = DEFAULT_AUTO,
     manual: Path = DEFAULT_MANUAL,
     contributions: Path = DEFAULT_CONTRIB_DIR,
     downloads: Path = DEFAULT_DOWNLOADS,
     out: Path = DEFAULT_OUT,
+    index_out: Path = DEFAULT_INDEX_OUT,
+    detail_dir: Path = DEFAULT_DETAIL_DIR,
 ) -> None:
     auto_data = _load_json(auto, {"packages": {}})
     manual_data = _load_json(manual, {"packages": {}})
@@ -204,10 +261,11 @@ def main(
 
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(payload, indent=2) + "\n")
+    _write_split_payload(payload, index_out, detail_dir)
     print(
         f"Merged auto={len(auto_data.get('packages', {}))} + "
         f"manual={len(manual_data.get('packages', {}))} + "
-        f"contributions={len(contrib_files)} → {out} "
+        f"contributions={len(contrib_files)} → {out}, {index_out}, {detail_dir} "
         f"({len(merged)} packages)"
     )
 
@@ -219,6 +277,8 @@ if __name__ == "__main__":
     parser.add_argument("--contributions", type=Path, default=DEFAULT_CONTRIB_DIR)
     parser.add_argument("--downloads", type=Path, default=DEFAULT_DOWNLOADS)
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
+    parser.add_argument("--index-out", type=Path, default=DEFAULT_INDEX_OUT)
+    parser.add_argument("--detail-dir", type=Path, default=DEFAULT_DETAIL_DIR)
     args = parser.parse_args()
     main(
         args.auto,
@@ -226,4 +286,6 @@ if __name__ == "__main__":
         args.contributions,
         args.downloads,
         args.out,
+        args.index_out,
+        args.detail_dir,
     )

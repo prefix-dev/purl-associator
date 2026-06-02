@@ -11,7 +11,9 @@ single payload the CVE frontend consumes.
    / ``under_investigation``) about one or more conda PURLs. Documents are
    sorted by timestamp so concurrent PRs resolve deterministically.
 
-Output: ``web/public/cves.json``.
+Output: ``web/public/cves.json`` for backwards compatibility, plus the
+split SPA payload ``web/public/cves-index.json`` and
+``web/public/cve_packages/*.json``.
 
 A VEX statement is matched to an advisory by its ``vulnerability.name`` (the
 OSV id, an alias, or a CVE id). Each statement's products are conda PURLs:
@@ -33,13 +35,17 @@ import argparse
 import json
 from datetime import UTC, datetime
 from pathlib import Path
+from urllib.parse import quote
 
 from scripts.cve_common import (
     affected_versions,
     blank_version_overrides,
+    best_severity,
     conda_block,
+    cve_ids,
     ensure_vex,
     parse_conda_purl,
+    primary_id,
     set_affected_versions,
 )
 
@@ -47,8 +53,11 @@ ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_CVES_DIR = ROOT / "mappings" / "cves"
 DEFAULT_CONTRIB_DIR = ROOT / "mappings" / "cve_contributions"
 DEFAULT_OUT = ROOT / "web" / "public" / "cves.json"
+DEFAULT_INDEX_OUT = ROOT / "web" / "public" / "cves-index.json"
+DEFAULT_DETAIL_DIR = ROOT / "web" / "public" / "cve_packages"
 
 SCHEMA_VERSION = 2
+INDEX_SCHEMA_VERSION = 3
 
 
 def _load_pkg_files(directory: Path) -> dict[str, dict]:
@@ -208,10 +217,122 @@ def _finalize_affected(packages: dict[str, dict]) -> None:
                 )
 
 
+def _is_active_on_latest(pkg: dict, advisory: dict) -> bool:
+    latest = pkg.get("latest_version")
+    if not latest:
+        return False
+    status = conda_block(advisory).get("vex", {}).get("status")
+    if status in {"not_affected", "fixed"}:
+        return False
+    return latest in affected_versions(advisory)
+
+
+def _is_future_affected(pkg: dict, advisory: dict) -> bool:
+    if _is_active_on_latest(pkg, advisory):
+        return False
+    status = conda_block(advisory).get("vex", {}).get("status")
+    if status in {"not_affected", "fixed"}:
+        return False
+    return conda_block(advisory).get("affects_future") is True
+
+
+def _detail_filename(package_name: str) -> str:
+    return f"{quote(package_name, safe='')}.json"
+
+
+def _index_advisory(pkg: dict, advisory: dict) -> dict:
+    block = conda_block(advisory)
+    severity = best_severity(advisory)
+    out = {
+        "id": advisory.get("id"),
+        "primary_id": primary_id(advisory),
+        "active_now": _is_active_on_latest(pkg, advisory),
+        "affects_future": _is_future_affected(pkg, advisory),
+        "affected_version_count": len(affected_versions(advisory)),
+    }
+    aliases = advisory.get("aliases")
+    if aliases:
+        out["aliases"] = aliases
+    for key in ("summary", "modified"):
+        value = advisory.get(key)
+        if value is not None:
+            out[key] = value
+    if severity:
+        out["severity"] = severity
+    vex = block.get("vex")
+    if isinstance(vex, dict) and vex.get("status"):
+        out["vex_status"] = vex["status"]
+    cves = cve_ids(advisory)
+    if cves:
+        out["cve_ids"] = cves
+    return out
+
+
+def _index_package(pkg: dict, detail_path: str) -> dict:
+    advisories = pkg.get("advisories") or []
+    unique_versions: set[str] = set()
+    for advisory in advisories:
+        unique_versions.update(affected_versions(advisory))
+    out = {
+        "schema_version": pkg.get("schema_version", 1),
+        "package": pkg.get("package"),
+        "purls": pkg.get("purls") or [],
+        "generated_at": pkg.get("generated_at") or "",
+        "conda_versions_total": pkg.get("conda_versions_total") or 0,
+        "latest_version": pkg.get("latest_version"),
+        "detail_path": detail_path,
+        "advisory_count": len(advisories),
+        "affected_version_count": sum(len(affected_versions(a)) for a in advisories),
+        "unique_affected_version_count": len(unique_versions),
+        "advisories": [_index_advisory(pkg, a) for a in advisories],
+    }
+    if pkg.get("cpes"):
+        out["cpes"] = pkg["cpes"]
+    return out
+
+
+def _write_split_payload(
+    packages: dict[str, dict],
+    *,
+    docs_count: int,
+    advisory_count: int,
+    affected_version_count: int,
+    generated_at: str,
+    index_out: Path,
+    detail_dir: Path,
+) -> None:
+    detail_dir.mkdir(parents=True, exist_ok=True)
+    for stale in detail_dir.glob("*.json"):
+        stale.unlink()
+
+    index_packages: dict[str, dict] = {}
+    for name, pkg in sorted(packages.items()):
+        filename = _detail_filename(name)
+        detail_path = f"cve_packages/{filename}"
+        (detail_dir / filename).write_text(
+            json.dumps(pkg, separators=(",", ":")) + "\n"
+        )
+        index_packages[name] = _index_package(pkg, detail_path)
+
+    payload = {
+        "schema_version": INDEX_SCHEMA_VERSION,
+        "generated_at": generated_at,
+        "contribution_count": docs_count,
+        "package_count": len(packages),
+        "advisory_count": advisory_count,
+        "affected_version_count": affected_version_count,
+        "packages": index_packages,
+    }
+    index_out.parent.mkdir(parents=True, exist_ok=True)
+    index_out.write_text(json.dumps(payload, separators=(",", ":")) + "\n")
+
+
 def main(
     cves_dir: Path = DEFAULT_CVES_DIR,
     contributions: Path = DEFAULT_CONTRIB_DIR,
     out: Path = DEFAULT_OUT,
+    index_out: Path = DEFAULT_INDEX_OUT,
+    detail_dir: Path = DEFAULT_DETAIL_DIR,
 ) -> None:
     packages = _load_pkg_files(cves_dir)
     docs = _load_openvex(contributions)
@@ -226,9 +347,10 @@ def main(
         for a in p.get("advisories") or []
     )
 
+    generated_at = datetime.now(UTC).isoformat(timespec="seconds")
     payload = {
         "schema_version": SCHEMA_VERSION,
-        "generated_at": datetime.now(UTC).isoformat(timespec="seconds"),
+        "generated_at": generated_at,
         "contribution_count": len(docs),
         "package_count": len(packages),
         "advisory_count": advisory_count,
@@ -238,10 +360,19 @@ def main(
 
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(payload, indent=2) + "\n")
+    _write_split_payload(
+        packages,
+        docs_count=len(docs),
+        advisory_count=advisory_count,
+        affected_version_count=affected_version_count,
+        generated_at=generated_at,
+        index_out=index_out,
+        detail_dir=detail_dir,
+    )
     print(
         f"Merged cves={len(packages)} packages + "
-        f"contributions={len(docs)} OpenVEX doc(s) → {out} "
-        f"({advisory_count:,} advisories, "
+        f"contributions={len(docs)} OpenVEX doc(s) → {out}, {index_out}, "
+        f"{detail_dir} ({advisory_count:,} advisories, "
         f"{affected_version_count:,} affected versions)"
     )
 
@@ -251,5 +382,7 @@ if __name__ == "__main__":
     parser.add_argument("--cves-dir", type=Path, default=DEFAULT_CVES_DIR)
     parser.add_argument("--contributions", type=Path, default=DEFAULT_CONTRIB_DIR)
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
+    parser.add_argument("--index-out", type=Path, default=DEFAULT_INDEX_OUT)
+    parser.add_argument("--detail-dir", type=Path, default=DEFAULT_DETAIL_DIR)
     args = parser.parse_args()
-    main(args.cves_dir, args.contributions, args.out)
+    main(args.cves_dir, args.contributions, args.out, args.index_out, args.detail_dir)

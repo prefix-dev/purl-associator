@@ -1,19 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import {
-  advisoryVex,
-  bestSeverity,
-  cveIds,
-  isActiveOnLatest,
-  isFutureAffected,
-  primaryId,
+import type {
+  CveAdvisoryIndex,
+  CvePackageIndex,
+  ReviewEdit,
 } from "../data/cves";
-import type { Advisory, CvePackage, ReviewEdit } from "../data/cves";
 import { Glyph, Theme } from "./Primitives";
 
 type Props = {
   theme: Theme;
-  packages: CvePackage[];
+  packages: CvePackageIndex[];
   /** Representative package name → every conda package collapsed into it
    *  (including the representative). Lets the header show "shared by N
    *  packages" and the search match hidden variant names. */
@@ -29,15 +25,15 @@ type Props = {
 type Kind = "now" | "future";
 
 type Row = {
-  pkg: CvePackage;
-  adv: Advisory;
+  pkg: CvePackageIndex;
+  adv: CveAdvisoryIndex;
   kind: Kind;
   score: number; // CVSS base score (0 when unknown)
   reviewed: boolean; // has a real VEX status other than under_investigation
 };
 
 type Group = {
-  pkg: CvePackage;
+  pkg: CvePackageIndex;
   rows: Row[]; // filtered rows visible in the list
   worst: number;
   unreviewed: number;
@@ -87,19 +83,19 @@ export function CveActiveList({
     for (const pkg of packages) {
       for (const adv of pkg.advisories) {
         let kind: Kind | null = null;
-        if (isActiveOnLatest(pkg, adv)) kind = "now";
-        else if (isFutureAffected(pkg, adv)) kind = "future";
+        if (adv.active_now) kind = "now";
+        else if (adv.affects_future) kind = "future";
         if (!kind) continue;
         const key = `${pkg.package}::${adv.id}`;
         const editStatus = edits[key]?.status;
-        const persisted = advisoryVex(adv)?.status;
+        const persisted = adv.vex_status;
         const effective = editStatus ?? persisted;
         const reviewed = !!effective && effective !== "under_investigation";
         out.push({
           pkg,
           adv,
           kind,
-          score: bestSeverity(adv)?.score_num ?? 0,
+          score: adv.severity?.score_num ?? 0,
           reviewed,
         });
       }
@@ -136,7 +132,8 @@ export function CveActiveList({
           m.toLowerCase().includes(ql),
         );
       const inCve =
-        cveIds(r.adv).some((id) => id.toLowerCase().includes(ql)) ||
+        (r.adv.cve_ids ?? []).some((id) => id.toLowerCase().includes(ql)) ||
+        (r.adv.aliases ?? []).some((id) => id.toLowerCase().includes(ql)) ||
         r.adv.id.toLowerCase().includes(ql);
       const inSummary = (r.adv.summary || "").toLowerCase().includes(ql);
       if (!inName && !inCve && !inSummary) return false;
@@ -173,7 +170,7 @@ export function CveActiveList({
         if (a.score !== b.score) return b.score - a.score;
         if (a.kind !== b.kind) return a.kind === "now" ? -1 : 1;
         if (a.reviewed !== b.reviewed) return a.reviewed ? 1 : -1;
-        return primaryId(a.adv).localeCompare(primaryId(b.adv));
+        return a.adv.primary_id.localeCompare(b.adv.primary_id);
       });
     }
     // Sort packages: worst severity desc, "shipping now" first within tie,
@@ -301,9 +298,7 @@ export function CveActiveList({
               gap: 6,
               background: onNextTriagePackage ? t.accent : t.surface2,
               color: onNextTriagePackage ? t.accentFg : t.fg3,
-              border: `1px solid ${
-                onNextTriagePackage ? t.accent : t.border
-              }`,
+              border: `1px solid ${onNextTriagePackage ? t.accent : t.border}`,
               borderRadius: 6,
               padding: "4px 10px",
               fontSize: 11.5,
@@ -318,8 +313,8 @@ export function CveActiveList({
         </div>
         <div style={{ fontSize: 11, color: t.fg3, lineHeight: 1.45 }}>
           Advisories hitting conda-forge's latest build (
-          <strong style={{ color: t.fg2 }}>now</strong>) or a version we
-          haven't shipped yet (<strong style={{ color: t.fg2 }}>future</strong>).
+          <strong style={{ color: t.fg2 }}>now</strong>) or a version we haven't
+          shipped yet (<strong style={{ color: t.fg2 }}>future</strong>).
         </div>
 
         <div style={{ position: "relative" }}>
@@ -372,11 +367,25 @@ export function CveActiveList({
         </div>
 
         <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
-          <Chip theme={theme} active={sev === "all"} onClick={() => setSev("all")}>
-            All <CountTag active={sev === "all"} theme={theme}>{counts.total}</CountTag>
+          <Chip
+            theme={theme}
+            active={sev === "all"}
+            onClick={() => setSev("all")}
+          >
+            All{" "}
+            <CountTag active={sev === "all"} theme={theme}>
+              {counts.total}
+            </CountTag>
           </Chip>
-          <Chip theme={theme} active={sev === "high+"} onClick={() => setSev("high+")}>
-            High+ <CountTag active={sev === "high+"} theme={theme}>{counts.high}</CountTag>
+          <Chip
+            theme={theme}
+            active={sev === "high+"}
+            onClick={() => setSev("high+")}
+          >
+            High+{" "}
+            <CountTag active={sev === "high+"} theme={theme}>
+              {counts.high}
+            </CountTag>
           </Chip>
           <Chip
             theme={theme}
@@ -384,15 +393,15 @@ export function CveActiveList({
             onClick={() => setSev("critical")}
           >
             Critical{" "}
-            <CountTag active={sev === "critical"} theme={theme}>{counts.critical}</CountTag>
+            <CountTag active={sev === "critical"} theme={theme}>
+              {counts.critical}
+            </CountTag>
           </Chip>
           <span style={{ width: 1, background: t.border, margin: "0 3px" }} />
           <Chip
             theme={theme}
             active={kindFilter === "now"}
-            onClick={() =>
-              setKindFilter(kindFilter === "now" ? "all" : "now")
-            }
+            onClick={() => setKindFilter(kindFilter === "now" ? "all" : "now")}
           >
             Shipping now{" "}
             <CountTag active={kindFilter === "now"} theme={theme}>
@@ -418,7 +427,9 @@ export function CveActiveList({
             onClick={() => setOnlyUnreviewed(!onlyUnreviewed)}
           >
             Unreviewed only{" "}
-            <CountTag active={onlyUnreviewed} theme={theme}>{counts.unreviewed}</CountTag>
+            <CountTag active={onlyUnreviewed} theme={theme}>
+              {counts.unreviewed}
+            </CountTag>
           </Chip>
         </div>
       </div>
@@ -470,8 +481,7 @@ export function CveActiveList({
               }
               const r = it.row;
               const inFocusedGroup = focusedPkg === r.pkg.package;
-              const focused =
-                inFocusedGroup && focusedAdvisoryId === r.adv.id;
+              const focused = inFocusedGroup && focusedAdvisoryId === r.adv.id;
               const band = SEVERITY_BAND(r.score);
               return (
                 <div
@@ -561,7 +571,7 @@ export function CveActiveList({
                         whiteSpace: "nowrap",
                       }}
                     >
-                      {primaryId(r.adv)}
+                      {r.adv.primary_id}
                     </code>
                     <span style={{ flex: 1 }} />
                     {!r.reviewed && (
@@ -635,9 +645,7 @@ function GroupHeader({
         borderTop: `1px solid ${t.border}`,
         borderBottom: `1px solid ${t.border}`,
         cursor: "pointer",
-        borderLeft: focused
-          ? `3px solid ${t.accent}`
-          : "3px solid transparent",
+        borderLeft: focused ? `3px solid ${t.accent}` : "3px solid transparent",
       }}
     >
       <code

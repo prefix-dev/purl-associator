@@ -11,15 +11,11 @@ import { CveEnqueueDrawer } from "./components/CveEnqueueDrawer";
 import { config, repoFullName } from "./config";
 import {
   advisoryVex,
-  bestSeverity,
   editFromVex,
-  isActiveOnLatest,
   isEditNonEmpty,
   loadAiDrafts,
   loadAiQueue,
-  isFutureAffected,
-  primaryId,
-  type CvePackage,
+  type CvePackageIndex,
   type AiDraftsPayload,
   type AiQueuePayload,
   type ReviewEdit,
@@ -38,6 +34,10 @@ export function CveApp() {
     representatives,
     membersByRep,
     focusedPackage,
+    focusedPackageLoading,
+    detailError,
+    ensurePackageDetail,
+    packageDetails,
   } = useCveData();
   const edits = useCveEditStore((state) => state.edits);
   const setEdits = useCveEditStore((state) => state.setEdits);
@@ -77,7 +77,7 @@ export function CveApp() {
   // to land on a random CVE.
   const triageQueue = useMemo(() => {
     const out: Array<{
-      pkg: CvePackage;
+      pkg: CvePackageIndex;
       firstAdvId: string;
       worst: number;
       hasNow: boolean;
@@ -90,12 +90,12 @@ export function CveApp() {
         reviewed: boolean;
       }> = [];
       for (const adv of pkg.advisories) {
-        const now = isActiveOnLatest(pkg, adv);
-        const future = !now && isFutureAffected(pkg, adv);
+        const now = adv.active_now;
+        const future = !now && adv.affects_future;
         if (!now && !future) continue;
-        const score = bestSeverity(adv)?.score_num ?? 0;
+        const score = adv.severity?.score_num ?? 0;
         const key = `${pkg.package}::${adv.id}`;
-        const effective = edits[key]?.status ?? advisoryVex(adv)?.status;
+        const effective = edits[key]?.status ?? adv.vex_status;
         const reviewed = !!effective && effective !== "under_investigation";
         rows.push({ adv, kind: now ? "now" : "future", score, reviewed });
       }
@@ -105,7 +105,7 @@ export function CveApp() {
         if (a.score !== b.score) return b.score - a.score;
         if (a.kind !== b.kind) return a.kind === "now" ? -1 : 1;
         if (a.reviewed !== b.reviewed) return a.reviewed ? 1 : -1;
-        return primaryId(a.adv).localeCompare(primaryId(b.adv));
+        return a.adv.primary_id.localeCompare(b.adv.primary_id);
       });
       const firstUnreviewed = rows.find((r) => !r.reviewed);
       if (!firstUnreviewed) continue;
@@ -454,7 +454,7 @@ export function CveApp() {
         </div>
       )}
 
-      {loadError && (
+      {(loadError || detailError) && (
         <div
           style={{
             padding: "7px 18px",
@@ -463,7 +463,7 @@ export function CveApp() {
             fontSize: 12,
           }}
         >
-          Failed to load advisories: {loadError}
+          Failed to load advisories: {loadError || detailError}
         </div>
       )}
 
@@ -554,6 +554,21 @@ export function CveApp() {
         </div>
 
         <div style={{ flex: 1, minWidth: 0, display: "flex" }}>
+          {focusedPackageLoading && !focusedPackage ? (
+            <div
+              style={{
+                flex: 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: t.fg2,
+                background: t.page,
+                fontSize: 13,
+              }}
+            >
+              Loading package details…
+            </div>
+          ) : (
           <CveDetail
             theme={theme}
             pkg={focusedPackage}
@@ -582,6 +597,7 @@ export function CveApp() {
             enqueuedAdvisories={enqueuedSet}
             onEnqueueAi={handleEnqueueAi}
           />
+          )}
         </div>
       </div>
 
@@ -589,7 +605,8 @@ export function CveApp() {
         <CvePRDrawer
           theme={theme}
           edits={edits}
-          packages={payload.packages}
+          loadedPackages={packageDetails}
+          ensurePackageDetail={ensurePackageDetail}
           membersByRep={membersByRep}
           onClose={() => setDrawerOpen(false)}
           onCommit={() => {
