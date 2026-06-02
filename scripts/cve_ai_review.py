@@ -115,6 +115,19 @@ obvious, say `unknown` rather than guess. A maintainer will review your draft
 before any of it ships."""
 
 
+# OpenVEX 0.2.0 closed enum for a `not_affected` statement's `justification`.
+# The model must emit exactly one bare key from this list — any explanatory
+# prose belongs in `impact_statement`, never appended onto the justification
+# (e.g. "vulnerable_code_not_present: because …" is NOT valid OpenVEX).
+OPENVEX_JUSTIFICATIONS = [
+    "component_not_present",
+    "vulnerable_code_not_present",
+    "vulnerable_code_not_in_execute_path",
+    "vulnerable_code_cannot_be_controlled_by_adversary",
+    "inline_mitigations_already_exist",
+]
+
+
 # Output JSON schema constraining Claude's reply. One key per advisory_id
 # the user asked about.
 ASSESSMENT_ITEM_SCHEMA = {
@@ -129,7 +142,7 @@ ASSESSMENT_ITEM_SCHEMA = {
             "type": "string",
             "enum": ["affected", "not_affected", "fixed", "under_investigation"],
         },
-        "openvex_justification": {"type": ["string", "null"]},
+        "openvex_justification": {"enum": [*OPENVEX_JUSTIFICATIONS, None]},
         "openvex_impact_statement": {"type": ["string", "null"]},
         "openvex_action_statement": {"type": ["string", "null"]},
         "affected_versions": {
@@ -828,10 +841,22 @@ def _build_openvex(
             "status": a.openvex_status,
             "timestamp": generated_at,
         }
-        if a.openvex_justification:
-            stmt["justification"] = a.openvex_justification
-        if a.openvex_impact_statement:
-            stmt["impact_statement"] = a.openvex_impact_statement
+        justification = a.openvex_justification
+        impact_statement = a.openvex_impact_statement
+        # Guard: the OpenVEX `justification` enum is closed (OPENVEX_JUSTIFICATIONS).
+        # If a value arrives as "<enum>: <prose>" (a model habit the response
+        # schema now forbids, but defend the builder anyway), split it so the
+        # bare enum stays in `justification` and the prose moves to
+        # `impact_statement` rather than poisoning the embedded OpenVEX block.
+        if justification and justification not in OPENVEX_JUSTIFICATIONS:
+            head, sep, rest = justification.partition(":")
+            if sep and head.strip() in OPENVEX_JUSTIFICATIONS:
+                justification = head.strip()
+                impact_statement = impact_statement or rest.strip()
+        if justification:
+            stmt["justification"] = justification
+        if impact_statement:
+            stmt["impact_statement"] = impact_statement
         if a.openvex_action_statement:
             stmt["action_statement"] = a.openvex_action_statement
         # Defensive: OpenVEX 0.2.0 conditionally REQUIRES justification or
