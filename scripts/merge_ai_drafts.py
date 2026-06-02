@@ -112,7 +112,7 @@ def _collect_drafts(drafts_dir: Path) -> dict[str, dict[str, dict]]:
 
 
 def _collect_queue(queue_dir: Path) -> dict[str, dict[str, dict]]:
-    """{package: {advisory_id: {enqueued_at, enqueued_by}}} — newest per pair."""
+    """{package: {advisory_id: {enqueued_at, enqueued_by, force}}} — newest per pair."""
     out: dict[str, dict[str, dict]] = {}
     if not queue_dir.exists():
         return out
@@ -133,7 +133,11 @@ def _collect_queue(queue_dir: Path) -> dict[str, dict[str, dict]]:
             existing = out.setdefault(pkg, {}).get(adv)
             if existing and existing.get("enqueued_at", "") >= ts:
                 continue
-            out[pkg][adv] = {"enqueued_at": ts, "enqueued_by": by}
+            out[pkg][adv] = {
+                "enqueued_at": ts,
+                "enqueued_by": by,
+                "force": bool(item.get("force")),
+            }
     return out
 
 
@@ -149,6 +153,59 @@ def _filter_covered(
     return dict(sorted(out.items()))
 
 
+def _parse_iso(s: str) -> datetime | None:
+    """Parse an ISO-8601 timestamp, tolerating a trailing ``Z``.
+
+    ``enqueued_at`` (``…Z`` from the worker, ``…+00:00`` from scripts) and a
+    draft's ``generated_at`` use different spellings, so they can't be compared
+    as strings — parse both before comparing.
+    """
+    if not s:
+        return None
+    try:
+        return datetime.fromisoformat(s.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
+def _pending_queue(
+    queue_tree: dict[str, dict[str, dict]],
+    covered: set[tuple[str, str]],
+    draft_ts: dict[tuple[str, str], str],
+) -> dict[str, dict[str, dict]]:
+    """Queue pairs still awaiting an AI draft (the queue tab's contents).
+
+    A pair is shown when it is not human-covered and either has no draft yet,
+    or was force-enqueued (a redraft request) with no draft newer than the
+    enqueue — i.e. the forced redraft hasn't been produced yet. Once a draft at
+    or after the enqueue lands, the pair drops out again. Without the force
+    carve-out a re-queued pair would be hidden the moment an old draft existed,
+    so requested re-reviews would never surface (queue files are append-only).
+    """
+    out: dict[str, dict[str, dict]] = {}
+    for pkg, advs in queue_tree.items():
+        keep: dict[str, dict] = {}
+        for adv, meta in advs.items():
+            if (pkg, adv) in covered:
+                continue
+            dts = draft_ts.get((pkg, adv))
+            if dts is None:
+                keep[adv] = meta  # never drafted → waiting for the AI
+                continue
+            if meta.get("force"):
+                enq = _parse_iso(meta.get("enqueued_at", ""))
+                drf = _parse_iso(dts)
+                # Show while the redraft is still pending; if either timestamp
+                # is unparseable, err toward visibility.
+                if enq is None or drf is None or enq > drf:
+                    keep[adv] = meta
+                    continue
+            # Drafted and not a pending forced redraft → handled, hide it.
+        if keep:
+            out[pkg] = dict(sorted(keep.items()))
+    return dict(sorted(out.items()))
+
+
 def main(
     drafts_dir: Path = DEFAULT_DRAFTS_DIR,
     queue_dir: Path = DEFAULT_QUEUE_DIR,
@@ -158,11 +215,14 @@ def main(
 ) -> None:
     covered = _load_human_covered_pairs(contributions_dir)
     drafts = _filter_covered(_collect_drafts(drafts_dir), covered)
-    # The queue sidecar additionally hides items that already have a draft.
-    drafted_pairs: set[tuple[str, str]] = {
-        (pkg, adv) for pkg, advs in drafts.items() for adv in advs
+    # The queue sidecar hides items that already have a draft — except a forced
+    # re-queue whose redraft hasn't landed yet, which stays "waiting for AI".
+    draft_ts: dict[tuple[str, str], str] = {
+        (pkg, adv): info.get("generated_at") or ""
+        for pkg, advs in drafts.items()
+        for adv, info in advs.items()
     }
-    queue = _filter_covered(_collect_queue(queue_dir), covered | drafted_pairs)
+    queue = _pending_queue(_collect_queue(queue_dir), covered, draft_ts)
 
     drafts_out.parent.mkdir(parents=True, exist_ok=True)
     drafts_out.write_text(
