@@ -14,6 +14,10 @@ import { Glyph, Theme } from "./Primitives";
 type Props = {
   theme: Theme;
   packages: CvePackage[];
+  /** Representative package name → every conda package collapsed into it
+   *  (including the representative). Lets the header show "shared by N
+   *  packages" and the search match hidden variant names. */
+  membersByRep: Map<string, string[]>;
   edits: Record<string, ReviewEdit>;
   focusedPkg: string | null;
   focusedAdvisoryId: string | null;
@@ -63,6 +67,7 @@ type KindFilter = "all" | "now" | "future";
 export function CveActiveList({
   theme,
   packages,
+  membersByRep,
   edits,
   focusedPkg,
   focusedAdvisoryId,
@@ -125,7 +130,11 @@ export function CveActiveList({
     if (kindFilter !== "all" && r.kind !== kindFilter) return false;
     if (onlyUnreviewed && r.reviewed) return false;
     if (ql) {
-      const inName = r.pkg.package.toLowerCase().includes(ql);
+      const inName =
+        r.pkg.package.toLowerCase().includes(ql) ||
+        (membersByRep.get(r.pkg.package) ?? []).some((m) =>
+          m.toLowerCase().includes(ql),
+        );
       const inCve =
         cveIds(r.adv).some((id) => id.toLowerCase().includes(ql)) ||
         r.adv.id.toLowerCase().includes(ql);
@@ -443,6 +452,7 @@ export function CveActiveList({
                     key={`hdr::${it.group.pkg.package}`}
                     theme={theme}
                     group={it.group}
+                    variants={membersByRep.get(it.group.pkg.package) ?? []}
                     focused={focused}
                     style={{
                       position: "absolute",
@@ -597,18 +607,21 @@ export function CveActiveList({
 function GroupHeader({
   theme,
   group,
+  variants,
   focused,
   onClick,
   style,
 }: {
   theme: Theme;
   group: Group;
+  variants: string[];
   focused: boolean;
   onClick: () => void;
   style: React.CSSProperties;
 }) {
   const t = theme.t;
   const band = SEVERITY_BAND(group.worst);
+  const variantCount = variants.length;
   return (
     <div
       onClick={onClick}
@@ -651,6 +664,23 @@ function GroupHeader({
       >
         {group.pkg.latest_version}
       </span>
+      {variantCount > 1 && (
+        <span
+          style={{
+            fontSize: 10,
+            fontWeight: 600,
+            padding: "1px 6px",
+            borderRadius: 3,
+            background: t.inset,
+            color: t.fg2,
+            border: `1px solid ${t.border}`,
+            whiteSpace: "nowrap",
+          }}
+          title={`Same PURL & version as ${variantCount} conda packages — a review here applies to all of them:\n${variants.join("\n")}`}
+        >
+          ×{variantCount}
+        </span>
+      )}
       <span style={{ flex: 1 }} />
       {group.hasNow && (
         <span

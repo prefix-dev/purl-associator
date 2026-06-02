@@ -24,8 +24,15 @@ import { useCveEditStore } from "./stores/userState";
 
 export function CveApp() {
   const theme = useTheme();
-  const { payload, loadError, focusedPkg, setFocusedPkg, packages, focusedPackage } =
-    useCveData();
+  const {
+    payload,
+    loadError,
+    focusedPkg,
+    setFocusedPkg,
+    representatives,
+    membersByRep,
+    focusedPackage,
+  } = useCveData();
   const edits = useCveEditStore((state) => state.edits);
   const setEdits = useCveEditStore((state) => state.setEdits);
   const [focusedAdvisoryId, setFocusedAdvisoryId] = useState<string | null>(null);
@@ -54,7 +61,7 @@ export function CveApp() {
       worst: number;
       hasNow: boolean;
     }> = [];
-    for (const pkg of packages) {
+    for (const pkg of representatives) {
       const rows: Array<{
         adv: (typeof pkg.advisories)[number];
         kind: "now" | "future";
@@ -94,7 +101,7 @@ export function CveApp() {
       return a.pkg.package.localeCompare(b.pkg.package);
     });
     return out;
-  }, [packages, edits]);
+  }, [representatives, edits]);
 
   const goToNextTriagePackage = useMemo<(() => void) | null>(() => {
     if (triageQueue.length === 0) return null;
@@ -447,7 +454,8 @@ export function CveApp() {
               view === "browse" ? (
                 <CvePackageList
                   theme={theme}
-                  packages={packages}
+                  packages={representatives}
+                  membersByRep={membersByRep}
                   edits={edits}
                   focusedId={focusedPkg}
                   setFocusedId={(id) => {
@@ -462,7 +470,8 @@ export function CveApp() {
               ) : (
                 <CveActiveList
                   theme={theme}
-                  packages={packages}
+                  packages={representatives}
+                  membersByRep={membersByRep}
                   edits={edits}
                   focusedPkg={focusedPkg}
                   focusedAdvisoryId={focusedAdvisoryId}
@@ -493,6 +502,7 @@ export function CveApp() {
           <CveDetail
             theme={theme}
             pkg={focusedPackage}
+            variants={(focusedPkg && membersByRep.get(focusedPkg)) || []}
             edits={edits}
             mode={view === "active" ? "triage" : "browse"}
             focusedAdvisoryId={focusedAdvisoryId}
@@ -519,6 +529,7 @@ export function CveApp() {
           theme={theme}
           edits={edits}
           packages={payload.packages}
+          membersByRep={membersByRep}
           onClose={() => setDrawerOpen(false)}
           onCommit={() => {
             setEdits({});

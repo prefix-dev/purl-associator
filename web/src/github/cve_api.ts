@@ -23,6 +23,13 @@ export type CveSubmitOptions = {
   token: string;
   /** Map of `${packageName}::${advisoryId}` → review edit. */
   edits: Record<string, ReviewEdit>;
+  /** Representative package name → every conda package collapsed into it
+   *  (including the representative). A single review staged against a
+   *  representative is fanned out to a statement per member so the OpenVEX
+   *  document covers every interchangeable package (e.g. all `airflow-with-*`
+   *  variants), not just the one the reviewer happened to see. Omit for no
+   *  fan-out. */
+  membersByRep?: Map<string, string[]>;
   title: string;
   body: string;
 };
@@ -41,32 +48,39 @@ export type CveSubmitResult = {
  * statement per status bucket. */
 export function buildStatements(
   edits: Record<string, ReviewEdit>,
+  membersByRep?: Map<string, string[]>,
 ): OpenVexStatement[] {
   const statements: OpenVexStatement[] = [];
   for (const [key, edit] of Object.entries(edits)) {
     const sep = key.indexOf("::");
     if (sep < 0) continue;
-    const pkg = key.slice(0, sep);
+    const rep = key.slice(0, sep);
     const advisoryId = key.slice(sep + 2);
-    statements.push(buildPackageStatement(pkg, advisoryId, edit));
+    // Fan the review out across every package collapsed under this
+    // representative (same PURLs + version ⇒ same advisory). Falls back to
+    // just the representative when no grouping is supplied.
+    const targets = membersByRep?.get(rep) ?? [rep];
+    for (const pkg of targets) {
+      statements.push(buildPackageStatement(pkg, advisoryId, edit));
 
-    // Version-pinned statements: flip individual conda versions.
-    const { not_affected, affected } = edit.version_overrides;
-    if (not_affected.length > 0) {
-      statements.push(
-        buildVersionOverrideStatement(
-          pkg,
-          advisoryId,
-          not_affected,
-          "not_affected",
-          edit,
-        ),
-      );
-    }
-    if (affected.length > 0) {
-      statements.push(
-        buildVersionOverrideStatement(pkg, advisoryId, affected, "affected", edit),
-      );
+      // Version-pinned statements: flip individual conda versions.
+      const { not_affected, affected } = edit.version_overrides;
+      if (not_affected.length > 0) {
+        statements.push(
+          buildVersionOverrideStatement(
+            pkg,
+            advisoryId,
+            not_affected,
+            "not_affected",
+            edit,
+          ),
+        );
+      }
+      if (affected.length > 0) {
+        statements.push(
+          buildVersionOverrideStatement(pkg, advisoryId, affected, "affected", edit),
+        );
+      }
     }
   }
   return statements;
@@ -78,7 +92,7 @@ export async function submitCveReviewsAsPR(
   if (!config.oauthWorkerUrl) {
     throw new Error("Worker URL not configured — cannot submit PR.");
   }
-  const statements = buildStatements(opts.edits);
+  const statements = buildStatements(opts.edits, opts.membersByRep);
   const endpoint = `${config.oauthWorkerUrl.replace(/\/$/, "")}/api/submit-cves`;
   const res = await fetch(endpoint, {
     method: "POST",

@@ -148,6 +148,23 @@ export function osvUrl(adv: Advisory): string {
   return `https://osv.dev/vulnerability/${adv.id}`;
 }
 
+/** Key that collapses interchangeable conda packages into one row.
+ *
+ * Many feedstocks ship a base package plus a swarm of `*-with-extras`
+ * variants (e.g. 100+ `airflow-with-*`) that all carry the *same* upstream
+ * PURL set and therefore the same advisories — so the dashboard would
+ * otherwise render the same CVEs dozens of times. We also fold in
+ * ``latest_version``: members of a group must share the shipped conda-forge
+ * version too, since `isActiveOnLatest`/`isFutureAffected` are computed
+ * against it — grouping packages on different versions would hide one
+ * branch's active CVEs behind the representative's. Same PURLs + same latest
+ * version ⇒ identical advisory set *and* identical now/future split, so one
+ * member faithfully represents the rest. */
+export function purlGroupKey(pkg: CvePackage): string {
+  const purls = [...pkg.purls].sort().join(" ");
+  return `${purls} @@ ${pkg.latest_version ?? ""}`;
+}
+
 const SEVERITY_RANK: Record<string, number> = {
   CVSS_V4: 4,
   CVSS_V3: 3,
