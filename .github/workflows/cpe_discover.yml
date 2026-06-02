@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       top:
-        description: "Top-N most-downloaded packages to consider"
+        description: "Top-N most-downloaded packages to consider (blank = all packages, no cap)"
         required: false
-        default: "100"
+        default: ""
       only:
         description: "Comma-separated package names (blank = all)"
         required: false
@@ -32,7 +32,7 @@ concurrency:
 jobs:
   cpe-discover:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v6
 
@@ -44,7 +44,11 @@ jobs:
       - name: Run heuristic discovery
         run: |
           set -euo pipefail
-          ARGS=(--top "${{ inputs.top || '100' }}")
+          # No --top on the scheduled run → cpe_discover's default (0 = no
+          # cap) considers every package. A manual dispatch can still pass a
+          # numeric ``top`` input to bound a one-off run.
+          ARGS=()
+          if [ -n "${{ inputs.top }}" ]; then ARGS+=(--top "${{ inputs.top }}"); fi
           if [ -n "${{ inputs.only }}" ]; then ARGS+=(--only "${{ inputs.only }}"); fi
           pixi run cpe-discover "${ARGS[@]}"
 
