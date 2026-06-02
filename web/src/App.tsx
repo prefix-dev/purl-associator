@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useGithubAuth } from "./auth/useGithubAuth";
 import { BulkPanel } from "./components/BulkPanel";
+import { LoadingToast } from "./components/LoadingToast";
 import { LocalDraftBanner } from "./components/LocalDraftBanner";
 import { LoginModal } from "./components/LoginModal";
 import { MappingEditor } from "./components/MappingEditor";
@@ -515,6 +516,7 @@ export function App() {
       )}
 
       {loginOpen && <LoginModal theme={theme} onClose={() => setLoginOpen(false)} />}
+      <LoadingToast theme={theme} />
     </div>
   );
 }
