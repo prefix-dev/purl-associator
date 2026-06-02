@@ -144,6 +144,7 @@ export type CvePackageIndex = {
   generated_at: string;
   conda_versions_total: number;
   latest_version?: string | null;
+  download_count?: number | null;
   detail_path: string;
   advisory_count: number;
   affected_version_count: number;
@@ -298,6 +299,7 @@ export type AiDraft = {
   model: string;
   run_id: string;
   generated_at: string;
+  prompt_version?: string | null;
   /** Narrative prose (3-6 sentences) — the AI's "why this CVE applies (or
    *  doesn't)" headline. Surfaced at the top of the draft panel. */
   rationale: string;

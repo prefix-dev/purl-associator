@@ -94,6 +94,8 @@ def _collect_drafts(drafts_dir: Path) -> dict[str, dict[str, dict]]:
                 "model": model,
                 "run_id": run_id,
                 "generated_at": ts,
+                "prompt_version": assessment.get("prompt_version")
+                or data.get("prompt_version"),
                 "rationale": assessment.get("rationale"),
                 "openvex_status": assessment.get("openvex_status"),
                 "openvex_justification": assessment.get("openvex_justification"),

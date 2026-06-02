@@ -8,6 +8,9 @@ so :mod:`scripts.merge_cves` and :mod:`scripts.cve_summary` stay in sync.
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 CONDA_DB_KEY = "conda-forge"
 
 # CVSS_V4 is the most expressive, then V3, then V2.
@@ -109,3 +112,69 @@ def parse_conda_purl(purl: str) -> tuple[str, str | None] | None:
     if not name:
         return None
     return (name, version if sep and version else None)
+
+
+def load_human_covered_pairs(contrib_dir: Path) -> set[tuple[str, str]]:
+    """All ``(pkg, advisory_id)`` pairs already covered by a human OpenVEX statement.
+
+    Draft contributions (``draft: true``) are ignored — only authoritative,
+    human-reviewed statements count as "covered".
+    """
+    pairs: set[tuple[str, str]] = set()
+    if not contrib_dir.exists():
+        return pairs
+    for path in sorted(contrib_dir.glob("*.json")):
+        try:
+            data = json.loads(path.read_text())
+        except json.JSONDecodeError:
+            continue
+        if data.get("draft") is True:
+            continue
+        for stmt in data.get("statements") or []:
+            if not isinstance(stmt, dict):
+                continue
+            vuln = stmt.get("vulnerability") or {}
+            name = vuln.get("name") if isinstance(vuln, dict) else None
+            if not isinstance(name, str):
+                continue
+            for product in stmt.get("products") or []:
+                if not isinstance(product, dict):
+                    continue
+                parsed = parse_conda_purl(product.get("@id") or "")
+                if parsed is None:
+                    continue
+                pairs.add((parsed[0], name))
+    return pairs
+
+
+def load_latest_drafts(drafts_dir: Path) -> dict[tuple[str, str], dict]:
+    """For each ``(pkg, advisory_id)``, the newest assessment by ``generated_at``.
+
+    Each returned assessment carries an extra ``_generated_at`` key (the run's
+    timestamp) so callers can compare recency. Assumes ``generated_at`` is a
+    fixed-format ISO-8601 UTC string so string comparison is chronological.
+    """
+    latest: dict[tuple[str, str], dict] = {}
+    if not drafts_dir.exists():
+        return latest
+    for path in sorted(drafts_dir.glob("*.json")):
+        try:
+            data = json.loads(path.read_text())
+        except json.JSONDecodeError:
+            continue
+        if data.get("draft") is not True:
+            continue
+        ts = data.get("generated_at") or ""
+        for key, assessment in (data.get("assessments") or {}).items():
+            if not isinstance(assessment, dict):
+                continue
+            pkg = assessment.get("package")
+            adv = assessment.get("advisory_id") or key
+            if not pkg or not adv:
+                continue
+            existing = latest.get((pkg, adv))
+            if existing is None or ts > existing.get("_generated_at", ""):
+                merged = dict(assessment)
+                merged["_generated_at"] = ts
+                latest[(pkg, adv)] = merged
+    return latest

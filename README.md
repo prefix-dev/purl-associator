@@ -7,9 +7,12 @@ those mappings to derive CVE assignment data.
 |---|---|---|
 | `web/public/mappings.json` | `scripts.merge_mappings` | Served package to PURL mapping data |
 | `web/public/cves.json` | `scripts.merge_cves` | Served CVE dashboard data |
+| `web/public/cve_ai_drafts.json` | `scripts.merge_ai_drafts` | AI CVE draft suggestions awaiting human review |
+| `web/public/cve_ai_queue.json` | `scripts.merge_ai_drafts` | CVEs queued for AI review but not drafted yet |
 | `web/public/sboms.json` | `scripts.merge_sboms` | Served deep-inspection summary index |
 | mapping PRs | Worker `POST /api/submit` | Human review of PURL mapping edits |
 | CVE review PRs | Worker `POST /api/submit-cves` | Human review of OpenVEX CVE statements |
+| AI queue PRs | Worker `POST /api/enqueue-cve-review` | Requests for AI CVE draft review |
 
 The web app is static. It reads generated JSON and submits edits to the
 Cloudflare Worker. The Worker opens pull requests through a GitHub App
@@ -33,6 +36,12 @@ flowchart LR
   VexContrib[mappings/cve_contributions/*.json] --> MergeCves[scripts.merge_cves]
   PackageCves --> MergeCves
   MergeCves --> Cves[web/public/cves.json]
+  AiQueue[mappings/cve_review_queue/*.json] --> AiReview[scripts.cve_ai_review]
+  PackageCves --> AiReview
+  AiReview --> AiDrafts[mappings/cve_ai_drafts/*.json]
+  AiDrafts --> MergeAi[scripts.merge_ai_drafts]
+  AiQueue --> MergeAi
+  MergeAi --> AiSidecars[web/public/cve_ai_drafts.json + cve_ai_queue.json]
 
   Auto --> SbomExtract[scripts.sbom_extract]
   SbomExtract --> Sboms[mappings/sboms/*.json]
@@ -43,6 +52,7 @@ flowchart LR
 
   Mappings --> Web[GitHub Pages app]
   Cves --> Web
+  AiSidecars --> Web
   PublicSboms --> Web
 ```
 
@@ -97,7 +107,8 @@ flowchart TD
   F --> G[Write mappings/cves per-package files]
   G --> H[Apply OpenVEX review documents]
   H --> I[Write web/public/cves.json]
-  I --> J[Validate OSV, OpenVEX, and bundle schemas]
+  I --> J[Compile AI draft and queue sidecars]
+  J --> K[Validate OSV, OpenVEX, AI draft, queue, and bundle schemas]
 ```
 
 `scripts.cve_match` joins mapped PURLs to OSV advisories. It supports the OSV
@@ -123,6 +134,8 @@ Useful commands:
 pixi run -e lite merge
 pixi run cve-match --only numpy,requests,pillow
 pixi run -e lite merge-cves
+pixi run merge-ai-drafts
+pixi run cve-ai-requeue-drafts --status fixed  # requeue existing drafts after prompt changes
 pixi run -e lite validate
 ```
 
@@ -150,7 +163,11 @@ The stored advisory remains OSV-shaped and is validated against the OSV schema.
 The matcher removes malformed empty OSV range events when necessary so the
 record validates.
 
-Reviewer CVE contributions are OpenVEX 0.2.0 documents.
+Reviewer CVE contributions are OpenVEX 0.2.0 documents. AI reviews are not
+applied automatically: they are stored as drafts in `mappings/cve_ai_drafts/`,
+compiled into `web/public/cve_ai_drafts.json`, and must be applied by a human
+reviewer through the dashboard before an authoritative OpenVEX contribution is
+submitted.
 
 | Statement product | Meaning |
 |---|---|
@@ -222,6 +239,7 @@ GitHub App installation token minted by the Worker.
 |---|---|---|---|
 | PURL mapping | `POST /api/submit` | `purl-mapping/` | `mappings/contributions/*.json` |
 | CVE review | `POST /api/submit-cves` | `cve-review/` | `mappings/cve_contributions/*.json` |
+| AI CVE review queue | `POST /api/enqueue-cve-review` | `cve-ai-review/` | `mappings/cve_review_queue/*.json` |
 
 For CVE reviews, the browser sends OpenVEX statements. The Worker owns the
 OpenVEX document envelope: document ID, author, timestamp, version, and
@@ -246,6 +264,7 @@ Worker routes:
 | `POST /exchange` | Exchange a GitHub OAuth code for a user access token |
 | `POST /api/submit` | Create a PURL mapping contribution PR |
 | `POST /api/submit-cves` | Create an OpenVEX CVE review PR |
+| `POST /api/enqueue-cve-review` | Create a PR adding package/advisory pairs to the AI review queue |
 
 Worker configuration:
 
@@ -261,6 +280,8 @@ Worker configuration:
 | `GITHUB_DEFAULT_BRANCH` | no | Pull request base branch |
 | `GITHUB_CONTRIBUTIONS_DIR` | no | PURL contribution output directory |
 | `GITHUB_CVE_CONTRIBUTIONS_DIR` | no | CVE contribution output directory |
+| `GITHUB_CVE_REVIEW_QUEUE_DIR` | no | AI CVE review queue output directory |
+| `GITHUB_CVES_DIR` | no | Per-package CVE detail directory used to validate queue requests |
 
 Local Worker commands:
 
@@ -288,7 +309,7 @@ The web app has two entry points:
 | Page | Purpose |
 |---|---|
 | `index.html` | edit PURL mappings |
-| `cve.html` | review CVE assignments |
+| `cve.html` | review CVE assignments, queue AI CVE reviews, and apply AI draft suggestions |
 
 Local development:
 
@@ -307,19 +328,32 @@ The Pages build expects these repository variables:
 
 Without these values, the app can load data but cannot submit pull requests.
 
+The CVE dashboard includes three task-oriented tabs:
+
+- **Triage** lists active/future advisories and can bulk add the current filtered
+  set (for example Critical or High+) to an AI review queue PR.
+- **AI queue** shows package/advisory pairs waiting for the AI workflow.
+- **AI drafts** shows model suggestions that still need human review. Each draft
+  starts with a one-line recommendation, splits the AI rationale into readable
+  sections, previews the OpenVEX fields, and lets the reviewer apply the
+  suggestion to the form. The tab can also requeue visible drafts when the AI
+  prompt or review policy changes.
+
 ## GitHub Actions
 
 ```mermaid
 flowchart LR
   Automap[automap.yml] --> AutoPR[refresh mapping PR]
   CVE[cve_refresh.yml] --> CvePR[refresh CVE PR]
+  AiCve[cve_ai_review.yml] --> AiDraftPR[AI draft PR]
   Pages[pages.yml] --> Site[GitHub Pages deploy]
 ```
 
 | Workflow | Trigger | Main steps |
 |---|---|---|
 | `automap.yml` | schedule and manual dispatch | run automap, merge mappings, open refresh PR |
-| `cve_refresh.yml` | schedule and manual dispatch | match OSV advisories, merge OpenVEX reviews, validate, open refresh PR |
+| `cve_refresh.yml` | schedule and manual dispatch | match OSV advisories, auto-enqueue high-severity AI candidates, merge OpenVEX reviews, refresh AI sidecars, validate, open refresh PR |
+| `cve_ai_review.yml` | schedule and manual dispatch | consume AI review queue items, write AI draft artifacts, refresh AI sidecars, open AI draft PR |
 | `sbom_refresh.yml` | manual dispatch | refresh recipe-derived deep-inspection candidates across all conda-forge, extract embedded SBOMs, match transitive CVEs, open refresh PR |
 | `pages.yml` | push to `main` and manual dispatch | regenerate served JSON, publish SBOM inspection index, validate, build Vite app, deploy Pages |
 

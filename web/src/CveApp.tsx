@@ -6,6 +6,7 @@ import { LoginModal } from "./components/LoginModal";
 import { Btn, Glyph, useTheme } from "./components/Primitives";
 import { CvePackageList } from "./components/CvePackageList";
 import { CveActiveList } from "./components/CveActiveList";
+import { CveAiWorkList } from "./components/CveAiWorkList";
 import { CveDetail } from "./components/CveDetail";
 import { CvePRDrawer } from "./components/CvePRDrawer";
 import { CveEnqueueDrawer } from "./components/CveEnqueueDrawer";
@@ -47,7 +48,7 @@ export function CveApp() {
   const [statusFilter, setStatusFilter] = useState<"all" | "unreviewed" | "reviewed">(
     "all",
   );
-  const [view, setView] = useState<"browse" | "active">("active");
+  const [view, setView] = useState<"browse" | "active" | "aiQueue" | "aiDrafts">("active");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
   const { token, user, error: authError, isLoggedIn, signOut } = useGithubAuth();
@@ -82,6 +83,7 @@ export function CveApp() {
       firstAdvId: string;
       worst: number;
       hasNow: boolean;
+      downloads: number;
     }> = [];
     for (const pkg of representatives) {
       const rows: Array<{
@@ -115,9 +117,11 @@ export function CveApp() {
         firstAdvId: firstUnreviewed.adv.id,
         worst: rows[0].score,
         hasNow: rows.some((r) => r.kind === "now"),
+        downloads: pkg.download_count ?? -1,
       });
     }
     out.sort((a, b) => {
+      if (a.downloads !== b.downloads) return b.downloads - a.downloads;
       if (a.worst !== b.worst) return b.worst - a.worst;
       if (a.hasNow !== b.hasNow) return a.hasNow ? -1 : 1;
       return a.pkg.package.localeCompare(b.pkg.package);
@@ -200,6 +204,23 @@ export function CveApp() {
     setEnqueueItems((prev) =>
       prev.filter((it) => !(it.package === pkg && it.advisory_id === advisoryId)),
     );
+  }
+
+  function handleBulkEnqueueAi(items: EnqueueItem[]): void {
+    if (items.length === 0) return;
+    if (!isLoggedIn) setLoginOpen(true);
+    setEnqueueItems((prev) => {
+      const seen = new Set(prev.map((it) => `${it.package}::${it.advisory_id}`));
+      const out = [...prev];
+      for (const it of items) {
+        const key = `${it.package}::${it.advisory_id}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        out.push(it);
+      }
+      return out;
+    });
+    setEnqueueOpen(true);
   }
 
 
@@ -480,12 +501,13 @@ export function CveApp() {
           }}
         >
           <div
+            role="tablist"
             style={{
               display: "flex",
-              gap: 2,
+              gap: 4,
               padding: "8px 10px 0 10px",
               borderBottom: `1px solid ${t.border}`,
-              background: t.surface,
+              background: t.inset,
               flexShrink: 0,
             }}
           >
@@ -503,6 +525,20 @@ export function CveApp() {
               onClick={() => setView("browse")}
             >
               All packages
+            </ViewTab>
+            <ViewTab
+              theme={theme}
+              active={view === "aiQueue"}
+              onClick={() => setView("aiQueue")}
+            >
+              ⏳ AI queue
+            </ViewTab>
+            <ViewTab
+              theme={theme}
+              active={view === "aiDrafts"}
+              onClick={() => setView("aiDrafts")}
+            >
+              🤖 AI drafts
             </ViewTab>
           </div>
           <div style={{ flex: 1, minHeight: 0 }}>
@@ -523,7 +559,7 @@ export function CveApp() {
                   statusFilter={statusFilter}
                   setStatusFilter={setStatusFilter}
                 />
-              ) : (
+              ) : view === "active" ? (
                 <CveActiveList
                   theme={theme}
                   packages={representatives}
@@ -533,6 +569,26 @@ export function CveApp() {
                   focusedAdvisoryId={focusedAdvisoryId}
                   onNextTriagePackage={goToNextTriagePackage}
                   triageRemaining={triageQueue.length}
+                  enqueuedAdvisories={enqueuedSet}
+                  onBulkEnqueue={handleBulkEnqueueAi}
+                  onSelect={(pkgName, advisoryId) => {
+                    setFocusedPkg(pkgName);
+                    setFocusedAdvisoryId(advisoryId);
+                  }}
+                />
+              ) : (
+                <CveAiWorkList
+                  theme={theme}
+                  mode={view === "aiQueue" ? "queue" : "drafts"}
+                  packages={representatives}
+                  membersByRep={membersByRep}
+                  edits={edits}
+                  focusedPkg={focusedPkg}
+                  focusedAdvisoryId={focusedAdvisoryId}
+                  aiDrafts={aiDrafts}
+                  aiQueue={aiQueue}
+                  enqueuedAdvisories={enqueuedSet}
+                  onBulkEnqueue={handleBulkEnqueueAi}
                   onSelect={(pkgName, advisoryId) => {
                     setFocusedPkg(pkgName);
                     setFocusedAdvisoryId(advisoryId);
@@ -666,22 +722,35 @@ function ViewTab({
   children: React.ReactNode;
 }) {
   const t = theme.t;
+  const [hover, setHover] = useState(false);
+  const activeColor = accent ? "#a8201f" : t.accent;
   return (
     <button
+      role="tab"
+      aria-selected={active}
       onClick={onClick}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
       style={{
+        position: "relative",
         display: "inline-flex",
         alignItems: "center",
         gap: 5,
-        background: active ? t.surface2 : "transparent",
-        border: 0,
-        borderBottom: `2px solid ${active ? (accent ? "#a8201f" : t.accent) : "transparent"}`,
-        color: active ? t.fg1 : t.fg2,
-        padding: "8px 12px 6px 12px",
+        background: active ? t.surface : hover ? t.surface2 : "transparent",
+        border: `1px solid ${active ? t.border : "transparent"}`,
+        borderBottom: active ? `1px solid ${t.surface}` : "1px solid transparent",
+        borderTop: `2px solid ${active ? activeColor : "transparent"}`,
+        borderRadius: "6px 6px 0 0",
+        color: active ? t.fg1 : hover ? t.fg1 : t.fg2,
+        padding: "7px 13px 7px 13px",
+        // pull the active tab down 1px so its bottom edge overlaps the strip's
+        // bottom border, making it read as connected to the panel below
+        marginBottom: -1,
         fontSize: 12,
         fontWeight: 600,
         cursor: "pointer",
         fontFamily: "Inter, sans-serif",
+        transition: "background 0.12s, color 0.12s",
       }}
     >
       {children}
