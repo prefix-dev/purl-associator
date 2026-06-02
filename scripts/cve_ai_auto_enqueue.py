@@ -24,6 +24,7 @@ files; the AI runner picks it up on its next scheduled run.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import secrets
@@ -45,6 +46,7 @@ DEFAULT_CVES_DIR = ROOT / "mappings" / "cves"
 DEFAULT_QUEUE_DIR = ROOT / "mappings" / "cve_review_queue"
 DEFAULT_DRAFTS_DIR = ROOT / "mappings" / "cve_ai_drafts"
 DEFAULT_CONTRIB_DIR = ROOT / "mappings" / "cve_contributions"
+DEFAULT_AUTO = ROOT / "mappings" / "auto.json"
 
 DEFAULT_MIN_SCORE = 9.0
 DEFAULT_MAX_AUTO_ENQUEUE = 100
@@ -113,6 +115,61 @@ def _severity_changed(seen: dict, current: dict) -> bool:
     return (seen.get("cvss") != current.get("cvss")) or (
         seen.get("level") != current.get("level")
     )
+
+
+def _inputs_snapshot(
+    auto_entry: dict | None, pkg_file: dict, advisory: dict
+) -> dict[str, str]:
+    """Mirror of ``scripts.cve_ai_review._inputs_snapshot``.
+
+    Same payload, same hash algorithm. Inlined for the same reason as
+    ``_severity_snapshot``: keep the auto-enqueuer free of the AI runner's
+    heavyweight module-level imports."""
+    cf = (advisory.get("database_specific") or {}).get("conda-forge") or {}
+    pkg_part: dict[str, Any] | None
+    if auto_entry is None:
+        pkg_part = None
+    else:
+        pkg_part = {
+            "summary": auto_entry.get("summary"),
+            "type": auto_entry.get("type"),
+            "purl": auto_entry.get("purl"),
+            "homepage": auto_entry.get("homepage"),
+            "source_url": auto_entry.get("source_url"),
+            "repo": auto_entry.get("repo"),
+            "recipe_url": auto_entry.get("recipe_url"),
+            "latest_version": pkg_file.get("latest_version"),
+        }
+    adv_part = {
+        "summary": advisory.get("summary"),
+        "details": advisory.get("details"),
+        "references": advisory.get("references"),
+        "affected": advisory.get("affected"),
+        "source_purls": cf.get("source_purls"),
+        "affected_versions": cf.get("affected_versions"),
+        "affects_future": cf.get("affects_future"),
+    }
+    blob = json.dumps({"pkg": pkg_part, "adv": adv_part}, sort_keys=True, default=str)
+    return {"hash": hashlib.sha256(blob.encode("utf-8")).hexdigest()}
+
+
+def _inputs_changed(seen: dict, current: dict) -> bool:
+    """Missing hash on the draft → treat as match (cutover policy)."""
+    seen_hash = (seen or {}).get("hash")
+    if not seen_hash:
+        return False
+    return seen_hash != (current or {}).get("hash")
+
+
+def _load_auto(auto_path: Path) -> dict[str, dict]:
+    """Mirror of ``scripts.cve_ai_review._load_auto``."""
+    if not auto_path.exists():
+        return {}
+    try:
+        data = json.loads(auto_path.read_text())
+    except json.JSONDecodeError:
+        return {}
+    return data.get("packages") or {}
 
 
 # --------------------------------------------------------------------------- #
@@ -203,9 +260,12 @@ def _load_latest_drafts(drafts_dir: Path) -> dict[tuple[str, str], dict]:
 
 def _iter_candidates(
     cves_dir: Path, *, min_score: float
-) -> Iterator[tuple[str, str, dict, float]]:
-    """Yield ``(package, advisory_id, advisory_dict, score)`` for every
-    per-package advisory passing the OSV + active + severity gates."""
+) -> Iterator[tuple[str, str, dict, dict, float]]:
+    """Yield ``(package, advisory_id, advisory_dict, pkg_file_dict, score)``
+    for every per-package advisory passing the OSV + active + severity
+    gates. ``pkg_file_dict`` is the parsed per-package CVE file, surfaced
+    so callers can compute the prompt-inputs fingerprint without re-reading
+    the JSON."""
     if not cves_dir.exists():
         return
     for path in sorted(cves_dir.glob("*.json")):
@@ -230,7 +290,7 @@ def _iter_candidates(
             adv_id = adv.get("id")
             if not isinstance(adv_id, str):
                 continue
-            yield package, adv_id, adv, score
+            yield package, adv_id, adv, data, score
 
 
 # --------------------------------------------------------------------------- #
@@ -243,6 +303,7 @@ def main(
     queue_dir: Path = typer.Option(DEFAULT_QUEUE_DIR, "--queue-dir"),
     drafts_dir: Path = typer.Option(DEFAULT_DRAFTS_DIR, "--drafts-dir"),
     contributions_dir: Path = typer.Option(DEFAULT_CONTRIB_DIR, "--contributions-dir"),
+    auto_path: Path = typer.Option(DEFAULT_AUTO, "--auto"),
     min_score: float = typer.Option(
         float(os.environ.get("CVE_AI_AUTO_ENQUEUE_MIN_SCORE", DEFAULT_MIN_SCORE)),
         "--min-score",
@@ -267,10 +328,11 @@ def main(
     queued_pairs = _load_queued_pairs(queue_dir)
     human_pairs = _load_human_covered_pairs(contributions_dir)
     latest_drafts = _load_latest_drafts(drafts_dir)
+    auto_packages = _load_auto(auto_path)
 
     selected: list[tuple[str, str, float]] = []
     counts = {"already_queued": 0, "already_human": 0, "already_drafted": 0}
-    for package, adv_id, adv, score in candidates:
+    for package, adv_id, adv, pkg_file, score in candidates:
         key = (package, adv_id)
         if key in queued_pairs:
             counts["already_queued"] += 1
@@ -280,8 +342,15 @@ def main(
             continue
         existing = latest_drafts.get(key)
         if existing is not None:
-            current = _severity_snapshot(adv)
-            if not _severity_changed(existing.get("severity_seen") or {}, current):
+            cur_sev = _severity_snapshot(adv)
+            cur_inp = _inputs_snapshot(auto_packages.get(package), pkg_file, adv)
+            sev_drift = _severity_changed(
+                existing.get("severity_seen") or {}, cur_sev
+            )
+            inp_drift = _inputs_changed(
+                existing.get("inputs_seen") or {}, cur_inp
+            )
+            if not sev_drift and not inp_drift:
                 counts["already_drafted"] += 1
                 continue
         selected.append((package, adv_id, score))
@@ -302,7 +371,7 @@ def main(
         f"To enqueue: [bold]{len(selected):,}[/]  "
         f"skipped: queued={counts['already_queued']}, "
         f"human={counts['already_human']}, "
-        f"drafted_same_severity={counts['already_drafted']}"
+        f"drafted_no_drift={counts['already_drafted']}"
     )
 
     if not selected:

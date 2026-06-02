@@ -23,6 +23,7 @@ Two LLM backends:
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import os
 import secrets
@@ -241,6 +242,7 @@ class Assessment:
     runtime_applicability: dict
     severity_in_conda_context: dict
     severity_seen: dict
+    inputs_seen: dict
     openvex_justification: str | None = None
     openvex_impact_statement: str | None = None
     openvex_action_statement: str | None = None
@@ -404,6 +406,44 @@ def _severity_snapshot(advisory: dict) -> dict[str, Any]:
         else None
     )
     return {"cvss": cvss, "level": level if isinstance(level, str) else None}
+
+
+def _inputs_snapshot(
+    auto_entry: dict | None, pkg_file: dict, advisory: dict
+) -> dict[str, str]:
+    """SHA-256 over the prompt's package + advisory inputs.
+
+    Covers exactly the fields formatted by ``_format_package_block`` and
+    ``_format_advisory_block`` — i.e. everything Claude actually reads.
+    Used alongside ``severity_seen`` to detect drift that severity alone
+    misses (OSV range edits, automap-improved PURLs, a new ``latest_version``
+    on conda-forge, OSV summary/details/references rewrites, etc.)."""
+    cf = (advisory.get("database_specific") or {}).get("conda-forge") or {}
+    pkg_part: dict[str, Any] | None
+    if auto_entry is None:
+        pkg_part = None
+    else:
+        pkg_part = {
+            "summary": auto_entry.get("summary"),
+            "type": auto_entry.get("type"),
+            "purl": auto_entry.get("purl"),
+            "homepage": auto_entry.get("homepage"),
+            "source_url": auto_entry.get("source_url"),
+            "repo": auto_entry.get("repo"),
+            "recipe_url": auto_entry.get("recipe_url"),
+            "latest_version": pkg_file.get("latest_version"),
+        }
+    adv_part = {
+        "summary": advisory.get("summary"),
+        "details": advisory.get("details"),
+        "references": advisory.get("references"),
+        "affected": advisory.get("affected"),
+        "source_purls": cf.get("source_purls"),
+        "affected_versions": cf.get("affected_versions"),
+        "affects_future": cf.get("affects_future"),
+    }
+    blob = json.dumps({"pkg": pkg_part, "adv": adv_part}, sort_keys=True, default=str)
+    return {"hash": hashlib.sha256(blob.encode("utf-8")).hexdigest()}
 
 
 def _format_advisory_block(advisory: dict, package: str) -> str:
@@ -756,6 +796,9 @@ async def _process_package(
                 },
                 notes=a.get("notes") or "",
                 severity_seen=_severity_snapshot(advisories[it.advisory_id]),
+                inputs_seen=_inputs_snapshot(
+                    auto_entry, pkg_file, advisories[it.advisory_id]
+                ),
             )
         )
     return results, skipped
@@ -882,15 +925,29 @@ def _severity_changed(seen: dict, current: dict) -> bool:
     )
 
 
+def _inputs_changed(seen: dict, current: dict) -> bool:
+    """True iff the prompt-inputs hash differs.
+
+    Treats a missing/empty ``seen`` hash as *match* — drafts written before
+    this field existed (the cutover policy) should not be re-drafted en
+    masse. They keep working on severity-only triggers until they naturally
+    turn over."""
+    seen_hash = (seen or {}).get("hash")
+    if not seen_hash:
+        return False
+    return seen_hash != (current or {}).get("hash")
+
+
 def _filter_items(
     items: list[QueueItem],
     *,
     human_pairs: set[tuple[str, str]],
     latest_drafts: dict[tuple[str, str], dict],
     cves_dir: Path,
+    auto_packages: dict[str, dict],
     redraft: bool,
 ) -> tuple[list[QueueItem], list[SkippedItem]]:
-    """Apply precedence + severity-change filters."""
+    """Apply precedence + drift filters (severity OR prompt-inputs)."""
     out: list[QueueItem] = []
     skipped: list[SkippedItem] = []
     for it in items:
@@ -903,7 +960,6 @@ def _filter_items(
         if not redraft:
             existing = latest_drafts.get(key)
             if existing is not None:
-                # Look at the live advisory to compare severity_seen.
                 pkg_file = _load_pkg_cve_file(cves_dir, it.package)
                 adv = _find_advisory(pkg_file, it.advisory_id) if pkg_file else None
                 if adv is None:
@@ -911,11 +967,20 @@ def _filter_items(
                         SkippedItem(it.package, it.advisory_id, "advisory_not_found")
                     )
                     continue
-                current = _severity_snapshot(adv)
-                if not _severity_changed(existing.get("severity_seen") or {}, current):
+                cur_sev = _severity_snapshot(adv)
+                cur_inp = _inputs_snapshot(
+                    auto_packages.get(it.package), pkg_file, adv
+                )
+                sev_drift = _severity_changed(
+                    existing.get("severity_seen") or {}, cur_sev
+                )
+                inp_drift = _inputs_changed(
+                    existing.get("inputs_seen") or {}, cur_inp
+                )
+                if not sev_drift and not inp_drift:
                     skipped.append(
                         SkippedItem(
-                            it.package, it.advisory_id, "already_drafted_same_severity"
+                            it.package, it.advisory_id, "already_drafted_no_drift"
                         )
                     )
                     continue
@@ -1001,11 +1066,16 @@ def main(
 
     human_pairs = _load_human_covered_pairs(contributions_dir)
     latest_drafts = _load_latest_drafts(drafts_dir)
+    # auto_packages is needed by the drift filter (input-fingerprint
+    # comparison reads package metadata from auto.json), so load it before
+    # filtering rather than just before the per-package run.
+    auto_packages = _load_auto(auto_path)
     queue, pre_skipped = _filter_items(
         queue,
         human_pairs=human_pairs,
         latest_drafts=latest_drafts,
         cves_dir=cves_dir,
+        auto_packages=auto_packages,
         redraft=redraft,
     )
     if limit and len(queue) > limit:
@@ -1019,7 +1089,6 @@ def main(
         console.log("nothing to do")
         return
 
-    auto_packages = _load_auto(auto_path)
     batches = _group_by_package(queue)
     console.log(f"grouped into {len(batches)} package(s) (per-package Claude calls)")
 
