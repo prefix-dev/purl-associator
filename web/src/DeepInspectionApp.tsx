@@ -13,7 +13,14 @@ import { useMappingsData } from "./data/useMappingsData";
 
 export function DeepInspectionApp() {
   const theme = useTheme();
-  const { payload, packages, loadError } = useMappingsData();
+  const {
+    payload,
+    packages,
+    loadError,
+    detailError,
+    details,
+    ensurePackageDetail,
+  } = useMappingsData();
   const [selectedSet, setSelectedSet] = useState<Set<string>>(new Set());
   const [focusedId, setFocusedId] = useState<string | null>(null);
   const [q, setQ] = useState("");
@@ -66,10 +73,15 @@ export function DeepInspectionApp() {
     if (first) setFocusedId(first.name);
   }, [packages, deepInspectionNames, focusedId]);
 
-  const focusedPkg = useMemo(
-    () => (focusedId ? packages.find((p) => p.name === focusedId) ?? null : null),
-    [packages, focusedId],
-  );
+  useEffect(() => {
+    if (focusedId && !details[focusedId]) {
+      ensurePackageDetail(focusedId).catch(() => {
+        // detailError is surfaced in the banner below.
+      });
+    }
+  }, [details, ensurePackageDetail, focusedId]);
+
+  const focusedPkg = focusedId ? details[focusedId] ?? null : null;
 
   return (
     <div
@@ -187,7 +199,7 @@ export function DeepInspectionApp() {
         </button>
       </header>
 
-      {loadError && (
+      {(loadError || detailError) && (
         <div
           style={{
             padding: "7px 18px",
@@ -196,7 +208,7 @@ export function DeepInspectionApp() {
             fontSize: 12,
           }}
         >
-          Failed to load mappings: {loadError}
+          Failed to load mappings: {loadError || detailError}
         </div>
       )}
 

@@ -309,7 +309,9 @@ def _write_split_payload(
     for name, pkg in sorted(packages.items()):
         filename = _detail_filename(name)
         detail_path = f"cve_packages/{filename}"
-        (detail_dir / filename).write_text(json.dumps(pkg, indent=2) + "\n")
+        (detail_dir / filename).write_text(
+            json.dumps(pkg, separators=(",", ":")) + "\n"
+        )
         index_packages[name] = _index_package(pkg, detail_path)
 
     payload = {
@@ -322,7 +324,7 @@ def _write_split_payload(
         "packages": index_packages,
     }
     index_out.parent.mkdir(parents=True, exist_ok=True)
-    index_out.write_text(json.dumps(payload, indent=2) + "\n")
+    index_out.write_text(json.dumps(payload, separators=(",", ":")) + "\n")
 
 
 def main(

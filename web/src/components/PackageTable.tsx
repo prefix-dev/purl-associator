@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import type { Edit, PackageEntry } from "../data/types";
+import type { Edit, MappingPackageIndex, PackageEntry } from "../data/types";
 import { ECOSYSTEMS } from "../data/loader";
 import { EcosystemChip, Glyph, StatusPill, Theme } from "./Primitives";
 
@@ -15,6 +15,7 @@ export type SortDir = "asc" | "desc";
 
 type EcosystemFilter = "all" | (string & {});
 type EditsByName = Record<string, Edit>;
+type TablePackage = MappingPackageIndex;
 type EffectiveStatus = PackageEntry["status"];
 type CountKey =
   | "all"
@@ -24,7 +25,7 @@ type CountKey =
   | "edited"
   | "deep";
 type PackageCounts = Record<CountKey, number>;
-type PackagePredicate = (p: PackageEntry, edits: EditsByName) => boolean;
+type PackagePredicate = (p: TablePackage, edits: EditsByName) => boolean;
 
 type Filters = {
   unmappedOnly: boolean;
@@ -35,7 +36,7 @@ type Filters = {
 
 type Props = {
   theme: Theme;
-  packages: PackageEntry[];
+  packages: TablePackage[];
   edits: EditsByName;
   selectedSet: Set<string>;
   setSelectedSet: (s: Set<string>) => void;
@@ -48,22 +49,22 @@ type Props = {
   deepInspectionNames: Set<string>;
 };
 
-function effectiveStatus(p: PackageEntry, edits: EditsByName): EffectiveStatus {
+function effectiveStatus(p: TablePackage, edits: EditsByName): EffectiveStatus {
   if (edits[p.name]) return "edited";
   if (p.purl === null || p.status === "unmapped") return "unmapped";
   return p.status;
 }
 
-function effectivePurl(p: PackageEntry, edits: EditsByName): string {
+function effectivePurl(p: TablePackage, edits: EditsByName): string {
   return edits[p.name]?.purl ?? p.purl ?? "";
 }
 
-function effectiveType(p: PackageEntry, edits: EditsByName): string {
+function effectiveType(p: TablePackage, edits: EditsByName): string {
   return edits[p.name]?.type ?? p.type ?? "none";
 }
 
 function matchesEcosystem(
-  p: PackageEntry,
+  p: TablePackage,
   edits: EditsByName,
   ecosystem: EcosystemFilter,
 ): boolean {

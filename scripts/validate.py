@@ -16,6 +16,8 @@ This is the standards-compliance gate. It checks:
 * ``web/public/mappings.json`` — manual/contribution PURL alternative lists are
   checked against the merged bundle so reviewed removals cannot be silently
   reintroduced from auto-generated suggestions.
+* ``web/public/mappings-index.json`` and ``web/public/mapping_packages/*.json`` —
+  the split PURL Mapper payload used for fast startup and lazy detail loading.
 
 Run standalone or via ``pixi run validate``; exits non-zero on any failure so
 the ``cve-refresh`` workflow can block a bad refresh.
@@ -40,6 +42,8 @@ DEFAULT_CVES_DETAIL_DIR = ROOT / "web" / "public" / "cve_packages"
 DEFAULT_MANUAL_MAPPINGS = ROOT / "mappings" / "manual.json"
 DEFAULT_MAPPING_CONTRIB_DIR = ROOT / "mappings" / "contributions"
 DEFAULT_MAPPINGS_BUNDLE = ROOT / "web" / "public" / "mappings.json"
+DEFAULT_MAPPINGS_INDEX = ROOT / "web" / "public" / "mappings-index.json"
+DEFAULT_MAPPINGS_DETAIL_DIR = ROOT / "web" / "public" / "mapping_packages"
 DEFAULT_QUEUE_DIR = ROOT / "mappings" / "cve_review_queue"
 DEFAULT_DRAFTS_DIR = ROOT / "mappings" / "cve_ai_drafts"
 
@@ -243,6 +247,58 @@ def validate_split_cves(index_path: Path, detail_dir: Path, errors: list[str]) -
     return True
 
 
+def validate_split_mappings(index_path: Path, detail_dir: Path, errors: list[str]) -> bool:
+    """Validate mappings-index.json plus sharded package detail files."""
+    if not index_path.exists():
+        return False
+    rel = index_path.relative_to(ROOT) if index_path.is_relative_to(ROOT) else index_path
+    try:
+        index = _load(index_path)
+    except json.JSONDecodeError as exc:
+        errors.append(f"{rel}: invalid JSON: {exc}")
+        return True
+    packages = index.get("packages")
+    if not isinstance(packages, dict):
+        errors.append(f"{rel}: packages must be an object")
+        return True
+    seen_detail_paths: set[str] = set()
+    for name, pkg_index in packages.items():
+        if not isinstance(pkg_index, dict):
+            errors.append(f"{rel}:{name}: index entry must be an object")
+            continue
+        detail_path = pkg_index.get("detail_path")
+        if not isinstance(detail_path, str):
+            errors.append(f"{rel}:{name}: detail_path is required")
+            continue
+        seen_detail_paths.add(detail_path)
+        path = ROOT / "web" / "public" / detail_path
+        drel = path.relative_to(ROOT) if path.is_relative_to(ROOT) else path
+        if not path.exists():
+            errors.append(f"{rel}:{name}: missing detail file {detail_path}")
+            continue
+        try:
+            detail = _load(path)
+        except json.JSONDecodeError as exc:
+            errors.append(f"{drel}: invalid JSON: {exc}")
+            continue
+        shard_packages = detail.get("packages")
+        if not isinstance(shard_packages, dict):
+            errors.append(f"{drel}: packages must be an object")
+            continue
+        package_detail = shard_packages.get(name)
+        if not isinstance(package_detail, dict):
+            errors.append(f"{drel}: missing package {name!r} referenced by index")
+            continue
+        if package_detail.get("name") != name:
+            errors.append(f"{drel}:{name}: detail name {package_detail.get('name')!r}, expected {name!r}")
+    if detail_dir.exists():
+        expected = {str((ROOT / "web" / "public" / p).resolve()) for p in seen_detail_paths}
+        for path in detail_dir.glob("*.json"):
+            if str(path.resolve()) not in expected:
+                errors.append(f"{path.relative_to(ROOT)}: stale detail file not referenced by index")
+    return True
+
+
 def validate_review_queue(queue_dir: Path, errors: list[str]) -> int:
     """Validate every AI review queue file. Returns the count checked."""
     if not queue_dir.exists():
@@ -297,6 +353,8 @@ def main() -> None:
     parser.add_argument("--cves-index", type=Path, default=DEFAULT_CVES_INDEX)
     parser.add_argument("--cves-detail-dir", type=Path, default=DEFAULT_CVES_DETAIL_DIR)
     parser.add_argument("--mappings", type=Path, default=DEFAULT_MAPPINGS_BUNDLE)
+    parser.add_argument("--mappings-index", type=Path, default=DEFAULT_MAPPINGS_INDEX)
+    parser.add_argument("--mappings-detail-dir", type=Path, default=DEFAULT_MAPPINGS_DETAIL_DIR)
     parser.add_argument(
         "--mapping-contributions", type=Path, default=DEFAULT_MAPPING_CONTRIB_DIR
     )
@@ -312,6 +370,9 @@ def main() -> None:
     has_split_cves = validate_split_cves(args.cves_index, args.cves_detail_dir, errors)
     has_mappings = validate_mapping_alternatives(
         args.manual_mappings, args.mapping_contributions, args.mappings, errors
+    )
+    has_split_mappings = validate_split_mappings(
+        args.mappings_index, args.mappings_detail_dir, errors
     )
     n_queue = validate_review_queue(args.queue_dir, errors)
     n_drafts = validate_ai_drafts(args.drafts_dir, errors)
@@ -329,7 +390,8 @@ def main() -> None:
         f"{n_drafts} AI draft(s) valid, "
         f"CVE bundle {'valid' if has_bundle else 'absent (skipped)'}, "
         f"split CVE payload {'valid' if has_split_cves else 'absent (skipped)'}, "
-        f"mapping removals {'valid' if has_mappings else 'absent (skipped)'}"
+        f"mapping removals {'valid' if has_mappings else 'absent (skipped)'}, "
+        f"split mapping payload {'valid' if has_split_mappings else 'absent (skipped)'}"
     )
 
 

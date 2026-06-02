@@ -71,6 +71,25 @@ export type PackageEntry = {
   } | null;
 };
 
+export type MappingPackageIndex = Pick<
+  PackageEntry,
+  | "name"
+  | "version"
+  | "purl"
+  | "type"
+  | "namespace"
+  | "pkg_name"
+  | "status"
+  | "download_count"
+  | "alternative_purls"
+  | "unmapped"
+  | "cpes"
+  | "deep_inspection"
+  | "auto"
+> & {
+  detail_path: string;
+};
+
 export type MappingsPayload = {
   schema_version: number;
   generated_at: string | null;
@@ -79,6 +98,10 @@ export type MappingsPayload = {
   channel: string;
   package_count: number;
   packages: Record<string, PackageEntry>;
+};
+
+export type MappingsIndexPayload = Omit<MappingsPayload, "packages"> & {
+  packages: Record<string, MappingPackageIndex>;
 };
 
 export type Edit = {

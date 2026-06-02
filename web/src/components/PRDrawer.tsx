@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { repoFullName } from "../config";
 import { purlFromAlternative, purlsFromAlternatives } from "../data/purlAlternatives";
 import { submitEditsAsPR } from "../github/api";
@@ -14,7 +14,8 @@ import {
 type Props = {
   theme: Theme;
   edits: Record<string, Edit>;
-  packages: PackageEntry[];
+  packages: Record<string, PackageEntry>;
+  ensurePackageDetail: (name: string) => Promise<PackageEntry>;
   onClose: () => void;
   onCommit: () => void;
   isLoggedIn: boolean;
@@ -34,6 +35,7 @@ export function PRDrawer({
   theme,
   edits,
   packages,
+  ensurePackageDetail,
   onClose,
   onCommit,
   isLoggedIn,
@@ -43,7 +45,7 @@ export function PRDrawer({
   token,
 }: Props) {
   const t = theme.t;
-  const editEntries = Object.entries(edits);
+  const editEntries = useMemo(() => Object.entries(edits), [edits]);
   const editsCount = editEntries.length;
 
   const [title, setTitle] = useState(
@@ -53,8 +55,40 @@ export function PRDrawer({
   const [committing, setCommitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [committed, setCommitted] = useState<Committed | null>(null);
+  const [detailPackages, setDetailPackages] = useState<Record<string, PackageEntry>>({});
+  const [loadingDetails, setLoadingDetails] = useState(false);
 
-  function generateBody(): string {
+  const allPackages = useMemo(
+    () => ({ ...packages, ...detailPackages }),
+    [packages, detailPackages],
+  );
+
+  const editedPackageNames = useMemo(() => editEntries.map(([id]) => id), [editEntries]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const missing = editedPackageNames.filter((name) => !allPackages[name]);
+    if (missing.length === 0) return;
+    setLoadingDetails(true);
+    Promise.all(missing.map((name) => ensurePackageDetail(name)))
+      .then((loaded) => {
+        if (cancelled) return;
+        setDetailPackages((prev) => {
+          const next = { ...prev };
+          for (const pkg of loaded) next[pkg.name] = pkg;
+          return next;
+        });
+      })
+      .catch((err) => setError(err instanceof Error ? err.message : String(err)))
+      .finally(() => {
+        if (!cancelled) setLoadingDetails(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [allPackages, editedPackageNames, ensurePackageDetail]);
+
+  function generateBody(packagesForBody = allPackages): string {
     const lines: string[] = [];
     // Headline summary: counts by transition so a reviewer can size up the
     // PR at a glance before scrolling.
@@ -62,7 +96,7 @@ export function PRDrawer({
     const bullets: string[] = [];
 
     for (const [id, e] of editEntries) {
-      const pkg = packages.find((p) => p.name === id);
+      const pkg = packagesForBody[id];
       if (!pkg) continue;
 
       // "Before" = whatever the merged dataset currently shows for this
@@ -168,13 +202,20 @@ export function PRDrawer({
     setCommitting(true);
     setError(null);
     try {
+      const loaded = await Promise.all(
+        editedPackageNames
+          .filter((name) => !allPackages[name])
+          .map((name) => ensurePackageDetail(name)),
+      );
+      const packagesForSubmit = { ...allPackages };
+      for (const pkg of loaded) packagesForSubmit[pkg.name] = pkg;
       const result = await submitEditsAsPR({
         token,
         user: { login: user.login },
-        packages,
+        packages: Object.values(packagesForSubmit),
         edits,
         title,
-        body: body.trim() === "" ? generateBody() : body,
+        body: body.trim() === "" ? generateBody(packagesForSubmit) : body,
       });
       setCommitted({
         number: result.pr.number,
@@ -263,7 +304,18 @@ export function PRDrawer({
         ) : (
           <>
             <div style={{ flex: 1, overflowY: "auto", padding: "12px 20px" }}>
-              {editEntries.length === 0 ? (
+              {loadingDetails ? (
+                <div
+                  style={{
+                    padding: 30,
+                    textAlign: "center",
+                    color: t.fg3,
+                    fontSize: 13,
+                  }}
+                >
+                  Loading package details…
+                </div>
+              ) : editEntries.length === 0 ? (
                 <div
                   style={{
                     padding: 30,
@@ -295,7 +347,7 @@ export function PRDrawer({
                     {editsCount} change{editsCount === 1 ? "" : "s"}
                   </div>
                   {editEntries.map(([id, e]) => {
-                    const pkg = packages.find((p) => p.name === id);
+                    const pkg = allPackages[id];
                     if (!pkg) return null;
 
                     // "Before" PURLs: whatever the package currently presents.
@@ -611,7 +663,7 @@ export function PRDrawer({
                     theme={theme}
                     variant="primary"
                     icon="pr"
-                    disabled={committing}
+                    disabled={committing || loadingDetails}
                     onClick={handleCommit}
                   >
                     {committing
