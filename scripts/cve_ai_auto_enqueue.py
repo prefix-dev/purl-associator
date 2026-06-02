@@ -205,9 +205,7 @@ def _load_human_covered_pairs(contrib_dir: Path) -> set[tuple[str, str]]:
         try:
             data = json.loads(path.read_text())
         except json.JSONDecodeError as exc:
-            console.log(
-                f"[yellow]skipping contribution {path.name}: {exc}[/yellow]"
-            )
+            console.log(f"[yellow]skipping contribution {path.name}: {exc}[/yellow]")
             continue
         if data.get("draft") is True:
             continue
@@ -344,12 +342,8 @@ def main(
         if existing is not None:
             cur_sev = _severity_snapshot(adv)
             cur_inp = _inputs_snapshot(auto_packages.get(package), pkg_file, adv)
-            sev_drift = _severity_changed(
-                existing.get("severity_seen") or {}, cur_sev
-            )
-            inp_drift = _inputs_changed(
-                existing.get("inputs_seen") or {}, cur_inp
-            )
+            sev_drift = _severity_changed(existing.get("severity_seen") or {}, cur_sev)
+            inp_drift = _inputs_changed(existing.get("inputs_seen") or {}, cur_inp)
             if not sev_drift and not inp_drift:
                 counts["already_drafted"] += 1
                 continue
@@ -400,7 +394,11 @@ def main(
     queue_dir.mkdir(parents=True, exist_ok=True)
     out = queue_dir / f"{ts}--{run_id}.json"
     out.write_text(json.dumps(payload, indent=2) + "\n")
-    console.log(f"Wrote [bold]{len(items)}[/] item(s) → {out.relative_to(ROOT)}")
+    try:
+        display = out.resolve().relative_to(ROOT)
+    except ValueError:
+        display = out
+    console.log(f"Wrote [bold]{len(items)}[/] item(s) → {display}")
 
 
 if __name__ == "__main__":

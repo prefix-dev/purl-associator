@@ -102,7 +102,11 @@ def main(
         )
         + "\n"
     )
-    print(f"queued {package} / {advisory} → {out.relative_to(ROOT)}")
+    try:
+        display = out.resolve().relative_to(ROOT)
+    except ValueError:
+        display = out
+    print(f"queued {package} / {advisory} → {display}")
 
 
 if __name__ == "__main__":

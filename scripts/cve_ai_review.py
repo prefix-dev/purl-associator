@@ -968,15 +968,11 @@ def _filter_items(
                     )
                     continue
                 cur_sev = _severity_snapshot(adv)
-                cur_inp = _inputs_snapshot(
-                    auto_packages.get(it.package), pkg_file, adv
-                )
+                cur_inp = _inputs_snapshot(auto_packages.get(it.package), pkg_file, adv)
                 sev_drift = _severity_changed(
                     existing.get("severity_seen") or {}, cur_sev
                 )
-                inp_drift = _inputs_changed(
-                    existing.get("inputs_seen") or {}, cur_inp
-                )
+                inp_drift = _inputs_changed(existing.get("inputs_seen") or {}, cur_inp)
                 if not sev_drift and not inp_drift:
                     skipped.append(
                         SkippedItem(
