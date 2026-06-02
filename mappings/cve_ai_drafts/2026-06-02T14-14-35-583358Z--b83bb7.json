@@ -885,6 +885,266 @@
         "level": null
       }
     },
+    "airflow-with-apache-kylin::PYSEC-2023-314": {
+      "advisory_id": "PYSEC-2023-314",
+      "affected_versions": {
+        "agrees_with_match": false,
+        "reasoning": "The OSV range covers all apache-airflow versions before 3.1.1, but the actual vulnerability is scoped to the Sqoop Provider package, not to core airflow or the Kylin provider. Neither 3.0.0 nor 3.0.1 of airflow-with-apache-kylin should be listed as affected since this conda artifact does not ship the vulnerable Sqoop provider code.",
+        "suggested_removes": [
+          "3.0.0",
+          "3.0.1"
+        ]
+      },
+      "inputs_seen": {
+        "hash": "9a7cd166521b95c88a3a83cb0e9313dc07047bc88b7212bf58c348730ac56d6f"
+      },
+      "notes": "The OSV record PYSEC-2023-314 appears to have been filed against the apache-airflow PyPI package rather than the provider-specific package (apache-airflow-providers-sqoop). This leads to false-positive matches against any conda package whose primary_purl is pkg:pypi/apache-airflow. The actual fix was in the Sqoop provider at PR #29500. Downstream tooling should ideally scope this CVE to apache-airflow-providers-sqoop only.",
+      "openvex_action_statement": null,
+      "openvex_impact_statement": "The vulnerability is in the Apache Airflow Sqoop Provider (apache-airflow-providers-sqoop), which is a separate package and is not included in or depended upon by airflow-with-apache-kylin. The Kylin provider does not contain Sqoop operator code.",
+      "openvex_justification": "vulnerable_code_not_present",
+      "openvex_status": "not_affected",
+      "package": "airflow-with-apache-kylin",
+      "prompt_version": "2026-06-02.openvex-status-history-v1",
+      "rationale": "CVE-2023-25693 is a vulnerability in the Apache Airflow Sqoop Provider (apache-airflow-providers-sqoop), not in the core apache-airflow package or the Apache Kylin provider. The OSV record for PYSEC-2023-314 has been incorrectly attributed to the top-level apache-airflow package ecosystem entry, but the actual advisory text and fix (PR #29500) clearly state this affects 'Apache Airflow Sqoop Provider versions before 3.1.1'. The conda package under review is airflow-with-apache-kylin, which is the Kylin provider extras metapackage for apache-airflow \u2014 it does not bundle or depend on the Sqoop provider. Therefore the vulnerable code path (Sqoop operator input validation) is not present in this conda artifact. The affected_versions list showing 3.0.0 and 3.0.1 of the core airflow package is a result of the OSV range being overly broad (applied to apache-airflow as a whole rather than scoped to the Sqoop provider package), and should not apply to this artifact.",
+      "runtime_applicability": {
+        "applies": "no",
+        "reasoning": "The vulnerable component is the Sqoop Provider for Airflow, which handles input validation in Sqoop-related operators. The airflow-with-apache-kylin package is a metapackage that pulls in the Apache Kylin provider extras; it does not include the Sqoop provider, so the vulnerable code is never present in this artifact's runtime environment."
+      },
+      "severity_in_conda_context": {
+        "assessment": "lower",
+        "reasoning": "Since the vulnerable Sqoop provider code is not present in airflow-with-apache-kylin, the effective severity for this package is none. The CVSS 9.8 score applies only to deployments that have the Sqoop provider installed and configured, which is not the case for this conda artifact."
+      },
+      "severity_seen": {
+        "cvss": 9.8,
+        "level": null
+      }
+    },
+    "airflow-with-apache-livy::PYSEC-2023-314": {
+      "advisory_id": "PYSEC-2023-314",
+      "affected_versions": {
+        "agrees_with_match": false,
+        "reasoning": "The OSV range 'introduced: 0, fixed: 3.1.1' applies to the apache-airflow PyPI ecosystem broadly, but the vulnerability is scoped to the Sqoop provider, not core Airflow. Since airflow-with-apache-livy does not include the Sqoop provider, neither 3.0.0 nor 3.0.1 should be listed as affected for this conda artifact. Both should be removed from the affected set.",
+        "suggested_removes": [
+          "3.0.0",
+          "3.0.1"
+        ]
+      },
+      "inputs_seen": {
+        "hash": "c31835a2b40e4bf47ba907a8536ec91430d8b0862804dc891d06a738940ade67"
+      },
+      "notes": "The OSV record's affected versions list is over-broad \u2014 it enumerates all apache-airflow releases rather than apache-airflow-providers-sqoop releases, which is the actual affected package. Maintainers should verify that the PYSEC record is correctly scoped; this mismatch is likely the source of the erroneous match against airflow-with-apache-livy.",
+      "openvex_action_statement": null,
+      "openvex_impact_statement": "The vulnerability is in the Apache Airflow Sqoop Provider (apache-airflow-providers-sqoop), which is not included in or required by the airflow-with-apache-livy conda-forge package. The Livy provider variant does not ship or depend on the Sqoop provider, so the vulnerable code is absent from this artifact.",
+      "openvex_justification": "vulnerable_code_not_present",
+      "openvex_status": "not_affected",
+      "package": "airflow-with-apache-livy",
+      "prompt_version": "2026-06-02.openvex-status-history-v1",
+      "rationale": "CVE-2023-25693 / PYSEC-2023-314 describes an Improper Input Validation vulnerability specifically in the Apache Airflow *Sqoop Provider* (apache-airflow-providers-sqoop), not in the core apache-airflow package itself. The fix referenced (PR #29500) is in the Sqoop provider code. The conda artifact under review is 'airflow-with-apache-livy', which is the Airflow distribution with the Apache Livy provider, not the Sqoop provider. The OSV record's ECOSYSTEM range sweeps all apache-airflow versions before 3.1.1, which is over-broad because the vulnerability is provider-specific: even if a given core Airflow version is listed, it is only affected when the Sqoop provider is installed and used. The airflow-with-apache-livy conda package does not bundle or depend on the Sqoop provider, so the vulnerable code path is not present in this artifact. Accordingly, the affected_versions list (3.0.0, 3.0.1) derived from the broad OSV range should not apply to this specific conda package.",
+      "runtime_applicability": {
+        "applies": "no",
+        "reasoning": "The vulnerable component is the Sqoop provider for Airflow. The airflow-with-apache-livy package only pulls in the Apache Livy provider. The Sqoop provider module is not installed or importable in this package variant, so the vulnerable code cannot execute at runtime."
+      },
+      "severity_in_conda_context": {
+        "assessment": "lower",
+        "reasoning": "Although the upstream CVSS score is 9.8 (Critical) for the Sqoop provider vulnerability, this score is irrelevant for airflow-with-apache-livy because the Sqoop provider is entirely absent. The effective severity for this conda package is none/not applicable."
+      },
+      "severity_seen": {
+        "cvss": 9.8,
+        "level": null
+      }
+    },
+    "airflow-with-apache-pig::PYSEC-2023-314": {
+      "advisory_id": "PYSEC-2023-314",
+      "affected_versions": {
+        "agrees_with_match": false,
+        "reasoning": "The OSV range 'introduced: 0, fixed: 3.1.1' is scoped to the apache-airflow core package but the actual vulnerability is in the separate Sqoop provider. airflow-with-apache-pig does not include the Sqoop provider, so no versions of this conda package should be listed as affected. Both matched versions (3.0.0, 3.0.1) should be removed.",
+        "suggested_removes": [
+          "3.0.0",
+          "3.0.1"
+        ]
+      },
+      "inputs_seen": {
+        "hash": "badefde38991aee6c802c00f26d3ca74bf35f51d4a06c7357b0088b8c470f724"
+      },
+      "notes": "The OSV record appears to have been filed against the top-level apache-airflow package rather than the specific apache-airflow-providers-apache-sqoop package, causing false-positive matches for all Airflow extras variants that do not include the Sqoop provider. This match should be dismissed for airflow-with-apache-pig.",
+      "openvex_action_statement": null,
+      "openvex_impact_statement": "The vulnerability is in the apache-airflow-providers-apache-sqoop provider package, which is not included as a dependency of the airflow-with-apache-pig conda-forge artifact. The Pig extras variant does not vendor or install the Sqoop provider, so the vulnerable code is not present in this package.",
+      "openvex_justification": "vulnerable_code_not_present",
+      "openvex_status": "not_affected",
+      "package": "airflow-with-apache-pig",
+      "prompt_version": "2026-06-02.openvex-status-history-v1",
+      "rationale": "CVE-2023-25693 / PYSEC-2023-314 concerns an Improper Input Validation vulnerability specifically in the Apache Airflow **Sqoop Provider** (apache-airflow-providers-apache-sqoop), fixed in that provider at version 3.1.1. The package under review is `airflow-with-apache-pig`, which is an Airflow meta-package that installs the Apache Pig provider extras, not the Sqoop provider. The OSV record's affected range covers the core `apache-airflow` package broadly (introduced 0, fixed 3.1.1), but the actual vulnerability lives in a separate provider package (`apache-airflow-providers-apache-sqoop`) that is not a dependency of the Pig extras variant. The conda-forge `airflow-with-apache-pig` feedstock does not pull in the Sqoop provider, so the vulnerable code path is simply not present in this artifact. The auto-derived `affected_versions` list (3.0.0, 3.0.1) therefore reflects an over-broad OSV range that should not apply to this specific conda package.",
+      "runtime_applicability": {
+        "applies": "no",
+        "reasoning": "The vulnerable module belongs to apache-airflow-providers-apache-sqoop, which is not installed or vendored by the airflow-with-apache-pig package. The Pig provider extras have no dependency on the Sqoop provider, so the vulnerable code is never on the import path at runtime."
+      },
+      "severity_in_conda_context": {
+        "assessment": "lower",
+        "reasoning": "Because the Sqoop provider is entirely absent from this conda artifact, the effective severity for airflow-with-apache-pig is zero regardless of the upstream CVSS 9.8 score assigned to the Sqoop provider vulnerability."
+      },
+      "severity_seen": {
+        "cvss": 9.8,
+        "level": null
+      }
+    },
+    "airflow-with-apache-pinot::PYSEC-2023-314": {
+      "advisory_id": "PYSEC-2023-314",
+      "affected_versions": {
+        "agrees_with_match": false,
+        "reasoning": "The OSV range 'introduced: 0, fixed: 3.1.1' is attached to the base apache-airflow package but the actual vulnerability is in the Sqoop provider (a distinct distribution). The conda-forge versions 3.0.0 and 3.0.1 listed as affected correspond to core Airflow releases, not to the Sqoop provider version. Since airflow-with-apache-pinot does not include the Sqoop provider, both listed versions should be removed from the affected set.",
+        "suggested_removes": [
+          "3.0.0",
+          "3.0.1"
+        ]
+      },
+      "inputs_seen": {
+        "hash": "4e8d84b2d6f45bd83ae1914f29b6ebfe6f000b5f8b5084916208b7a1fc380014"
+      },
+      "notes": "The OSV record PYSEC-2023-314 is misattributed to the base apache-airflow package rather than to apache-airflow-providers-sqoop. Matching logic that simply checks the apache-airflow PyPI package will produce many false positives across all Airflow provider extras. The correct fix target is the Sqoop provider package. The PR reference (https://github.com/apache/airflow/pull/29500) confirms the fix was in the Sqoop provider code, not in core Airflow.",
+      "openvex_action_statement": null,
+      "openvex_impact_statement": "The vulnerability is in the Apache Airflow Sqoop Provider (apache-airflow-providers-sqoop), which is a separate package not included in or required by airflow-with-apache-pinot. The Pinot provider extra does not vendor or depend on the Sqoop provider, so the vulnerable code path is entirely absent from this conda artifact.",
+      "openvex_justification": "vulnerable_code_not_present",
+      "openvex_status": "not_affected",
+      "package": "airflow-with-apache-pinot",
+      "prompt_version": "2026-06-02.openvex-status-history-v1",
+      "rationale": "CVE-2023-25693 describes an Improper Input Validation vulnerability in the Apache Airflow Sqoop Provider (apache-airflow-providers-sqoop), specifically affecting versions of that provider before 3.1.1. The OSV record is attached to the base apache-airflow package and lists an overly broad affected range (introduced: 0, fixed: 3.1.1), which appears to conflate the provider's version scheme with the core Airflow version scheme. The conda package under review is 'airflow-with-apache-pinot', which is the Apache Pinot provider extra for Airflow \u2014 it does not include or install the Sqoop provider. Because the vulnerable code lives in the Sqoop provider (a separately distributed package, apache-airflow-providers-sqoop), it is not present in the airflow-with-apache-pinot conda artifact. The affected_versions list includes 3.0.0 and 3.0.1, but these refer to the core apache-airflow version numbering, not to the Sqoop provider's version; the mismatch further confirms this is an over-broad OSV match. Therefore this advisory should not apply to the airflow-with-apache-pinot package.",
+      "runtime_applicability": {
+        "applies": "no",
+        "reasoning": "The Sqoop provider is a separately installed plugin package (apache-airflow-providers-sqoop). The airflow-with-apache-pinot conda package installs the Apache Pinot provider extras and does not pull in or vendor the Sqoop provider. No Sqoop code is present in this artifact's runtime environment."
+      },
+      "severity_in_conda_context": {
+        "assessment": "lower",
+        "reasoning": "While the upstream CVSS score is 9.8 (Critical), the vulnerability is entirely inapplicable to this conda artifact because the vulnerable Sqoop provider code is not present. The effective severity for users of airflow-with-apache-pinot is zero."
+      },
+      "severity_seen": {
+        "cvss": 9.8,
+        "level": null
+      }
+    },
+    "airflow-with-apache-spark::PYSEC-2023-314": {
+      "advisory_id": "PYSEC-2023-314",
+      "affected_versions": {
+        "agrees_with_match": false,
+        "reasoning": "The OSV range incorrectly maps this Sqoop Provider vulnerability to the core apache-airflow package. Since the vulnerable component (apache-airflow-providers-sqoop) is not part of the airflow-with-apache-spark artifact, both listed conda affected versions (3.0.0 and 3.0.1) should be removed from the affected set for this package.",
+        "suggested_removes": [
+          "3.0.0",
+          "3.0.1"
+        ]
+      },
+      "inputs_seen": {
+        "hash": "30d1cad2425022fe4987baaba5fe2b4f3b3b34f270f1417b66c71a45151ac921"
+      },
+      "notes": "The OSV advisory database appears to have incorrectly mapped this Sqoop Provider CVE to the core apache-airflow package. The correct affected package should be apache-airflow-providers-sqoop. Maintainers should consider flagging this mapping error upstream to the PyPA advisory database. The 'affects_future: True' flag is also misleading for the same reason.",
+      "openvex_action_statement": null,
+      "openvex_impact_statement": "The vulnerability is in the Apache Airflow Sqoop Provider (apache-airflow-providers-sqoop), which is a separate package not included in the airflow-with-apache-spark conda-forge artifact. The Sqoop Provider code is not present in this package and therefore this CVE does not apply.",
+      "openvex_justification": "vulnerable_code_not_present",
+      "openvex_status": "not_affected",
+      "package": "airflow-with-apache-spark",
+      "prompt_version": "2026-06-02.openvex-status-history-v1",
+      "rationale": "CVE-2023-25693 (PYSEC-2023-314) describes an Improper Input Validation vulnerability specifically in the Apache Airflow Sqoop Provider, not in the core apache-airflow package. The OSV record's affected range ('introduced': '0', 'fixed': '3.1.1') applies to the PyPI package 'apache-airflow', but the advisory text explicitly states 'This issue affects Apache Airflow Sqoop Provider versions before 3.1.1.' The Sqoop Provider is a separate PyPI distribution (apache-airflow-providers-sqoop) that is not bundled with the core airflow package or with the airflow-with-apache-spark conda-forge package. The conda package under review (airflow-with-apache-spark) provides Spark integration, not Sqoop integration, so the vulnerable Sqoop Provider code is not present in this artifact. The OSV range attribution to 'apache-airflow' core appears to be an over-broad mapping error in the advisory database; the fix PR (#29500) targets the Sqoop Provider, not core Airflow.",
+      "runtime_applicability": {
+        "applies": "no",
+        "reasoning": "The vulnerable code is in the Sqoop Provider, a separately distributed package (apache-airflow-providers-sqoop). The airflow-with-apache-spark package includes Spark-related providers, not Sqoop, so the vulnerable input validation code path is never executed in this artifact."
+      },
+      "severity_in_conda_context": {
+        "assessment": "lower",
+        "reasoning": "Even if Sqoop Provider were somehow present, the CVSS 9.8 critical score is assigned to the core apache-airflow package in the OSV record due to the erroneous mapping. Since this specific conda artifact does not include the Sqoop Provider at all, the effective severity is not applicable (zero risk from this CVE in this package)."
+      },
+      "severity_seen": {
+        "cvss": 9.8,
+        "level": null
+      }
+    },
+    "airflow-with-apache-webhdfs::GHSA-7wqf-h36w-47mc": {
+      "advisory_id": "GHSA-7wqf-h36w-47mc",
+      "affected_versions": {
+        "agrees_with_match": true,
+        "reasoning": "The OSV range is [0, 2.3.0) fixed, and the conda affected_versions correctly lists 2.0.1 through 2.2.5, which are the conda-forge releases in that window. No adds or removes are needed."
+      },
+      "inputs_seen": {
+        "hash": "59cfd9e4f74ae6123dd6384ac1c03c471504450f058a7f0ae4d2e49075192b65"
+      },
+      "notes": "The vulnerability requires the Pinot Provider to be installed. Users of airflow-with-apache-webhdfs who have not separately installed apache-airflow-providers-apache-pinot are not directly exposed. Historical conda builds < 2.3.0 are technically in the affected range if Pinot Provider is added.",
+      "openvex_action_statement": "Upgrade airflow-with-apache-webhdfs to version 2.3.0 or later (latest conda-forge version 3.0.1 is not affected). Note that this vulnerability is specifically triggered by the Apache Airflow Pinot Provider; if you are not using the Pinot Provider, your risk is substantially reduced, but upgrading is still strongly recommended.",
+      "openvex_impact_statement": null,
+      "openvex_justification": null,
+      "openvex_status": "affected",
+      "package": "airflow-with-apache-webhdfs",
+      "prompt_version": "2026-06-02.openvex-status-history-v1",
+      "rationale": "This advisory covers an OS command injection vulnerability in the Apache Airflow Pinot Provider that affects apache-airflow versions prior to 2.3.0. The conda-forge package airflow-with-apache-webhdfs is currently at version 3.0.1, which is well above the fixed version of 2.3.0. The auto-derived affected_versions set lists conda-shipped versions 2.0.1 through 2.2.5, which correctly align with the OSV range of [0, 2.3.0). However, the vulnerability is specifically tied to the Pinot Provider being installed alongside Airflow; the airflow-with-apache-webhdfs package is a different extras variant (WebHDFS, not Pinot), so the Pinot-specific code path is not bundled in this conda artifact. The current latest conda-forge version 3.0.1 is well past the fixed point, but historical conda-forge builds in the 2.x range remain in the affected window and should be flagged for upgrade.",
+      "runtime_applicability": {
+        "applies": "partial",
+        "reasoning": "The vulnerability is in the Pinot Provider, not in the core Airflow or WebHDFS provider. The airflow-with-apache-webhdfs package does not bundle the Pinot Provider, so the specific vulnerable code path is not present unless the Pinot Provider is separately installed. However, the OSV advisory notes that any Airflow < 2.3.0 is affected if the Pinot Provider happens to be installed alongside."
+      },
+      "severity_in_conda_context": {
+        "assessment": "lower",
+        "reasoning": "The CVSS score of 9.8 CRITICAL assumes the Pinot Provider is installed. Since this conda package is the WebHDFS extras variant, the Pinot Provider is not a direct dependency, making exploitation less likely in typical deployments unless the user has separately installed the Pinot Provider."
+      },
+      "severity_seen": {
+        "cvss": 9.8,
+        "level": "CRITICAL"
+      }
+    },
+    "airflow-with-apache-webhdfs::GHSA-c732-xvv8-g94c": {
+      "advisory_id": "GHSA-c732-xvv8-g94c",
+      "affected_versions": {
+        "agrees_with_match": true,
+        "reasoning": "The OSV range for apache-airflow is [0, 2.5.1) fixed. The conda affected_versions list (2.0.1 through 2.5.0) correctly captures the conda-forge releases in that window. The MySQL Provider range is a separate package not bundled here."
+      },
+      "inputs_seen": {
+        "hash": "2fb93668f4c5ef0c07cf7f5419d182e512b315200b2cb5cadcaf0440b7c147a0"
+      },
+      "notes": "Two separate affected packages are listed in the OSV record: apache-airflow (fixed at 2.5.1) and apache-airflow-providers-mysql (fixed at 4.0.0). Only the core Airflow component is relevant to this conda package.",
+      "openvex_action_statement": "Upgrade airflow-with-apache-webhdfs to version 2.5.1 or later (latest conda-forge version 3.0.1 is not affected). The MySQL Provider component of this CVE does not apply to this package variant, but the core Airflow command injection vulnerability does affect versions prior to 2.5.1.",
+      "openvex_impact_statement": null,
+      "openvex_justification": null,
+      "openvex_status": "affected",
+      "package": "airflow-with-apache-webhdfs",
+      "prompt_version": "2026-06-02.openvex-status-history-v1",
+      "rationale": "This advisory describes a command injection vulnerability in Apache Airflow core (fixed in 2.5.1) and Apache Airflow MySQL Provider (fixed in 4.0.0). The conda-forge airflow-with-apache-webhdfs package is currently at version 3.0.1, which is above the 2.5.1 fix point for the core Airflow component. The auto-derived affected_versions set (2.0.1 through 2.5.0) correctly maps to the OSV ECOSYSTEM range of [0, 2.5.1). The airflow-with-apache-webhdfs package is the WebHDFS extras variant and does not bundle the MySQL provider, so the MySQL Provider component of this CVE is not directly applicable. The core Airflow command injection affects all those historical conda builds, and upgrading to 2.5.1+ (latest 3.0.1) resolves the core issue.",
+      "runtime_applicability": {
+        "applies": "partial",
+        "reasoning": "The core Airflow command injection vulnerability (prior to 2.5.1) is runtime-applicable to all Airflow deployments. The MySQL Provider-specific portion of this CVE does not apply since airflow-with-apache-webhdfs does not include the MySQL provider. The WebHDFS provider itself is not implicated in this CVE."
+      },
+      "severity_in_conda_context": {
+        "assessment": "lower",
+        "reasoning": "The CVSS 9.8 CRITICAL score accounts for both the core Airflow and MySQL Provider vulnerabilities. Since the MySQL Provider is not bundled in this conda variant, the effective attack surface is somewhat reduced, though the core Airflow command injection remains serious for any version prior to 2.5.1."
+      },
+      "severity_seen": {
+        "cvss": 9.8,
+        "level": "CRITICAL"
+      }
+    },
+    "airflow-with-apache-webhdfs::GHSA-rmf2-pwfq-h75j": {
+      "advisory_id": "GHSA-rmf2-pwfq-h75j",
+      "affected_versions": {
+        "agrees_with_match": true,
+        "reasoning": "The OSV range is [0, 2.3.0) fixed. The conda affected_versions list (2.0.1 through 2.2.5) correctly captures the conda-forge releases within that range. No modifications are needed."
+      },
+      "inputs_seen": {
+        "hash": "89b0cd86ad498e86d13dc7d8daad71895faa87df36d58c2d7534bc46a36877e2"
+      },
+      "notes": "Structurally similar to GHSA-7wqf-h36w-47mc (Pinot Provider). Both advisories affect Airflow < 2.3.0 when the respective provider is installed. The Pig and Pinot Providers are not part of the airflow-with-apache-webhdfs extras variant.",
+      "openvex_action_statement": "Upgrade airflow-with-apache-webhdfs to version 2.3.0 or later (latest conda-forge version 3.0.1 is not affected). This vulnerability specifically requires the Apache Airflow Pig Provider to be installed; if you are not using the Pig Provider, your exposure is substantially reduced, but upgrading is still strongly recommended.",
+      "openvex_impact_statement": null,
+      "openvex_justification": null,
+      "openvex_status": "affected",
+      "package": "airflow-with-apache-webhdfs",
+      "prompt_version": "2026-06-02.openvex-status-history-v1",
+      "rationale": "This advisory covers an OS command injection vulnerability in the Apache Airflow Pig Provider that affects apache-airflow versions prior to 2.3.0. The conda-forge airflow-with-apache-webhdfs package is currently at version 3.0.1, well above the fixed point of 2.3.0. The auto-derived affected_versions set (2.0.1 through 2.2.5) correctly aligns with the OSV ECOSYSTEM range of [0, 2.3.0). Like the Pinot Provider advisory (GHSA-7wqf-h36w-47mc), this vulnerability is specifically tied to the Pig Provider being installed alongside Airflow; the airflow-with-apache-webhdfs package is a different extras variant that does not bundle the Pig Provider. Historical conda-forge builds of this package in the 2.0.x\u20132.2.x range are in scope if the Pig Provider is separately installed.",
+      "runtime_applicability": {
+        "applies": "partial",
+        "reasoning": "The vulnerability resides in the Pig Provider, not in core Airflow or the WebHDFS provider. The airflow-with-apache-webhdfs conda package does not include the Pig Provider as a bundled dependency. Exploitation requires the Pig Provider to be separately installed alongside Airflow < 2.3.0."
+      },
+      "severity_in_conda_context": {
+        "assessment": "lower",
+        "reasoning": "The CVSS 9.8 CRITICAL severity presupposes the Pig Provider is installed and in use. Since this conda variant bundles WebHDFS rather than Pig, the Pig Provider would need to be separately installed for the vulnerability to be exploitable, reducing the practical severity for typical deployments of this package."
+      },
+      "severity_seen": {
+        "cvss": 9.8,
+        "level": "CRITICAL"
+      }
+    },
     "codechecker::GHSA-f3f8-vx3w-hp5q": {
       "advisory_id": "GHSA-f3f8-vx3w-hp5q",
       "affected_versions": {
@@ -1333,7 +1593,7 @@
   },
   "backend": "api",
   "draft": true,
-  "generated_at": "2026-06-02T14:17:58+00:00",
+  "generated_at": "2026-06-02T14:18:40+00:00",
   "model": "claude-sonnet-4-6",
   "openvex": {
     "@context": "https://openvex.dev/ns/v0.2.0",
@@ -1348,7 +1608,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-mw26-5g2v-hqw3"
         }
@@ -1361,7 +1621,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-mw26-5g2v-hqw3"
         }
@@ -1374,7 +1634,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-mw26-5g2v-hqw3"
         }
@@ -1387,7 +1647,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-mw26-5g2v-hqw3"
         }
@@ -1400,7 +1660,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-mw26-5g2v-hqw3"
         }
@@ -1413,7 +1673,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-mw26-5g2v-hqw3"
         }
@@ -1426,7 +1686,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -1439,7 +1699,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-r23q-823p-vmf7"
         }
@@ -1452,7 +1712,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-554w-xh4j-8w64"
         }
@@ -1465,7 +1725,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-5p3h-7fwh-92rc"
         }
@@ -1478,7 +1738,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-5q6c-ffvg-xcm9"
         }
@@ -1491,7 +1751,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-f798-qm4r-23r5"
         }
@@ -1504,7 +1764,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-fmxj-6h9g-6vw3"
         }
@@ -1517,7 +1777,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-r23q-823p-vmf7"
         }
@@ -1530,7 +1790,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-7p94-766c-hgjp"
         }
@@ -1543,7 +1803,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2026-99"
         }
@@ -1556,7 +1816,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-hj4w-hm2g-p6w5"
         }
@@ -1569,7 +1829,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-hj4w-hm2g-p6w5"
         }
@@ -1582,7 +1842,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-hj4w-hm2g-p6w5"
         }
@@ -1595,7 +1855,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-hj4w-hm2g-p6w5"
         }
@@ -1608,7 +1868,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-hj4w-hm2g-p6w5"
         }
@@ -1621,7 +1881,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-hj4w-hm2g-p6w5"
         }
@@ -1634,7 +1894,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-hj4w-hm2g-p6w5"
         }
@@ -1647,7 +1907,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-hj4w-hm2g-p6w5"
         }
@@ -1660,7 +1920,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-hj4w-hm2g-p6w5"
         }
@@ -1673,7 +1933,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-hj4w-hm2g-p6w5"
         }
@@ -1686,7 +1946,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-hj4w-hm2g-p6w5"
         }
@@ -1699,7 +1959,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-hj4w-hm2g-p6w5"
         }
@@ -1712,7 +1972,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-f3f8-vx3w-hp5q"
         }
@@ -1725,7 +1985,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-329j-jfvr-rhr6"
         }
@@ -1739,7 +1999,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -1752,7 +2012,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -1765,7 +2025,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -1778,7 +2038,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -1791,7 +2051,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -1804,7 +2064,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -1817,7 +2077,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -1830,7 +2090,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -1843,7 +2103,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -1856,7 +2116,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -1869,7 +2129,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -1882,7 +2142,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -1896,7 +2156,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -1909,7 +2169,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -1922,7 +2182,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -1935,7 +2195,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-mxvw-cj37-8g2h"
         }
@@ -1948,7 +2208,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-mxvw-cj37-8g2h"
         }
@@ -1961,7 +2221,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-mxvw-cj37-8g2h"
         }
@@ -1974,7 +2234,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-mxvw-cj37-8g2h"
         }
@@ -1987,7 +2247,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-mxvw-cj37-8g2h"
         }
@@ -2000,7 +2260,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-mxvw-cj37-8g2h"
         }
@@ -2013,7 +2273,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-mxvw-cj37-8g2h"
         }
@@ -2026,7 +2286,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-mxvw-cj37-8g2h"
         }
@@ -2039,7 +2299,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-mxvw-cj37-8g2h"
         }
@@ -2052,7 +2312,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-mxvw-cj37-8g2h"
         }
@@ -2065,7 +2325,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-mxvw-cj37-8g2h"
         }
@@ -2078,7 +2338,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-mxvw-cj37-8g2h"
         }
@@ -2091,7 +2351,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-mxvw-cj37-8g2h"
         }
@@ -2104,7 +2364,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-mxvw-cj37-8g2h"
         }
@@ -2117,7 +2377,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-mxvw-cj37-8g2h"
         }
@@ -2130,7 +2390,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-mxvw-cj37-8g2h"
         }
@@ -2143,7 +2403,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-mxvw-cj37-8g2h"
         }
@@ -2156,7 +2416,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-mxvw-cj37-8g2h"
         }
@@ -2169,7 +2429,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-mxvw-cj37-8g2h"
         }
@@ -2182,7 +2442,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-mxvw-cj37-8g2h"
         }
@@ -2195,7 +2455,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-mxvw-cj37-8g2h"
         }
@@ -2208,7 +2468,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-mxvw-cj37-8g2h"
         }
@@ -2221,7 +2481,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-mxvw-cj37-8g2h"
         }
@@ -2234,7 +2494,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-mxvw-cj37-8g2h"
         }
@@ -2248,7 +2508,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2261,7 +2521,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2274,7 +2534,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2288,7 +2548,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2301,7 +2561,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2314,7 +2574,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2327,7 +2587,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2340,7 +2600,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2353,7 +2613,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2366,7 +2626,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2379,7 +2639,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2392,7 +2652,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2406,7 +2666,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2419,7 +2679,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2432,7 +2692,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2444,7 +2704,7 @@
           }
         ],
         "status": "under_investigation",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2457,7 +2717,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2470,7 +2730,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2483,7 +2743,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2496,7 +2756,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2509,7 +2769,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2522,7 +2782,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2535,7 +2795,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2549,7 +2809,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2562,7 +2822,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2575,7 +2835,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2588,7 +2848,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2601,7 +2861,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2614,7 +2874,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2627,7 +2887,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2640,7 +2900,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2653,7 +2913,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2666,7 +2926,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2679,7 +2939,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2692,7 +2952,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2705,7 +2965,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2718,7 +2978,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2731,7 +2991,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2744,7 +3004,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2757,7 +3017,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2770,7 +3030,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2783,7 +3043,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2796,7 +3056,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2809,7 +3069,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2822,7 +3082,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2835,7 +3095,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2848,7 +3108,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2861,7 +3121,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2874,7 +3134,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2887,7 +3147,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2900,7 +3160,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2913,7 +3173,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2926,7 +3186,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2939,7 +3199,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2952,7 +3212,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2965,7 +3225,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2978,7 +3238,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -2991,7 +3251,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3004,7 +3264,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3017,7 +3277,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3030,7 +3290,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3043,7 +3303,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3056,7 +3316,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3069,7 +3329,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3082,7 +3342,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3095,7 +3355,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3108,7 +3368,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3121,7 +3381,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3134,7 +3394,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3147,7 +3407,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3160,7 +3420,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3173,7 +3433,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3186,7 +3446,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3199,7 +3459,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3213,7 +3473,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3226,7 +3486,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3239,7 +3499,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3252,7 +3512,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3265,7 +3525,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3278,7 +3538,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3291,7 +3551,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3304,7 +3564,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3317,7 +3577,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3330,7 +3590,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3343,7 +3603,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3356,7 +3616,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3369,7 +3629,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3382,7 +3642,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3395,7 +3655,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3408,7 +3668,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-7wqf-h36w-47mc"
         }
@@ -3421,7 +3681,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-c732-xvv8-g94c"
         }
@@ -3434,7 +3694,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-rmf2-pwfq-h75j"
         }
@@ -3448,7 +3708,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3461,7 +3721,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3474,7 +3734,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3487,7 +3747,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-7wqf-h36w-47mc"
         }
@@ -3500,7 +3760,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-7wqf-h36w-47mc"
         }
@@ -3513,7 +3773,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-7wqf-h36w-47mc"
         }
@@ -3526,7 +3786,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-c732-xvv8-g94c"
         }
@@ -3539,7 +3799,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-c732-xvv8-g94c"
         }
@@ -3552,7 +3812,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-c732-xvv8-g94c"
         }
@@ -3565,7 +3825,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-c732-xvv8-g94c"
         }
@@ -3578,7 +3838,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-c732-xvv8-g94c"
         }
@@ -3591,7 +3851,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-c732-xvv8-g94c"
         }
@@ -3604,7 +3864,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-c732-xvv8-g94c"
         }
@@ -3617,7 +3877,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-c732-xvv8-g94c"
         }
@@ -3630,7 +3890,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-c732-xvv8-g94c"
         }
@@ -3643,7 +3903,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-c732-xvv8-g94c"
         }
@@ -3656,7 +3916,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-c732-xvv8-g94c"
         }
@@ -3669,7 +3929,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-c732-xvv8-g94c"
         }
@@ -3682,7 +3942,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-c732-xvv8-g94c"
         }
@@ -3695,7 +3955,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-rmf2-pwfq-h75j"
         }
@@ -3708,7 +3968,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-rmf2-pwfq-h75j"
         }
@@ -3721,7 +3981,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "GHSA-rmf2-pwfq-h75j"
         }
@@ -3735,7 +3995,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3748,7 +4008,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3761,7 +4021,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3775,7 +4035,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3788,7 +4048,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3801,7 +4061,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3815,7 +4075,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3828,7 +4088,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3841,7 +4101,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3855,7 +4115,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3868,7 +4128,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3881,7 +4141,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3895,7 +4155,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3908,7 +4168,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3921,7 +4181,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3935,7 +4195,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3948,7 +4208,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3961,7 +4221,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3975,7 +4235,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -3988,7 +4248,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
@@ -4001,13 +4261,252 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-02T14:17:58+00:00",
+        "timestamp": "2026-06-02T14:18:40+00:00",
         "vulnerability": {
           "name": "PYSEC-2023-314"
         }
+      },
+      {
+        "impact_statement": "The vulnerability is in the Apache Airflow Sqoop Provider (apache-airflow-providers-sqoop), which is a separate package and is not included in or depended upon by airflow-with-apache-kylin. The Kylin provider does not contain Sqoop operator code.",
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-apache-kylin?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-02T14:18:40+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-apache-kylin@3.0.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-02T14:18:40+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-apache-kylin@3.0.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-02T14:18:40+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "impact_statement": "The vulnerability is in the Apache Airflow Sqoop Provider (apache-airflow-providers-sqoop), which is not included in or required by the airflow-with-apache-livy conda-forge package. The Livy provider variant does not ship or depend on the Sqoop provider, so the vulnerable code is absent from this artifact.",
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-apache-livy?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-02T14:18:40+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-apache-livy@3.0.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-02T14:18:40+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-apache-livy@3.0.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-02T14:18:40+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "impact_statement": "The vulnerability is in the apache-airflow-providers-apache-sqoop provider package, which is not included as a dependency of the airflow-with-apache-pig conda-forge artifact. The Pig extras variant does not vendor or install the Sqoop provider, so the vulnerable code is not present in this package.",
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-apache-pig?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-02T14:18:40+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-apache-pig@3.0.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-02T14:18:40+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-apache-pig@3.0.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-02T14:18:40+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "impact_statement": "The vulnerability is in the Apache Airflow Sqoop Provider (apache-airflow-providers-sqoop), which is a separate package not included in or required by airflow-with-apache-pinot. The Pinot provider extra does not vendor or depend on the Sqoop provider, so the vulnerable code path is entirely absent from this conda artifact.",
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-apache-pinot?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-02T14:18:40+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-apache-pinot@3.0.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-02T14:18:40+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-apache-pinot@3.0.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-02T14:18:40+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "impact_statement": "The vulnerability is in the Apache Airflow Sqoop Provider (apache-airflow-providers-sqoop), which is a separate package not included in the airflow-with-apache-spark conda-forge artifact. The Sqoop Provider code is not present in this package and therefore this CVE does not apply.",
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-apache-spark?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-02T14:18:40+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-apache-spark@3.0.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-02T14:18:40+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-apache-spark@3.0.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-02T14:18:40+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "action_statement": "Upgrade airflow-with-apache-webhdfs to version 2.3.0 or later (latest conda-forge version 3.0.1 is not affected). Note that this vulnerability is specifically triggered by the Apache Airflow Pinot Provider; if you are not using the Pinot Provider, your risk is substantially reduced, but upgrading is still strongly recommended.",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-apache-webhdfs?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-02T14:18:40+00:00",
+        "vulnerability": {
+          "name": "GHSA-7wqf-h36w-47mc"
+        }
+      },
+      {
+        "action_statement": "Upgrade airflow-with-apache-webhdfs to version 2.5.1 or later (latest conda-forge version 3.0.1 is not affected). The MySQL Provider component of this CVE does not apply to this package variant, but the core Airflow command injection vulnerability does affect versions prior to 2.5.1.",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-apache-webhdfs?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-02T14:18:40+00:00",
+        "vulnerability": {
+          "name": "GHSA-c732-xvv8-g94c"
+        }
+      },
+      {
+        "action_statement": "Upgrade airflow-with-apache-webhdfs to version 2.3.0 or later (latest conda-forge version 3.0.1 is not affected). This vulnerability specifically requires the Apache Airflow Pig Provider to be installed; if you are not using the Pig Provider, your exposure is substantially reduced, but upgrading is still strongly recommended.",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-apache-webhdfs?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-02T14:18:40+00:00",
+        "vulnerability": {
+          "name": "GHSA-rmf2-pwfq-h75j"
+        }
       }
     ],
-    "timestamp": "2026-06-02T14:17:58+00:00",
+    "timestamp": "2026-06-02T14:18:40+00:00",
     "tooling": "purl-associator/scripts.cve_ai_review",
     "version": 1
   },
