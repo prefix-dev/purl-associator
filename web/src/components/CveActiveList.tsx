@@ -5,7 +5,7 @@ import type {
   CvePackageIndex,
   ReviewEdit,
 } from "../data/cves";
-import { Glyph, Theme } from "./Primitives";
+import { Btn, Glyph, Theme } from "./Primitives";
 
 type Props = {
   theme: Theme;
@@ -19,6 +19,8 @@ type Props = {
   focusedAdvisoryId: string | null;
   onNextTriagePackage: (() => void) | null;
   triageRemaining: number;
+  enqueuedAdvisories?: Set<string>;
+  onBulkEnqueue?: (items: { package: string; advisory_id: string }[]) => void;
   onSelect: (pkgName: string, advisoryId: string) => void;
 };
 
@@ -39,6 +41,15 @@ type Group = {
   unreviewed: number;
   hasNow: boolean;
 };
+
+function downloadCount(pkg: CvePackageIndex): number {
+  return pkg.download_count ?? -1;
+}
+
+function formatDownloads(count: number | null | undefined): string {
+  if (count == null) return "downloads unknown";
+  return `${count.toLocaleString()} downloads`;
+}
 
 type Item =
   | { type: "header"; group: Group }
@@ -69,6 +80,8 @@ export function CveActiveList({
   focusedAdvisoryId,
   onNextTriagePackage,
   triageRemaining,
+  enqueuedAdvisories,
+  onBulkEnqueue,
   onSelect,
 }: Props) {
   const t = theme.t;
@@ -173,9 +186,13 @@ export function CveActiveList({
         return a.adv.primary_id.localeCompare(b.adv.primary_id);
       });
     }
-    // Sort packages: worst severity desc, "shipping now" first within tie,
-    // then by name.
+    // Sort packages by popularity first so the default triage path handles
+    // high-impact conda-forge packages before obscure ones. Severity and
+    // "shipping now" remain tie-breakers, and rows inside a package are still
+    // severity-sorted above.
     out.sort((a, b) => {
+      const downloads = downloadCount(b.pkg) - downloadCount(a.pkg);
+      if (downloads !== 0) return downloads;
       if (a.worst !== b.worst) return b.worst - a.worst;
       if (a.hasNow !== b.hasNow) return a.hasNow ? -1 : 1;
       return a.pkg.package.localeCompare(b.pkg.package);
@@ -199,6 +216,15 @@ export function CveActiveList({
     () => groups.reduce((sum, g) => sum + g.rows.length, 0),
     [groups],
   );
+
+  const bulkAiCandidates = useMemo(() => {
+    const queued = enqueuedAdvisories ?? new Set<string>();
+    return groups.flatMap((g) =>
+      g.rows
+        .filter((r) => !r.reviewed && !queued.has(`${r.pkg.package}::${r.adv.id}`))
+        .map((r) => ({ package: r.pkg.package, advisory_id: r.adv.id })),
+    );
+  }, [groups, enqueuedAdvisories]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const virtualizer = useVirtualizer({
@@ -283,6 +309,17 @@ export function CveActiveList({
               / {counts.total.toLocaleString()}
             </span>
           </div>
+          {onBulkEnqueue && bulkAiCandidates.length > 0 && (
+            <span style={{ marginLeft: "auto" }}>
+              <Btn
+                theme={theme}
+                variant="secondary"
+                onClick={() => onBulkEnqueue(bulkAiCandidates)}
+              >
+                🤖 Add visible to AI ({bulkAiCandidates.length})
+              </Btn>
+            </span>
+          )}
           <button
             onClick={() => onNextTriagePackage?.()}
             disabled={!onNextTriagePackage}
@@ -314,7 +351,8 @@ export function CveActiveList({
         <div style={{ fontSize: 11, color: t.fg3, lineHeight: 1.45 }}>
           Advisories hitting conda-forge's latest build (
           <strong style={{ color: t.fg2 }}>now</strong>) or a version we haven't
-          shipped yet (<strong style={{ color: t.fg2 }}>future</strong>).
+          shipped yet (<strong style={{ color: t.fg2 }}>future</strong>), sorted by
+          package download count.
         </div>
 
         <div style={{ position: "relative" }}>
@@ -671,6 +709,17 @@ function GroupHeader({
         title="Latest conda-forge version"
       >
         {group.pkg.latest_version}
+      </span>
+      <span
+        style={{
+          fontSize: 10.5,
+          color: t.fg3,
+          fontVariantNumeric: "tabular-nums",
+          whiteSpace: "nowrap",
+        }}
+        title="prefix.dev package download count"
+      >
+        {formatDownloads(group.pkg.download_count)}
       </span>
       {variantCount > 1 && (
         <span

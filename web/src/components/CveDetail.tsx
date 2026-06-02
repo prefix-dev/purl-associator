@@ -381,12 +381,13 @@ export function CveDetail({
     return { activeAdvisories: active, inactiveAdvisories: inactive };
   }, [pkg, mode, sortedAdvisories]);
 
-  // In triage mode, pull the focused advisory to the top so the user always
-  // sees the card they just clicked — even if it isn't the highest-severity
-  // one in the package. Browse mode keeps the natural sort.
+  // Pull the focused advisory to the top so selecting a row on the left always
+  // produces an obvious change on the right. This matters outside triage too:
+  // AI draft/queue tabs often select a different advisory within the same
+  // package, where only changing expansion state would be easy to miss.
   const advisories = useMemo(() => {
     const base = mode === "triage" ? activeAdvisories : sortedAdvisories;
-    if (mode !== "triage" || !focusedAdvisoryId) return base;
+    if (!focusedAdvisoryId) return base;
     const idx = base.findIndex((a) => a.id === focusedAdvisoryId);
     if (idx <= 0) return base;
     return [base[idx], ...base.slice(0, idx), ...base.slice(idx + 1)];
@@ -448,6 +449,8 @@ export function CveDetail({
       </div>
     );
   }
+
+  const aiLookupPackages = variants.length > 0 ? variants : [pkg.package];
 
   return (
     <div
@@ -606,28 +609,32 @@ export function CveDetail({
                 ` ${inactiveAdvisories.length} historical advisor${inactiveAdvisories.length === 1 ? "y" : "ies"} below.`}
             </div>
           )}
-          {advisories.map((adv) => (
+          {advisories.map((adv) => {
+            const isFocused = adv.id === effectiveFocusId || adv.id === focusedAdvisoryId;
+            return (
             <AdvisoryCard
               key={adv.id}
               theme={theme}
               pkgName={pkg.package}
               adv={adv}
               edit={edits[`${pkg.package}::${adv.id}`]}
+              focused={isFocused}
               defaultExpanded={
-                mode === "triage" ? adv.id === effectiveFocusId : true
+                focusedAdvisoryId ? isFocused : mode === "triage" ? adv.id === effectiveFocusId : true
               }
               onEdit={(next) => onEdit(adv.id, next)}
               onReset={() => onResetEdit(adv.id)}
               isLoggedIn={isLoggedIn}
               onRequestLogin={onRequestLogin}
-              aiDraft={getAiDraftFor(aiDrafts, pkg.package, adv.id)}
+              aiDraft={aiDraftForAnyPackage(aiDrafts, aiLookupPackages, adv.id)}
               aiQueued={
-                Boolean(isAdvisoryQueued(aiQueue, pkg.package, adv.id)) ||
-                enqueuedAdvisories.has(`${pkg.package}::${adv.id}`)
+                aiQueuedForAnyPackage(aiQueue, aiLookupPackages, adv.id) ||
+                locallyQueuedForAnyPackage(enqueuedAdvisories, aiLookupPackages, adv.id)
               }
               onEnqueueAi={() => onEnqueueAi(pkg.package, adv.id)}
             />
-          ))}
+            );
+          })}
 
           {mode === "triage" && inactiveAdvisories.length > 0 && (
             <>
@@ -672,15 +679,16 @@ export function CveDetail({
                     pkgName={pkg.package}
                     adv={adv}
                     edit={edits[`${pkg.package}::${adv.id}`]}
-                    defaultExpanded={false}
+                    focused={adv.id === focusedAdvisoryId}
+                    defaultExpanded={adv.id === focusedAdvisoryId}
                     onEdit={(next) => onEdit(adv.id, next)}
                     onReset={() => onResetEdit(adv.id)}
                     isLoggedIn={isLoggedIn}
                     onRequestLogin={onRequestLogin}
-                    aiDraft={getAiDraftFor(aiDrafts, pkg.package, adv.id)}
+                    aiDraft={aiDraftForAnyPackage(aiDrafts, aiLookupPackages, adv.id)}
                     aiQueued={
-                      Boolean(isAdvisoryQueued(aiQueue, pkg.package, adv.id)) ||
-                      enqueuedAdvisories.has(`${pkg.package}::${adv.id}`)
+                      aiQueuedForAnyPackage(aiQueue, aiLookupPackages, adv.id) ||
+                      locallyQueuedForAnyPackage(enqueuedAdvisories, aiLookupPackages, adv.id)
                     }
                     onEnqueueAi={() => onEnqueueAi(pkg.package, adv.id)}
                   />
@@ -698,6 +706,7 @@ function AdvisoryCard({
   pkgName: _pkgName,
   adv,
   edit,
+  focused = false,
   defaultExpanded = true,
   onEdit,
   onReset,
@@ -711,6 +720,7 @@ function AdvisoryCard({
   pkgName: string;
   adv: Advisory;
   edit: ReviewEdit | undefined;
+  focused?: boolean;
   defaultExpanded?: boolean;
   onEdit: (next: ReviewEdit) => void;
   onReset: () => void;
@@ -784,7 +794,16 @@ function AdvisoryCard({
       id={`adv-${adv.id}`}
       style={{
         background: t.surface,
-        border: `1px solid ${isEdited ? (theme.dark ? "#2a3a55" : "#c2d0fb") : t.border}`,
+        border: `1px solid ${
+          focused
+            ? t.accent
+            : isEdited
+              ? theme.dark
+                ? "#2a3a55"
+                : "#c2d0fb"
+              : t.border
+        }`,
+        boxShadow: focused ? `0 0 0 2px ${theme.dark ? "rgba(154,170,255,.18)" : "rgba(57,87,255,.12)"}` : "none",
         borderRadius: 12,
         overflow: "hidden",
       }}
@@ -919,6 +938,7 @@ function AdvisoryCard({
             <AiDraftPanel
               theme={theme}
               draft={aiDraft}
+              adv={adv}
               onUseAsStartingPoint={() => {
                 if (!isLoggedIn) onRequestLogin();
                 onEdit(editFromAiDraft(aiDraft));
@@ -1375,6 +1395,34 @@ function AddVersionInline({
 
 /* ------------ AI CVE review (drafts + queue) ------------ */
 
+function aiDraftForAnyPackage(
+  payload: AiDraftsPayload | null,
+  packages: string[],
+  advisoryId: string,
+): AiDraft | undefined {
+  for (const pkg of packages) {
+    const draft = getAiDraftFor(payload, pkg, advisoryId);
+    if (draft) return draft;
+  }
+  return undefined;
+}
+
+function aiQueuedForAnyPackage(
+  payload: AiQueuePayload | null,
+  packages: string[],
+  advisoryId: string,
+): boolean {
+  return packages.some((pkg) => Boolean(isAdvisoryQueued(payload, pkg, advisoryId)));
+}
+
+function locallyQueuedForAnyPackage(
+  enqueued: Set<string>,
+  packages: string[],
+  advisoryId: string,
+): boolean {
+  return packages.some((pkg) => enqueued.has(`${pkg}::${advisoryId}`));
+}
+
 function AiChip({
   theme,
   aiDraft,
@@ -1460,19 +1508,78 @@ function AiChip({
   );
 }
 
+function aiStatusVerb(status: VexStatus): string {
+  if (status === "not_affected") return "mark this as not affected";
+  if (status === "under_investigation") return "keep this under investigation";
+  return `mark this as ${status}`;
+}
+
+function aiNeedsCloserRead(draft: AiDraft): boolean {
+  return (
+    !draft.affected_versions.agrees_with_match ||
+    draft.runtime_applicability.applies === "unknown" ||
+    draft.runtime_applicability.applies === "partial" ||
+    draft.severity_in_conda_context.assessment === "unknown"
+  );
+}
+
+function aiRecommendationLine(draft: AiDraft): string {
+  const caution = aiNeedsCloserRead(draft)
+    ? "but it requires a closer read"
+    : "and feels confident";
+  return `AI suggests to ${aiStatusVerb(draft.openvex_status)} ${caution}.`;
+}
+
+function splitReadableSections(text: string): string[] {
+  const trimmed = text.trim();
+  if (!trimmed) return [];
+  if (trimmed.includes("\n")) return trimmed.split(/\n{2,}/).map((s) => s.trim()).filter(Boolean);
+  return trimmed
+    .split(/(?<=[.!?])\s+(?=[A-Z0-9])/)
+    .reduce<string[]>((acc, sentence) => {
+      const last = acc[acc.length - 1];
+      if (!last || last.length > 220) acc.push(sentence);
+      else acc[acc.length - 1] = `${last} ${sentence}`;
+      return acc;
+    }, []);
+}
+
+function aiTakeaways(draft: AiDraft): string[] {
+  const out = [
+    `Suggested OpenVEX status: ${draft.openvex_status}${
+      draft.openvex_justification ? ` (${draft.openvex_justification})` : ""
+    }.`,
+    draft.affected_versions.agrees_with_match
+      ? "Affected versions agree with the automated OSV/conda match."
+      : "Affected versions differ from the automated match; review the suggested adds/removes before applying.",
+    `Runtime applicability: ${draft.runtime_applicability.applies}.`,
+    `Conda-context severity: ${draft.severity_in_conda_context.assessment}.`,
+  ];
+  if (draft.openvex_action_statement) {
+    out.push(`Action to communicate: ${draft.openvex_action_statement}`);
+  }
+  return out;
+}
+
 function AiDraftPanel({
   theme,
   draft,
+  adv,
   onUseAsStartingPoint,
 }: {
   theme: Theme;
   draft: AiDraft;
+  adv: Advisory;
   onUseAsStartingPoint: () => void;
 }) {
   const t = theme.t;
   const af = draft.affected_versions;
   const rt = draft.runtime_applicability;
   const sev = draft.severity_in_conda_context;
+  const rationaleSections = splitReadableSections(draft.rationale);
+  const takeaways = aiTakeaways(draft);
+  const cardBg = theme.dark ? "#11192a" : "#ffffff";
+  const cardBorder = theme.dark ? "#243150" : "#d6deef";
   return (
     <div
       style={{
@@ -1484,7 +1591,7 @@ function AiDraftPanel({
         color: t.fg1,
         display: "flex",
         flexDirection: "column",
-        gap: 8,
+        gap: 10,
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -1494,94 +1601,306 @@ function AiDraftPanel({
         </span>
         <span style={{ flex: 1 }} />
         <Btn theme={theme} variant="primary" onClick={onUseAsStartingPoint}>
-          Use as starting point
+          Apply AI suggestion
         </Btn>
       </div>
 
-      {/* The headline reasoning — what the maintainer reads first. Rendered
-          full-width with body-size text and the panel's primary fg color so
-          it doesn't disappear under the per-dimension micro-reasonings. */}
       <div
         style={{
-          fontSize: 13,
-          color: t.fg1,
-          lineHeight: 1.5,
+          fontSize: 14,
+          fontWeight: 700,
+          color: theme.dark ? "#dbe3ff" : "#1b2c77",
+          lineHeight: 1.4,
           padding: "10px 12px",
-          background: theme.dark ? "#11192a" : "#ffffff",
-          border: `1px solid ${theme.dark ? "#243150" : "#d6deef"}`,
+          background: cardBg,
+          border: `1px solid ${cardBorder}`,
           borderRadius: 6,
-          whiteSpace: "pre-wrap",
         }}
       >
+        {aiRecommendationLine(draft)}
+      </div>
+
+      <OpenVexSuggestionPreview theme={theme} draft={draft} adv={adv} />
+
+      <AiDraftSection theme={theme} title="Reviewer takeaway">
+        <ul style={{ margin: 0, paddingLeft: 18, display: "grid", gap: 5 }}>
+          {takeaways.map((item) => (
+            <li key={item} style={{ lineHeight: 1.45 }}>
+              {item}
+            </li>
+          ))}
+        </ul>
+      </AiDraftSection>
+
+      <AiDraftSection theme={theme} title="Why AI suggests this">
+        {rationaleSections.length > 0 ? (
+          rationaleSections.map((section, idx) => (
+            <p key={idx} style={{ margin: idx === 0 ? "0 0 7px" : "7px 0 0" }}>
+              {section}
+            </p>
+          ))
+        ) : (
+          <p style={{ margin: 0 }}>
+            AI did not provide a headline rationale; use the evidence below as the review notes.
+          </p>
+        )}
+      </AiDraftSection>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         <div
           style={{
             fontSize: 10.5,
-            fontWeight: 700,
+            fontWeight: 800,
             textTransform: "uppercase",
-            letterSpacing: ".04em",
+            letterSpacing: ".05em",
             color: theme.dark ? "#9aaaff" : "#3957ff",
-            marginBottom: 6,
+            marginTop: 2,
           }}
         >
-          Why the AI accepts this
+          Evidence / reasoning
         </div>
-        {draft.rationale ||
-          "(AI did not provide a rationale; treat the per-dimension reasoning below as the only narrative.)"}
-      </div>
-
-      <div style={{ color: t.fg2 }}>
-        Proposed status:{" "}
-        <strong style={{ color: t.fg1 }}>{draft.openvex_status}</strong>
-        {draft.openvex_justification && <> · {draft.openvex_justification}</>}
-      </div>
-      {draft.openvex_action_statement && (
-        <div style={{ color: t.fg2 }}>
-          <strong style={{ color: t.fg1 }}>Action:</strong>{" "}
-          {draft.openvex_action_statement}
-        </div>
-      )}
-      <DraftDimension
-        theme={theme}
-        title="Affected versions"
-        valueLabel={af.agrees_with_match ? "agrees with auto match" : "disagrees"}
-        reasoning={af.reasoning}
-        extra={
-          (af.suggested_adds ?? []).length || (af.suggested_removes ?? []).length ? (
-            <>
-              {(af.suggested_adds ?? []).length > 0 && (
-                <div>+ {af.suggested_adds!.join(", ")}</div>
-              )}
-              {(af.suggested_removes ?? []).length > 0 && (
-                <div>− {af.suggested_removes!.join(", ")}</div>
-              )}
-            </>
-          ) : null
-        }
-      />
-      <DraftDimension
-        theme={theme}
-        title="Runtime applicability"
-        valueLabel={rt.applies}
-        reasoning={rt.reasoning}
-      />
-      <DraftDimension
-        theme={theme}
-        title="Severity in conda context"
-        valueLabel={sev.assessment}
-        reasoning={sev.reasoning}
-      />
-      {draft.notes && (
         <DraftDimension
           theme={theme}
-          title="Notes"
-          valueLabel=""
-          reasoning={draft.notes}
+          title="Affected versions"
+          valueLabel={af.agrees_with_match ? "agrees with auto match" : "disagrees"}
+          reasoning={af.reasoning}
+          extra={
+            (af.suggested_adds ?? []).length || (af.suggested_removes ?? []).length ? (
+              <>
+                {(af.suggested_adds ?? []).length > 0 && (
+                  <div>+ {af.suggested_adds!.join(", ")}</div>
+                )}
+                {(af.suggested_removes ?? []).length > 0 && (
+                  <div>− {af.suggested_removes!.join(", ")}</div>
+                )}
+              </>
+            ) : null
+          }
         />
-      )}
-      <div style={{ fontSize: 10.5, color: t.fg3, marginTop: 4 }}>
-        This is a draft, not authoritative. Click "Use as starting point" to seed the
-        OpenVEX form below, edit if needed, then submit via the Review changes drawer.
+        <DraftDimension
+          theme={theme}
+          title="Runtime applicability"
+          valueLabel={rt.applies}
+          reasoning={rt.reasoning}
+        />
+        <DraftDimension
+          theme={theme}
+          title="Severity in conda context"
+          valueLabel={sev.assessment}
+          reasoning={sev.reasoning}
+        />
+        {draft.notes && (
+          <DraftDimension
+            theme={theme}
+            title="Notes"
+            valueLabel=""
+            reasoning={draft.notes}
+          />
+        )}
       </div>
+
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          justifyContent: "space-between",
+          borderTop: `1px solid ${theme.dark ? "#2a3a55" : "#c2d0fb"}`,
+          paddingTop: 10,
+          marginTop: 2,
+        }}
+      >
+        <div style={{ fontSize: 10.5, color: t.fg3, lineHeight: 1.4 }}>
+          This is a draft, not authoritative. Apply it to seed the OpenVEX form,
+          review/edit it, then submit via the Review changes drawer.
+        </div>
+        <Btn theme={theme} variant="primary" onClick={onUseAsStartingPoint}>
+          Apply AI suggestion
+        </Btn>
+      </div>
+    </div>
+  );
+}
+
+function openVexStatusMeaning(status: VexStatus): string {
+  if (status === "fixed") {
+    return "current reviewed package is patched; historical affected versions may still be listed";
+  }
+  if (status === "affected") {
+    return "current reviewed package is vulnerable or needs mitigation";
+  }
+  if (status === "not_affected") {
+    return "match should not apply to this package/version because the vulnerable component or path is absent";
+  }
+  return "leave this for human follow-up before deciding affected/not affected/fixed";
+}
+
+function OpenVexSuggestionPreview({
+  theme,
+  draft,
+  adv,
+}: {
+  theme: Theme;
+  draft: AiDraft;
+  adv: Advisory;
+}) {
+  const t = theme.t;
+  const matchedAffectedCount = affectedVersions(adv).length;
+  const suggestedRemoves = draft.affected_versions.suggested_removes ?? [];
+  const fixedWithAffectedVersions =
+    draft.openvex_status === "fixed" &&
+    matchedAffectedCount > 0 &&
+    suggestedRemoves.length < matchedAffectedCount;
+  const rows: Array<{ label: string; value: React.ReactNode; important?: boolean }> = [
+    {
+      label: "status",
+      value: (
+        <div style={{ display: "grid", gap: 3 }}>
+          <strong>{draft.openvex_status}</strong>
+          <span style={{ color: t.fg3, fontSize: 11.5 }}>
+            {openVexStatusMeaning(draft.openvex_status)}
+          </span>
+        </div>
+      ),
+      important: true,
+    },
+  ];
+  if (draft.openvex_status === "not_affected" && draft.openvex_justification) {
+    rows.push({ label: "justification", value: draft.openvex_justification, important: true });
+  } else if (draft.openvex_justification) {
+    rows.push({ label: "justification", value: draft.openvex_justification });
+  }
+  if (draft.openvex_action_statement) {
+    rows.push({ label: "action_statement", value: draft.openvex_action_statement, important: draft.openvex_status === "affected" });
+  }
+  if (draft.openvex_impact_statement) {
+    rows.push({ label: "impact_statement", value: draft.openvex_impact_statement });
+  }
+  if (draft.notes) {
+    rows.push({ label: "status_notes", value: draft.notes });
+  }
+  const adds = draft.affected_versions.suggested_adds ?? [];
+  const removes = draft.affected_versions.suggested_removes ?? [];
+  if (adds.length || removes.length) {
+    rows.push({
+      label: "version_overrides",
+      value: (
+        <div style={{ display: "grid", gap: 3 }}>
+          {adds.length > 0 && <div>affected: {adds.join(", ")}</div>}
+          {removes.length > 0 && <div>not_affected: {removes.join(", ")}</div>}
+        </div>
+      ),
+    });
+  } else {
+    rows.push({
+      label: "version_overrides",
+      value:
+        draft.openvex_status === "fixed"
+          ? "none — package-level fixed statement; keep the historical affected-version list for old vulnerable builds"
+          : "none — no per-version additions/removals; keep the matcher's affected-version list",
+    });
+  }
+
+  return (
+    <AiDraftSection theme={theme} title="OpenVEX statement AI would apply">
+      {fixedWithAffectedVersions && (
+        <div
+          style={{
+            marginBottom: 10,
+            padding: "8px 10px",
+            borderRadius: 6,
+            border: `1px solid ${theme.dark ? "#4a3e1d" : "#ead58b"}`,
+            background: theme.dark ? "#2a2616" : "#fff4d2",
+            color: theme.dark ? "#f5c542" : "#7a5b00",
+            fontSize: 12,
+            lineHeight: 1.45,
+          }}
+        >
+          <strong>Review status carefully:</strong> AI suggests <code>fixed</code>,
+          but this advisory still has {matchedAffectedCount.toLocaleString()} matched
+          conda affected version{matchedAffectedCount === 1 ? "" : "s"}. If those
+          historical versions are truly vulnerable, this should probably be
+          <code> affected</code> with an upgrade action, not <code>fixed</code>.
+        </div>
+      )}
+      <div style={{ display: "grid", gap: 7 }}>
+        {rows.map((row) => (
+          <div
+            key={row.label}
+            style={{
+              display: "grid",
+              gridTemplateColumns: "145px minmax(0, 1fr)",
+              gap: 10,
+              alignItems: "start",
+            }}
+          >
+            <code
+              style={{
+                color: row.important ? (theme.dark ? "#dbe3ff" : "#1b2c77") : t.fg2,
+                fontSize: 11.5,
+                fontWeight: row.important ? 800 : 600,
+                whiteSpace: "nowrap",
+              }}
+            >
+              {row.label}
+            </code>
+            <div
+              style={{
+                color: row.important ? t.fg1 : t.fg2,
+                fontWeight: row.important ? 700 : 400,
+                lineHeight: 1.45,
+                minWidth: 0,
+                overflowWrap: "anywhere",
+              }}
+            >
+              {row.value}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div style={{ marginTop: 8, color: t.fg3, fontSize: 11.5 }}>
+        Applying the suggestion copies these fields into the review form below;
+        the final PR will wrap them in the OpenVEX document envelope with the selected package and advisory.
+      </div>
+    </AiDraftSection>
+  );
+}
+
+function AiDraftSection({
+  theme,
+  title,
+  children,
+}: {
+  theme: Theme;
+  title: string;
+  children: React.ReactNode;
+}) {
+  const t = theme.t;
+  return (
+    <div
+      style={{
+        fontSize: 13,
+        color: t.fg1,
+        lineHeight: 1.5,
+        padding: "10px 12px",
+        background: theme.dark ? "#11192a" : "#ffffff",
+        border: `1px solid ${theme.dark ? "#243150" : "#d6deef"}`,
+        borderRadius: 6,
+      }}
+    >
+      <div
+        style={{
+          fontSize: 10.5,
+          fontWeight: 800,
+          textTransform: "uppercase",
+          letterSpacing: ".04em",
+          color: theme.dark ? "#9aaaff" : "#3957ff",
+          marginBottom: 6,
+        }}
+      >
+        {title}
+      </div>
+      {children}
     </div>
   );
 }
@@ -1601,28 +1920,49 @@ function DraftDimension({
 }) {
   const t = theme.t;
   return (
-    <div>
+    <div
+      style={{
+        padding: "10px 12px",
+        background: theme.dark ? "#11192a" : "#ffffff",
+        border: `1px solid ${theme.dark ? "#243150" : "#d6deef"}`,
+        borderRadius: 6,
+      }}
+    >
       <div
         style={{
-          fontSize: 10.5,
-          fontWeight: 700,
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
+          fontSize: 11,
+          fontWeight: 800,
           textTransform: "uppercase",
           letterSpacing: ".04em",
           color: t.fg2,
+          marginBottom: 5,
         }}
       >
-        {title}
+        <span>{title}</span>
         {valueLabel ? (
-          <>
-            {" — "}
-            <span style={{ color: t.fg1 }}>{valueLabel}</span>
-          </>
+          <span
+            style={{
+              color: t.fg1,
+              background: theme.dark ? "#1a2233" : "#eef3ff",
+              border: `1px solid ${theme.dark ? "#2a3a55" : "#c2d0fb"}`,
+              borderRadius: 999,
+              padding: "1px 7px",
+              fontSize: 10.5,
+              textTransform: "none",
+              letterSpacing: 0,
+            }}
+          >
+            {valueLabel}
+          </span>
         ) : null}
       </div>
-      <div style={{ color: t.fg1, marginTop: 2, lineHeight: 1.45 }}>
+      <div style={{ color: t.fg1, marginTop: 2, lineHeight: 1.5, fontSize: 13 }}>
         {reasoning}
       </div>
-      {extra && <div style={{ marginTop: 4, color: t.fg2 }}>{extra}</div>}
+      {extra && <div style={{ marginTop: 6, color: t.fg2, fontSize: 12 }}>{extra}</div>}
     </div>
   );
 }

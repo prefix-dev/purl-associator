@@ -55,6 +55,7 @@ DEFAULT_CONTRIB_DIR = ROOT / "mappings" / "cve_contributions"
 DEFAULT_OUT = ROOT / "web" / "public" / "cves.json"
 DEFAULT_INDEX_OUT = ROOT / "web" / "public" / "cves-index.json"
 DEFAULT_DETAIL_DIR = ROOT / "web" / "public" / "cve_packages"
+DEFAULT_MAPPINGS_INDEX = ROOT / "web" / "public" / "mappings-index.json"
 
 SCHEMA_VERSION = 2
 INDEX_SCHEMA_VERSION = 3
@@ -72,6 +73,29 @@ def _load_pkg_files(directory: Path) -> dict[str, dict]:
             continue
         name = data.get("package") or f.stem
         out[name] = data
+    return out
+
+
+def _load_download_counts(path: Path) -> dict[str, int]:
+    """Return ``{package_name: download_count}`` from mappings-index.json.
+
+    Missing or stale mapping output is non-fatal; CVE payload generation should
+    still work in partial local runs, just without popularity ordering.
+    """
+    try:
+        data = json.loads(path.read_text())
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+    out: dict[str, int] = {}
+    packages = data.get("packages") if isinstance(data, dict) else None
+    if not isinstance(packages, dict):
+        return out
+    for name, entry in packages.items():
+        if not isinstance(name, str) or not isinstance(entry, dict):
+            continue
+        value = entry.get("download_count")
+        if isinstance(value, int):
+            out[name] = value
     return out
 
 
@@ -268,7 +292,7 @@ def _index_advisory(pkg: dict, advisory: dict) -> dict:
     return out
 
 
-def _index_package(pkg: dict, detail_path: str) -> dict:
+def _index_package(pkg: dict, detail_path: str, download_count: int | None) -> dict:
     advisories = pkg.get("advisories") or []
     unique_versions: set[str] = set()
     for advisory in advisories:
@@ -280,6 +304,7 @@ def _index_package(pkg: dict, detail_path: str) -> dict:
         "generated_at": pkg.get("generated_at") or "",
         "conda_versions_total": pkg.get("conda_versions_total") or 0,
         "latest_version": pkg.get("latest_version"),
+        "download_count": download_count,
         "detail_path": detail_path,
         "advisory_count": len(advisories),
         "affected_version_count": sum(len(affected_versions(a)) for a in advisories),
@@ -300,6 +325,7 @@ def _write_split_payload(
     generated_at: str,
     index_out: Path,
     detail_dir: Path,
+    download_counts: dict[str, int],
 ) -> None:
     detail_dir.mkdir(parents=True, exist_ok=True)
     for stale in detail_dir.glob("*.json"):
@@ -312,7 +338,9 @@ def _write_split_payload(
         (detail_dir / filename).write_text(
             json.dumps(pkg, separators=(",", ":")) + "\n"
         )
-        index_packages[name] = _index_package(pkg, detail_path)
+        index_packages[name] = _index_package(
+            pkg, detail_path, download_counts.get(name)
+        )
 
     payload = {
         "schema_version": INDEX_SCHEMA_VERSION,
@@ -333,9 +361,11 @@ def main(
     out: Path = DEFAULT_OUT,
     index_out: Path = DEFAULT_INDEX_OUT,
     detail_dir: Path = DEFAULT_DETAIL_DIR,
+    mappings_index: Path = DEFAULT_MAPPINGS_INDEX,
 ) -> None:
     packages = _load_pkg_files(cves_dir)
     docs = _load_openvex(contributions)
+    download_counts = _load_download_counts(mappings_index)
 
     _resolve_contributions(packages, docs)
     _finalize_affected(packages)
@@ -368,6 +398,7 @@ def main(
         generated_at=generated_at,
         index_out=index_out,
         detail_dir=detail_dir,
+        download_counts=download_counts,
     )
     print(
         f"Merged cves={len(packages)} packages + "
@@ -384,5 +415,13 @@ if __name__ == "__main__":
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
     parser.add_argument("--index-out", type=Path, default=DEFAULT_INDEX_OUT)
     parser.add_argument("--detail-dir", type=Path, default=DEFAULT_DETAIL_DIR)
+    parser.add_argument("--mappings-index", type=Path, default=DEFAULT_MAPPINGS_INDEX)
     args = parser.parse_args()
-    main(args.cves_dir, args.contributions, args.out, args.index_out, args.detail_dir)
+    main(
+        args.cves_dir,
+        args.contributions,
+        args.out,
+        args.index_out,
+        args.detail_dir,
+        args.mappings_index,
+    )
