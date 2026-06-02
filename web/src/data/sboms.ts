@@ -1,3 +1,5 @@
+import { fetchJsonWithProgress } from "./progressFetch";
+
 /* Loader for SBOM summaries + per-package transitive CVE matches.
  *
  * scripts/sbom_extract.py writes CycloneDX docs to mappings/sboms/.
@@ -70,9 +72,10 @@ export async function loadSbomSummary(
   path = SUMMARY_PATH,
 ): Promise<SbomSummaryPayload | null> {
   try {
-    const res = await fetch(path, { cache: "no-cache" });
-    if (!res.ok) return null;
-    return (await res.json()) as SbomSummaryPayload;
+    return await fetchJsonWithProgress<SbomSummaryPayload>(path, {
+      cache: "no-cache",
+      label: "sboms.json",
+    });
   } catch {
     return null;
   }
@@ -86,9 +89,10 @@ export async function loadSbomDetail(
 ): Promise<SbomDetailPayload | null> {
   if (!summary.detail_path) return null;
   try {
-    const res = await fetch(`./${summary.detail_path}`, { cache: "no-cache" });
-    if (!res.ok) return null;
-    return (await res.json()) as SbomDetailPayload;
+    return await fetchJsonWithProgress<SbomDetailPayload>(`./${summary.detail_path}`, {
+      cache: "no-cache",
+      label: summary.detail_path.split("/").at(-1) ?? "SBOM detail",
+    });
   } catch {
     return null;
   }

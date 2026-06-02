@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useGithubAuth } from "./auth/useGithubAuth";
+import { LoadingToast } from "./components/LoadingToast";
 import { LocalDraftBanner } from "./components/LocalDraftBanner";
 import { LoginModal } from "./components/LoginModal";
 import { Btn, Glyph, useTheme } from "./components/Primitives";
@@ -646,6 +647,7 @@ export function CveApp() {
       )}
 
       {loginOpen && <LoginModal theme={theme} onClose={() => setLoginOpen(false)} />}
+      <LoadingToast theme={theme} />
     </div>
   );
 }

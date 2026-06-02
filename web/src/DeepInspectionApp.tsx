@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { DeepInspectionPanel } from "./components/DeepInspectionPanel";
+import { LoadingToast } from "./components/LoadingToast";
 import { PackageTable } from "./components/PackageTable";
 import { Glyph, useTheme } from "./components/Primitives";
 import { repoFullName } from "./config";
@@ -259,6 +260,7 @@ export function DeepInspectionApp() {
           />
         </div>
       </div>
+      <LoadingToast theme={theme} />
     </div>
   );
 }

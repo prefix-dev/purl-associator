@@ -1,3 +1,5 @@
+import { fetchJsonWithProgress } from "./progressFetch";
+
 /* Types + loader for the CVE dashboard payload.
  *
  * The payload (web/public/cves.json) is produced by scripts/merge_cves.py.
@@ -266,12 +268,7 @@ const jsonCache = new Map<string, Promise<unknown>>();
 async function loadJsonCached<T>(path: string): Promise<T> {
   const cached = jsonCache.get(path);
   if (cached) return cached as Promise<T>;
-  const promise = fetch(path, { cache: "no-cache" }).then((res) => {
-    if (!res.ok) {
-      throw new Error(`Failed to load ${path}: ${res.status} ${res.statusText}`);
-    }
-    return res.json() as Promise<T>;
-  });
+  const promise = fetchJsonWithProgress<T>(path, { cache: "no-cache" });
   jsonCache.set(path, promise);
   promise.catch(() => jsonCache.delete(path));
   return promise;
