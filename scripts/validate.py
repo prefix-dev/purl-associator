@@ -36,6 +36,8 @@ DEFAULT_BUNDLE = ROOT / "web" / "public" / "cves.json"
 DEFAULT_MANUAL_MAPPINGS = ROOT / "mappings" / "manual.json"
 DEFAULT_MAPPING_CONTRIB_DIR = ROOT / "mappings" / "contributions"
 DEFAULT_MAPPINGS_BUNDLE = ROOT / "web" / "public" / "mappings.json"
+DEFAULT_QUEUE_DIR = ROOT / "mappings" / "cve_review_queue"
+DEFAULT_DRAFTS_DIR = ROOT / "mappings" / "cve_ai_drafts"
 
 
 def _load(path: Path) -> dict:
@@ -190,6 +192,52 @@ def validate_bundle(bundle_path: Path, errors: list[str]) -> bool:
     return True
 
 
+def validate_review_queue(queue_dir: Path, errors: list[str]) -> int:
+    """Validate every AI review queue file. Returns the count checked."""
+    if not queue_dir.exists():
+        return 0
+    schema = _validator("cve-review-queue.schema.json")
+    files = sorted(queue_dir.glob("*.json"))
+    for path in files:
+        rel = path.relative_to(ROOT)
+        try:
+            data = _load(path)
+        except json.JSONDecodeError as exc:
+            errors.append(f"{rel}: invalid JSON: {exc}")
+            continue
+        for err in schema.iter_errors(data):
+            errors.append(f"{rel} [queue] {_fmt(err)}")
+    return len(files)
+
+
+def validate_ai_drafts(drafts_dir: Path, errors: list[str]) -> int:
+    """Validate every AI draft file. Returns the count checked.
+
+    Two-stage: validates the wrapper against ``cve-ai-draft.schema.json``, then
+    re-validates the embedded ``openvex`` block against the OpenVEX schema so
+    the draft can never carry malformed OpenVEX.
+    """
+    if not drafts_dir.exists():
+        return 0
+    wrapper = _validator("cve-ai-draft.schema.json")
+    openvex = _validator("openvex-schema.json")
+    files = sorted(drafts_dir.glob("*.json"))
+    for path in files:
+        rel = path.relative_to(ROOT)
+        try:
+            data = _load(path)
+        except json.JSONDecodeError as exc:
+            errors.append(f"{rel}: invalid JSON: {exc}")
+            continue
+        for err in wrapper.iter_errors(data):
+            errors.append(f"{rel} [draft wrapper] {_fmt(err)}")
+        embedded = data.get("openvex")
+        if isinstance(embedded, dict):
+            for err in openvex.iter_errors(embedded):
+                errors.append(f"{rel} [embedded OpenVEX] {_fmt(err)}")
+    return len(files)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--cves-dir", type=Path, default=DEFAULT_CVES_DIR)
@@ -200,6 +248,8 @@ def main() -> None:
         "--mapping-contributions", type=Path, default=DEFAULT_MAPPING_CONTRIB_DIR
     )
     parser.add_argument("--manual-mappings", type=Path, default=DEFAULT_MANUAL_MAPPINGS)
+    parser.add_argument("--queue-dir", type=Path, default=DEFAULT_QUEUE_DIR)
+    parser.add_argument("--drafts-dir", type=Path, default=DEFAULT_DRAFTS_DIR)
     args = parser.parse_args()
 
     errors: list[str] = []
@@ -209,6 +259,8 @@ def main() -> None:
     has_mappings = validate_mapping_alternatives(
         args.manual_mappings, args.mapping_contributions, args.mappings, errors
     )
+    n_queue = validate_review_queue(args.queue_dir, errors)
+    n_drafts = validate_ai_drafts(args.drafts_dir, errors)
 
     if errors:
         print(f"✗ {len(errors)} schema violation(s):", file=sys.stderr)
@@ -219,6 +271,8 @@ def main() -> None:
     print(
         f"✓ {n_cves} per-package CVE file(s) valid (OSV schema + envelope), "
         f"{n_contrib} OpenVEX contribution(s) valid, "
+        f"{n_queue} AI review queue file(s) valid, "
+        f"{n_drafts} AI draft(s) valid, "
         f"CVE bundle {'valid' if has_bundle else 'absent (skipped)'}, "
         f"mapping removals {'valid' if has_mappings else 'absent (skipped)'}"
     )

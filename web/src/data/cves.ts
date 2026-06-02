@@ -229,6 +229,183 @@ export async function loadCves(path = DEFAULT_PATH): Promise<CvePayload> {
   return res.json();
 }
 
+/* ---- AI CVE review sidecars (cve_ai_drafts.json + cve_ai_queue.json) ---- */
+
+/** One per-advisory AI assessment as surfaced by scripts.merge_ai_drafts. */
+export type AiDraft = {
+  model: string;
+  run_id: string;
+  generated_at: string;
+  /** Narrative prose (3-6 sentences) — the AI's "why this CVE applies (or
+   *  doesn't)" headline. Surfaced at the top of the draft panel. */
+  rationale: string;
+  openvex_status: VexStatus;
+  openvex_justification: VexJustification | null;
+  openvex_impact_statement: string | null;
+  openvex_action_statement: string | null;
+  affected_versions: {
+    agrees_with_match: boolean;
+    suggested_adds?: string[];
+    suggested_removes?: string[];
+    reasoning: string;
+  };
+  runtime_applicability: {
+    applies: "yes" | "no" | "partial" | "unknown";
+    reasoning: string;
+  };
+  severity_in_conda_context: {
+    assessment: "lower" | "same" | "higher" | "unknown";
+    reasoning: string;
+  };
+  notes?: string;
+};
+
+export type AiDraftsPayload = {
+  schema_version: number;
+  generated_at: string;
+  drafts: Record<string, Record<string, AiDraft>>; // package → advisory_id → AiDraft
+  draft_count: number;
+  package_count: number;
+};
+
+export type AiQueueEntry = {
+  enqueued_at: string;
+  enqueued_by: string;
+};
+
+export type AiQueuePayload = {
+  schema_version: number;
+  generated_at: string;
+  queue: Record<string, Record<string, AiQueueEntry>>;
+  queue_count: number;
+  package_count: number;
+};
+
+const DEFAULT_AI_DRAFTS_PATH = "./cve_ai_drafts.json";
+const DEFAULT_AI_QUEUE_PATH = "./cve_ai_queue.json";
+
+const EMPTY_DRAFTS: AiDraftsPayload = {
+  schema_version: 1,
+  generated_at: "",
+  drafts: {},
+  draft_count: 0,
+  package_count: 0,
+};
+
+const EMPTY_QUEUE: AiQueuePayload = {
+  schema_version: 1,
+  generated_at: "",
+  queue: {},
+  queue_count: 0,
+  package_count: 0,
+};
+
+/** Load the AI drafts sidecar. Missing file is non-fatal — returns empty,
+ *  with a console warning so production debugging is possible. */
+export async function loadAiDrafts(
+  path = DEFAULT_AI_DRAFTS_PATH,
+): Promise<AiDraftsPayload> {
+  try {
+    const res = await fetch(path, { cache: "no-cache" });
+    if (!res.ok) {
+      // 404 is the "file not deployed yet" case — common before the first
+      // cve_ai_review run lands, not worth shouting about. Anything else is.
+      if (res.status !== 404) {
+        console.warn(
+          `loadAiDrafts(${path}): HTTP ${res.status} ${res.statusText} — AI draft chips disabled`,
+        );
+      }
+      return EMPTY_DRAFTS;
+    }
+    return (await res.json()) as AiDraftsPayload;
+  } catch (err) {
+    console.warn(
+      `loadAiDrafts(${path}): ${err instanceof Error ? err.message : String(err)} — AI draft chips disabled`,
+    );
+    return EMPTY_DRAFTS;
+  }
+}
+
+/** Load the AI queue sidecar. Missing file is non-fatal — returns empty,
+ *  with a console warning so production debugging is possible. */
+export async function loadAiQueue(
+  path = DEFAULT_AI_QUEUE_PATH,
+): Promise<AiQueuePayload> {
+  try {
+    const res = await fetch(path, { cache: "no-cache" });
+    if (!res.ok) {
+      if (res.status !== 404) {
+        console.warn(
+          `loadAiQueue(${path}): HTTP ${res.status} ${res.statusText} — AI queue chips disabled`,
+        );
+      }
+      return EMPTY_QUEUE;
+    }
+    return (await res.json()) as AiQueuePayload;
+  } catch (err) {
+    console.warn(
+      `loadAiQueue(${path}): ${err instanceof Error ? err.message : String(err)} — AI queue chips disabled`,
+    );
+    return EMPTY_QUEUE;
+  }
+}
+
+export function getAiDraftFor(
+  payload: AiDraftsPayload | null,
+  pkg: string,
+  advisoryId: string,
+): AiDraft | undefined {
+  return payload?.drafts[pkg]?.[advisoryId];
+}
+
+export function isAdvisoryQueued(
+  payload: AiQueuePayload | null,
+  pkg: string,
+  advisoryId: string,
+): AiQueueEntry | undefined {
+  return payload?.queue[pkg]?.[advisoryId];
+}
+
+function coerceJustification(
+  value: string | null | undefined,
+  fallback: VexJustification,
+): VexJustification {
+  // VEX_JUSTIFICATIONS is declared further down; check membership at call
+  // time to avoid the TS "used before declaration" hoisting issue.
+  if (
+    value &&
+    VEX_JUSTIFICATIONS.some((j) => j.id === (value as VexJustification))
+  ) {
+    return value as VexJustification;
+  }
+  return fallback;
+}
+
+/** Translate an AI draft's suggested status + reasoning into a ReviewEdit so
+ *  the existing OpenVEX form can pre-fill from the AI's recommendation.
+ *
+ *  Note on validation: the AI's `openvex_justification` is constrained to the
+ *  five enum values by `scripts/cve_ai_review.py`'s response schema, but we
+ *  defensively coerce here in case the model slips through with a free-text
+ *  reason — otherwise the OpenVEX form would display a value that isn't in
+ *  the dropdown and the user couldn't toggle off. */
+export function editFromAiDraft(draft: AiDraft): ReviewEdit {
+  const base = blankReviewEdit();
+  return {
+    status: draft.openvex_status,
+    justification: coerceJustification(
+      draft.openvex_justification,
+      base.justification,
+    ),
+    action_statement: draft.openvex_action_statement ?? "",
+    notes: draft.notes ?? draft.openvex_impact_statement ?? "",
+    version_overrides: {
+      affected: draft.affected_versions.suggested_adds ?? [],
+      not_affected: draft.affected_versions.suggested_removes ?? [],
+    },
+  };
+}
+
 /* ---- staged review edits (dashboard-side, pre-submit) ---- */
 
 export const VEX_STATUSES: { id: VexStatus; label: string }[] = [

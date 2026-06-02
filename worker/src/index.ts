@@ -33,6 +33,10 @@ type Env = {
   GITHUB_CONTRIBUTIONS_DIR: string;
   /** Directory each CVE-review PR drops a uniquely-named contribution file into. */
   GITHUB_CVE_CONTRIBUTIONS_DIR: string;
+  /** Directory each AI-review enqueue PR drops a uniquely-named queue file into. */
+  GITHUB_CVE_REVIEW_QUEUE_DIR: string;
+  /** Directory where per-package CVE files live (used to validate enqueue requests). */
+  GITHUB_CVES_DIR: string;
 };
 
 // ---------- Common helpers ----------
@@ -186,6 +190,36 @@ async function ghApi<T>(
     throw new Error(`GitHub ${method} ${path} → ${res.status}: ${await res.text()}`);
   }
   return (await res.json()) as T;
+}
+
+/**
+ * Fetch a repository file as raw text via the GitHub Contents API.
+ *
+ * Uses `Accept: application/vnd.github.raw` instead of the default JSON
+ * envelope. Two benefits:
+ *
+ * 1. The response body is already UTF-8 text — no base64 round-trip — so
+ *    non-ASCII advisory text (accents, em-dashes, non-Latin scripts) decodes
+ *    correctly.
+ * 2. Bypasses the JSON-envelope's 1 MB content limit; raw can return files
+ *    far larger than what `contents` returns base64-encoded.
+ *
+ * Returns 404 → throws an Error with `(404)` in the message so callers can
+ * branch on "genuinely missing" vs "transient failure".
+ */
+async function ghApiText(token: string, path: string): Promise<string> {
+  const res = await fetch(`https://api.github.com${path}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/vnd.github.raw",
+      "User-Agent": UA,
+      "X-GitHub-Api-Version": "2022-11-28",
+    },
+  });
+  if (!res.ok) {
+    throw new Error(`GitHub GET ${path} → ${res.status}: ${await res.text()}`);
+  }
+  return await res.text();
 }
 
 // ---------- /exchange ----------
@@ -677,6 +711,327 @@ async function handleSubmitCves(request: Request, env: Env): Promise<Response> {
   }
 }
 
+// ---------- /api/enqueue-cve-review (queue AI review of one or more advisories) ----------
+
+type EnqueueItem = {
+  package: string;
+  advisory_id: string;
+  reason?: string;
+  note?: string;
+};
+
+type EnqueueBody = {
+  userToken: string;
+  items: EnqueueItem[];
+  title?: string;
+  body?: string;
+};
+
+const ENQUEUE_MAX_ITEMS = 50;
+const ADVISORY_ID_RE =
+  /^(GHSA-|CVE-|OSV-|PYSEC-|RUSTSEC-|GO-|MAL-|NPM-|PLDB-|HSEC-|ASB-|ALAS-|RHSA-)/;
+
+function validateEnqueueItems(items: unknown): { ok: EnqueueItem[]; error: string | null } {
+  if (!Array.isArray(items) || items.length === 0) {
+    return { ok: [], error: "items must be a non-empty array" };
+  }
+  if (items.length > ENQUEUE_MAX_ITEMS) {
+    return { ok: [], error: `at most ${ENQUEUE_MAX_ITEMS} items per request` };
+  }
+  const seen = new Set<string>();
+  const out: EnqueueItem[] = [];
+  for (const [i, raw] of items.entries()) {
+    if (!raw || typeof raw !== "object") {
+      return { ok: [], error: `items[${i}] must be an object` };
+    }
+    const r = raw as Record<string, unknown>;
+    const pkg = r.package;
+    const adv = r.advisory_id;
+    if (typeof pkg !== "string" || pkg.trim() === "") {
+      return { ok: [], error: `items[${i}].package is required` };
+    }
+    if (typeof adv !== "string" || !ADVISORY_ID_RE.test(adv)) {
+      return { ok: [], error: `items[${i}].advisory_id is not a recognised id` };
+    }
+    const key = `${pkg}\x00${adv}`;
+    if (seen.has(key)) {
+      return { ok: [], error: `items[${i}] duplicate (${pkg}, ${adv})` };
+    }
+    seen.add(key);
+    const item: EnqueueItem = { package: pkg, advisory_id: adv };
+    if (typeof r.reason === "string") item.reason = r.reason;
+    if (typeof r.note === "string") item.note = r.note;
+    out.push(item);
+  }
+  return { ok: out, error: null };
+}
+
+type dict = Record<string, unknown> | null;
+
+/** A per-request cache entry. `null` = package file is genuinely missing
+ *  (404). `"skipped"` = could not fetch/parse for other reasons; callers
+ *  should fail-open rather than reject the queue request. */
+type PkgFetchResult = dict | "skipped";
+
+async function fetchPkgFile(
+  installToken: string,
+  owner: string,
+  repo: string,
+  branch: string,
+  cvesDir: string,
+  pkg: string,
+): Promise<PkgFetchResult> {
+  const path = `${cvesDir}/${pkg}.json`;
+  const url = `/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(branch)}`;
+  let raw: string;
+  try {
+    raw = await ghApiText(installToken, url);
+  } catch (err) {
+    const msg = String(err);
+    // 404 — file genuinely doesn't exist; let the caller reject the request.
+    if (/→ 404/.test(msg)) return null;
+    // Anything else (5xx, network blip, surprise schema) — fail-open. We
+    // would rather queue a possibly-bad item than fail the whole batch on a
+    // transient GitHub hiccup. The AI workflow itself rejects unknown pairs
+    // with a clean skipped[] entry.
+    console.warn(`fetchPkgFile(${pkg}): falling back to fail-open: ${msg}`);
+    return "skipped";
+  }
+  try {
+    return JSON.parse(raw) as dict;
+  } catch (err) {
+    console.warn(`fetchPkgFile(${pkg}): JSON parse failed, fail-open: ${err}`);
+    return "skipped";
+  }
+}
+
+async function verifyAdvisoryExists(
+  installToken: string,
+  owner: string,
+  repo: string,
+  branch: string,
+  cvesDir: string,
+  pkg: string,
+  advisoryId: string,
+  pkgCache: Map<string, PkgFetchResult>,
+): Promise<string | null> {
+  let pkgData = pkgCache.get(pkg);
+  if (pkgData === undefined) {
+    pkgData = await fetchPkgFile(
+      installToken,
+      owner,
+      repo,
+      branch,
+      cvesDir,
+      pkg,
+    );
+    pkgCache.set(pkg, pkgData);
+  }
+  if (pkgData === null) {
+    return `unknown package: ${pkg}`;
+  }
+  if (pkgData === "skipped") {
+    // Couldn't verify — accept the pair and let the AI workflow handle it.
+    return null;
+  }
+  const advisories = (pkgData as { advisories?: unknown[] }).advisories ?? [];
+  for (const adv of advisories) {
+    if (!adv || typeof adv !== "object") continue;
+    const a = adv as Record<string, unknown>;
+    if (a.id === advisoryId) return null;
+    const aliases = a.aliases;
+    if (Array.isArray(aliases) && aliases.includes(advisoryId)) return null;
+  }
+  return `advisory ${advisoryId} not found in ${pkg}.json`;
+}
+
+function buildQueueFile(
+  items: EnqueueItem[],
+  user: GhUser,
+  timestamp: string,
+): string {
+  return (
+    JSON.stringify(
+      {
+        schema_version: 1,
+        enqueued_at: timestamp,
+        enqueued_by: "worker",
+        author: user.login,
+        items,
+      },
+      null,
+      2,
+    ) + "\n"
+  );
+}
+
+function queueFilename(user: GhUser, timestamp: string): string {
+  const tsSafe = timestamp.replace(/[:.]/g, "-");
+  const rand = Math.random().toString(36).slice(2, 7);
+  const userSafe = user.login.replace(/[^A-Za-z0-9._-]/g, "_");
+  return `${tsSafe}--${userSafe}--${rand}.json`;
+}
+
+function renderEnqueuePrBody(items: EnqueueItem[], user: GhUser, extra: string): string {
+  const rows = items
+    .map(
+      (it) =>
+        `- \`${it.package}\` / \`${it.advisory_id}\`${
+          it.note ? ` — ${it.note}` : ""
+        }`,
+    )
+    .join("\n");
+  const trailer = extra ? `\n\n---\n\n${extra}` : "";
+  return (
+    `Queueing **${items.length}** advisory pair(s) for AI CVE coverage review ` +
+    `(requested by @${user.login}).\n\n${rows}\n\n` +
+    `Merge this queue PR first. After it lands on \`main\`, the next ` +
+    `\`cve_ai_review.yml\` run will pick these up and open a separate ` +
+    `"AI CVE review drafts" PR with the model's verdicts.${trailer}`
+  );
+}
+
+async function handleEnqueueCveReview(
+  request: Request,
+  env: Env,
+): Promise<Response> {
+  const origin = request.headers.get("Origin");
+  let payload: EnqueueBody;
+  try {
+    payload = (await request.json()) as EnqueueBody;
+  } catch {
+    return json({ error: "invalid_json" }, { status: 400, origin, env });
+  }
+  if (!payload.userToken) {
+    return json({ error: "missing_fields" }, { status: 400, origin, env });
+  }
+  const { ok: items, error: itemsError } = validateEnqueueItems(payload.items);
+  if (itemsError) {
+    return json(
+      { error: "invalid_items", detail: itemsError },
+      { status: 400, origin, env },
+    );
+  }
+  if (!env.GITHUB_APP_PRIVATE_KEY || !env.GITHUB_INSTALLATION_ID) {
+    return json({ error: "app_not_configured" }, { status: 500, origin, env });
+  }
+
+  // 1. Identify the user.
+  const userRes = await fetch("https://api.github.com/user", {
+    headers: {
+      Authorization: `Bearer ${payload.userToken}`,
+      Accept: "application/vnd.github+json",
+      "User-Agent": UA,
+    },
+  });
+  if (!userRes.ok) {
+    return json(
+      { error: "invalid_user_token", status: userRes.status },
+      { status: 401, origin, env },
+    );
+  }
+  const user = (await userRes.json()) as GhUser;
+
+  // 2. Installation token (App identity for writes).
+  let installToken: string;
+  try {
+    installToken = await getInstallationToken(env);
+  } catch (err) {
+    return json(
+      { error: "installation_token_failed", detail: String(err) },
+      { status: 500, origin, env },
+    );
+  }
+
+  const owner = env.GITHUB_REPO_OWNER;
+  const repo = env.GITHUB_REPO_NAME;
+  const baseBranch = env.GITHUB_DEFAULT_BRANCH || "main";
+  const queueDir = (
+    env.GITHUB_CVE_REVIEW_QUEUE_DIR || "mappings/cve_review_queue"
+  ).replace(/\/+$/, "");
+  const cvesDir = (env.GITHUB_CVES_DIR || "mappings/cves").replace(/\/+$/, "");
+
+  // 3. Sanity-check each (package, advisory) pair exists in the bundle on the
+  //    default branch — prevents spammers from queueing nonsense or typos.
+  //    Fail-open on transient errors (5xx, network blips, parse failures) —
+  //    only a genuine 404 on the package file rejects the request.
+  const pkgCache = new Map<string, PkgFetchResult>();
+  for (const it of items) {
+    const err = await verifyAdvisoryExists(
+      installToken,
+      owner,
+      repo,
+      baseBranch,
+      cvesDir,
+      it.package,
+      it.advisory_id,
+      pkgCache,
+    );
+    if (err) {
+      return json(
+        { error: "unknown_pair", detail: err },
+        { status: 400, origin, env },
+      );
+    }
+  }
+
+  const timestamp = new Date().toISOString();
+  const filename = queueFilename(user, timestamp);
+  const path = `${queueDir}/${filename}`;
+  const branch = `cve-ai-queue/${user.login}-${Date.now().toString(36)}`;
+
+  try {
+    const ref = await ghApi<{ object: { sha: string } }>(
+      installToken,
+      `/repos/${owner}/${repo}/git/refs/heads/${baseBranch}`,
+    );
+    await ghApi(installToken, `/repos/${owner}/${repo}/git/refs`, "POST", {
+      ref: `refs/heads/${branch}`,
+      sha: ref.object.sha,
+    });
+
+    const newText = buildQueueFile(items, user, timestamp);
+    const email = user.email ?? `${user.login}@users.noreply.github.com`;
+    const authorBlock = { name: user.name ?? user.login, email };
+    await ghApi(
+      installToken,
+      `/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`,
+      "PUT",
+      {
+        message: payload.title || `queue AI CVE review for ${items.length} pair(s)`,
+        content: b64encode(newText),
+        branch,
+        author: authorBlock,
+        committer: authorBlock,
+      },
+    );
+
+    const pr = await ghApi<{ number: number; html_url: string }>(
+      installToken,
+      `/repos/${owner}/${repo}/pulls`,
+      "POST",
+      {
+        title:
+          payload.title || `Queue AI CVE review (${items.length} item${items.length === 1 ? "" : "s"})`,
+        head: branch,
+        base: baseBranch,
+        body: renderEnqueuePrBody(items, user, payload.body || ""),
+        maintainer_can_modify: true,
+      },
+    );
+
+    return json(
+      { number: pr.number, html_url: pr.html_url, branch, file: path },
+      { status: 200, origin, env },
+    );
+  } catch (err) {
+    return json(
+      { error: "github_write_failed", detail: String(err) },
+      { status: 500, origin, env },
+    );
+  }
+}
+
 // ---------- Router ----------
 
 export default {
@@ -701,6 +1056,9 @@ export default {
     }
     if (url.pathname === "/api/submit-cves" && request.method === "POST") {
       return handleSubmitCves(request, env);
+    }
+    if (url.pathname === "/api/enqueue-cve-review" && request.method === "POST") {
+      return handleEnqueueCveReview(request, env);
     }
     return json({ error: "not_found" }, { status: 404, origin, env });
   },
