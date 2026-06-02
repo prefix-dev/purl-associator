@@ -8,9 +8,11 @@ This is the standards-compliance gate. It checks:
   ``ossf/osv-schema``). Each advisory must be a valid OSV record.
 * ``mappings/cve_contributions/*.json`` — each reviewer contribution against
   ``schemas/openvex-schema.json`` (the official OpenVEX 0.2.0 schema).
-* ``web/public/cves.json`` — the merged bundle against
+* ``web/public/cves.json`` — the legacy merged bundle against
   ``schemas/cves-bundle.schema.json`` plus the OSV schema per advisory.
   Skipped if absent (it is a generated artifact).
+* ``web/public/cves-index.json`` and ``web/public/cve_packages/*.json`` — the
+  split SPA payload used for fast startup and lazy package detail loading.
 * ``web/public/mappings.json`` — manual/contribution PURL alternative lists are
   checked against the merged bundle so reviewed removals cannot be silently
   reintroduced from auto-generated suggestions.
@@ -33,6 +35,8 @@ SCHEMA_DIR = ROOT / "schemas"
 DEFAULT_CVES_DIR = ROOT / "mappings" / "cves"
 DEFAULT_CONTRIB_DIR = ROOT / "mappings" / "cve_contributions"
 DEFAULT_BUNDLE = ROOT / "web" / "public" / "cves.json"
+DEFAULT_CVES_INDEX = ROOT / "web" / "public" / "cves-index.json"
+DEFAULT_CVES_DETAIL_DIR = ROOT / "web" / "public" / "cve_packages"
 DEFAULT_MANUAL_MAPPINGS = ROOT / "mappings" / "manual.json"
 DEFAULT_MAPPING_CONTRIB_DIR = ROOT / "mappings" / "contributions"
 DEFAULT_MAPPINGS_BUNDLE = ROOT / "web" / "public" / "mappings.json"
@@ -168,7 +172,7 @@ def validate_mapping_alternatives(
 
 
 def validate_bundle(bundle_path: Path, errors: list[str]) -> bool:
-    """Validate the merged cves.json bundle. Returns False if it is absent."""
+    """Validate the legacy merged cves.json bundle. Returns False if it is absent."""
     if not bundle_path.exists():
         return False
     rel = (
@@ -189,6 +193,53 @@ def validate_bundle(bundle_path: Path, errors: list[str]) -> bool:
         _validate_advisories(
             pkg.get("advisories"), osv, "OSV record", f"{rel}:{name}", errors
         )
+    return True
+
+
+def validate_split_cves(index_path: Path, detail_dir: Path, errors: list[str]) -> bool:
+    """Validate cves-index.json plus lazy per-package detail files."""
+    if not index_path.exists():
+        return False
+    rel = index_path.relative_to(ROOT) if index_path.is_relative_to(ROOT) else index_path
+    index_schema = _validator("cves-index.schema.json")
+    envelope = _validator("cve-package.schema.json")
+    osv = _validator("osv-schema.json")
+    try:
+        index = _load(index_path)
+    except json.JSONDecodeError as exc:
+        errors.append(f"{rel}: invalid JSON: {exc}")
+        return True
+    for err in index_schema.iter_errors(index):
+        errors.append(f"{rel} [index] {_fmt(err)}")
+
+    packages = index.get("packages") or {}
+    seen_detail_paths: set[str] = set()
+    for name, pkg_index in packages.items():
+        detail_path = pkg_index.get("detail_path") if isinstance(pkg_index, dict) else None
+        if not isinstance(detail_path, str):
+            continue
+        seen_detail_paths.add(detail_path)
+        path = ROOT / "web" / "public" / detail_path
+        drel = path.relative_to(ROOT) if path.is_relative_to(ROOT) else path
+        if not path.exists():
+            errors.append(f"{rel}:{name}: missing detail file {detail_path}")
+            continue
+        try:
+            detail = _load(path)
+        except json.JSONDecodeError as exc:
+            errors.append(f"{drel}: invalid JSON: {exc}")
+            continue
+        if detail.get("package") != name:
+            errors.append(f"{drel}: package {detail.get('package')!r}, expected {name!r}")
+        for err in envelope.iter_errors(detail):
+            errors.append(f"{drel} [envelope] {_fmt(err)}")
+        _validate_advisories(detail.get("advisories"), osv, "OSV record", drel, errors)
+
+    if detail_dir.exists():
+        expected = {str((ROOT / "web" / "public" / p).resolve()) for p in seen_detail_paths}
+        for path in detail_dir.glob("*.json"):
+            if str(path.resolve()) not in expected:
+                errors.append(f"{path.relative_to(ROOT)}: stale detail file not referenced by index")
     return True
 
 
@@ -243,6 +294,8 @@ def main() -> None:
     parser.add_argument("--cves-dir", type=Path, default=DEFAULT_CVES_DIR)
     parser.add_argument("--contributions", type=Path, default=DEFAULT_CONTRIB_DIR)
     parser.add_argument("--bundle", type=Path, default=DEFAULT_BUNDLE)
+    parser.add_argument("--cves-index", type=Path, default=DEFAULT_CVES_INDEX)
+    parser.add_argument("--cves-detail-dir", type=Path, default=DEFAULT_CVES_DETAIL_DIR)
     parser.add_argument("--mappings", type=Path, default=DEFAULT_MAPPINGS_BUNDLE)
     parser.add_argument(
         "--mapping-contributions", type=Path, default=DEFAULT_MAPPING_CONTRIB_DIR
@@ -256,6 +309,7 @@ def main() -> None:
     n_cves = validate_cves(args.cves_dir, errors)
     n_contrib = validate_contributions(args.contributions, errors)
     has_bundle = validate_bundle(args.bundle, errors)
+    has_split_cves = validate_split_cves(args.cves_index, args.cves_detail_dir, errors)
     has_mappings = validate_mapping_alternatives(
         args.manual_mappings, args.mapping_contributions, args.mappings, errors
     )
@@ -274,6 +328,7 @@ def main() -> None:
         f"{n_queue} AI review queue file(s) valid, "
         f"{n_drafts} AI draft(s) valid, "
         f"CVE bundle {'valid' if has_bundle else 'absent (skipped)'}, "
+        f"split CVE payload {'valid' if has_split_cves else 'absent (skipped)'}, "
         f"mapping removals {'valid' if has_mappings else 'absent (skipped)'}"
     )
 

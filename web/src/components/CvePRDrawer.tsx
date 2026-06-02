@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { repoFullName } from "../config";
 import { submitCveReviewsAsPR } from "../github/cve_api";
 import {
@@ -15,7 +15,8 @@ import { Avatar, Btn, Glyph, Theme } from "./Primitives";
 type Props = {
   theme: Theme;
   edits: Record<string, ReviewEdit>;
-  packages: Record<string, CvePackage>;
+  loadedPackages: Record<string, CvePackage>;
+  ensurePackageDetail: (pkgName: string) => Promise<CvePackage>;
   /** Representative package name → every conda package collapsed into it
    *  (including the representative). Reviews fan out across the members. */
   membersByRep: Map<string, string[]>;
@@ -45,7 +46,8 @@ const STATUS_LABELS: Record<string, string> = {
 export function CvePRDrawer({
   theme,
   edits,
-  packages,
+  loadedPackages,
+  ensurePackageDetail,
   membersByRep,
   onClose,
   onCommit,
@@ -56,7 +58,7 @@ export function CvePRDrawer({
   token,
 }: Props) {
   const t = theme.t;
-  const editEntries = Object.entries(edits);
+  const editEntries = useMemo(() => Object.entries(edits), [edits]);
   const editsCount = editEntries.length;
 
   const [title, setTitle] = useState("Review conda-forge CVE assignments");
@@ -64,8 +66,47 @@ export function CvePRDrawer({
   const [committing, setCommitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [committed, setCommitted] = useState<Committed | null>(null);
+  const [details, setDetails] = useState<Record<string, CvePackage>>({});
+  const [loadingDetails, setLoadingDetails] = useState(false);
 
-  function generateBody(): string {
+  const detailPackages = useMemo(
+    () => ({ ...loadedPackages, ...details }),
+    [loadedPackages, details],
+  );
+
+  const editedPackageNames = useMemo(() => {
+    const names = new Set<string>();
+    for (const [key] of editEntries) {
+      const sep = key.indexOf("::");
+      if (sep >= 0) names.add(key.slice(0, sep));
+    }
+    return [...names];
+  }, [editEntries]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const missing = editedPackageNames.filter((name) => !detailPackages[name]);
+    if (missing.length === 0) return;
+    setLoadingDetails(true);
+    Promise.all(missing.map((name) => ensurePackageDetail(name)))
+      .then((loaded) => {
+        if (cancelled) return;
+        setDetails((prev) => {
+          const next = { ...prev };
+          for (const pkg of loaded) next[pkg.package] = pkg;
+          return next;
+        });
+      })
+      .catch((err) => setError(err instanceof Error ? err.message : String(err)))
+      .finally(() => {
+        if (!cancelled) setLoadingDetails(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [detailPackages, editedPackageNames, ensurePackageDetail]);
+
+  function generateBody(packagesForBody = detailPackages): string {
     // Group edits by package so the PR reads as "per-package review".
     const byPkg = new Map<string, [string, ReviewEdit][]>();
     for (const [key, edit] of editEntries) {
@@ -150,7 +191,7 @@ export function CvePRDrawer({
     }
 
     for (const [pkgName, items] of [...byPkg.entries()].sort()) {
-      const pkg = packages[pkgName];
+      const pkg = packagesForBody[pkgName];
       const purl = pkg?.purls?.[0] || "";
       lines.push(`### ${pkgName}${purl ? ` · \`${purl}\`` : ""}`);
       lines.push("");
@@ -228,12 +269,26 @@ export function CvePRDrawer({
     setCommitting(true);
     setError(null);
     try {
+      const loaded = await Promise.all(
+        editedPackageNames
+          .filter((name) => !detailPackages[name])
+          .map((name) => ensurePackageDetail(name)),
+      );
+      if (loaded.length > 0) {
+        setDetails((prev) => {
+          const next = { ...prev };
+          for (const pkg of loaded) next[pkg.package] = pkg;
+          return next;
+        });
+      }
+      const packagesForBody = { ...detailPackages };
+      for (const pkg of loaded) packagesForBody[pkg.package] = pkg;
       const result = await submitCveReviewsAsPR({
         token,
         edits,
         membersByRep,
         title,
-        body: body.trim() === "" ? generateBody() : body,
+        body: body.trim() === "" ? generateBody(packagesForBody) : body,
       });
       setCommitted({
         number: result.number,
@@ -319,7 +374,18 @@ export function CvePRDrawer({
         ) : (
           <>
             <div style={{ flex: 1, overflowY: "auto", padding: "12px 20px" }}>
-              {editEntries.length === 0 ? (
+              {loadingDetails ? (
+                <div
+                  style={{
+                    padding: 30,
+                    textAlign: "center",
+                    color: t.fg3,
+                    fontSize: 13,
+                  }}
+                >
+                  Loading advisory details…
+                </div>
+              ) : editEntries.length === 0 ? (
                 <div
                   style={{
                     padding: 30,
@@ -354,7 +420,7 @@ export function CvePRDrawer({
                     const sep = key.indexOf("::");
                     const pkg = key.slice(0, sep);
                     const advisoryId = key.slice(sep + 2);
-                    const adv = packages[pkg]?.advisories.find(
+                    const adv = detailPackages[pkg]?.advisories.find(
                       (a) => a.id === advisoryId,
                     );
                     const memberCount = (membersByRep.get(pkg) ?? [pkg]).length;
@@ -655,7 +721,7 @@ export function CvePRDrawer({
                     theme={theme}
                     variant="primary"
                     icon="pr"
-                    disabled={committing}
+                    disabled={committing || loadingDetails}
                     onClick={handleCommit}
                   >
                     {committing

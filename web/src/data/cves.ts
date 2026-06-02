@@ -120,6 +120,45 @@ export type CvePayload = {
   packages: Record<string, CvePackage>;
 };
 
+export type CveAdvisoryIndex = {
+  id: string;
+  aliases?: string[];
+  cve_ids?: string[];
+  primary_id: string;
+  summary?: string;
+  modified?: string;
+  severity?: OsvSeverity;
+  active_now: boolean;
+  affects_future: boolean;
+  vex_status?: VexStatus;
+  affected_version_count: number;
+};
+
+export type CvePackageIndex = {
+  schema_version: number;
+  package: string;
+  purls: string[];
+  cpes?: string[];
+  generated_at: string;
+  conda_versions_total: number;
+  latest_version?: string | null;
+  detail_path: string;
+  advisory_count: number;
+  affected_version_count: number;
+  unique_affected_version_count: number;
+  advisories: CveAdvisoryIndex[];
+};
+
+export type CveIndexPayload = {
+  schema_version: number;
+  generated_at: string;
+  contribution_count: number;
+  package_count: number;
+  advisory_count: number;
+  affected_version_count: number;
+  packages: Record<string, CvePackageIndex>;
+};
+
 /* ---- accessors over the OSV-record layout (mirror scripts/cve_common.py) ---- */
 
 export function condaBlock(adv: Advisory): CondaForgeBlock | undefined {
@@ -160,7 +199,7 @@ export function osvUrl(adv: Advisory): string {
  * branch's active CVEs behind the representative's. Same PURLs + same latest
  * version ⇒ identical advisory set *and* identical now/future split, so one
  * member faithfully represents the rest. */
-export function purlGroupKey(pkg: CvePackage): string {
+export function purlGroupKey(pkg: Pick<CvePackage | CvePackageIndex, "purls" | "latest_version">): string {
   const purls = [...pkg.purls].sort().join(" ");
   return `${purls} @@ ${pkg.latest_version ?? ""}`;
 }
@@ -220,13 +259,39 @@ export function osvRanges(adv: Advisory): OsvRange[] {
 }
 
 const DEFAULT_PATH = "./cves.json";
+const DEFAULT_INDEX_PATH = "./cves-index.json";
+
+const jsonCache = new Map<string, Promise<unknown>>();
+
+async function loadJsonCached<T>(path: string): Promise<T> {
+  const cached = jsonCache.get(path);
+  if (cached) return cached as Promise<T>;
+  const promise = fetch(path, { cache: "no-cache" }).then((res) => {
+    if (!res.ok) {
+      throw new Error(`Failed to load ${path}: ${res.status} ${res.statusText}`);
+    }
+    return res.json() as Promise<T>;
+  });
+  jsonCache.set(path, promise);
+  promise.catch(() => jsonCache.delete(path));
+  return promise;
+}
 
 export async function loadCves(path = DEFAULT_PATH): Promise<CvePayload> {
-  const res = await fetch(path, { cache: "no-cache" });
-  if (!res.ok) {
-    throw new Error(`Failed to load ${path}: ${res.status} ${res.statusText}`);
-  }
-  return res.json();
+  return loadJsonCached<CvePayload>(path);
+}
+
+export async function loadCveIndex(
+  path = DEFAULT_INDEX_PATH,
+): Promise<CveIndexPayload> {
+  return loadJsonCached<CveIndexPayload>(path);
+}
+
+export async function loadCvePackageDetail(
+  pkgOrPath: CvePackageIndex | string,
+): Promise<CvePackage> {
+  const path = typeof pkgOrPath === "string" ? pkgOrPath : `./${pkgOrPath.detail_path}`;
+  return loadJsonCached<CvePackage>(path);
 }
 
 /* ---- AI CVE review sidecars (cve_ai_drafts.json + cve_ai_queue.json) ---- */

@@ -93,12 +93,15 @@ jobs:
         run: pixi run cve-ai-auto-enqueue
 
       - name: Merge CVEs + reviewer contributions for the SPA
+        # Emits both the legacy cves.json bundle and the split dashboard payload
+        # (cves-index.json + cve_packages/*) used for lazy package detail loads.
         run: pixi run python -m scripts.merge_cves
 
       - name: Validate against the OSV + OpenVEX schemas
         # Standards-compliance gate: every per-package file must be a valid
-        # OSV record, every contribution a valid OpenVEX document, and
-        # cves.json a valid bundle. A failure here blocks the refresh PR.
+        # OSV record, every contribution a valid OpenVEX document, and the
+        # generated CVE dashboard payloads must validate. A failure here blocks
+        # the refresh PR.
         run: pixi run validate
 
       - name: Refresh AI draft / queue SPA sidecars
@@ -122,6 +125,8 @@ jobs:
             mappings/cves/**
             mappings/cve_review_queue/**
             web/public/cves.json
+            web/public/cves-index.json
+            web/public/cve_packages/**
             web/public/cve_ai_drafts.json
             web/public/cve_ai_queue.json
           branch: cves/refresh
