@@ -169,12 +169,18 @@ def _emit_table(rows: list[dict]) -> list[str]:
     return lines
 
 
-def _emit_details(rows: list[dict]) -> list[str]:
-    lines = ["## Per-draft reasoning", ""]
+def _detail_blocks(rows: list[dict]) -> list[list[str]]:
+    """One self-contained ``<details>`` block per package (incl. trailing blank).
+
+    Returned as separate blocks so the body assembler can drop whole-package
+    sections when the rendered body would exceed GitHub's PR-body size limit.
+    """
     by_pkg: dict[str, list[dict]] = {}
     for r in rows:
         by_pkg.setdefault(r["package"], []).append(r)
+    blocks: list[list[str]] = []
     for pkg, items in sorted(by_pkg.items()):
+        lines: list[str] = []
         lines.append(
             f"<details><summary><code>{pkg}</code> — {len(items)} draft(s)</summary>"
         )
@@ -236,7 +242,55 @@ def _emit_details(rows: list[dict]) -> list[str]:
             lines.append("")
         lines.append("</details>")
         lines.append("")
-    return lines
+        blocks.append(lines)
+    return blocks
+
+
+# GitHub rejects PR bodies longer than 65,536 characters, measured (like the
+# GraphQL/JS notion of string length) in UTF-16 code units — so emoji and other
+# astral chars count as 2. Cap a little under that for headroom.
+GITHUB_PR_BODY_LIMIT = 65536
+DEFAULT_MAX_CHARS = 65000
+
+
+def _u16len(s: str) -> int:
+    """Length in UTF-16 code units — how GitHub counts a PR body's characters."""
+    return len(s.encode("utf-16-le")) // 2
+
+
+def _assemble_body(head_lines: list[str], blocks: list[list[str]], max_chars: int) -> str:
+    """Join header/table + as many per-package detail blocks as fit under the cap.
+
+    Whole-package blocks are dropped (never split mid-section) once adding the
+    next one would exceed ``max_chars``; a note records how many were omitted.
+    Length is measured in UTF-16 code units to match GitHub's limit.
+    """
+    note_tmpl = (
+        "> ⚠️ Per-draft reasoning truncated to fit GitHub's "
+        f"{GITHUB_PR_BODY_LIMIT:,}-character PR-body limit — **{{omitted}}** "
+        "package section(s) omitted. See `mappings/cve_ai_drafts/` or the SPA "
+        "for the full reasoning."
+    )
+    reserve = _u16len(note_tmpl.format(omitted=len(blocks))) + 2
+
+    lines = list(head_lines) + ["## Per-draft reasoning", ""]
+    length = sum(_u16len(s) + 1 for s in lines)  # +1 for the joining newline
+    omitted = 0
+    for i, block in enumerate(blocks):
+        block_len = sum(_u16len(s) + 1 for s in block)
+        if length + block_len + reserve > max_chars:
+            omitted = len(blocks) - i
+            break
+        lines.extend(block)
+        length += block_len
+    if omitted:
+        lines.append(note_tmpl.format(omitted=omitted))
+        lines.append("")
+
+    body = "\n".join(lines)
+    while _u16len(body) > max_chars:  # backstop (e.g. an enormous table)
+        body = body[:-256].rstrip() + "\n"
+    return body
 
 
 def main() -> int:
@@ -249,6 +303,13 @@ def main() -> int:
     )
     parser.add_argument(
         "--out", type=Path, default=None, help="Write to this path (default: stdout)"
+    )
+    parser.add_argument(
+        "--max-chars",
+        type=int,
+        default=DEFAULT_MAX_CHARS,
+        help=f"Cap body length (default {DEFAULT_MAX_CHARS}; GitHub limit is "
+        f"{GITHUB_PR_BODY_LIMIT}).",
     )
     args = parser.parse_args()
 
@@ -265,9 +326,8 @@ def main() -> int:
             "(no new drafts in this run — nothing to summarise)\n"
         )
     else:
-        body = "\n".join(
-            _emit_header(rows, drafts) + _emit_table(rows) + _emit_details(rows)
-        )
+        head_lines = _emit_header(rows, drafts) + _emit_table(rows)
+        body = _assemble_body(head_lines, _detail_blocks(rows), args.max_chars)
 
     if args.out:
         args.out.parent.mkdir(parents=True, exist_ok=True)

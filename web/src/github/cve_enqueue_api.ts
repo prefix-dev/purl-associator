@@ -12,6 +12,8 @@ export type EnqueueItem = {
   package: string;
   advisory_id: string;
   note?: string;
+  /** Force a re-draft even when the pair is already drafted and nothing drifted. */
+  force?: boolean;
 };
 
 export type EnqueueOptions = {

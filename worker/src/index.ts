@@ -718,6 +718,8 @@ type EnqueueItem = {
   advisory_id: string;
   reason?: string;
   note?: string;
+  /** Force a re-draft even when the pair is already drafted and nothing drifted. */
+  force?: boolean;
 };
 
 type EnqueueBody = {
@@ -761,6 +763,7 @@ function validateEnqueueItems(items: unknown): { ok: EnqueueItem[]; error: strin
     const item: EnqueueItem = { package: pkg, advisory_id: adv };
     if (typeof r.reason === "string") item.reason = r.reason;
     if (typeof r.note === "string") item.note = r.note;
+    if (r.force === true) item.force = true;
     out.push(item);
   }
   return { ok: out, error: null };
