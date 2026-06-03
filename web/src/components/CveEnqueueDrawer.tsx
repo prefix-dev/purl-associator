@@ -10,6 +10,7 @@ type Props = {
   items: EnqueueItem[];
   onClose: () => void;
   onRemove: (pkg: string, advisoryId: string) => void;
+  onClear: () => void;
   onSubmitted: () => void;
   isLoggedIn: boolean;
   onRequestLogin: () => void;
@@ -28,6 +29,7 @@ export function CveEnqueueDrawer({
   items,
   onClose,
   onRemove,
+  onClear,
   onSubmitted,
   isLoggedIn,
   onRequestLogin,
@@ -211,21 +213,26 @@ export function CveEnqueueDrawer({
               borderTop: `1px solid ${t.border}`,
               display: "flex",
               gap: 8,
-              justifyContent: "flex-end",
+              justifyContent: "space-between",
             }}
           >
-            <Btn theme={theme} variant="ghost" onClick={onClose}>
-              Cancel
+            <Btn theme={theme} variant="ghost" onClick={onClear} disabled={submitting}>
+              Clear all
             </Btn>
-            <Btn
-              theme={theme}
-              variant="primary"
-              icon="pr"
-              onClick={submit}
-              disabled={submitting}
-            >
-              {submitting ? "Opening PR…" : "Submit batch"}
-            </Btn>
+            <div style={{ display: "flex", gap: 8 }}>
+              <Btn theme={theme} variant="ghost" onClick={onClose}>
+                Cancel
+              </Btn>
+              <Btn
+                theme={theme}
+                variant="primary"
+                icon="pr"
+                onClick={submit}
+                disabled={submitting}
+              >
+                {submitting ? "Opening PR…" : "Submit batch"}
+              </Btn>
+            </div>
           </div>
         )}
       </div>

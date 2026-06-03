@@ -71,7 +71,7 @@ DEFAULT_LIMIT = 50
 REALTIME_CONCURRENCY = 4  # API mode; claude-cli forces 1.
 # Bump this whenever SYSTEM_PROMPT semantics change in a way that should
 # invalidate existing drafts once their queue items are seen again.
-PROMPT_VERSION = "2026-06-02.openvex-status-history-v1"
+PROMPT_VERSION = "2026-06-03.verify-conda-shipped-versions-v1"
 
 
 SYSTEM_PROMPT = """You review CVE coverage suggestions for conda-forge packages.
@@ -88,8 +88,15 @@ auto-derived match is a sensible CVE coverage assertion and produce:
    Avoid hedging when the evidence is clear; say "unknown" when it isn't.
 
 2. **affected_versions** — does the conda `affected_versions` set look right
-   given the OSV ranges and the conda release history? Suggest adds/removes
-   when you can; provide reasoning that quotes the specific OSV range events.
+   given the OSV ranges and the conda release history? Suggest removes when a
+   listed conda-forge version is outside the vulnerable range. Suggest adds
+   only for versions you can verify are present in the provided conda-forge
+   package data (for example, already listed in `affected_versions` or clearly
+   identified as the package's `latest_conda_version`). Do not invent upstream
+   fixed or affected versions as conda-forge releases; if a version is not
+   shown in the prompt as shipped on conda-forge, mention it in notes/action
+   text but do not put it in `suggested_adds`. Provide reasoning that quotes
+   the specific OSV range events.
 
 3. **runtime_applicability** — does the vulnerable code actually execute in
    the conda artifact? Consider:
@@ -123,6 +130,14 @@ oriented, not latest-version-only:
   is a different artifact, or the OSV range is over-broad and all matched conda
   versions should be removed.
 - Use `under_investigation` when unsure.
+
+Before claiming the automated conda `affected_versions` are wrong because an
+upstream version should be added/removed, verify that the version exists in the
+conda-forge data shown in the prompt. Upstream project releases, PyPI versions,
+Git tags, or changelog versions are not automatically conda-forge versions.
+If the needed conda-forge version is not present in the prompt, do not suggest
+it as a version override; instead explain that conda-forge shipping status needs
+human verification.
 
 If you cannot tell, use `under_investigation` and explain in the rationale.
 

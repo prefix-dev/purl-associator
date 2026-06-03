@@ -471,6 +471,45 @@ export function SourceTag({ source, theme }: { source: string; theme: Theme }) {
   );
 }
 
+type FilterChipProps = {
+  theme: Theme;
+  active: boolean;
+  onClick: () => void;
+  children: ReactNode;
+  rounded?: boolean;
+};
+
+export function FilterChip({
+  theme,
+  active,
+  onClick,
+  children,
+  rounded = false,
+}: FilterChipProps) {
+  const t = theme.t;
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 6,
+        background: active ? t.accent : t.surface2,
+        color: active ? t.accentFg : t.fg1,
+        border: `1px solid ${active ? t.accent : t.border}`,
+        borderRadius: rounded ? 999 : 6,
+        padding: rounded ? "4px 8px" : "3px 8px",
+        fontSize: rounded ? 11 : 11.5,
+        fontWeight: 600,
+        cursor: "pointer",
+        fontFamily: "Inter, sans-serif",
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
 type BtnProps = {
   children: ReactNode;
   onClick?: () => void;

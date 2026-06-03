@@ -1,16 +1,24 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import type {
-  AiDraft,
   AiDraftsPayload,
   AiQueuePayload,
-  CveAdvisoryIndex,
   CvePackageIndex,
   ReviewEdit,
 } from "../data/cves";
-import { Glyph, Theme, Btn } from "./Primitives";
+import {
+  aiStatusChangeLabel,
+  buildCveAiWorkRows,
+  draftNeedsCloserRead,
+  type CveAiWorkRow,
+} from "../data/cveAiWorkItems";
+import { Glyph, Theme, Btn, FilterChip } from "./Primitives";
+import { useCveAiWorkListPrefsStore } from "../stores/userState";
+import type { EnqueueItem } from "../github/cve_enqueue_api";
+import { useSetSelection } from "../hooks/useSetSelection";
 
 type Mode = "queue" | "drafts";
 type SeverityFilter = "all" | "critical" | "high+";
+type StatusChangeFilter = "all" | string;
 
 type Props = {
   theme: Theme;
@@ -24,70 +32,10 @@ type Props = {
   aiQueue: AiQueuePayload | null;
   enqueuedAdvisories: Set<string>;
   onSelect: (pkgName: string, advisoryId: string) => void;
-  onBulkEnqueue: (items: { package: string; advisory_id: string }[]) => void;
+  onBulkEnqueue: (items: EnqueueItem[]) => void;
 };
 
-type Row = {
-  pkg: CvePackageIndex;
-  adv: CveAdvisoryIndex;
-  score: number;
-  reviewed: boolean;
-  queued: boolean;
-  drafted: boolean;
-  draft?: AiDraft;
-  locallyQueued: boolean;
-};
-
-function reviewedStatus(edit: ReviewEdit | undefined, adv: CveAdvisoryIndex): boolean {
-  const status = edit?.status ?? adv.vex_status;
-  return !!status && status !== "under_investigation";
-}
-
-function packageDraft(
-  aiDrafts: AiDraftsPayload | null,
-  packages: string[],
-  advisoryId: string,
-): AiDraft | undefined {
-  for (const pkg of packages) {
-    const draft = aiDrafts?.drafts[pkg]?.[advisoryId];
-    if (draft) return draft;
-  }
-  return undefined;
-}
-
-function draftNeedsCloserRead(draft: AiDraft): boolean {
-  return (
-    !draft.affected_versions.agrees_with_match ||
-    draft.runtime_applicability.applies === "unknown" ||
-    draft.runtime_applicability.applies === "partial" ||
-    draft.severity_in_conda_context.assessment === "unknown"
-  );
-}
-
-function statusChangeLabel(adv: CveAdvisoryIndex, draft: AiDraft): string {
-  const current = adv.vex_status ?? "unreviewed";
-  return current === draft.openvex_status
-    ? `keeps ${draft.openvex_status}`
-    : `${current} → ${draft.openvex_status}`;
-}
-
-function packageQueued(
-  aiQueue: AiQueuePayload | null,
-  packages: string[],
-  advisoryId: string,
-): boolean {
-  return packages.some((pkg) => Boolean(aiQueue?.queue[pkg]?.[advisoryId]));
-}
-
-function locallyQueued(
-  enqueued: Set<string>,
-  packages: string[],
-  advisoryId: string,
-): boolean {
-  return packages.some((pkg) => enqueued.has(`${pkg}::${advisoryId}`));
-}
-
-function rowKey(row: Pick<Row, "pkg" | "adv">): string {
+function rowKey(row: Pick<CveAiWorkRow, "pkg" | "adv">): string {
   return `${row.pkg.package}::${row.adv.id}`;
 }
 
@@ -160,79 +108,58 @@ export function CveAiWorkList({
   onBulkEnqueue,
 }: Props) {
   const t = theme.t;
-  const [q, setQ] = useState("");
-  const [sev, setSev] = useState<SeverityFilter>("all");
-  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const searchByMode = useCveAiWorkListPrefsStore((state) => state.search);
+  const severityByMode = useCveAiWorkListPrefsStore((state) => state.severity);
+  const statusChangeByMode = useCveAiWorkListPrefsStore((state) => state.statusChange);
+  const setModePref = useCveAiWorkListPrefsStore((state) => state.setModePref);
+  const q = searchByMode[mode] ?? "";
+  const sev = (severityByMode[mode] ?? "all") as SeverityFilter;
+  const statusChange = (statusChangeByMode[mode] ?? "all") as StatusChangeFilter;
+  const setQ = (value: string) => setModePref("search", mode, value);
+  const setSev = (value: SeverityFilter) => setModePref("severity", mode, value);
+  const setStatusChange = (value: StatusChangeFilter) => setModePref("statusChange", mode, value);
+  const { selected, toggleSelected, selectItems, clearSelection } = useSetSelection(rowKey);
 
-  const allRows = useMemo<Row[]>(() => {
-    const out: Row[] = [];
-    for (const pkg of packages) {
-      const lookupPackages = membersByRep.get(pkg.package) ?? [pkg.package];
-      for (const adv of pkg.advisories) {
-        const key = `${pkg.package}::${adv.id}`;
-        const draft = packageDraft(aiDrafts, lookupPackages, adv.id);
-        const drafted = Boolean(draft);
-        const queued = packageQueued(aiQueue, lookupPackages, adv.id);
-        const locallyQueued_ = locallyQueued(enqueuedAdvisories, lookupPackages, adv.id);
-        const reviewed = reviewedStatus(edits[key], adv);
-        if (mode === "drafts") {
-          if (!drafted || reviewed) continue;
-        } else {
-          if (!queued || drafted || reviewed) continue;
-        }
-        out.push({
-          pkg,
-          adv,
-          score: adv.severity?.score_num ?? 0,
-          reviewed,
-          queued,
-          drafted,
-          draft,
-          locallyQueued: locallyQueued_,
-        });
-      }
-    }
-    out.sort((a, b) => {
-      if (a.score !== b.score) return b.score - a.score;
-      return a.adv.primary_id.localeCompare(b.adv.primary_id) || a.pkg.package.localeCompare(b.pkg.package);
-    });
-    return out;
-  }, [packages, membersByRep, aiDrafts, aiQueue, enqueuedAdvisories, edits, mode]);
+  const allRows = useMemo(
+    () =>
+      buildCveAiWorkRows({
+        mode,
+        packages,
+        membersByRep,
+        edits,
+        aiDrafts,
+        aiQueue,
+        enqueuedAdvisories,
+      }),
+    [packages, membersByRep, aiDrafts, aiQueue, enqueuedAdvisories, edits, mode],
+  );
 
   const ql = q.trim().toLowerCase();
   const rows = useMemo(() => {
     return allRows.filter((r) => {
       if (sev === "critical" && r.score < 9) return false;
       if (sev === "high+" && r.score < 7) return false;
+      if (mode === "drafts" && statusChange !== "all" && r.draft && aiStatusChangeLabel(r.adv, r.draft) !== statusChange) return false;
       if (!ql) return true;
       const names = [r.pkg.package, ...(membersByRep.get(r.pkg.package) ?? [])].join(" ").toLowerCase();
       const ids = [r.adv.id, r.adv.primary_id, ...(r.adv.cve_ids ?? []), ...(r.adv.aliases ?? [])].join(" ").toLowerCase();
       return names.includes(ql) || ids.includes(ql) || (r.adv.summary ?? "").toLowerCase().includes(ql);
     });
-  }, [allRows, ql, sev, membersByRep]);
+  }, [allRows, ql, sev, statusChange, mode, membersByRep]);
+
+  const statusChangeOptions = useMemo(() => {
+    const labels = new Set<string>();
+    for (const row of allRows) {
+      if (row.draft) labels.add(aiStatusChangeLabel(row.adv, row.draft));
+    }
+    return [...labels].sort();
+  }, [allRows]);
 
   const selectableRows = mode === "drafts" ? rows.filter((r) => !r.locallyQueued) : [];
   const selectedRows = selectableRows.filter((r) => selected.has(rowKey(r)));
 
-  function toggleSelected(key: string): void {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
-  }
-
   function selectVisible(): void {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      for (const row of selectableRows) next.add(rowKey(row));
-      return next;
-    });
-  }
-
-  function clearSelection(): void {
-    setSelected(new Set());
+    selectItems(selectableRows);
   }
 
   return (
@@ -253,22 +180,36 @@ export function CveAiWorkList({
         />
         <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
           {(["all", "critical", "high+"] as SeverityFilter[]).map((value) => (
-            <button
+            <FilterChip
               key={value}
+              theme={theme}
+              active={sev === value}
               onClick={() => setSev(value)}
+              rounded
+            >
+              {value === "high+" ? "High + critical" : value[0].toUpperCase() + value.slice(1)}
+            </FilterChip>
+          ))}
+          {mode === "drafts" && statusChangeOptions.length > 0 && (
+            <select
+              value={statusChange}
+              onChange={(e) => setStatusChange(e.target.value)}
+              title="Filter by AI status change"
               style={{
-                border: `1px solid ${sev === value ? t.accent : t.border}`,
-                background: sev === value ? t.surface2 : "transparent",
-                color: sev === value ? t.fg1 : t.fg2,
+                background: t.inset,
+                color: t.fg1,
+                border: `1px solid ${t.border}`,
                 borderRadius: 999,
                 padding: "4px 8px",
                 fontSize: 11,
-                cursor: "pointer",
               }}
             >
-              {value === "high+" ? "High + critical" : value[0].toUpperCase() + value.slice(1)}
-            </button>
-          ))}
+              <option value="all">All status changes</option>
+              {statusChangeOptions.map((label) => (
+                <option key={label} value={label}>{label}</option>
+              ))}
+            </select>
+          )}
           {mode === "drafts" && selectableRows.length > 0 && (
             <span style={{ marginLeft: "auto", display: "inline-flex", gap: 6, alignItems: "center" }}>
               <button
@@ -378,11 +319,18 @@ export function CveAiWorkList({
                   <AiBadge
                     theme={theme}
                     tone="info"
-                    label={statusChangeLabel(r.adv, r.draft)}
+                    label={aiStatusChangeLabel(r.adv, r.draft)}
                   />
                 </div>
               )}
-              <div style={{ marginTop: 4, fontFamily: "JetBrains Mono, monospace", color: t.fg2, fontSize: 11 }}>{r.pkg.package}</div>
+              <div style={{ marginTop: 4, fontFamily: "JetBrains Mono, monospace", color: t.fg2, fontSize: 11 }}>
+                {r.pkg.package}
+                {mode === "queue" && r.packageQueueCount > 1 && (
+                  <span style={{ marginLeft: 8, fontFamily: "Inter, sans-serif", color: t.fg3 }}>
+                    {r.packageQueueCount} CVEs queued for this package
+                  </span>
+                )}
+              </div>
               {r.adv.summary && <div style={{ marginTop: 4, color: t.fg2, fontSize: 12, lineHeight: 1.35 }}>{r.adv.summary}</div>}
             </button>
           );
