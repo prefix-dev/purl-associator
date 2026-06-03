@@ -2,9 +2,9 @@
 
 Use this after changing ``scripts.cve_ai_review`` prompt semantics. It reads the
 newest draft per ``(package, advisory_id)`` from ``mappings/cve_ai_drafts/`` and
-writes one queue file under ``mappings/cve_review_queue/``. The next
-``cve-ai-review`` run will pick the pairs up; if the prompt version changed, the
-runner redrafts them even without ``--redraft``.
+writes one queue file under ``mappings/cve_review_queue/``. By default each item
+is marked ``force: true``, so the next ``cve-ai-review`` run redrafts the pairs
+even when nothing has drifted (pass ``--no-force`` to redraft only on drift).
 
 Examples::
 
@@ -59,6 +59,13 @@ def main() -> None:
     )
     parser.add_argument("--note", default="", help="Optional note on each queue item")
     parser.add_argument(
+        "--no-force",
+        dest="force",
+        action="store_false",
+        help="Don't force a re-draft; only redraft on prompt/severity/input drift",
+    )
+    parser.set_defaults(force=True)
+    parser.add_argument(
         "--include-human-reviewed",
         action="store_true",
         help="Also requeue pairs already covered by human OpenVEX contributions",
@@ -77,7 +84,7 @@ def main() -> None:
         else load_human_covered_pairs(args.contributions_dir)
     )
 
-    items: list[dict[str, str]] = []
+    items: list[dict[str, object]] = []
     for (pkg, adv), draft in sorted(load_latest_drafts(args.drafts_dir).items()):
         if packages and pkg not in packages:
             continue
@@ -87,9 +94,15 @@ def main() -> None:
             continue
         if (pkg, adv) in covered:
             continue
-        item = {"package": pkg, "advisory_id": adv, "reason": args.reason}
+        item: dict[str, object] = {
+            "package": pkg,
+            "advisory_id": adv,
+            "reason": args.reason,
+        }
         if args.note:
             item["note"] = args.note
+        if args.force:
+            item["force"] = True
         items.append(item)
 
     now = datetime.now(UTC)

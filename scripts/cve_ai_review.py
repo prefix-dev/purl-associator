@@ -264,6 +264,7 @@ class QueueItem:
     advisory_id: str
     reason: str = ""
     note: str = ""
+    force: bool = False  # per-item redraft: bypass the already-drafted/no-drift skip
 
 
 @dataclass
@@ -305,7 +306,7 @@ def _load_queue(queue_dir: Path) -> list[QueueItem]:
     """Union of all items across every queue file. Deduped by (pkg, advisory_id)."""
     if not queue_dir.exists():
         return []
-    seen: set[tuple[str, str]] = set()
+    seen: dict[tuple[str, str], QueueItem] = {}
     out: list[QueueItem] = []
     for path in sorted(queue_dir.glob("*.json")):
         try:
@@ -321,17 +322,21 @@ def _load_queue(queue_dir: Path) -> list[QueueItem]:
             if not pkg or not adv:
                 continue
             key = (pkg, adv)
+            force = bool(raw.get("force"))
             if key in seen:
+                # A later forced requeue of an already-queued pair still forces.
+                if force:
+                    seen[key].force = True
                 continue
-            seen.add(key)
-            out.append(
-                QueueItem(
-                    package=pkg,
-                    advisory_id=adv,
-                    reason=raw.get("reason") or "",
-                    note=raw.get("note") or "",
-                )
+            item = QueueItem(
+                package=pkg,
+                advisory_id=adv,
+                reason=raw.get("reason") or "",
+                note=raw.get("note") or "",
+                force=force,
             )
+            seen[key] = item
+            out.append(item)
     return out
 
 
@@ -951,7 +956,7 @@ def _filter_items(
                 SkippedItem(it.package, it.advisory_id, "human_openvex_exists")
             )
             continue
-        if not redraft:
+        if not redraft and not it.force:
             existing = latest_drafts.get(key)
             if existing is not None:
                 if existing.get("prompt_version") != PROMPT_VERSION:
