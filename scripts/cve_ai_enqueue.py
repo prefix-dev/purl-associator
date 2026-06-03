@@ -59,6 +59,11 @@ def main(
         "manual", "--reason", help="Why this pair is being queued"
     ),
     note: str = typer.Option("", "--note", help="Optional free-form note"),
+    force: bool = typer.Option(
+        False,
+        "--force",
+        help="Force a re-draft even if already drafted with no drift",
+    ),
     queue_dir: Path = typer.Option(DEFAULT_QUEUE_DIR, "--queue-dir"),
     cves_dir: Path = typer.Option(DEFAULT_CVES_DIR, "--cves-dir"),
     skip_existence_check: bool = typer.Option(
@@ -78,13 +83,15 @@ def main(
         )
         sys.exit(2)
 
-    item: dict[str, str] = {
+    item: dict[str, object] = {
         "package": package,
         "advisory_id": advisory,
         "reason": reason,
     }
     if note:
         item["note"] = note
+    if force:
+        item["force"] = True
 
     ts = datetime.now(UTC).strftime("%Y-%m-%dT%H-%M-%S-%fZ")
     run_id = secrets.token_hex(3)

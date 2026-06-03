@@ -210,15 +210,20 @@ export function CveApp() {
     if (items.length === 0) return;
     if (!isLoggedIn) setLoginOpen(true);
     setEnqueueItems((prev) => {
-      const seen = new Set(prev.map((it) => `${it.package}::${it.advisory_id}`));
-      const out = [...prev];
+      const byKey = new Map<string, EnqueueItem>(
+        prev.map((it) => [`${it.package}::${it.advisory_id}`, it]),
+      );
       for (const it of items) {
         const key = `${it.package}::${it.advisory_id}`;
-        if (seen.has(key)) continue;
-        seen.add(key);
-        out.push(it);
+        const existing = byKey.get(key);
+        if (existing) {
+          // Re-staging an already-queued pair with force upgrades it.
+          if (it.force && !existing.force) byKey.set(key, { ...existing, force: true });
+          continue;
+        }
+        byKey.set(key, it);
       }
-      return out;
+      return [...byKey.values()];
     });
     setEnqueueOpen(true);
   }
