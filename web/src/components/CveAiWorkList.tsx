@@ -307,7 +307,13 @@ export function CveAiWorkList({
                 size="sm"
                 disabled={selectedRows.length === 0}
                 onClick={() => {
-                  onBulkEnqueue(selectedRows.map((r) => ({ package: r.pkg.package, advisory_id: r.adv.id })));
+                  onBulkEnqueue(
+                    selectedRows.map((r) => ({
+                      package: r.pkg.package,
+                      advisory_id: r.adv.id,
+                      force: true,
+                    })),
+                  );
                   clearSelection();
                 }}
               >

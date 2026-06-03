@@ -10,19 +10,30 @@ Design notes:
 
 * Batched requests (default 15 packages per AI call), mirroring
   :mod:`scripts.ai_vet`. One system prompt amortizes across the batch.
-* Structured output via ``output_config.format.json_schema`` — the model
-  cannot return free-form text, only a list of verdicts matching the
-  schema below.
 * Strict no-hallucination rule: the model must pick from the CPE list it
   was given. If none match, ``verdict="none"`` with an empty selection.
 * Output goes to ``mappings/cpe_vet/<ts>--<runid>.json``, layout
   parallel to ``mappings/ai_vet/``. :mod:`scripts.cpe_promote` reads
   this directory when promoting (``--vet-file`` overrides).
 
+Two LLM backends (``--backend``, mirroring :mod:`scripts.cve_ai_review`):
+
+* ``api`` — Anthropic SDK with ``ANTHROPIC_API_KEY`` (CI default). Uses
+  structured output (``output_config.format.json_schema``) so the reply
+  is guaranteed to match the verdict schema.
+* ``claude-cli`` — shells out to the local ``claude`` CLI in headless
+  mode using the maintainer's Claude subscription (no API key). The CLI
+  can't enforce ``json_schema``, so the schema is embedded in the prompt
+  and the reply is best-effort parsed; ``_validate_selected`` still drops
+  any CPE not in the offered list.
+* ``auto`` (default) picks ``api`` when ``ANTHROPIC_API_KEY`` is set,
+  ``claude-cli`` otherwise.
+
 Run it:
 
-    pixi run cpe-vet --dry-run            # preview prompts, no API call
-    pixi run cpe-vet                      # call Haiku, write verdicts
+    pixi run cpe-vet --dry-run            # preview prompts, no LLM call
+    pixi run cpe-vet                      # auto backend, write verdicts
+    pixi run cpe-vet-local                # force the local subscription
     pixi run cpe-vet --only libpng,libtiff   # just two packages
 """
 
@@ -32,6 +43,8 @@ import asyncio
 import json
 import os
 import secrets
+import shutil
+import subprocess
 import sys
 import time
 from dataclasses import dataclass
@@ -289,30 +302,186 @@ def _validate_selected(
     return valid
 
 
-async def _vet_chunk(
-    client: anthropic.AsyncAnthropic,
-    sem: asyncio.Semaphore,
-    chunk: list[AmbiguousPackage],
-) -> list[VetVerdict]:
-    user_msg = _build_user_message(chunk)
-    async with sem:
+# ---------- LLM backends ----------
+#
+# Two ways to reach Haiku, mirroring scripts.cve_ai_review:
+#   * ``api``        — Anthropic SDK + ANTHROPIC_API_KEY (CI default). Uses
+#                      structured output (json_schema) so the reply is
+#                      guaranteed to match VERDICT_SCHEMA.
+#   * ``claude-cli`` — shells out to the local ``claude`` CLI in headless
+#                      mode, using the maintainer's Claude subscription (no
+#                      API key). The CLI can't enforce json_schema, so we
+#                      embed the schema in the prompt and best-effort parse
+#                      the reply. The downstream _validate_selected guard
+#                      still drops any CPE not in the offered list, so the
+#                      looser parse keeps the same safety posture.
+# Each backend returns the parsed ``verdicts`` list, or None on failure.
+
+
+class _VetBackend:
+    name = "base"
+    # Max chunks in flight. The api backend can saturate the network; the
+    # claude-cli backend runs the local subscription one call at a time.
+    concurrency = DEFAULT_CONCURRENCY
+
+    async def complete(self, system: str, user: str) -> list[dict] | None:
+        raise NotImplementedError
+
+
+class AnthropicAPIBackend(_VetBackend):
+    name = "api"
+
+    def __init__(self) -> None:
+        api_key = os.environ.get("ANTHROPIC_API_KEY")
+        if not api_key:
+            console.print(
+                "[red]ANTHROPIC_API_KEY not set (required for --backend api)[/]"
+            )
+            sys.exit(2)
+        self._client = anthropic.AsyncAnthropic(api_key=api_key)
+
+    async def complete(self, system: str, user: str) -> list[dict] | None:
         try:
-            resp = await client.messages.create(
+            resp = await self._client.messages.create(
                 model=MODEL,
                 max_tokens=4096,
-                system=SYSTEM_PROMPT,
-                messages=[{"role": "user", "content": user_msg}],
+                system=system,
+                messages=[{"role": "user", "content": user}],
                 output_config={
                     "format": {"type": "json_schema", "schema": VERDICT_SCHEMA}
                 },
             )
         except anthropic.APIError as exc:
-            console.log(f"[red]API error on chunk of {len(chunk)}: {exc}[/]")
-            return []
+            console.log(f"[red]API error: {exc}[/]")
+            return None
+        return _parse_response(resp.content)
 
-    verdicts = _parse_response(resp.content)
+
+class ClaudeCLIBackend(_VetBackend):
+    name = "claude-cli"
+    # Subscription-backed; one in-flight call at a time to respect rate limits.
+    concurrency = 1
+
+    def __init__(self) -> None:
+        if not shutil.which("claude"):
+            console.print(
+                "[red]`claude` CLI not found on PATH. Install Claude Code or "
+                "set ANTHROPIC_API_KEY to use --backend api.[/]"
+            )
+            sys.exit(2)
+
+    async def complete(self, system: str, user: str) -> list[dict] | None:
+        # Run the blocking subprocess on a worker thread so the event loop
+        # stays responsive (though concurrency=1 means one at a time anyway).
+        return await asyncio.to_thread(self._complete_sync, system, user)
+
+    def _complete_sync(self, system: str, user: str) -> list[dict] | None:
+        prompt = (
+            system
+            + "\n\nRespond with a JSON object that matches this schema (no prose, "
+            "no markdown fences, just JSON):\n"
+            + json.dumps(VERDICT_SCHEMA, indent=2)
+            + "\n\n"
+            + user
+        )
+        last_err: Exception | None = None
+        for _attempt in range(2):
+            try:
+                proc = subprocess.run(
+                    [
+                        "claude",
+                        "-p",
+                        prompt,
+                        "--output-format",
+                        "json",
+                        "--model",
+                        MODEL,
+                    ],
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                    timeout=300,
+                )
+            except subprocess.TimeoutExpired:
+                last_err = RuntimeError("claude CLI timed out after 300s")
+                continue
+            if proc.returncode != 0:
+                last_err = RuntimeError(
+                    f"claude CLI exit {proc.returncode}: {proc.stderr.strip()[:500]}"
+                )
+                continue
+            # `--output-format json` wraps the reply in an envelope; the model
+            # text is the `result` field.
+            try:
+                envelope = json.loads(proc.stdout)
+                reply_text = (
+                    envelope.get("result")
+                    if isinstance(envelope, dict)
+                    else proc.stdout
+                )
+            except json.JSONDecodeError:
+                reply_text = proc.stdout
+            doc = _extract_json_payload(reply_text or "")
+            if doc is None or not isinstance(doc.get("verdicts"), list):
+                last_err = RuntimeError("claude CLI reply missing 'verdicts' list")
+                continue
+            return doc["verdicts"]
+        console.log(f"[red]claude-cli backend failed: {last_err}[/]")
+        return None
+
+
+def _extract_json_payload(text: str) -> dict | None:
+    """Best-effort: parse the first {...} object out of a text reply."""
+    text = text.strip()
+    if text.startswith("```"):
+        # strip("`") removes any run of backticks; handles ```json ... ``` too.
+        text = text.strip("`")
+        if text.startswith("json"):
+            text = text[4:]
+    text = text.strip()
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        pass
+    start = text.find("{")
+    if start < 0:
+        return None
+    depth = 0
+    for i in range(start, len(text)):
+        c = text[i]
+        if c == "{":
+            depth += 1
+        elif c == "}":
+            depth -= 1
+            if depth == 0:
+                try:
+                    return json.loads(text[start : i + 1])
+                except json.JSONDecodeError:
+                    return None
+    return None
+
+
+def _pick_backend(name: str) -> _VetBackend:
+    if name == "auto":
+        name = "api" if os.environ.get("ANTHROPIC_API_KEY") else "claude-cli"
+    if name == "api":
+        return AnthropicAPIBackend()
+    if name == "claude-cli":
+        return ClaudeCLIBackend()
+    raise typer.BadParameter(f"unknown backend: {name!r} (use auto|api|claude-cli)")
+
+
+async def _vet_chunk(
+    backend: _VetBackend,
+    sem: asyncio.Semaphore,
+    chunk: list[AmbiguousPackage],
+) -> list[VetVerdict]:
+    user_msg = _build_user_message(chunk)
+    async with sem:
+        verdicts = await backend.complete(SYSTEM_PROMPT, user_msg)
+
     if verdicts is None:
-        console.log(f"[red]Could not parse response for chunk of {len(chunk)}[/]")
+        console.log(f"[red]Could not get verdicts for chunk of {len(chunk)}[/]")
         return []
 
     # Index verdicts by the echoed package_name so a reordered or partial
@@ -421,6 +590,13 @@ def main(
     ),
     ai_batch_size: int = typer.Option(DEFAULT_BATCH_SIZE),
     concurrency: int = typer.Option(DEFAULT_CONCURRENCY),
+    backend: str = typer.Option(
+        "auto",
+        "--backend",
+        help="auto | api | claude-cli. 'auto' picks 'api' when "
+        "ANTHROPIC_API_KEY is set, otherwise the local `claude` CLI "
+        "subscription (no API key needed).",
+    ),
     dry_run: bool = typer.Option(
         False,
         "--dry-run",
@@ -462,17 +638,21 @@ def main(
             console.print(_build_user_message(chunk))
         return
 
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
-    if not api_key:
-        console.print("[red]ANTHROPIC_API_KEY not set[/]")
-        sys.exit(2)
+    backend_impl = _pick_backend(backend)
+    effective_concurrency = min(concurrency, backend_impl.concurrency)
+    if effective_concurrency != concurrency:
+        console.log(
+            f"[dim]backend={backend_impl.name}: capping concurrency "
+            f"{concurrency} → {effective_concurrency}[/]"
+        )
+    else:
+        console.log(f"[dim]backend={backend_impl.name}[/]")
 
     async def _run() -> list[VetVerdict]:
-        client = anthropic.AsyncAnthropic(api_key=api_key)
-        sem = asyncio.Semaphore(concurrency)
+        sem = asyncio.Semaphore(effective_concurrency)
         t0 = time.monotonic()
         results = await asyncio.gather(
-            *(_vet_chunk(client, sem, chunk) for chunk in chunks)
+            *(_vet_chunk(backend_impl, sem, chunk) for chunk in chunks)
         )
         elapsed = time.monotonic() - t0
         console.log(f"AI vet done in {elapsed:.1f}s")
@@ -494,6 +674,7 @@ def main(
         # from a prior discover run that has since been overwritten.
         "source_candidates_generated_at": candidates_generated_at,
         "model": MODEL,
+        "backend": backend_impl.name,
         "summary": summary,
         "verdicts": [_verdict_to_dict(v) for v in verdicts],
     }
