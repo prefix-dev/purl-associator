@@ -46,9 +46,9 @@ export function CveApp() {
   const setEdits = useCveEditStore((state) => state.setEdits);
   const [focusedAdvisoryId, setFocusedAdvisoryId] = useState<string | null>(null);
   const [q, setQ] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "unreviewed" | "reviewed">(
-    "all",
-  );
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "unreviewed" | "reviewed" | "cpe"
+  >("all");
   const [view, setView] = useState<"browse" | "active" | "aiQueue" | "aiDrafts">("active");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);

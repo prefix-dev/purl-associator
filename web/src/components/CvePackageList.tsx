@@ -15,8 +15,8 @@ type Props = {
   setFocusedId: (id: string) => void;
   q: string;
   setQ: (v: string) => void;
-  statusFilter: "all" | "unreviewed" | "reviewed";
-  setStatusFilter: (s: "all" | "unreviewed" | "reviewed") => void;
+  statusFilter: "all" | "unreviewed" | "reviewed" | "cpe";
+  setStatusFilter: (s: "all" | "unreviewed" | "reviewed" | "cpe") => void;
 };
 
 function packageStats(p: CvePackageIndex, edits: Record<string, ReviewEdit>) {
@@ -72,6 +72,7 @@ export function CvePackageList({
         if (!inName && !inCve && !inSummary) return false;
       }
       if (statusFilter === "all") return true;
+      if (statusFilter === "cpe") return (p.cpes?.length ?? 0) > 0;
       const s = packageStats(p, edits);
       if (statusFilter === "unreviewed") return s.unreviewed > 0;
       if (statusFilter === "reviewed") return s.unreviewed === 0;
@@ -83,13 +84,21 @@ export function CvePackageList({
     let withUnreviewed = 0;
     let fullyReviewed = 0;
     let totalAdv = 0;
+    let withCpe = 0;
     for (const p of packages) {
       const s = packageStats(p, edits);
       totalAdv += s.total;
       if (s.unreviewed > 0) withUnreviewed++;
       else fullyReviewed++;
+      if ((p.cpes?.length ?? 0) > 0) withCpe++;
     }
-    return { all: packages.length, withUnreviewed, fullyReviewed, totalAdv };
+    return {
+      all: packages.length,
+      withUnreviewed,
+      fullyReviewed,
+      totalAdv,
+      withCpe,
+    };
   }, [packages, edits]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -223,6 +232,16 @@ export function CvePackageList({
               {counts.fullyReviewed}
             </Count>
           </FilterChip>
+          <FilterChip
+            theme={theme}
+            active={statusFilter === "cpe"}
+            onClick={() => setStatusFilter("cpe")}
+          >
+            Has CPE{" "}
+            <Count active={statusFilter === "cpe"} theme={theme}>
+              {counts.withCpe}
+            </Count>
+          </FilterChip>
         </div>
       </div>
 
@@ -325,6 +344,44 @@ export function CvePackageList({
                         }}
                       >
                         +{s.editsHere}
+                      </span>
+                    )}
+                    {(p.cpes?.length ?? 0) > 0 && (
+                      <span
+                        style={{
+                          fontSize: 10,
+                          fontWeight: 600,
+                          fontFamily: "JetBrains Mono, monospace",
+                          padding: "1px 6px",
+                          borderRadius: 3,
+                          background: t.inset,
+                          color: t.fg2,
+                          border: `1px solid ${t.border}`,
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          maxWidth: 160,
+                        }}
+                        title={p.cpes![0]}
+                      >
+                        {p.cpes![0].replace(/^cpe:2\.3:[aho]:/, "")}
+                      </span>
+                    )}
+                    {(p.cpes?.length ?? 0) > 1 && (
+                      <span
+                        style={{
+                          fontSize: 10,
+                          fontWeight: 600,
+                          padding: "1px 6px",
+                          borderRadius: 3,
+                          background: t.inset,
+                          color: t.fg3,
+                          border: `1px solid ${t.border}`,
+                          whiteSpace: "nowrap",
+                        }}
+                        title={p.cpes!.slice(1).join("\n")}
+                      >
+                        +{p.cpes!.length - 1}
                       </span>
                     )}
                     <span
