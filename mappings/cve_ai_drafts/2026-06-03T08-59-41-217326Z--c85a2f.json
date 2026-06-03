@@ -1,0 +1,1617 @@
+{
+  "assessments": {
+    "deepdiff::GHSA-mw26-5g2v-hqw3": {
+      "advisory_id": "GHSA-mw26-5g2v-hqw3",
+      "affected_versions": {
+        "agrees_with_match": true,
+        "reasoning": "The OSV ECOSYSTEM range lists 'introduced: 5.0.0, fixed: 8.6.1', which covers all versions from 5.0.0 up to but not including 8.6.1. The auto-derived affected_versions list is missing several versions that appear in the OSV versions list (5.2.0, 6.4.0, 7.0.0, 8.1.0, 8.3.0) and should be added for completeness. Version 9.1.0 (current conda-forge latest) is correctly not listed as it is above the fixed version 8.6.1.",
+        "suggested_adds": [
+          "5.2.0",
+          "6.4.0",
+          "7.0.0",
+          "8.1.0",
+          "8.3.0"
+        ],
+        "suggested_removes": []
+      },
+      "inputs_seen": {
+        "hash": "ead93145bd5b409f0a4b0947f70f0b13af5103bc89df1743b440e595e86f30c2"
+      },
+      "notes": "The fix was released in deepdiff 8.6.1 per the GitHub release tag and OSV record. The current conda-forge version 9.1.0 is patched. Historical conda-forge builds from 5.0.0 through 8.6.0 remain vulnerable. Maintainers should ensure users are aware of the need to upgrade, particularly in environments where deepdiff Delta is exposed to external input (e.g., web applications, APIs).",
+      "openvex_action_statement": "Upgrade deepdiff to version 8.6.1 or later (conda-forge latest is 9.1.0) to obtain the fix. Avoid passing untrusted user-controlled input directly to the Delta class constructor until upgraded.",
+      "openvex_impact_statement": null,
+      "openvex_justification": null,
+      "openvex_status": "affected",
+      "package": "deepdiff",
+      "prompt_version": "2026-06-02.openvex-status-history-v1",
+      "rationale": "This advisory directly targets the deepdiff PyPI package itself \u2014 it is not a transitive or vendored dependency issue. The OSV range covers versions 5.0.0 through 8.6.0 (fixed in 8.6.1), and the conda-forge package currently ships version 9.1.0, which is above the fixed threshold of 8.6.1. However, many historical conda-forge builds of deepdiff (versions 5.x, 6.x, 7.x, 8.0.0\u20138.6.0) remain in the conda-forge channel and are genuinely vulnerable. The vulnerability is in the Delta class constructor, which is a core runtime feature of deepdiff \u2014 it is not a build-time-only or optional code path. The proof-of-concept demonstrates critical-severity RCE and DoS when user-controlled input is passed to Delta, and CVSS 10.0 is appropriate for that threat model, though exploitation requires user-controlled input to Delta. Since historical conda-forge versions remain affected and the fix landed in 8.6.1, the status is 'affected' with a recommendation to upgrade to 9.1.0 (the current conda-forge latest, which is above 8.6.1).",
+      "runtime_applicability": {
+        "applies": "yes",
+        "reasoning": "The vulnerability is in the Delta class, a core runtime feature of the deepdiff package, not a build-time utility or optional import. Any application that exposes Delta to user-controlled input is at risk. The vulnerable code is in deepdiff/path.py and deepdiff/delta.py, which are standard runtime modules loaded when deepdiff is imported and Delta is used."
+      },
+      "severity_in_conda_context": {
+        "assessment": "same",
+        "reasoning": "The CVSS 10.0 critical rating reflects the potential for unauthenticated RCE and DoS when Delta processes untrusted input. This threat model is the same regardless of whether deepdiff is installed via conda or pip. The severity is contingent on the application passing user-controlled data to Delta, but the package itself provides no mitigation against this in affected versions."
+      },
+      "severity_seen": {
+        "cvss": 10.0,
+        "level": "CRITICAL"
+      }
+    },
+    "fastmcp::GHSA-vv7q-7jx5-f767": {
+      "advisory_id": "GHSA-vv7q-7jx5-f767",
+      "affected_versions": {
+        "agrees_with_match": false,
+        "reasoning": "The OSV range event specifies `introduced: 0` and `fixed: 3.2.0`, meaning every fastmcp release before 3.2.0 is affected. The auto-derived affected_versions list of 28 versions appears to be only a partial subset of the full affected version list (e.g., it omits 0.x, 1.0, 2.0.x, many 2.2.x, 2.4.x\u20132.7.x, 2.14.4\u20132.14.6, 3.0.0, 3.0.1, 3.1.1, etc.). All pre-3.2.0 versions shipped on conda-forge should be considered affected. The current conda-forge version 3.3.1 is above the fix boundary and is not affected.",
+        "suggested_adds": [
+          "2.14.4",
+          "2.14.5",
+          "2.14.6",
+          "2.13.0",
+          "2.13.0.1",
+          "2.12.1",
+          "2.10.0",
+          "2.10.3",
+          "2.9.1",
+          "0.1.0",
+          "0.2.0",
+          "0.3.0",
+          "0.3.1",
+          "0.3.2",
+          "0.3.3",
+          "0.3.4",
+          "0.3.5",
+          "0.4.0",
+          "0.4.1",
+          "1.0",
+          "2.0.0",
+          "2.1.0",
+          "2.1.1",
+          "2.1.2",
+          "2.2.0",
+          "2.2.1",
+          "2.2.2",
+          "2.2.3",
+          "2.2.4",
+          "2.2.5",
+          "2.2.6",
+          "2.2.7",
+          "2.2.8",
+          "2.2.9",
+          "2.2.10",
+          "2.3.0",
+          "2.3.1",
+          "2.3.2",
+          "2.3.3",
+          "2.3.5",
+          "2.4.0",
+          "2.5.0",
+          "2.5.1",
+          "2.5.2",
+          "2.6.0",
+          "2.6.1",
+          "2.7.0",
+          "2.7.1",
+          "2.8.0",
+          "3.0.0",
+          "3.0.1",
+          "3.1.1"
+        ],
+        "suggested_removes": []
+      },
+      "inputs_seen": {
+        "hash": "e7f1bc4fc7f273453ea98e2b1a632b83342e246fcfbd760b7b164194d7cb2799"
+      },
+      "notes": "The fix was released in fastmcp v3.2.0 (commit 40bdfb6b1de0ce30609ee9ba5bb95ecd04a9fb71, PR #3507). The conda-forge latest (3.3.1) is already past the fix point. Conda-forge maintainers should ensure that older pinned builds are not used in production environments where the OpenAPIProvider feature is enabled. The auto-derived affected_versions list was incomplete relative to the OSV range; all versions from 0.1.0 up to but not including 3.2.0 are affected.",
+      "openvex_action_statement": "Upgrade fastmcp to version 3.2.0 or later (3.3.1 is the current conda-forge latest). The fix URL-encodes path parameter values before substitution in `_build_url()`, preventing path traversal and SSRF. Historical conda-forge builds prior to 3.2.0 remain affected and should not be used in production environments where the OpenAPI provider feature is enabled.",
+      "openvex_impact_statement": null,
+      "openvex_justification": null,
+      "openvex_status": "affected",
+      "package": "fastmcp",
+      "prompt_version": "2026-06-02.openvex-status-history-v1",
+      "rationale": "The OSV record for GHSA-vv7q-7jx5-f767 covers all fastmcp versions from 0 up to (but not including) 3.2.0, with the fix landing in the v3.2.0 release. The latest conda-forge version of fastmcp is 3.3.1, which is well above the fixed boundary of 3.2.0, so the currently shipped conda-forge package is not vulnerable. However, historical conda-forge builds covering the versions listed in the affected_versions set (e.g., 2.3.4 through 3.1.0) remain genuinely vulnerable. The vulnerability is in the core `OpenAPIProvider` / `RequestDirector._build_url()` code path that is part of the fastmcp package itself \u2014 not a vendored dependency \u2014 and is exercised at runtime whenever an MCP client invokes an OpenAPI-backed tool with path parameters. The CVSS 4.0 score of 10.0 is plausible in environments where the OpenAPI provider feature is actively configured, though many deployments may not expose this feature, slightly softening real-world impact. Users running older conda-forge builds should upgrade to 3.2.0 or later (3.3.1 is the current latest) to obtain the fix.",
+      "runtime_applicability": {
+        "applies": "partial",
+        "reasoning": "The vulnerable code path (`OpenAPIProvider` / `RequestDirector._build_url()`) is part of fastmcp's core runtime library and is exercised at runtime whenever a user configures and uses the OpenAPI provider feature with path parameters. However, this feature is not always enabled \u2014 many fastmcp deployments use standard MCP tools without the OpenAPI integration. The vulnerability only manifests when an attacker can influence path parameter values passed to an OpenAPI-backed operation, so deployments that do not use `OpenAPIProvider` are not at risk."
+      },
+      "severity_in_conda_context": {
+        "assessment": "same",
+        "reasoning": "The CVSS 4.0 score of 10.0 (Critical) reflects a network-accessible, no-authentication-required SSRF and path traversal that can lead to full confidentiality, integrity, and availability compromise. This severity is appropriate for conda deployments where the OpenAPI provider is actively used, as the vulnerable code is the same PyPI package redistributed via conda-forge without modification. The only softening factor is that many fastmcp deployments may not use the OpenAPI provider feature, but that is a deployment concern rather than a package-level severity reduction."
+      },
+      "severity_seen": {
+        "cvss": 10.0,
+        "level": "CRITICAL"
+      }
+    },
+    "mlflow::GHSA-554w-xh4j-8w64": {
+      "advisory_id": "GHSA-554w-xh4j-8w64",
+      "affected_versions": {
+        "agrees_with_match": true,
+        "reasoning": "The OSV range is introduced=0, fixed=2.9.2, which matches the 61 listed affected conda versions (all pre-2.9.2 builds available on conda-forge). The affected_versions list correctly excludes 2.9.2 and later. No adds or removes are suggested."
+      },
+      "inputs_seen": {
+        "hash": "23d163bd61698f0b06dc8c70fa8e358a9d8c328255ea4a44475a687e6afbe1d0"
+      },
+      "notes": "The fix commit is 1da75dfcecd4d169e34809ade55748384e8af6c1. The conda-forge latest (3.12.0) is well past the fix point. Only users running old conda-forge-installed mlflow versions and exposing the server are at risk.",
+      "openvex_action_statement": "Upgrade to mlflow >= 2.9.2 via conda-forge. All conda-forge builds prior to 2.9.2 remain affected by this path traversal vulnerability. The current latest conda-forge version (3.12.0) is not affected.",
+      "openvex_impact_statement": null,
+      "openvex_justification": null,
+      "openvex_status": "affected",
+      "package": "mlflow",
+      "prompt_version": "2026-06-02.openvex-status-history-v1",
+      "rationale": "This is a path traversal vulnerability in the MLflow server (CVE-2023-6831), fixed in 2.9.2. The OSV range covers all versions from 0 up to (but not including) 2.9.2, which directly maps to the mlflow package distributed via conda-forge. The conda-forge mlflow package ships the same upstream mlflow Python code including the server components, so the vulnerable file-serving code paths are present in the artifact. Historical conda-forge builds covering versions up through 2.9.1 remain affected, while the current conda-forge version (3.12.0) is well past the fix point. The CVSS score of 10.0 (CRITICAL) reflects a no-auth, network-accessible, high-impact exploit, which is accurate for deployments running the mlflow server. Users running old conda-forge builds should upgrade to 2.9.2 or later.",
+      "runtime_applicability": {
+        "applies": "yes",
+        "reasoning": "The path traversal vulnerability is in the MLflow tracking server file-serving code. conda-forge ships the full mlflow package including the server, so users running mlflow server or mlflow ui from these versions are exposed. The vulnerability is reachable without authentication over the network."
+      },
+      "severity_in_conda_context": {
+        "assessment": "same",
+        "reasoning": "The CVSS 10.0 critical rating is appropriate: the MLflow server is commonly deployed network-accessible, requires no authentication by default, and arbitrary file write has severe integrity and availability impact. The conda artifact is the same code as PyPI, so severity is unchanged."
+      },
+      "severity_seen": {
+        "cvss": 10.0,
+        "level": "CRITICAL"
+      }
+    },
+    "mlflow::GHSA-5p3h-7fwh-92rc": {
+      "advisory_id": "GHSA-5p3h-7fwh-92rc",
+      "affected_versions": {
+        "agrees_with_match": true,
+        "reasoning": "The OSV range (introduced=0, fixed=2.9.2) matches the listed affected versions (all pre-2.9.2 conda-forge releases). The database_specific note says last_known_affected <= 2.8.1, but the fix is officially in 2.9.2, so 2.9.0 and 2.9.1 may also be affected; the listed set already includes 2.9.0 and 2.9.1, which is correct. No changes are suggested."
+      },
+      "inputs_seen": {
+        "hash": "2434b83bebcb8b4790633ca9e2b2cf083ec5f5363fa7a0c454fcce83970b9572"
+      },
+      "notes": "The fix commit is 55c72d02380e8db8118595a4fdae7879cb7ac5bd. The database_specific field indicates last_known_affected <= 2.8.1, but the official fixed version is 2.9.2, so versions 2.9.0 and 2.9.1 should also be treated as affected, consistent with the listed affected_versions set.",
+      "openvex_action_statement": "Upgrade to mlflow >= 2.9.2 on conda-forge. Any conda-forge build of mlflow prior to 2.9.2 running the mlflow server is exposed to this arbitrary file write / RCE vulnerability. The current latest conda-forge version (3.12.0) is not affected.",
+      "openvex_impact_statement": null,
+      "openvex_justification": null,
+      "openvex_status": "affected",
+      "package": "mlflow",
+      "prompt_version": "2026-06-02.openvex-status-history-v1",
+      "rationale": "This is a remote code execution vulnerability (CVE-2023-6018) arising from unrestricted file write in the MLflow web server, fixed in 2.9.2. The OSV range spans from introduced=0 to fixed=2.9.2, with a database-specific note that the last known affected version is 2.8.1; the OSV record's fix version of 2.9.2 is consistent with related advisories patched in the same release cycle. All conda-forge builds of mlflow prior to 2.9.2 carry the same vulnerable server code since conda-forge ships the upstream mlflow Python package without modification. The current conda-forge version (3.12.0) is far beyond the fix point and is not affected. Historical conda-forge builds up to 2.9.1 remain affected for users running the mlflow server.",
+      "runtime_applicability": {
+        "applies": "yes",
+        "reasoning": "The vulnerability is in the MLflow tracking server's file upload handling. The conda-forge mlflow package includes the full server stack. Any user running mlflow server or mlflow ui with a pre-2.9.2 build is exposed if the server is network-accessible."
+      },
+      "severity_in_conda_context": {
+        "assessment": "same",
+        "reasoning": "CVSS 10.0 (CRITICAL) is appropriate. MLflow server is commonly deployed with network access, the exploit requires no authentication, and arbitrary file write leading to RCE is maximally severe. The conda artifact is equivalent to the PyPI artifact, so no adjustment is warranted."
+      },
+      "severity_seen": {
+        "cvss": 10.0,
+        "level": "CRITICAL"
+      }
+    },
+    "mlflow::GHSA-5q6c-ffvg-xcm9": {
+      "advisory_id": "GHSA-5q6c-ffvg-xcm9",
+      "affected_versions": {
+        "agrees_with_match": true,
+        "reasoning": "The OSV range (introduced=0, fixed=2.9.0) is correctly reflected by the 59 affected versions listing all conda-forge releases up through 2.8.1. Versions 2.9.0 and later are correctly excluded. No adds or removes are needed."
+      },
+      "inputs_seen": {
+        "hash": "c8b07eb6ca125431acd51e4a31e182c7410bd1fed42da48f6a5d062638e38c49"
+      },
+      "notes": "The fix commit is 400c226953b4568f4361bc0a0c223511652c2b9d. Note that the advisory description oddly references 'version 8.2.1' which appears to be a typo in the advisory text; the actual affected range and fix version (2.9.0) are correct per the OSV data and the PYSEC-2024-239 cross-reference.",
+      "openvex_action_statement": "Upgrade to mlflow >= 2.9.0 on conda-forge. Pre-2.9.0 conda-forge builds of mlflow are vulnerable when loading datasets via HTTP URLs due to unsanitized filename handling in mlflow.data.http_dataset_source. The current latest conda-forge version (3.12.0) is not affected.",
+      "openvex_impact_statement": null,
+      "openvex_justification": null,
+      "openvex_status": "affected",
+      "package": "mlflow",
+      "prompt_version": "2026-06-02.openvex-status-history-v1",
+      "rationale": "This is a remote code execution vulnerability (CVE-2024-0520) in mlflow's HTTP dataset source loader (`mlflow.data.http_dataset_source`), fixed in 2.9.0. The OSV range is introduced=0, fixed=2.9.0, meaning all versions before 2.9.0 are affected. The listed 59 conda affected versions end at 2.8.1, consistent with this range. The conda-forge mlflow package ships the full upstream Python code including the data loading modules, so this code path is present in pre-2.9.0 conda-forge builds. The current conda-forge version (3.12.0) is far beyond the fix and is not affected. Any user of a historical conda-forge mlflow build prior to 2.9.0 who loads datasets from HTTP sources is exposed to arbitrary file write and potential RCE.",
+      "runtime_applicability": {
+        "applies": "yes",
+        "reasoning": "The vulnerable code is in mlflow.data.http_dataset_source.py, which is part of the standard mlflow data loading API. This module is imported and used at runtime when users load datasets from HTTP sources \u2014 a common workflow in MLflow experiments. The conda-forge package ships this module without modification, so the vulnerability is present in the runtime artifact for pre-2.9.0 builds."
+      },
+      "severity_in_conda_context": {
+        "assessment": "same",
+        "reasoning": "CVSS 10.0 (CRITICAL) is appropriate. The attack vector is network, no authentication is required, and the impact is arbitrary file write leading to RCE. The conda-forge mlflow package is identical in behavior to the PyPI package for this code path, so no severity adjustment is warranted."
+      },
+      "severity_seen": {
+        "cvss": 10.0,
+        "level": "CRITICAL"
+      }
+    },
+    "mlflow::GHSA-f798-qm4r-23r5": {
+      "advisory_id": "GHSA-f798-qm4r-23r5",
+      "affected_versions": {
+        "agrees_with_match": true,
+        "reasoning": "The OSV ecosystem range is introduced=0, fixed=2.8.1. The listed conda affected versions (up to 2.8.0) are correct and align with what conda-forge has shipped historically. No adds or removes needed."
+      },
+      "inputs_seen": {
+        "hash": "813bdcc53aa420b45e9217b63b08840dec401fbbcdb8847d1962f02914082e23"
+      },
+      "notes": "Fixed in upstream 2.8.1. The current conda-forge latest (3.12.0) is not affected, but any pinned environment using mlflow <= 2.8.0 from conda-forge remains vulnerable.",
+      "openvex_action_statement": "Upgrade mlflow to version 2.8.1 or later (conda-forge ships 3.12.0 which is unaffected). Users running historical conda-forge builds of mlflow <= 2.8.0 should update immediately, as those versions allow arbitrary file PUT onto the MLflow tracking server.",
+      "openvex_impact_statement": null,
+      "openvex_justification": null,
+      "openvex_status": "affected",
+      "package": "mlflow",
+      "prompt_version": "2026-06-02.openvex-status-history-v1",
+      "rationale": "The OSV range covers all mlflow versions from 0 up to (not including) 2.8.1. The conda-forge package ships mlflow directly from the upstream source, not as a vendored dependency, so this match is appropriate. The latest conda-forge version is 3.12.0, which is well past the fixed version 2.8.1, meaning the current build is not vulnerable. However, historical conda-forge builds of mlflow 2.8.0 and earlier (which do exist in conda-forge) are genuinely affected by this arbitrary file PUT vulnerability. The affected versions listed in the match correctly capture all pre-2.8.1 releases that conda-forge has shipped. Since conda-forge users running older pinned versions remain at risk, this should be marked as affected with guidance to upgrade.",
+      "runtime_applicability": {
+        "applies": "yes",
+        "reasoning": "The vulnerability is in the MLflow tracking server's HTTP endpoint handling, which is a core runtime component of the mlflow package. When users run `mlflow server` or `mlflow ui`, this code path is active. It is not a build-time-only or optional feature."
+      },
+      "severity_in_conda_context": {
+        "assessment": "same",
+        "reasoning": "The CVSS 10.0 critical rating (network-accessible, no auth required, scope changed, high confidentiality/integrity impact) accurately reflects the risk in the conda context. MLflow is commonly deployed as a tracking server, making this exploit path directly relevant."
+      },
+      "severity_seen": {
+        "cvss": 10.0,
+        "level": "CRITICAL"
+      }
+    },
+    "mlflow::GHSA-fmxj-6h9g-6vw3": {
+      "advisory_id": "GHSA-fmxj-6h9g-6vw3",
+      "affected_versions": {
+        "agrees_with_match": true,
+        "reasoning": "The OSV ecosystem range is introduced=0, fixed=2.5.0. The listed conda affected versions (up to 2.4.2) are correct and align with conda-forge's historical releases. No adds or removes are needed."
+      },
+      "inputs_seen": {
+        "hash": "149fb5985f8dd644d3df53446ceaf960692b47b9de60f8f1d0e0f2b611960133"
+      },
+      "notes": "Fixed upstream in 2.5.0. The current conda-forge latest (3.12.0) is not affected, but pinned environments with mlflow < 2.5.0 from conda-forge remain at risk.",
+      "openvex_action_statement": "Upgrade mlflow to version 2.5.0 or later (conda-forge ships 3.12.0 which is unaffected). Users running historical conda-forge builds of mlflow < 2.5.0 should update immediately to remediate the path traversal vulnerability in the MLflow server.",
+      "openvex_impact_statement": null,
+      "openvex_justification": null,
+      "openvex_status": "affected",
+      "package": "mlflow",
+      "prompt_version": "2026-06-02.openvex-status-history-v1",
+      "rationale": "The OSV range covers all mlflow versions from 0 up to (not including) 2.5.0, corresponding to an absolute path traversal vulnerability in the MLflow server. The conda-forge mlflow package ships the upstream mlflow server code directly, so this match is clearly applicable to historical conda-forge builds. The current latest conda-forge version 3.12.0 is far beyond the fixed version 2.5.0 and is not affected. However, conda-forge builds of mlflow versions prior to 2.5.0 that users may have pinned in their environments remain genuinely vulnerable. The affected versions list correctly enumerates pre-2.5.0 conda-forge releases.",
+      "runtime_applicability": {
+        "applies": "yes",
+        "reasoning": "This is an absolute path traversal vulnerability in the MLflow server's artifact serving code, a core runtime feature. Any user running the mlflow tracking server with versions < 2.5.0 is exposed whenever the server is accessible over the network."
+      },
+      "severity_in_conda_context": {
+        "assessment": "same",
+        "reasoning": "CVSS 10.0 (network, no auth, scope changed, high C/I/A) accurately represents the risk. MLflow is widely run as a multi-user tracking server, making path traversal with full filesystem read/write impact critical in practice."
+      },
+      "severity_seen": {
+        "cvss": 10.0,
+        "level": "CRITICAL"
+      }
+    },
+    "mlflow::GHSA-r23q-823p-vmf7": {
+      "advisory_id": "GHSA-r23q-823p-vmf7",
+      "affected_versions": {
+        "agrees_with_match": true,
+        "reasoning": "The OSV ecosystem range is introduced=0, fixed=3.8.1. The listed affected conda versions ending at 3.8.0 align with this range. While the advisory text focuses on 3.8.0 specifically, the OSV record claims all prior versions are also affected, which is plausible if the function existed in earlier versions. The match is reasonable as-is.",
+        "suggested_removes": []
+      },
+      "inputs_seen": {
+        "hash": "6166dd7d9c4716ff361937d32adf1309403372b37231715b3a575a6f0bf1f925"
+      },
+      "notes": "The advisory text says 'affects versions 3.8.0 and is fixed in version 3.8.1', but the OSV range starts from version 0, suggesting the vulnerable function may have existed across many prior versions. Maintainers should verify whether the _install_model_dependencies_to_env() function and LOCAL env_manager feature were present in earlier versions. The current conda-forge latest (3.12.0) is fixed.",
+      "openvex_action_statement": "Upgrade mlflow to version 3.8.1 or later (conda-forge ships 3.12.0 which is unaffected). Users running conda-forge builds of mlflow < 3.8.1 who use model serving with env_manager=LOCAL should update immediately to remediate the command injection vulnerability in _install_model_dependencies_to_env().",
+      "openvex_impact_statement": null,
+      "openvex_justification": null,
+      "openvex_status": "affected",
+      "package": "mlflow",
+      "prompt_version": "2026-06-02.openvex-status-history-v1",
+      "rationale": "The OSV range covers mlflow versions from 0 up to (not including) 3.8.1, with the advisory text explicitly stating the vulnerability affects version 3.8.0 and is fixed in 3.8.1. The current conda-forge latest is 3.12.0, which is beyond 3.8.1 and thus not vulnerable. However, this is a broad range that technically implicates all historical mlflow versions, while the actual vulnerability in `_install_model_dependencies_to_env()` may only be reachable in versions where this function exists and `env_manager=LOCAL` model serving is supported \u2014 a relatively recent feature. Regardless, the conda-forge build of mlflow 3.8.0 (if it was packaged) and all earlier versions up to 3.8.0 that conda-forge ships are covered by this OSV range. The vulnerability is a command injection when deploying malicious model artifacts, which is a real runtime risk for conda-forge users running older mlflow builds in model-serving contexts. The affected versions list in the match is consistent with the OSV range.",
+      "runtime_applicability": {
+        "applies": "partial",
+        "reasoning": "The vulnerability is triggered only when deploying a model with env_manager=LOCAL, which is an optional model-serving feature. Users who only use mlflow for experiment tracking (without model serving) are not exposed. However, model serving is a significant and commonly used mlflow feature in conda-forge deployments, so the applicability is partial rather than full."
+      },
+      "severity_in_conda_context": {
+        "assessment": "same",
+        "reasoning": "CVSS 10.0 is appropriate for a command injection that allows arbitrary code execution on model-serving infrastructure, with no authentication required if the attacker can supply a malicious model artifact. This is realistic in shared MLflow deployments."
+      },
+      "severity_seen": {
+        "cvss": 10.0,
+        "level": "CRITICAL"
+      }
+    }
+  },
+  "backend": "api",
+  "draft": true,
+  "generated_at": "2026-06-03T09:00:39+00:00",
+  "model": "claude-sonnet-4-6",
+  "openvex": {
+    "@context": "https://openvex.dev/ns/v0.2.0",
+    "@id": "https://github.com/prefix-dev/purl-associator/ai-draft/c85a2f",
+    "author": "purl-associator AI reviewer (claude-sonnet-4-6)",
+    "statements": [
+      {
+        "action_statement": "Upgrade deepdiff to version 8.6.1 or later (conda-forge latest is 9.1.0) to obtain the fix. Avoid passing untrusted user-controlled input directly to the Delta class constructor until upgraded.",
+        "products": [
+          {
+            "@id": "pkg:conda/deepdiff?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-mw26-5g2v-hqw3"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/deepdiff@5.2.0?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-mw26-5g2v-hqw3"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/deepdiff@6.4.0?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-mw26-5g2v-hqw3"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/deepdiff@7.0.0?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-mw26-5g2v-hqw3"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/deepdiff@8.1.0?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-mw26-5g2v-hqw3"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/deepdiff@8.3.0?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-mw26-5g2v-hqw3"
+        }
+      },
+      {
+        "action_statement": "Upgrade fastmcp to version 3.2.0 or later (3.3.1 is the current conda-forge latest). The fix URL-encodes path parameter values before substitution in `_build_url()`, preventing path traversal and SSRF. Historical conda-forge builds prior to 3.2.0 remain affected and should not be used in production environments where the OpenAPI provider feature is enabled.",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@2.14.4?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@2.14.5?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@2.14.6?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@2.13.0?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@2.13.0.1?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@2.12.1?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@2.10.0?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@2.10.3?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@2.9.1?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@0.1.0?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@0.2.0?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@0.3.0?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@0.3.1?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@0.3.2?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@0.3.3?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@0.3.4?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@0.3.5?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@0.4.0?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@0.4.1?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@1.0?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@2.0.0?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@2.1.0?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@2.1.1?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@2.1.2?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@2.2.0?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@2.2.1?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@2.2.2?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@2.2.3?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@2.2.4?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@2.2.5?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@2.2.6?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@2.2.7?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@2.2.8?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@2.2.9?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@2.2.10?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@2.3.0?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@2.3.1?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@2.3.2?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@2.3.3?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@2.3.5?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@2.4.0?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@2.5.0?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@2.5.1?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@2.5.2?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@2.6.0?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@2.6.1?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@2.7.0?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@2.7.1?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@2.8.0?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@3.0.0?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@3.0.1?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/fastmcp@3.1.1?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-vv7q-7jx5-f767"
+        }
+      },
+      {
+        "action_statement": "Upgrade mlflow to version 2.8.1 or later (conda-forge ships 3.12.0 which is unaffected). Users running historical conda-forge builds of mlflow <= 2.8.0 should update immediately, as those versions allow arbitrary file PUT onto the MLflow tracking server.",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-f798-qm4r-23r5"
+        }
+      },
+      {
+        "action_statement": "Upgrade mlflow to version 2.5.0 or later (conda-forge ships 3.12.0 which is unaffected). Users running historical conda-forge builds of mlflow < 2.5.0 should update immediately to remediate the path traversal vulnerability in the MLflow server.",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-fmxj-6h9g-6vw3"
+        }
+      },
+      {
+        "action_statement": "Upgrade mlflow to version 3.8.1 or later (conda-forge ships 3.12.0 which is unaffected). Users running conda-forge builds of mlflow < 3.8.1 who use model serving with env_manager=LOCAL should update immediately to remediate the command injection vulnerability in _install_model_dependencies_to_env().",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-r23q-823p-vmf7"
+        }
+      },
+      {
+        "action_statement": "Upgrade to mlflow >= 2.9.2 via conda-forge. All conda-forge builds prior to 2.9.2 remain affected by this path traversal vulnerability. The current latest conda-forge version (3.12.0) is not affected.",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-554w-xh4j-8w64"
+        }
+      },
+      {
+        "action_statement": "Upgrade to mlflow >= 2.9.2 on conda-forge. Any conda-forge build of mlflow prior to 2.9.2 running the mlflow server is exposed to this arbitrary file write / RCE vulnerability. The current latest conda-forge version (3.12.0) is not affected.",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-5p3h-7fwh-92rc"
+        }
+      },
+      {
+        "action_statement": "Upgrade to mlflow >= 2.9.0 on conda-forge. Pre-2.9.0 conda-forge builds of mlflow are vulnerable when loading datasets via HTTP URLs due to unsanitized filename handling in mlflow.data.http_dataset_source. The current latest conda-forge version (3.12.0) is not affected.",
+        "products": [
+          {
+            "@id": "pkg:conda/mlflow?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:00:39+00:00",
+        "vulnerability": {
+          "name": "GHSA-5q6c-ffvg-xcm9"
+        }
+      }
+    ],
+    "timestamp": "2026-06-03T09:00:39+00:00",
+    "tooling": "purl-associator/scripts.cve_ai_review",
+    "version": 1
+  },
+  "prompt_version": "2026-06-02.openvex-status-history-v1",
+  "run_id": "c85a2f",
+  "schema_version": 1,
+  "skipped": [
+    {
+      "advisory_id": "GHSA-5882-5rx9-xgxp",
+      "package": "crawl4ai",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-554w-xh4j-8w64",
+      "package": "mlflow-pipelines",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-5p3h-7fwh-92rc",
+      "package": "mlflow-pipelines",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-5q6c-ffvg-xcm9",
+      "package": "mlflow-pipelines",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-f798-qm4r-23r5",
+      "package": "mlflow-pipelines",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-fmxj-6h9g-6vw3",
+      "package": "mlflow-pipelines",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-r23q-823p-vmf7",
+      "package": "mlflow-pipelines",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-r23q-823p-vmf7",
+      "package": "mlflow-ui",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "GHSA-f3f8-vx3w-hp5q",
+      "package": "codechecker",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "GHSA-329j-jfvr-rhr6",
+      "package": "pyspark",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-aiobotocore",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-airbyte",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-alibaba",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-all-core",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-all",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-amazon",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "GHSA-7wqf-h36w-47mc",
+      "package": "airflow-with-apache-atlas",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "GHSA-c732-xvv8-g94c",
+      "package": "airflow-with-apache-atlas",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "GHSA-rmf2-pwfq-h75j",
+      "package": "airflow-with-apache-atlas",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-apache-atlas",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "GHSA-7wqf-h36w-47mc",
+      "package": "airflow-with-apache-beam",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "GHSA-c732-xvv8-g94c",
+      "package": "airflow-with-apache-beam",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "GHSA-rmf2-pwfq-h75j",
+      "package": "airflow-with-apache-beam",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-apache-beam",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-apache-cassandra",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-apache-drill",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-apache-druid",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-apache-flink",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-apache-hdfs",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-apache-hive",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-apache-iceberg",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-apache-kafka",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-apache-kylin",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-apache-livy",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-apache-pig",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-apache-pinot",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-apache-spark",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "GHSA-7wqf-h36w-47mc",
+      "package": "airflow-with-apache-webhdfs",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "GHSA-c732-xvv8-g94c",
+      "package": "airflow-with-apache-webhdfs",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "GHSA-rmf2-pwfq-h75j",
+      "package": "airflow-with-apache-webhdfs",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-apache-webhdfs",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-apprise",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-arangodb",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-asana",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "GHSA-7wqf-h36w-47mc",
+      "package": "airflow-with-async",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "GHSA-c732-xvv8-g94c",
+      "package": "airflow-with-async",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "GHSA-rmf2-pwfq-h75j",
+      "package": "airflow-with-async",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-async",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2025-87",
+      "package": "airflow-with-async",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-atlassian-jira",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "GHSA-7wqf-h36w-47mc",
+      "package": "airflow-with-celery",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "GHSA-c732-xvv8-g94c",
+      "package": "airflow-with-celery",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "GHSA-rmf2-pwfq-h75j",
+      "package": "airflow-with-celery",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-celery",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2025-87",
+      "package": "airflow-with-celery",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "GHSA-7wqf-h36w-47mc",
+      "package": "airflow-with-cloudant",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "GHSA-c732-xvv8-g94c",
+      "package": "airflow-with-cloudant",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "GHSA-rmf2-pwfq-h75j",
+      "package": "airflow-with-cloudant",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-cloudant",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2025-87",
+      "package": "airflow-with-cloudant",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-cloudpickle",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "GHSA-7wqf-h36w-47mc",
+      "package": "airflow-with-cncf-kubernetes",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "GHSA-c732-xvv8-g94c",
+      "package": "airflow-with-cncf-kubernetes",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "GHSA-rmf2-pwfq-h75j",
+      "package": "airflow-with-cncf-kubernetes",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-cncf-kubernetes",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-common-compat",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-common-io",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-common-sql",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "GHSA-7wqf-h36w-47mc",
+      "package": "airflow-with-databricks",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "GHSA-c732-xvv8-g94c",
+      "package": "airflow-with-databricks",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "GHSA-rmf2-pwfq-h75j",
+      "package": "airflow-with-databricks",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-databricks",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2025-87",
+      "package": "airflow-with-databricks",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "GHSA-7wqf-h36w-47mc",
+      "package": "airflow-with-datadog",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "GHSA-c732-xvv8-g94c",
+      "package": "airflow-with-datadog",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "GHSA-rmf2-pwfq-h75j",
+      "package": "airflow-with-datadog",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-datadog",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2025-87",
+      "package": "airflow-with-datadog",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-dbt-cloud",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-dingding",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-discord",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "GHSA-7wqf-h36w-47mc",
+      "package": "airflow-with-docker",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "GHSA-c732-xvv8-g94c",
+      "package": "airflow-with-docker",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "GHSA-vx9w-5cx4-9796",
+      "package": "crawl4ai",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "GHSA-59v3-898r-qwhj",
+      "package": "mlflow-pipelines",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2025-70",
+      "package": "langchain-community",
+      "reason": "no_assessment_in_reply"
+    },
+    {
+      "advisory_id": "PYSEC-2026-33",
+      "package": "crawl4ai",
+      "reason": "no_assessment_in_reply"
+    },
+    {
+      "advisory_id": "PYSEC-2023-308",
+      "package": "mlflow-pipelines",
+      "reason": "no_assessment_in_reply"
+    },
+    {
+      "advisory_id": "PYSEC-2023-308",
+      "package": "mlflow",
+      "reason": "no_assessment_in_reply"
+    }
+  ]
+}
