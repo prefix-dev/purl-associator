@@ -23,7 +23,8 @@ import {
   type ReviewEdit,
 } from "./data/cves";
 import { useCveData } from "./data/useCveData";
-import { useCveEditStore } from "./stores/userState";
+import { buildCveAiWorkRows, cveReviewKey } from "./data/cveAiWorkItems";
+import { useCveAiReviewQueueStore, useCveEditStore } from "./stores/userState";
 import type { EnqueueItem } from "./github/cve_enqueue_api";
 
 export function CveApp() {
@@ -56,7 +57,8 @@ export function CveApp() {
   // AI CVE review state.
   const [aiDrafts, setAiDrafts] = useState<AiDraftsPayload | null>(null);
   const [aiQueue, setAiQueue] = useState<AiQueuePayload | null>(null);
-  const [enqueueItems, setEnqueueItems] = useState<EnqueueItem[]>([]);
+  const enqueueItems = useCveAiReviewQueueStore((state) => state.items);
+  const setEnqueueItems = useCveAiReviewQueueStore((state) => state.setItems);
   const [enqueueOpen, setEnqueueOpen] = useState(false);
 
   const t = theme.t;
@@ -69,6 +71,7 @@ export function CveApp() {
     loadAiDrafts(config.aiDraftsUrl).then(setAiDrafts);
     loadAiQueue(config.aiQueueUrl).then(setAiQueue);
   }, []);
+
 
   // Packages that still have at least one unreviewed advisory shipping now
   // (or affecting a future version). Ordered the same way the triage list
@@ -146,7 +149,7 @@ export function CveApp() {
   const editsCount = Object.keys(edits).length;
 
   function editKey(pkg: string, advisoryId: string): string {
-    return `${pkg}::${advisoryId}`;
+    return cveReviewKey(pkg, advisoryId);
   }
 
   function handleEdit(
@@ -189,6 +192,30 @@ export function CveApp() {
     () => new Set(enqueueItems.map((it) => `${it.package}::${it.advisory_id}`)),
     [enqueueItems],
   );
+
+  function handleAiDraftApplied(pkgName: string, advisoryId: string): void {
+    const currentKey = editKey(pkgName, advisoryId);
+    const openDrafts = buildCveAiWorkRows({
+      mode: "drafts",
+      packages: representatives,
+      membersByRep,
+      edits,
+      aiDrafts,
+      aiQueue,
+      enqueuedAdvisories: enqueuedSet,
+      includeCurrentKey: currentKey,
+    });
+    const idx = openDrafts.findIndex(
+      (row) => row.pkg.package === pkgName && row.adv.id === advisoryId,
+    );
+    const next =
+      openDrafts[idx >= 0 ? idx + 1 : 0] ??
+      openDrafts.find((row) => editKey(row.pkg.package, row.adv.id) !== currentKey);
+    if (!next) return;
+    setView("aiDrafts");
+    setFocusedPkg(next.pkg.package);
+    setFocusedAdvisoryId(next.adv.id);
+  }
 
   function handleEnqueueAi(pkg: string, advisoryId: string): void {
     if (!isLoggedIn) {
@@ -658,6 +685,9 @@ export function CveApp() {
             aiQueue={aiQueue}
             enqueuedAdvisories={enqueuedSet}
             onEnqueueAi={handleEnqueueAi}
+            onAiDraftApplied={(advisoryId) => {
+              if (focusedPackage) handleAiDraftApplied(focusedPackage.package, advisoryId);
+            }}
           />
           )}
         </div>
@@ -698,6 +728,7 @@ export function CveApp() {
           items={enqueueItems}
           onClose={() => setEnqueueOpen(false)}
           onRemove={handleRemoveEnqueue}
+          onClear={() => setEnqueueItems([])}
           onSubmitted={() => {
             setEnqueueItems([]);
           }}

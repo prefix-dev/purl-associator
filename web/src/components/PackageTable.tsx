@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import type { Edit, MappingPackageIndex, PackageEntry } from "../data/types";
 import { ECOSYSTEMS } from "../data/loader";
-import { EcosystemChip, Glyph, StatusPill, Theme } from "./Primitives";
+import { EcosystemChip, FilterChip, Glyph, StatusPill, Theme } from "./Primitives";
 
 export type SortKey =
   | "name"
@@ -746,41 +746,6 @@ function SortHeader({
           ▲
         </span>
       )}
-    </button>
-  );
-}
-
-function FilterChip({
-  theme,
-  active,
-  onClick,
-  children,
-}: {
-  theme: Theme;
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  const t = theme.t;
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 6,
-        background: active ? t.accent : t.surface2,
-        color: active ? t.accentFg : t.fg1,
-        border: `1px solid ${active ? t.accent : t.border}`,
-        borderRadius: 6,
-        padding: "3px 8px",
-        fontSize: 11.5,
-        fontWeight: 600,
-        cursor: "pointer",
-        fontFamily: "Inter, sans-serif",
-      }}
-    >
-      {children}
     </button>
   );
 }
