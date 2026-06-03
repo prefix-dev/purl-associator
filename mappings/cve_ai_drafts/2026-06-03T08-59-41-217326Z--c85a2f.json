@@ -1,5 +1,459 @@
 {
   "assessments": {
+    "aim::GHSA-mxvw-cj37-8g2h": {
+      "advisory_id": "GHSA-mxvw-cj37-8g2h",
+      "affected_versions": {
+        "agrees_with_match": false,
+        "reasoning": "The OSV range specifies `introduced: 3.0.0` through `last_affected: 3.25.0`, meaning all conda-forge builds from 3.0.0 up to and including 3.25.0 should be considered affected. The auto-derived set only includes 7 specific versions that happen to be available on conda-forge, but many other conda-forge versions in this range (e.g. 3.17.0, 3.18.0, 3.19.x, 3.21.0\u20133.25.0) are also affected. The current latest conda-forge version 3.29.1 is beyond last_affected and is not included, which is correct.",
+        "suggested_adds": [
+          "3.15.0",
+          "3.15.1",
+          "3.16.0",
+          "3.16.1",
+          "3.16.2",
+          "3.17.0",
+          "3.17.1",
+          "3.17.2",
+          "3.17.3",
+          "3.17.4",
+          "3.17.5",
+          "3.18.0",
+          "3.18.1",
+          "3.19.0",
+          "3.19.1",
+          "3.19.2",
+          "3.19.3",
+          "3.20.1",
+          "3.21.0",
+          "3.22.0",
+          "3.23.0",
+          "3.24.0",
+          "3.25.0"
+        ],
+        "suggested_removes": []
+      },
+      "inputs_seen": {
+        "hash": "785304e5f101cb93ee4841f46a8e9ec97a03a883e0d40112cc419ee2a335c77a"
+      },
+      "notes": "The OSV `last_affected: 3.25.0` implies the vulnerability was fixed or mitigated in versions after 3.25.0. The conda-forge feedstock currently ships 3.29.1 which is beyond this boundary and thus appears safe. However, many older conda-forge builds remain in user environments and are at critical risk if the aim web server is exposed. The advisory does not cite a specific fix commit or version, so the exact remediation boundary (>3.25.0) should be verified against upstream changelogs.",
+      "openvex_action_statement": "Users should upgrade the aim conda-forge package to version 3.29.1 (beyond the last_affected 3.25.0) to mitigate this RCE vulnerability. Avoid exposing the Aim web API to untrusted networks until upgraded.",
+      "openvex_impact_statement": null,
+      "openvex_justification": null,
+      "openvex_status": "affected",
+      "package": "aim",
+      "prompt_version": "2026-06-02.openvex-status-history-v1",
+      "rationale": "The OSV record identifies a critical RCE vulnerability in the Aim Web API endpoint `/api/runs/search/run/` affecting versions >= 3.0.0 through last_affected 3.25.0. The conda-forge package ships the full `aim` distribution including its web server components, meaning the vulnerable `/api/runs/search/run/` endpoint and the `run_search_api` function in `aim/web/api/runs/views.py` are present in the installed artifact. The auto-derived `affected_versions` set in the match only samples 7 specific conda-forge builds (3.15.2, 3.16.0, 3.16.1, 3.16.2, 3.17.3, 3.17.4, 3.20.1) rather than all conda-forge versions in the range 3.0.0\u20133.25.0, which is an undercount but directionally correct. The latest conda-forge version (3.29.1) is beyond the OSV `last_affected` of 3.25.0, so the latest build appears to be outside the affected range; however, historical conda-forge builds up to and including 3.25.0 remain affected. Users running older conda-forge builds of aim who expose the web API are at critical risk and should upgrade to 3.29.1.",
+      "runtime_applicability": {
+        "applies": "yes",
+        "reasoning": "The aim conda-forge package ships the full aim distribution including the web server (aim up / aim server commands). The vulnerable endpoint is part of the installed web API server, not a build-time or optional component. Any user who runs the aim web server with the affected versions exposes this endpoint. The web module is part of the standard runtime, not an optional extra."
+      },
+      "severity_in_conda_context": {
+        "assessment": "same",
+        "reasoning": "The CVSS 9.8 CRITICAL rating accurately reflects the severity in the conda context. The aim package is a server application and any conda-forge user running the aim web server is directly exposed. The vulnerability allows unauthenticated remote code execution with no prerequisites, consistent with the AV:N/AC:L/PR:N/UI:N scoring."
+      },
+      "severity_seen": {
+        "cvss": 9.8,
+        "level": "CRITICAL"
+      }
+    },
+    "airflow-with-docker::GHSA-rmf2-pwfq-h75j": {
+      "advisory_id": "GHSA-rmf2-pwfq-h75j",
+      "affected_versions": {
+        "agrees_with_match": false,
+        "reasoning": "The conda-forge airflow-with-docker feedstock does not ship any 1.x versions of Airflow; those PyPI versions listed were never part of this conda artifact. The OSV range is fixed at 2.3.0, and the conda package's latest version is 3.0.1. All suggested affected conda versions should be removed.",
+        "suggested_removes": [
+          "1.9.0",
+          "1.10.0",
+          "1.10.1",
+          "1.10.2",
+          "1.10.3",
+          "1.10.4",
+          "1.10.5",
+          "1.10.6",
+          "1.10.7",
+          "1.10.8",
+          "1.10.9",
+          "1.10.10",
+          "1.10.11"
+        ]
+      },
+      "inputs_seen": {
+        "hash": "8eb130a782372fa3788cbb52ce989d7a4259bd76479f18968e478e248a20a22c"
+      },
+      "notes": "The advisory explicitly states this only impacts Pig Provider usage. The airflow-with-docker metapackage does not include the Pig Provider. Conda-forge has never shipped 1.x versions of this package.",
+      "openvex_action_statement": null,
+      "openvex_impact_statement": "The airflow-with-docker conda-forge package ships Airflow 3.0.1, which is beyond the fixed point of 2.3.0. The Pig Provider is a separate optional provider not included in this package, and no conda-forge versions of airflow-with-docker fall within the affected range of <2.3.0.",
+      "openvex_justification": "vulnerable_code_not_present",
+      "openvex_status": "not_affected",
+      "package": "airflow-with-docker",
+      "prompt_version": "2026-06-02.openvex-status-history-v1",
+      "rationale": "This advisory concerns OS command injection in the Apache Airflow Pig Provider, affecting Airflow versions prior to 2.3.0 when the Pig Provider (version < 4.0.0) is installed. The conda-forge airflow-with-docker package ships at version 3.0.1, which is well beyond the OSV fixed point of 2.3.0. The affected_versions set listed (1.9.0 through 1.10.11) are all in the pre-2.3.0 range, but the conda-forge airflow-with-docker feedstock only begins packaging Airflow at much later versions (2.x and now 3.0.1), so none of the listed conda versions are historically available in this conda package. Furthermore, even if older Airflow versions were packaged, the Pig Provider is a separate optional provider that would need to be independently installed and configured \u2014 it is not bundled in the base Airflow or this docker-extras metapackage. The current conda-forge version 3.0.1 is clearly not affected.",
+      "runtime_applicability": {
+        "applies": "no",
+        "reasoning": "The vulnerability is in the Pig Provider, a separate optional provider package not bundled with airflow-with-docker. Even if an older affected Airflow version were hypothetically present, the Pig Provider would need to be separately installed and configured to be exploitable."
+      },
+      "severity_in_conda_context": {
+        "assessment": "lower",
+        "reasoning": "The CVSS score of 9.8 applies when the Pig Provider is installed and in use. Since this is an optional provider not included in the airflow-with-docker conda package and the shipped version is beyond the fix point, the effective severity for conda-forge users of this package is negligible."
+      },
+      "severity_seen": {
+        "cvss": 9.8,
+        "level": "CRITICAL"
+      }
+    },
+    "airflow-with-docker::PYSEC-2023-314": {
+      "advisory_id": "PYSEC-2023-314",
+      "affected_versions": {
+        "agrees_with_match": false,
+        "reasoning": "The vulnerability is in the Sqoop Provider, not core Airflow. The OSV range appears to have been incorrectly attached to the apache-airflow core package. None of these conda-forge airflow-with-docker versions include the Sqoop Provider. Additionally, 1.x versions are not shipped by this conda feedstock.",
+        "suggested_removes": [
+          "1.9.0",
+          "1.10.0",
+          "1.10.1",
+          "1.10.2",
+          "1.10.3",
+          "1.10.4",
+          "1.10.5",
+          "1.10.6",
+          "1.10.7",
+          "1.10.8",
+          "1.10.9",
+          "1.10.10",
+          "1.10.11",
+          "3.0.0",
+          "3.0.1"
+        ]
+      },
+      "inputs_seen": {
+        "hash": "d508d10ae75ced0845941d76ed3f16e6c3ffe95d37a77139f00381a7b85300ce"
+      },
+      "notes": "The OSV record conflates the Sqoop Provider version space (fixed at provider version 3.1.1) with the core Airflow package. This is a known pattern where provider CVEs get attributed to the parent apache-airflow PyPI package. The affects_future:True flag and inclusion of 3.0.0/3.0.1 in affected_versions are artifacts of this misattribution.",
+      "openvex_action_statement": null,
+      "openvex_impact_statement": "The PYSEC-2023-314 vulnerability is in the Apache Airflow Sqoop Provider (apache-airflow-providers-sqoop), not in core Airflow. The airflow-with-docker conda package does not include the Sqoop Provider. The OSV record's range referencing apache-airflow versions up to 3.1.1 is misleading \u2014 the actual fix was in the Sqoop Provider package version 3.1.1, which is a separate artifact entirely.",
+      "openvex_justification": "vulnerable_code_not_present",
+      "openvex_status": "not_affected",
+      "package": "airflow-with-docker",
+      "prompt_version": "2026-06-02.openvex-status-history-v1",
+      "rationale": "This advisory concerns an improper input validation vulnerability in the Apache Airflow Sqoop Provider, affecting versions of the Sqoop Provider before 3.1.1. The OSV record has a range of 'introduced: 0, fixed: 3.1.1' applied to apache-airflow itself, which is an overreach \u2014 the actual fix is in the Sqoop Provider package (apache-airflow-providers-sqoop), not in the core Airflow package. The affects_future flag is True and the OSV version list includes 3.0.0 and 3.0.1 (the current conda-forge version), but this is because the OSV record incorrectly conflates the Sqoop Provider version space with the core Airflow version space. The airflow-with-docker package does not vendor or bundle the Sqoop Provider, which is a separately installable provider. The Sqoop Provider 3.1.1 was the fix, not Airflow core 3.1.1.",
+      "runtime_applicability": {
+        "applies": "no",
+        "reasoning": "The Sqoop Provider is a separately installable optional provider not bundled with the airflow-with-docker conda package. The vulnerable code path does not exist in the artifact being assessed."
+      },
+      "severity_in_conda_context": {
+        "assessment": "lower",
+        "reasoning": "The CVSS 9.8 score applies to Sqoop Provider usage. Since the Sqoop Provider is not part of airflow-with-docker, there is no impact for users of this conda package unless they separately install the vulnerable Sqoop Provider version, which is outside the scope of this artifact."
+      },
+      "severity_seen": {
+        "cvss": 9.8,
+        "level": null
+      }
+    },
+    "airflow-with-docker::PYSEC-2025-87": {
+      "advisory_id": "PYSEC-2025-87",
+      "affected_versions": {
+        "agrees_with_match": false,
+        "reasoning": "The OSV range (introduced: 0, fixed: 2.0.0) and the listed affected versions (1.x) are inconsistent with the advisory text which says the vulnerability affects Airflow 2 with Edge3 Provider. The conda-forge airflow-with-docker does not ship 1.x versions. Additionally, the advisory explicitly says Airflow 3 users are not affected, and the current version is 3.0.1. All suggested affected versions should be removed.",
+        "suggested_removes": [
+          "1.9.0",
+          "1.10.0",
+          "1.10.1",
+          "1.10.2",
+          "1.10.3",
+          "1.10.4",
+          "1.10.5",
+          "1.10.6",
+          "1.10.7",
+          "1.10.8",
+          "1.10.9",
+          "1.10.10",
+          "1.10.11"
+        ]
+      },
+      "inputs_seen": {
+        "hash": "752d57197909039bab0cce11011fb2d532f3e27d648f9aebd2940735091c70aa"
+      },
+      "notes": "The OSV record has a significant inconsistency: the ECOSYSTEM range says 'fixed: 2.0.0' (implying versions before 2.0.0 are affected), but the advisory text says the issue specifically affects Airflow 2 with Edge3 Provider, and Airflow 3 users are explicitly not affected. This appears to be a metadata error in the OSV record. The affects_future flag is False which is consistent with Airflow 3 being unaffected.",
+      "openvex_action_statement": null,
+      "openvex_impact_statement": "The PYSEC-2025-87 vulnerability is in the Edge3 Provider for Airflow 2, which is a separate optional provider package not included in airflow-with-docker. The advisory explicitly states Airflow 3 users are not affected. The current conda-forge version is 3.0.1 (Airflow 3), and the OSV range (fixed at 2.0.0) contradicts the advisory narrative which says the issue is specific to Airflow 2.",
+      "openvex_justification": "vulnerable_code_not_present",
+      "openvex_status": "not_affected",
+      "package": "airflow-with-docker",
+      "prompt_version": "2026-06-02.openvex-status-history-v1",
+      "rationale": "This advisory describes an RCE vulnerability in the Apache Airflow Edge3 Provider when used with Airflow 2.x. The OSV range covers versions of apache-airflow from 0 up to (but not including) 2.0.0, which is paradoxical given the advisory text explicitly states the issue only affects Airflow 2 with the Edge3 provider installed and configured. The listed affected conda versions (1.9.0 through 1.10.11) are all pre-2.0 Airflow releases \u2014 but the advisory text says the issue specifically affects Airflow 2, not Airflow 1. Furthermore, the advisory explicitly states 'If you used Edge Provider in Airflow 3, you are not affected', and the current conda-forge version is 3.0.1. The Edge3 Provider is a separate optional package not bundled with airflow-with-docker. The OSV range appears to be incorrect relative to the advisory narrative.",
+      "runtime_applicability": {
+        "applies": "no",
+        "reasoning": "The Edge3 Provider is a separate optional provider not bundled with airflow-with-docker. The advisory text explicitly states 'If you used Edge Provider in Airflow 3, you are not affected.' The current conda version is 3.0.1 (Airflow 3). The vulnerable code path is absent from this artifact."
+      },
+      "severity_in_conda_context": {
+        "assessment": "lower",
+        "reasoning": "The CVSS 9.8 RCE score requires the Edge3 Provider to be installed and configured on Airflow 2, which is a development-only configuration. The airflow-with-docker package is Airflow 3 and does not include Edge3 Provider. The advisory itself notes this was development-only code never officially released for production use."
+      },
+      "severity_seen": {
+        "cvss": 9.8,
+        "level": null
+      }
+    },
+    "airflow-with-elasticsearch::PYSEC-2023-314": {
+      "advisory_id": "PYSEC-2023-314",
+      "affected_versions": {
+        "agrees_with_match": false,
+        "reasoning": "The OSV range covers all apache-airflow versions < 3.1.1, but the vulnerability is specifically in the Sqoop provider package, not in core airflow or the Elasticsearch provider. None of the versions listed should be considered affected for this conda artifact, which bundles only Elasticsearch extras.",
+        "suggested_removes": [
+          "1.10.0",
+          "1.10.1",
+          "1.10.2",
+          "1.10.3",
+          "1.10.4",
+          "1.10.5",
+          "1.10.6",
+          "1.10.7",
+          "1.10.8",
+          "1.10.9",
+          "1.10.10",
+          "1.10.11",
+          "3.0.0",
+          "3.0.1"
+        ]
+      },
+      "inputs_seen": {
+        "hash": "3c70d016cd75f545ca1ecf235b5c3c8f3028ef4f8854fee9becc75decd797b02"
+      },
+      "notes": "The OSV record for PYSEC-2023-314 incorrectly uses the core apache-airflow package as the affected package rather than apache-airflow-providers-sqoop. This is a known problem with some PYSEC entries where provider CVEs get attributed to the parent package. The match should be dismissed for airflow-with-elasticsearch entirely.",
+      "openvex_action_statement": null,
+      "openvex_impact_statement": "The vulnerability is in the Apache Airflow Sqoop Provider (apache-airflow-providers-sqoop), which is a separate installable component not included in airflow-with-elasticsearch. This conda-forge package installs the Elasticsearch provider extras only; the Sqoop provider and its vulnerable code are not present.",
+      "openvex_justification": "component_not_present",
+      "openvex_status": "not_affected",
+      "package": "airflow-with-elasticsearch",
+      "prompt_version": "2026-06-02.openvex-status-history-v1",
+      "rationale": "This CVE affects the Apache Airflow Sqoop Provider (apache-airflow-providers-sqoop), not the core apache-airflow package and not the Elasticsearch provider. The OSV record has been incorrectly applied to the base apache-airflow package with a range of [0, 3.1.1), but the actual vulnerability lives entirely within the Sqoop provider plugin, which is a separately installable component. The conda-forge package under review is airflow-with-elasticsearch, which installs the Elasticsearch provider extras \u2014 Sqoop is not included. Even if conda-forge ships the latest version of apache-airflow (3.0.1), the Sqoop provider code is not present in this artifact. Therefore this match should not apply to this conda package.",
+      "runtime_applicability": {
+        "applies": "no",
+        "reasoning": "The Sqoop provider is a separate pip package (apache-airflow-providers-sqoop) that is not installed by airflow-with-elasticsearch. The vulnerable code path is therefore entirely absent from this conda artifact."
+      },
+      "severity_in_conda_context": {
+        "assessment": "lower",
+        "reasoning": "Since the Sqoop provider is not present in this conda package at all, the effective severity is zero \u2014 the CVSS 9.8 score is irrelevant to this artifact."
+      },
+      "severity_seen": {
+        "cvss": 9.8,
+        "level": null
+      }
+    },
+    "airflow-with-elasticsearch::PYSEC-2025-87": {
+      "advisory_id": "PYSEC-2025-87",
+      "affected_versions": {
+        "agrees_with_match": false,
+        "reasoning": "The OSV range is fixed at 2.0.0, so only pre-2.0 airflow versions are in scope. The airflow-with-elasticsearch conda-forge feedstock does not ship any 1.x versions, so none of these should appear in the affected_versions set for this conda artifact. Additionally, the vulnerability is in the Edge3 provider, not in the core package or Elasticsearch provider.",
+        "suggested_removes": [
+          "1.10.0",
+          "1.10.1",
+          "1.10.2",
+          "1.10.3",
+          "1.10.4",
+          "1.10.5",
+          "1.10.6",
+          "1.10.7",
+          "1.10.8",
+          "1.10.9",
+          "1.10.10",
+          "1.10.11"
+        ]
+      },
+      "inputs_seen": {
+        "hash": "c4141e7c762106558bfa93d35979aa1f7aca77b5e1adbbaa1e40a84257b64167"
+      },
+      "notes": "The OSV record's affected range ([0, 2.0.0)) correctly captures the Airflow version scope, but the advisory should be attributed to apache-airflow-providers-edge3 rather than core apache-airflow. The auto-match incorrectly fired on the base package PURL. The airflow-with-elasticsearch feedstock has never shipped 1.x versions and does not include the Edge3 provider.",
+      "openvex_action_statement": null,
+      "openvex_impact_statement": "The vulnerability is specific to the Apache Airflow Edge3 provider (a separate installable component) used with Airflow 2. The airflow-with-elasticsearch conda package installs only Elasticsearch provider extras, does not include the Edge3 provider, and the conda-forge feedstock has never shipped Airflow 1.x versions. Airflow 3.x users are explicitly stated to be unaffected even if they have the Edge3 provider installed.",
+      "openvex_justification": "component_not_present",
+      "openvex_status": "not_affected",
+      "package": "airflow-with-elasticsearch",
+      "prompt_version": "2026-06-02.openvex-status-history-v1",
+      "rationale": "This CVE describes an RCE vulnerability in the Apache Airflow Edge3 provider when used with Airflow 2. The OSV affected range covers apache-airflow versions [0, 2.0.0), i.e., the 1.x line. The conda-forge package airflow-with-elasticsearch ships version 3.0.1 (and the latest is 3.0.1), which is well above the fixed boundary of 2.0.0. Furthermore, the advisory explicitly states that users on Airflow 3 with Edge3 provider are not affected, and this package installs only Elasticsearch extras \u2014 the Edge3 provider is a completely separate optional component not included here. The computed affected_versions list (1.10.0 through 1.10.11) does not include any version shipped by this conda-forge feedstock, which starts at Airflow 2.x or later in practice.",
+      "runtime_applicability": {
+        "applies": "no",
+        "reasoning": "The Edge3 provider is a separate optional component not bundled in airflow-with-elasticsearch. Even if it were present, Airflow 3.x users are explicitly excluded from the vulnerability scope per the advisory text. The conda-forge feedstock ships Airflow 3.0.1 with only Elasticsearch extras."
+      },
+      "severity_in_conda_context": {
+        "assessment": "lower",
+        "reasoning": "The CVSS 9.8 score is inapplicable here: the vulnerable Edge3 provider code is absent from this conda artifact, and the Airflow version shipped (3.x) is explicitly not affected per the advisory."
+      },
+      "severity_seen": {
+        "cvss": 9.8,
+        "level": null
+      }
+    },
+    "airflow-with-exasol::PYSEC-2023-314": {
+      "advisory_id": "PYSEC-2023-314",
+      "affected_versions": {
+        "agrees_with_match": false,
+        "reasoning": "The OSV range (introduced: 0, fixed: 3.1.1) targets apache-airflow core version numbers, but the actual vulnerability is in apache-airflow-providers-sqoop versions before 3.1.1 \u2014 a separately versioned and distributed package. The conda-forge airflow-with-exasol versions 3.0.0 and 3.0.1 should be removed from the affected set because the sqoop provider is not a dependency of this package and the version range has been incorrectly mapped to the core airflow package.",
+        "suggested_removes": [
+          "3.0.0",
+          "3.0.1"
+        ]
+      },
+      "inputs_seen": {
+        "hash": "71aaf8a214629fbc0a217c5591e1cf6af4e3695acb74b23bdbf1420faf619ba3"
+      },
+      "notes": "The OSV record incorrectly associates this Sqoop Provider CVE with the core apache-airflow package version range rather than tracking apache-airflow-providers-sqoop as a separate package. This creates false-positive matches for all airflow core packages and metapackages. The actual fix was in apache-airflow-providers-sqoop 3.1.1. Conda-forge maintainers may want to flag this to the PyPA advisory database as a misattribution.",
+      "openvex_action_statement": null,
+      "openvex_impact_statement": "The vulnerability is in the Apache Airflow Sqoop Provider (apache-airflow-providers-sqoop), which is a separate package not included in the airflow-with-exasol conda-forge metapackage. The airflow-with-exasol package installs Exasol provider dependencies only, so the vulnerable Sqoop code is not present in this artifact.",
+      "openvex_justification": "vulnerable_code_not_present",
+      "openvex_status": "not_affected",
+      "package": "airflow-with-exasol",
+      "prompt_version": "2026-06-02.openvex-status-history-v1",
+      "rationale": "CVE-2023-25693 / PYSEC-2023-314 describes an Improper Input Validation vulnerability specifically in the Apache Airflow Sqoop Provider (apache-airflow-providers-sqoop), not in the core apache-airflow package itself. The OSV record's ECOSYSTEM range covers all apache-airflow versions before 3.1.1, but this is an over-broad attribution: the actual vulnerable code lives in the separately distributed sqoop provider package, which is not bundled in either the core airflow package or the airflow-with-exasol conda-forge metapackage. The airflow-with-exasol conda-forge package installs Exasol provider dependencies, not the Sqoop provider, so the vulnerable Sqoop code path is simply not present in this artifact. The affected_versions list (3.0.0 and 3.0.1) reflects the currently shipped conda-forge versions but the match is based on the core package version range rather than the presence of the sqoop provider \u2014 this is a false positive. Because the Sqoop provider is a separate installable component not included in airflow-with-exasol, this advisory does not apply to this conda artifact.",
+      "runtime_applicability": {
+        "applies": "no",
+        "reasoning": "The vulnerable code resides in the Sqoop provider module (airflow.providers.sqoop), which is part of apache-airflow-providers-sqoop. This provider is not installed or vendored by airflow-with-exasol, which only adds Exasol provider dependencies. There is no import path from airflow-with-exasol entry points to the Sqoop provider code."
+      },
+      "severity_in_conda_context": {
+        "assessment": "lower",
+        "reasoning": "The CVSS score of 9.8 (Critical) reflects the severity of the Sqoop provider vulnerability in environments where it is actually installed and used. Since the Sqoop provider is not present in this conda artifact at all, the effective severity for airflow-with-exasol users is none \u2014 the vulnerability is not reachable."
+      },
+      "severity_seen": {
+        "cvss": 9.8,
+        "level": null
+      }
+    },
+    "airflow-with-uv::GHSA-c732-xvv8-g94c": {
+      "advisory_id": "GHSA-c732-xvv8-g94c",
+      "affected_versions": {
+        "agrees_with_match": true,
+        "reasoning": "The affected_versions set is correctly empty. The OSV range covers apache-airflow < 2.5.1, but the conda-forge airflow-with-uv package only exists at version 3.0.1 (and presumably was first packaged at much higher versions than 2.5.1), so no conda builds fall within the vulnerable range. No adds or removes are needed."
+      },
+      "inputs_seen": {
+        "hash": "470ae192c2d053e015158475a7d52dde7f4b52b657b0e4b42315e8b6f861da2b"
+      },
+      "notes": "The advisory covers two separate PyPI packages: apache-airflow (core, fixed in 2.5.1) and apache-airflow-providers-mysql (fixed in 4.0.0). The conda-forge airflow-with-uv package at 3.0.1 is not affected by the core airflow component vulnerability. Users should ensure they are not separately installing a vulnerable version of apache-airflow-providers-mysql alongside this package.",
+      "openvex_action_statement": null,
+      "openvex_impact_statement": "The airflow-with-uv conda-forge package ships version 3.0.1, which is well above the fixed threshold of 2.5.1. The vulnerability in the MySQL provider (apache-airflow-providers-mysql < 4.0.0) is in a separate optional provider package not bundled in the core airflow-with-uv artifact. No conda-forge versions of this package are listed in the affected set.",
+      "openvex_justification": "vulnerable_code_not_present",
+      "openvex_status": "not_affected",
+      "package": "airflow-with-uv",
+      "prompt_version": "2026-06-02.openvex-status-history-v1",
+      "rationale": "The OSV record for CVE-2023-22884 covers apache-airflow versions from 0 up to (but not including) 2.5.1, and apache-airflow-providers-mysql versions from 0 up to (but not including) 4.0.0. The airflow-with-uv conda-forge package ships the latest version 3.0.1, which is well above the fixed threshold of 2.5.1 for the core airflow component. The affected_versions set is listed as empty (none), and the system correctly notes affects_future as False, meaning no currently tracked conda versions are flagged as vulnerable. The vulnerability involves command injection in the MySQL provider integration, which is a separate optional provider package (apache-airflow-providers-mysql); the airflow-with-uv metapackage does not necessarily bundle or pin the MySQL provider at a vulnerable version. Since the latest conda-forge version (3.0.1) is far above the fixed version (2.5.1), and no conda-forge versions are listed as affected, this advisory does not apply to the current or any tracked conda-forge builds of this package.",
+      "runtime_applicability": {
+        "applies": "no",
+        "reasoning": "The command injection vulnerability is specifically in the MySQL provider integration (apache-airflow-providers-mysql < 4.0.0), which is a separately installable optional provider package. Even for the core airflow component, the fix was delivered in 2.5.1 and the current conda-forge version is 3.0.1. The vulnerable code path is not present in any tracked conda-forge version of this package."
+      },
+      "severity_in_conda_context": {
+        "assessment": "lower",
+        "reasoning": "While the upstream CVSS score is 9.8 (Critical), this vulnerability requires the MySQL provider to be installed and configured with a malicious or attacker-controlled MySQL connection, limiting real-world exploitability. Additionally, since the conda-forge package is at a patched version, the effective severity for conda-forge users is none."
+      },
+      "severity_seen": {
+        "cvss": 9.8,
+        "level": "CRITICAL"
+      }
+    },
+    "airflow::PYSEC-2023-314": {
+      "advisory_id": "PYSEC-2023-314",
+      "affected_versions": {
+        "agrees_with_match": false,
+        "reasoning": "The OSV range 'introduced: 0, fixed: 3.1.1' is mis-attributed to apache-airflow core. The actual vulnerability is in apache-airflow-providers-sqoop (a separate PyPI package), whose 3.1.1 release fixed the Sqoop operator input validation flaw per PR #29500. None of the apache-airflow core versions should be listed as affected by this advisory, since the vulnerable code does not reside in the core package at all.",
+        "suggested_removes": [
+          "1.9.0",
+          "1.10.0",
+          "1.10.1",
+          "1.10.2",
+          "1.10.3",
+          "1.10.4",
+          "1.10.5",
+          "1.10.6",
+          "1.10.7",
+          "1.10.8",
+          "1.10.9",
+          "1.10.10",
+          "1.10.11",
+          "1.10.12",
+          "1.10.13",
+          "1.10.14",
+          "1.10.15",
+          "2.0.1",
+          "2.0.2",
+          "2.1.0",
+          "2.1.1",
+          "2.1.2",
+          "2.1.3",
+          "2.1.4",
+          "2.2.0",
+          "2.2.1",
+          "2.2.2",
+          "2.2.3",
+          "2.2.4",
+          "2.2.5",
+          "2.3.0",
+          "2.3.1",
+          "2.3.2",
+          "2.3.3",
+          "2.3.4",
+          "2.4.0",
+          "2.4.1",
+          "2.4.2",
+          "2.4.3",
+          "2.5.0",
+          "2.5.1",
+          "2.5.2",
+          "2.5.3",
+          "2.6.0",
+          "2.6.1",
+          "2.6.2",
+          "2.6.3",
+          "2.7.0",
+          "2.7.1",
+          "2.7.2",
+          "2.7.3",
+          "2.8.0",
+          "2.8.1",
+          "2.8.2",
+          "2.8.3",
+          "2.8.4",
+          "2.9.0",
+          "2.9.1",
+          "2.9.2",
+          "2.9.3",
+          "2.10.0",
+          "2.10.1",
+          "2.10.2",
+          "2.10.4",
+          "2.10.5",
+          "2.11.0",
+          "2.11.1",
+          "3.0.0",
+          "3.0.1",
+          "3.0.2",
+          "3.0.3",
+          "3.0.4",
+          "3.0.5",
+          "3.0.6",
+          "3.1.0"
+        ]
+      },
+      "inputs_seen": {
+        "hash": "843a1a92f2fc47a378578db81fffa3cb4904d45825892494a29fca99d779a3bf"
+      },
+      "notes": "The OSV advisory PYSEC-2023-314 appears to have been incorrectly mapped to the apache-airflow core package. The actual CVE-2023-25693 describes a flaw in apache-airflow-providers-sqoop <3.1.1. The conda-forge airflow package should be flagged as not_affected. A separate assessment for apache-airflow-providers-sqoop (if it exists on conda-forge) would be appropriate. The affects_future: False flag and the fix at upstream airflow 3.1.1 in the OSV record are likely a numbering coincidence with the provider package version.",
+      "openvex_action_statement": null,
+      "openvex_impact_statement": "The vulnerability is in the apache-airflow-providers-sqoop package, specifically its Sqoop operator input validation. The conda-forge airflow package ships only the core Airflow framework and does not bundle the Sqoop provider. The OSV range attribution to apache-airflow core appears to be an over-broad mis-mapping in the advisory database.",
+      "openvex_justification": "vulnerable_code_not_present",
+      "openvex_status": "not_affected",
+      "package": "airflow",
+      "prompt_version": "2026-06-02.openvex-status-history-v1",
+      "rationale": "CVE-2023-25693 (PYSEC-2023-314) describes an Improper Input Validation vulnerability specifically in the Apache Airflow Sqoop Provider, affecting versions of that provider before 3.1.1. The OSV record, however, is attached to the apache-airflow core package and lists a fix event at apache-airflow 3.1.1, which is a version numbering coincidence \u2014 the Sqoop Provider's 3.1.1 release is a separate package (apache-airflow-providers-sqoop) and is not equivalent to airflow core 3.1.1. The conda-forge airflow package ships the core airflow framework; the Sqoop Provider is a separately installable provider package and is not bundled into the main airflow conda artifact. Because the vulnerable code (Sqoop operator input validation) resides only in the apache-airflow-providers-sqoop package and not in the core airflow distribution, this CVE does not apply to the conda-forge airflow package itself. The OSV range for apache-airflow core being set to 'introduced: 0, fixed: 3.1.1' appears to be an over-broad mis-attribution in the advisory database; the actual fix was in the Sqoop provider package (PR #29500), not the core airflow codebase.",
+      "runtime_applicability": {
+        "applies": "no",
+        "reasoning": "The Sqoop Provider's vulnerable input validation code is shipped in the separate apache-airflow-providers-sqoop package, not in the apache-airflow core package distributed via conda-forge. Even if a user installs the Sqoop provider alongside the core airflow conda package, the vulnerability is in the provider package, not in the core artifact being assessed here."
+      },
+      "severity_in_conda_context": {
+        "assessment": "lower",
+        "reasoning": "Because the vulnerable component (Sqoop Provider) is not present in the conda-forge airflow core package, the effective severity for this artifact is none. The CVSS 9.8 score applies to deployments that actually use the Sqoop provider, which is a separate, optional installation not part of the core conda artifact."
+      },
+      "severity_seen": {
+        "cvss": 9.8,
+        "level": null
+      }
+    },
     "deepdiff::GHSA-mw26-5g2v-hqw3": {
       "advisory_id": "GHSA-mw26-5g2v-hqw3",
       "affected_versions": {
@@ -303,11 +757,127 @@
         "cvss": 10.0,
         "level": "CRITICAL"
       }
+    },
+    "nltk::GHSA-7p94-766c-hgjp": {
+      "advisory_id": "GHSA-7p94-766c-hgjp",
+      "affected_versions": {
+        "agrees_with_match": true,
+        "reasoning": "The OSV ECOSYSTEM range states introduced=0, fixed=3.9.3, so all conda-forge builds of nltk < 3.9.3 are affected. The match list of 19 versions appears to be a subset of all published PyPI versions and omits some versions that were shipped on conda-forge (e.g. 3.9 is missing from the listed 19 but is in the OSV versions list and should be included). The current conda-forge latest, 3.9.4, is not affected.",
+        "suggested_adds": [
+          "3.9",
+          "3.9.1",
+          "3.9.2"
+        ],
+        "suggested_removes": []
+      },
+      "inputs_seen": {
+        "hash": "9bdbdeb979efc00fb2e669eebd1ea3c5b50e3a35b57908bdb0f235e5804abe33"
+      },
+      "notes": "The same advisory appears twice in the input; only one assessment is emitted. The fix commit is 1056b323af6462455571302e766b67cf300aea18 which adds path validation in _unzip_iter.",
+      "openvex_action_statement": "Upgrade to nltk >= 3.9.3 (conda-forge latest is 3.9.4 which is fixed). Users running historical conda builds of versions <= 3.9.2 should upgrade immediately to avoid the Zip Slip vulnerability in the downloader component.",
+      "openvex_impact_statement": null,
+      "openvex_justification": null,
+      "openvex_status": "affected",
+      "package": "nltk",
+      "prompt_version": "2026-06-02.openvex-status-history-v1",
+      "rationale": "The OSV record covers all versions from 0 through < 3.9.3, with the fix landing in 3.9.3. The conda-forge package currently ships 3.9.4, which is newer than 3.9.3 and is therefore not vulnerable. However, historical conda-forge builds of versions up through 3.9.2 remain in the channel and are genuinely affected. The vulnerability is in `nltk/downloader.py`'s `_unzip_iter` function, which is part of NLTK's core corpus download workflow \u2014 a heavily-used runtime feature, not a build-time-only code path. The CVSS 10.0 score reflects that a network-accessible attacker who can compromise the NLTK download server (or perform MITM) could deliver a malicious zip that extracts files outside the intended directory and, if those files are then imported, achieves RCE. The affected_versions list in the match omits several conda-relevant versions (e.g. 3.9, 3.9.1, 3.9.2 are listed but the list is incomplete relative to all conda-forge releases below 3.9.3) but the OSV range itself is clear and correct \u2014 all conda builds < 3.9.3 are affected.",
+      "runtime_applicability": {
+        "applies": "yes",
+        "reasoning": "The vulnerability lives in `nltk.downloader`, which is a standard runtime module invoked whenever users call `nltk.download()` to fetch corpora. This is a very common usage pattern for NLTK users and is not a build-time-only path; it runs in user environments at runtime."
+      },
+      "severity_in_conda_context": {
+        "assessment": "same",
+        "reasoning": "The CVSS 10.0 score requires a network-accessible attacker to compromise the download source or perform MITM, which is a realistic threat model for NLTK users who regularly call `nltk.download()` over the network. The severity is not overstated for typical conda-forge usage."
+      },
+      "severity_seen": {
+        "cvss": 10.0,
+        "level": "CRITICAL"
+      }
+    },
+    "nltk::PYSEC-2026-99": {
+      "advisory_id": "PYSEC-2026-99",
+      "affected_versions": {
+        "agrees_with_match": true,
+        "reasoning": "The OSV range is identical to GHSA-7p94-766c-hgjp: all versions < 3.9.3 are affected. The 19-version match list is again an incomplete subset; the full set of conda-forge builds below 3.9.3 should be considered affected per the ECOSYSTEM range.",
+        "suggested_adds": [
+          "3.9",
+          "3.9.1",
+          "3.9.2"
+        ],
+        "suggested_removes": []
+      },
+      "inputs_seen": {
+        "hash": "4255568bcd5866b51a418a5191332b6e754d0871953962bdd706d048e3ad8c75"
+      },
+      "notes": "This advisory has no public summary text and minimal references (only a huntr bounty link). It appears to be a distinct vulnerability from the Zip Slip (CVE-2025-14009) despite sharing the same version range and fix point. The OSV record is sparse; maintainers should verify the fix was indeed included in 3.9.3 before finalizing this assessment.",
+      "openvex_action_statement": "Upgrade to nltk >= 3.9.3 (conda-forge latest is 3.9.4 which is fixed). Users on conda-forge builds <= 3.9.2 should upgrade to mitigate the StanfordSegmenter arbitrary JAR execution vulnerability.",
+      "openvex_impact_statement": null,
+      "openvex_justification": null,
+      "openvex_status": "affected",
+      "package": "nltk",
+      "prompt_version": "2026-06-02.openvex-status-history-v1",
+      "rationale": "PYSEC-2026-99 covers the same OSV ECOSYSTEM range (introduced=0, fixed=3.9.3) as GHSA-7p94-766c-hgjp but describes a distinct vulnerability: improper validation in the StanfordSegmenter module, which dynamically loads external Java JAR files via subprocess without path or integrity verification. This is a different attack surface from the Zip Slip issue. The StanfordSegmenter is a runtime module in NLTK that wraps the Stanford NLP Java tools; it requires users to have Java installed and to explicitly point NLTK at a Stanford JAR file, making this a conditional code path. Conda-forge's nltk package ships the Python wrappers including StanfordSegmenter, and historical conda builds <= 3.9.2 are in scope per the OSV range. The latest conda-forge version 3.9.4 is newer than the fixed version 3.9.3, so the current build is not vulnerable, but older channel builds remain affected.",
+      "runtime_applicability": {
+        "applies": "partial",
+        "reasoning": "The StanfordSegmenter module is part of NLTK's runtime but is only exercised when a user explicitly instantiates it with a path to a Stanford JAR file and has Java installed. This is an optional, user-configured feature. The conda-forge package ships the module, so the attack surface is present, but exploitation requires the user to have configured the Stanford integration and for an attacker to be able to substitute the JAR file."
+      },
+      "severity_in_conda_context": {
+        "assessment": "lower",
+        "reasoning": "While the CVSS score is 10.0, the actual exploitability in a typical conda-forge context is lower than the raw score suggests because StanfordSegmenter requires explicit user configuration (pointing to a JAR file), Java installation, and attacker ability to replace or poison that JAR. Most NLTK users never use this module, reducing the real-world attack surface compared to the universal downloader vulnerability in GHSA-7p94-766c-hgjp."
+      },
+      "severity_seen": {
+        "cvss": 10.0,
+        "level": null
+      }
+    },
+    "vllm::GHSA-hj4w-hm2g-p6w5": {
+      "advisory_id": "GHSA-hj4w-hm2g-p6w5",
+      "affected_versions": {
+        "agrees_with_match": false,
+        "reasoning": "The OSV ecosystem range introduces at 0.6.5 and fixes at 0.8.5, covering versions 0.6.5, 0.6.6, 0.6.6.post1, 0.7.0, 0.7.1, 0.7.2, 0.7.3, 0.8.0, 0.8.1, 0.8.2, 0.8.3, and 0.8.4. The auto-derived match only lists 0.8.3, which is incomplete \u2014 all versions from 0.6.5 through 0.8.4 should be included if they were packaged on conda-forge.",
+        "suggested_adds": [
+          "0.6.5",
+          "0.6.6",
+          "0.6.6.post1",
+          "0.7.0",
+          "0.7.1",
+          "0.7.2",
+          "0.7.3",
+          "0.8.0",
+          "0.8.1",
+          "0.8.2",
+          "0.8.4"
+        ],
+        "suggested_removes": []
+      },
+      "inputs_seen": {
+        "hash": "2d687db17fdbba75012592dbbe391cbf19511856d6c992a789183c954caf09bf"
+      },
+      "notes": "The conda-forge latest version (0.19.1) is well past the fix point (0.8.5). The primary risk is for users pinned to older conda-forge builds in the 0.6.5\u20130.8.4 range who also use the Mooncake integration. A related advisory GHSA-x3m8-f7g5-qhm7 covers a similar pickle/ZeroMQ RCE pattern in a different vllm component.",
+      "openvex_action_statement": "Users running vllm versions 0.6.5 through 0.8.4 from conda-forge with the Mooncake KV-transfer integration enabled should upgrade to vllm >= 0.8.5 (conda-forge latest is 0.19.1, which is fixed). If Mooncake integration is not used, the vulnerable code path is not exercised.",
+      "openvex_impact_statement": null,
+      "openvex_justification": null,
+      "openvex_status": "affected",
+      "package": "vllm",
+      "prompt_version": "2026-06-02.openvex-status-history-v1",
+      "rationale": "The OSV range covers vllm versions 0.6.5 through 0.8.4 (fixed in 0.8.5), while the latest conda-forge version is 0.19.1, which is well beyond the fixed point of 0.8.5. However, historical conda-forge builds within the range 0.6.5\u20130.8.4 (specifically 0.8.3 is listed in conda affected_versions) remain genuinely vulnerable if they were ever packaged on conda-forge. The vulnerability is in vllm/distributed/kv_transfer/kv_pipe/mooncake_pipe.py, which uses pickle-based deserialization over ZeroMQ \u2014 this is only triggered when the Mooncake integration is actively used. The advisory explicitly states that deployments NOT using the Mooncake integration are not vulnerable, which significantly narrows the real-world exposure. The conda-forge package at version 0.19.1 is patched (fix landed in 0.8.5), but historical builds like 0.8.3 on conda-forge are affected if users have not upgraded.",
+      "runtime_applicability": {
+        "applies": "partial",
+        "reasoning": "The vulnerable code path (mooncake_pipe.py using recv_pyobj with implicit pickle deserialization over ZeroMQ) is only executed when the Mooncake distributed KV-transfer integration is explicitly configured and used. Standard vllm deployments without Mooncake are not affected. This is an optional feature, so runtime applicability is partial rather than universal."
+      },
+      "severity_in_conda_context": {
+        "assessment": "lower",
+        "reasoning": "The CVSS score of 10.0 (Critical) reflects the worst-case scenario of unauthenticated RCE over the network. However, the advisory explicitly gates this on the Mooncake integration being active. Most conda-forge users of vllm are unlikely to have Mooncake configured, and the attack requires network access to the ZeroMQ sockets. In practice the severity is lower for typical conda deployments that do not use Mooncake, though it remains Critical for those that do."
+      },
+      "severity_seen": {
+        "cvss": 10.0,
+        "level": "CRITICAL"
+      }
     }
   },
   "backend": "api",
   "draft": true,
-  "generated_at": "2026-06-03T09:00:39+00:00",
+  "generated_at": "2026-06-03T09:01:38+00:00",
   "model": "claude-sonnet-4-6",
   "openvex": {
     "@context": "https://openvex.dev/ns/v0.2.0",
@@ -322,7 +892,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-mw26-5g2v-hqw3"
         }
@@ -335,7 +905,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-mw26-5g2v-hqw3"
         }
@@ -348,7 +918,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-mw26-5g2v-hqw3"
         }
@@ -361,7 +931,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-mw26-5g2v-hqw3"
         }
@@ -374,7 +944,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-mw26-5g2v-hqw3"
         }
@@ -387,7 +957,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-mw26-5g2v-hqw3"
         }
@@ -400,7 +970,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -413,7 +983,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -426,7 +996,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -439,7 +1009,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -452,7 +1022,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -465,7 +1035,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -478,7 +1048,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -491,7 +1061,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -504,7 +1074,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -517,7 +1087,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -530,7 +1100,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -543,7 +1113,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -556,7 +1126,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -569,7 +1139,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -582,7 +1152,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -595,7 +1165,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -608,7 +1178,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -621,7 +1191,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -634,7 +1204,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -647,7 +1217,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -660,7 +1230,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -673,7 +1243,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -686,7 +1256,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -699,7 +1269,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -712,7 +1282,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -725,7 +1295,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -738,7 +1308,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -751,7 +1321,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -764,7 +1334,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -777,7 +1347,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -790,7 +1360,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -803,7 +1373,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -816,7 +1386,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -829,7 +1399,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -842,7 +1412,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -855,7 +1425,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -868,7 +1438,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -881,7 +1451,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -894,7 +1464,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -907,7 +1477,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -920,7 +1490,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -933,7 +1503,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -946,7 +1516,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -959,7 +1529,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -972,7 +1542,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -985,7 +1555,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -998,7 +1568,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -1011,7 +1581,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -1024,7 +1594,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -1037,7 +1607,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -1050,7 +1620,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -1063,7 +1633,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -1076,7 +1646,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-vv7q-7jx5-f767"
         }
@@ -1089,7 +1659,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-f798-qm4r-23r5"
         }
@@ -1102,7 +1672,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-fmxj-6h9g-6vw3"
         }
@@ -1115,7 +1685,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-r23q-823p-vmf7"
         }
@@ -1128,7 +1698,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-554w-xh4j-8w64"
         }
@@ -1141,7 +1711,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-5p3h-7fwh-92rc"
         }
@@ -1154,13 +1724,2569 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-03T09:00:39+00:00",
+        "timestamp": "2026-06-03T09:01:38+00:00",
         "vulnerability": {
           "name": "GHSA-5q6c-ffvg-xcm9"
         }
+      },
+      {
+        "action_statement": "Users running vllm versions 0.6.5 through 0.8.4 from conda-forge with the Mooncake KV-transfer integration enabled should upgrade to vllm >= 0.8.5 (conda-forge latest is 0.19.1, which is fixed). If Mooncake integration is not used, the vulnerable code path is not exercised.",
+        "products": [
+          {
+            "@id": "pkg:conda/vllm?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-hj4w-hm2g-p6w5"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/vllm@0.6.5?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-hj4w-hm2g-p6w5"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/vllm@0.6.6?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-hj4w-hm2g-p6w5"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/vllm@0.6.6.post1?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-hj4w-hm2g-p6w5"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/vllm@0.7.0?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-hj4w-hm2g-p6w5"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/vllm@0.7.1?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-hj4w-hm2g-p6w5"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/vllm@0.7.2?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-hj4w-hm2g-p6w5"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/vllm@0.7.3?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-hj4w-hm2g-p6w5"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/vllm@0.8.0?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-hj4w-hm2g-p6w5"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/vllm@0.8.1?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-hj4w-hm2g-p6w5"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/vllm@0.8.2?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-hj4w-hm2g-p6w5"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/vllm@0.8.4?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-hj4w-hm2g-p6w5"
+        }
+      },
+      {
+        "action_statement": "Upgrade to nltk >= 3.9.3 (conda-forge latest is 3.9.4 which is fixed). Users running historical conda builds of versions <= 3.9.2 should upgrade immediately to avoid the Zip Slip vulnerability in the downloader component.",
+        "products": [
+          {
+            "@id": "pkg:conda/nltk?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-7p94-766c-hgjp"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/nltk@3.9?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-7p94-766c-hgjp"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/nltk@3.9.1?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-7p94-766c-hgjp"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/nltk@3.9.2?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-7p94-766c-hgjp"
+        }
+      },
+      {
+        "action_statement": "Upgrade to nltk >= 3.9.3 (conda-forge latest is 3.9.4 which is fixed). Users on conda-forge builds <= 3.9.2 should upgrade to mitigate the StanfordSegmenter arbitrary JAR execution vulnerability.",
+        "products": [
+          {
+            "@id": "pkg:conda/nltk?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2026-99"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/nltk@3.9?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2026-99"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/nltk@3.9.1?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2026-99"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/nltk@3.9.2?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2026-99"
+        }
+      },
+      {
+        "impact_statement": "The airflow-with-uv conda-forge package ships version 3.0.1, which is well above the fixed threshold of 2.5.1. The vulnerability in the MySQL provider (apache-airflow-providers-mysql < 4.0.0) is in a separate optional provider package not bundled in the core airflow-with-uv artifact. No conda-forge versions of this package are listed in the affected set.",
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-uv?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-c732-xvv8-g94c"
+        }
+      },
+      {
+        "action_statement": "Users should upgrade the aim conda-forge package to version 3.29.1 (beyond the last_affected 3.25.0) to mitigate this RCE vulnerability. Avoid exposing the Aim web API to untrusted networks until upgraded.",
+        "products": [
+          {
+            "@id": "pkg:conda/aim?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-mxvw-cj37-8g2h"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/aim@3.15.0?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-mxvw-cj37-8g2h"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/aim@3.15.1?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-mxvw-cj37-8g2h"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/aim@3.16.0?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-mxvw-cj37-8g2h"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/aim@3.16.1?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-mxvw-cj37-8g2h"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/aim@3.16.2?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-mxvw-cj37-8g2h"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/aim@3.17.0?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-mxvw-cj37-8g2h"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/aim@3.17.1?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-mxvw-cj37-8g2h"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/aim@3.17.2?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-mxvw-cj37-8g2h"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/aim@3.17.3?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-mxvw-cj37-8g2h"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/aim@3.17.4?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-mxvw-cj37-8g2h"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/aim@3.17.5?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-mxvw-cj37-8g2h"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/aim@3.18.0?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-mxvw-cj37-8g2h"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/aim@3.18.1?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-mxvw-cj37-8g2h"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/aim@3.19.0?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-mxvw-cj37-8g2h"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/aim@3.19.1?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-mxvw-cj37-8g2h"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/aim@3.19.2?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-mxvw-cj37-8g2h"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/aim@3.19.3?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-mxvw-cj37-8g2h"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/aim@3.20.1?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-mxvw-cj37-8g2h"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/aim@3.21.0?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-mxvw-cj37-8g2h"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/aim@3.22.0?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-mxvw-cj37-8g2h"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/aim@3.23.0?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-mxvw-cj37-8g2h"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/aim@3.24.0?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-mxvw-cj37-8g2h"
+        }
+      },
+      {
+        "action_statement": "added by AI reviewer (affected_versions.suggested_adds)",
+        "products": [
+          {
+            "@id": "pkg:conda/aim@3.25.0?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-mxvw-cj37-8g2h"
+        }
+      },
+      {
+        "impact_statement": "The vulnerability is in the apache-airflow-providers-sqoop package, specifically its Sqoop operator input validation. The conda-forge airflow package ships only the core Airflow framework and does not bundle the Sqoop provider. The OSV range attribution to apache-airflow core appears to be an over-broad mis-mapping in the advisory database.",
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@1.9.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@1.10.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@1.10.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@1.10.2?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@1.10.3?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@1.10.4?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@1.10.5?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@1.10.6?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@1.10.7?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@1.10.8?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@1.10.9?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@1.10.10?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@1.10.11?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@1.10.12?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@1.10.13?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@1.10.14?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@1.10.15?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.0.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.0.2?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.1.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.1.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.1.2?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.1.3?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.1.4?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.2.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.2.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.2.2?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.2.3?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.2.4?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.2.5?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.3.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.3.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.3.2?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.3.3?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.3.4?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.4.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.4.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.4.2?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.4.3?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.5.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.5.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.5.2?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.5.3?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.6.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.6.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.6.2?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.6.3?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.7.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.7.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.7.2?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.7.3?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.8.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.8.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.8.2?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.8.3?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.8.4?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.9.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.9.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.9.2?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.9.3?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.10.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.10.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.10.2?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.10.4?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.10.5?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.11.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@2.11.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@3.0.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@3.0.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@3.0.2?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@3.0.3?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@3.0.4?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@3.0.5?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@3.0.6?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow@3.1.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "impact_statement": "The vulnerability is in the Apache Airflow Sqoop Provider (apache-airflow-providers-sqoop), which is a separate installable component not included in airflow-with-elasticsearch. This conda-forge package installs the Elasticsearch provider extras only; the Sqoop provider and its vulnerable code are not present.",
+        "justification": "component_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-elasticsearch?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-elasticsearch@1.10.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-elasticsearch@1.10.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-elasticsearch@1.10.2?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-elasticsearch@1.10.3?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-elasticsearch@1.10.4?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-elasticsearch@1.10.5?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-elasticsearch@1.10.6?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-elasticsearch@1.10.7?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-elasticsearch@1.10.8?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-elasticsearch@1.10.9?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-elasticsearch@1.10.10?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-elasticsearch@1.10.11?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-elasticsearch@3.0.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-elasticsearch@3.0.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "impact_statement": "The vulnerability is specific to the Apache Airflow Edge3 provider (a separate installable component) used with Airflow 2. The airflow-with-elasticsearch conda package installs only Elasticsearch provider extras, does not include the Edge3 provider, and the conda-forge feedstock has never shipped Airflow 1.x versions. Airflow 3.x users are explicitly stated to be unaffected even if they have the Edge3 provider installed.",
+        "justification": "component_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-elasticsearch?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2025-87"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-elasticsearch@1.10.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2025-87"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-elasticsearch@1.10.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2025-87"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-elasticsearch@1.10.2?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2025-87"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-elasticsearch@1.10.3?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2025-87"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-elasticsearch@1.10.4?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2025-87"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-elasticsearch@1.10.5?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2025-87"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-elasticsearch@1.10.6?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2025-87"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-elasticsearch@1.10.7?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2025-87"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-elasticsearch@1.10.8?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2025-87"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-elasticsearch@1.10.9?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2025-87"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-elasticsearch@1.10.10?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2025-87"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-elasticsearch@1.10.11?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2025-87"
+        }
+      },
+      {
+        "impact_statement": "The vulnerability is in the Apache Airflow Sqoop Provider (apache-airflow-providers-sqoop), which is a separate package not included in the airflow-with-exasol conda-forge metapackage. The airflow-with-exasol package installs Exasol provider dependencies only, so the vulnerable Sqoop code is not present in this artifact.",
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-exasol?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-exasol@3.0.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-exasol@3.0.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "impact_statement": "The airflow-with-docker conda-forge package ships Airflow 3.0.1, which is beyond the fixed point of 2.3.0. The Pig Provider is a separate optional provider not included in this package, and no conda-forge versions of airflow-with-docker fall within the affected range of <2.3.0.",
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-docker?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-rmf2-pwfq-h75j"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-docker@1.9.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-rmf2-pwfq-h75j"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-docker@1.10.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-rmf2-pwfq-h75j"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-docker@1.10.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-rmf2-pwfq-h75j"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-docker@1.10.2?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-rmf2-pwfq-h75j"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-docker@1.10.3?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-rmf2-pwfq-h75j"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-docker@1.10.4?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-rmf2-pwfq-h75j"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-docker@1.10.5?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-rmf2-pwfq-h75j"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-docker@1.10.6?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-rmf2-pwfq-h75j"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-docker@1.10.7?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-rmf2-pwfq-h75j"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-docker@1.10.8?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-rmf2-pwfq-h75j"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-docker@1.10.9?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-rmf2-pwfq-h75j"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-docker@1.10.10?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-rmf2-pwfq-h75j"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-docker@1.10.11?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "GHSA-rmf2-pwfq-h75j"
+        }
+      },
+      {
+        "impact_statement": "The PYSEC-2023-314 vulnerability is in the Apache Airflow Sqoop Provider (apache-airflow-providers-sqoop), not in core Airflow. The airflow-with-docker conda package does not include the Sqoop Provider. The OSV record's range referencing apache-airflow versions up to 3.1.1 is misleading \u2014 the actual fix was in the Sqoop Provider package version 3.1.1, which is a separate artifact entirely.",
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-docker?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-docker@1.9.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-docker@1.10.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-docker@1.10.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-docker@1.10.2?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-docker@1.10.3?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-docker@1.10.4?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-docker@1.10.5?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-docker@1.10.6?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-docker@1.10.7?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-docker@1.10.8?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-docker@1.10.9?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-docker@1.10.10?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-docker@1.10.11?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-docker@3.0.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-docker@3.0.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "impact_statement": "The PYSEC-2025-87 vulnerability is in the Edge3 Provider for Airflow 2, which is a separate optional provider package not included in airflow-with-docker. The advisory explicitly states Airflow 3 users are not affected. The current conda-forge version is 3.0.1 (Airflow 3), and the OSV range (fixed at 2.0.0) contradicts the advisory narrative which says the issue is specific to Airflow 2.",
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-docker?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2025-87"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-docker@1.9.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2025-87"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-docker@1.10.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2025-87"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-docker@1.10.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2025-87"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-docker@1.10.2?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2025-87"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-docker@1.10.3?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2025-87"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-docker@1.10.4?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2025-87"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-docker@1.10.5?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2025-87"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-docker@1.10.6?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2025-87"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-docker@1.10.7?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2025-87"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-docker@1.10.8?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2025-87"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-docker@1.10.9?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2025-87"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-docker@1.10.10?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2025-87"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-docker@1.10.11?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T09:01:38+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2025-87"
+        }
       }
     ],
-    "timestamp": "2026-06-03T09:00:39+00:00",
+    "timestamp": "2026-06-03T09:01:38+00:00",
     "tooling": "purl-associator/scripts.cve_ai_review",
     "version": 1
   },
@@ -1611,6 +4737,11 @@
     {
       "advisory_id": "PYSEC-2023-308",
       "package": "mlflow",
+      "reason": "no_assessment_in_reply"
+    },
+    {
+      "advisory_id": "PYSEC-2026-96",
+      "package": "nltk",
       "reason": "no_assessment_in_reply"
     }
   ]
