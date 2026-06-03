@@ -101,9 +101,6 @@ jobs:
 
           pixi run cve-ai-review "${ARGS[@]}"
 
-      - name: Refresh SPA sidecars
-        run: pixi run merge-ai-drafts
-
       - name: Generate PR body
         run: |
           mkdir -p .tmp
@@ -111,15 +108,15 @@ jobs:
           echo "---"
           head -40 .tmp/ai-pr-body.md || true
 
-      - name: Commit sidecar refresh
+      - name: Commit draft files
         run: |
           set -euo pipefail
-          git add web/public/cve_ai_drafts.json web/public/cve_ai_queue.json mappings/cve_ai_drafts/ || true
+          git add mappings/cve_ai_drafts/ || true
           if ! git diff --cached --quiet; then
-            git commit -m "cve-ai-review: refresh SPA sidecars"
+            git commit -m "cve-ai-review: refresh drafts"
             git push
           else
-            echo "No sidecar changes to commit."
+            echo "No draft changes to commit."
           fi
 
       - name: Open PR if not already open

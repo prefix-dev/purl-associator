@@ -215,11 +215,20 @@ cmd = "npm install"
 cwd = "web"
 description = "Install frontend npm dependencies"
 
+[tasks.web-data]
+depends-on = [
+  { task = "merge", environment = "lite" },
+  { task = "merge-cves", environment = "lite" },
+  { task = "merge-ai-drafts", environment = "lite" },
+  { task = "merge-sboms", environment = "lite" },
+]
+description = "Regenerate frontend data payloads from mappings/ source files"
+
 [tasks.web-dev]
 cmd = "npm run dev -- --host {{ host }} --port {{ port }}"
 cwd = "web"
-depends-on = ["web-install"]
-description = "Run the frontend Vite dev server"
+depends-on = ["web-install", "web-data"]
+description = "Regenerate frontend data and run the Vite dev server"
 args = [
   { arg = "host", default = "127.0.0.1" },
   { arg = "port", default = "5173" },
@@ -228,8 +237,8 @@ args = [
 [tasks.web-build]
 cmd = "npm run build"
 cwd = "web"
-depends-on = ["web-install"]
-description = "Build the frontend"
+depends-on = ["web-install", "web-data"]
+description = "Regenerate frontend data and build the frontend"
 
 [tasks.web-preview]
 cmd = "npm run preview -- --host {{ host }} --port {{ port }}"

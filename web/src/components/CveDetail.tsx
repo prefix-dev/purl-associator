@@ -19,8 +19,6 @@ import {
   cveIds,
   editFromAiDraft,
   editFromVex,
-  getAiDraftFor,
-  isAdvisoryQueued,
   isActiveOnLatest,
   isEditNonEmpty,
   isFutureAffected,
@@ -36,6 +34,7 @@ import {
   handleDraftSubmit,
 } from "./DraftFields";
 import { cvssBaseMetrics } from "../data/cvssMetrics";
+import { packageDraft, packageQueued, locallyQueued } from "../data/cveAiWorkItems";
 import { Btn, CpeChip, Glyph, Theme } from "./Primitives";
 
 type Props = {
@@ -55,6 +54,7 @@ type Props = {
   aiQueue: AiQueuePayload | null;
   enqueuedAdvisories: Set<string>;
   onEnqueueAi: (pkg: string, advisoryId: string) => void;
+  onAiDraftApplied?: (advisoryId: string) => void;
 };
 
 function severityLevel(v: number): {
@@ -330,6 +330,7 @@ export function CveDetail({
   aiQueue,
   enqueuedAdvisories,
   onEnqueueAi,
+  onAiDraftApplied,
 }: Props) {
   const t = theme.t;
 
@@ -626,12 +627,13 @@ export function CveDetail({
               onReset={() => onResetEdit(adv.id)}
               isLoggedIn={isLoggedIn}
               onRequestLogin={onRequestLogin}
-              aiDraft={aiDraftForAnyPackage(aiDrafts, aiLookupPackages, adv.id)}
+              aiDraft={packageDraft(aiDrafts, aiLookupPackages, adv.id)}
               aiQueued={
-                aiQueuedForAnyPackage(aiQueue, aiLookupPackages, adv.id) ||
-                locallyQueuedForAnyPackage(enqueuedAdvisories, aiLookupPackages, adv.id)
+                packageQueued(aiQueue, aiLookupPackages, adv.id) ||
+                locallyQueued(enqueuedAdvisories, aiLookupPackages, adv.id)
               }
               onEnqueueAi={() => onEnqueueAi(pkg.package, adv.id)}
+              onAiDraftApplied={() => onAiDraftApplied?.(adv.id)}
             />
             );
           })}
@@ -685,12 +687,13 @@ export function CveDetail({
                     onReset={() => onResetEdit(adv.id)}
                     isLoggedIn={isLoggedIn}
                     onRequestLogin={onRequestLogin}
-                    aiDraft={aiDraftForAnyPackage(aiDrafts, aiLookupPackages, adv.id)}
+                    aiDraft={packageDraft(aiDrafts, aiLookupPackages, adv.id)}
                     aiQueued={
-                      aiQueuedForAnyPackage(aiQueue, aiLookupPackages, adv.id) ||
-                      locallyQueuedForAnyPackage(enqueuedAdvisories, aiLookupPackages, adv.id)
+                      packageQueued(aiQueue, aiLookupPackages, adv.id) ||
+                      locallyQueued(enqueuedAdvisories, aiLookupPackages, adv.id)
                     }
                     onEnqueueAi={() => onEnqueueAi(pkg.package, adv.id)}
+                    onAiDraftApplied={() => onAiDraftApplied?.(adv.id)}
                   />
                 ))}
             </>
@@ -715,6 +718,7 @@ function AdvisoryCard({
   aiDraft,
   aiQueued,
   onEnqueueAi,
+  onAiDraftApplied,
 }: {
   theme: Theme;
   pkgName: string;
@@ -729,6 +733,7 @@ function AdvisoryCard({
   aiDraft: AiDraft | undefined;
   aiQueued: boolean;
   onEnqueueAi: () => void;
+  onAiDraftApplied?: () => void;
 }) {
   const t = theme.t;
   const [expanded, setExpanded] = useState(defaultExpanded);
@@ -939,9 +944,14 @@ function AdvisoryCard({
               theme={theme}
               draft={aiDraft}
               adv={adv}
-              onUseAsStartingPoint={() => {
+              onFillForm={() => {
                 if (!isLoggedIn) onRequestLogin();
                 onEdit(editFromAiDraft(aiDraft));
+              }}
+              onApplyAndNext={() => {
+                if (!isLoggedIn) onRequestLogin();
+                onEdit(editFromAiDraft(aiDraft));
+                onAiDraftApplied?.();
               }}
             />
           )}
@@ -1395,33 +1405,6 @@ function AddVersionInline({
 
 /* ------------ AI CVE review (drafts + queue) ------------ */
 
-function aiDraftForAnyPackage(
-  payload: AiDraftsPayload | null,
-  packages: string[],
-  advisoryId: string,
-): AiDraft | undefined {
-  for (const pkg of packages) {
-    const draft = getAiDraftFor(payload, pkg, advisoryId);
-    if (draft) return draft;
-  }
-  return undefined;
-}
-
-function aiQueuedForAnyPackage(
-  payload: AiQueuePayload | null,
-  packages: string[],
-  advisoryId: string,
-): boolean {
-  return packages.some((pkg) => Boolean(isAdvisoryQueued(payload, pkg, advisoryId)));
-}
-
-function locallyQueuedForAnyPackage(
-  enqueued: Set<string>,
-  packages: string[],
-  advisoryId: string,
-): boolean {
-  return packages.some((pkg) => enqueued.has(`${pkg}::${advisoryId}`));
-}
 
 function AiChip({
   theme,
@@ -1561,16 +1544,39 @@ function aiTakeaways(draft: AiDraft): string[] {
   return out;
 }
 
+function AiDraftActions({
+  theme,
+  onFillForm,
+  onApplyAndNext,
+}: {
+  theme: Theme;
+  onFillForm: () => void;
+  onApplyAndNext: () => void;
+}) {
+  return (
+    <div style={{ display: "inline-flex", gap: 8 }}>
+      <Btn theme={theme} variant="secondary" onClick={onFillForm}>
+        Fill OpenVEX form
+      </Btn>
+      <Btn theme={theme} variant="primary" onClick={onApplyAndNext}>
+        Apply & next
+      </Btn>
+    </div>
+  );
+}
+
 function AiDraftPanel({
   theme,
   draft,
   adv,
-  onUseAsStartingPoint,
+  onFillForm,
+  onApplyAndNext,
 }: {
   theme: Theme;
   draft: AiDraft;
   adv: Advisory;
-  onUseAsStartingPoint: () => void;
+  onFillForm: () => void;
+  onApplyAndNext: () => void;
 }) {
   const t = theme.t;
   const af = draft.affected_versions;
@@ -1600,9 +1606,11 @@ function AiDraftPanel({
           {draft.model} · {(draft.generated_at || "").slice(0, 10)}
         </span>
         <span style={{ flex: 1 }} />
-        <Btn theme={theme} variant="primary" onClick={onUseAsStartingPoint}>
-          Apply AI suggestion
-        </Btn>
+        <AiDraftActions
+          theme={theme}
+          onFillForm={onFillForm}
+          onApplyAndNext={onApplyAndNext}
+        />
       </div>
 
       <div
@@ -1711,12 +1719,14 @@ function AiDraftPanel({
         }}
       >
         <div style={{ fontSize: 10.5, color: t.fg3, lineHeight: 1.4 }}>
-          This is a draft, not authoritative. Apply it to seed the OpenVEX form,
-          review/edit it, then submit via the Review changes drawer.
+          This is a draft, not authoritative. Fill the OpenVEX form to review/edit
+          it here, or Apply & next to stage it and advance through the AI drafts queue.
         </div>
-        <Btn theme={theme} variant="primary" onClick={onUseAsStartingPoint}>
-          Apply AI suggestion
-        </Btn>
+        <AiDraftActions
+          theme={theme}
+          onFillForm={onFillForm}
+          onApplyAndNext={onApplyAndNext}
+        />
       </div>
     </div>
   );
@@ -1783,7 +1793,7 @@ function OpenVexSuggestionPreview({
   const removes = draft.affected_versions.suggested_removes ?? [];
   if (adds.length || removes.length) {
     rows.push({
-      label: "version_overrides",
+      label: "per-version statements",
       value: (
         <div style={{ display: "grid", gap: 3 }}>
           {adds.length > 0 && <div>affected: {adds.join(", ")}</div>}
@@ -1793,7 +1803,7 @@ function OpenVexSuggestionPreview({
     });
   } else {
     rows.push({
-      label: "version_overrides",
+      label: "per-version statements",
       value:
         draft.openvex_status === "fixed"
           ? "none — package-level fixed statement; keep the historical affected-version list for old vulnerable builds"
@@ -1859,8 +1869,8 @@ function OpenVexSuggestionPreview({
         ))}
       </div>
       <div style={{ marginTop: 8, color: t.fg3, fontSize: 11.5 }}>
-        Applying the suggestion copies these fields into the review form below;
-        the final PR will wrap them in the OpenVEX document envelope with the selected package and advisory.
+        OpenVEX has product-specific statements, not a literal version_overrides field.
+        Suggested adds/removes are represented as separate version-pinned OpenVEX statements in the final PR.
       </div>
     </AiDraftSection>
   );
