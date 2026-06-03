@@ -73,6 +73,12 @@ fmt = "ruff format scripts"
 cmd = "python -m scripts.cve_ai_review --backend claude-cli --mode realtime"
 description = "Run the AI CVE reviewer using the local Claude subscription (requires `claude` CLI installed and authed)"
 
+# Same idea for the CPE vet tiebreaker — vet the ambiguous bucket on the
+# local Claude subscription instead of ANTHROPIC_API_KEY.
+[tasks.cpe-vet-local]
+cmd = "python -m scripts.cpe_vet --backend claude-cli"
+description = "Vet the CPE ambiguous bucket using the local Claude subscription (requires `claude` CLI installed and authed)"
+
 [tasks.automap-test]
 cmd = "python -m scripts.automap --only {{ packages }} --out {{ auto }} --parallel {{ parallel }} --force && python -m scripts.merge_mappings --auto {{ auto }} --out {{ out }}"
 description = "Test auto-association on a small package set without touching committed outputs"
