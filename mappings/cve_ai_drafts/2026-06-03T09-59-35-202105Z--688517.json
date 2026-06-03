@@ -1,0 +1,1828 @@
+{
+  "assessments": {
+    "airflow-with-leveldb::GHSA-7wqf-h36w-47mc": {
+      "advisory_id": "GHSA-7wqf-h36w-47mc",
+      "affected_versions": {
+        "agrees_with_match": true,
+        "reasoning": "The OSV range covers introduced:0 to fixed:2.3.0. The listed affected conda versions (2.1.1 through 2.2.5) correctly represent the conda-forge builds that fall within this range. Versions 2.3.0 and above, including the latest 2.10.5, are not in the affected set, which aligns with the fix boundary."
+      },
+      "inputs_seen": {
+        "hash": "4aa663552819204f00a19358626e5865d67ca5d13b1fade665e17f6c193f54db"
+      },
+      "notes": "This CVE requires both a vulnerable Airflow core version AND the separately installed Pinot Provider < 4.0.0. Conda-forge does not ship the Pinot Provider as part of airflow-with-leveldb. Historical builds (2.1.1-2.2.5) remain in the affected set for users who may have installed the provider separately.",
+      "openvex_action_statement": "Upgrade to airflow-with-leveldb >= 2.3.0 (latest conda-forge version is 2.10.5, which is unaffected). Additionally, ensure the apache-airflow-providers-apache-pinot package is at version 4.0.0 or later if it is installed separately, as the vulnerability requires the Pinot Provider to be present.",
+      "openvex_impact_statement": null,
+      "openvex_justification": null,
+      "openvex_status": "affected",
+      "package": "airflow-with-leveldb",
+      "prompt_version": "2026-06-02.openvex-status-history-v1",
+      "rationale": "This advisory covers an OS command injection vulnerability in the Apache Airflow Pinot Provider, affecting all Airflow versions prior to 2.3.0 when the Pinot Provider is installed. The OSV range is 'introduced: 0, fixed: 2.3.0', meaning all conda-forge builds of airflow-with-leveldb before 2.3.0 would be technically within scope. The latest conda-forge version is 2.10.5, which is well beyond the fix boundary. The affected_versions list (2.1.1 through 2.2.5) correctly captures the conda-forge-shipped versions that fall in the vulnerable range. However, the vulnerability only materializes if the Pinot Provider (apache-airflow-providers-apache-pinot) is separately installed \u2014 the airflow-with-leveldb conda package does not bundle the Pinot Provider, so the vulnerable code path is not present in the package itself. Historical conda-forge builds in the 2.1.x\u20132.2.x range are conditionally vulnerable depending on whether users separately installed the Pinot Provider. The current conda-forge version (2.10.5) is unambiguously beyond the fix boundary for both Airflow core and the Pinot Provider version requirement.",
+      "runtime_applicability": {
+        "applies": "partial",
+        "reasoning": "The vulnerability is in the Pinot Provider, which is a separately installable plugin and is NOT bundled with airflow-with-leveldb. Exploitation requires that users have separately installed apache-airflow-providers-apache-pinot < 4.0.0 alongside a vulnerable Airflow core version. Without the Pinot Provider installed, the vulnerable code path is absent."
+      },
+      "severity_in_conda_context": {
+        "assessment": "lower",
+        "reasoning": "The CVSS score of 9.8 assumes the Pinot Provider is present and exploitable. In the conda-forge airflow-with-leveldb artifact, the Pinot Provider is not bundled, making exploitation contingent on a separate optional installation, which reduces the practical severity for most users of this conda package."
+      },
+      "severity_seen": {
+        "cvss": 9.8,
+        "level": "CRITICAL"
+      }
+    },
+    "airflow-with-leveldb::GHSA-c732-xvv8-g94c": {
+      "advisory_id": "GHSA-c732-xvv8-g94c",
+      "affected_versions": {
+        "agrees_with_match": true,
+        "reasoning": "The OSV range covers introduced:0 to fixed:2.5.1 for apache-airflow core. The listed affected conda versions (2.1.1 through 2.5.0) correctly capture the conda-forge-shipped versions in this range. Version 2.5.1 and above, including the current 2.10.5, are outside the affected range."
+      },
+      "inputs_seen": {
+        "hash": "cb5ea063c7c18ed36eeb9a1950428a1ce86e76a136acbba3484215a213d09262"
+      },
+      "notes": "The dual nature of this CVE (affecting both Airflow core and the MySQL provider) means all historical conda-forge builds in the affected range are genuinely vulnerable at the core level. The MySQL provider impact is additional and separate. Users should also check their MySQL provider version if installed.",
+      "openvex_action_statement": "Upgrade to airflow-with-leveldb >= 2.5.1 (latest conda-forge version is 2.10.5, which is unaffected). If the apache-airflow-providers-mysql package is also installed, upgrade it to >= 4.0.0.",
+      "openvex_impact_statement": null,
+      "openvex_justification": null,
+      "openvex_status": "affected",
+      "package": "airflow-with-leveldb",
+      "prompt_version": "2026-06-02.openvex-status-history-v1",
+      "rationale": "This advisory covers a command injection vulnerability in Apache Airflow core (before 2.5.1) and the MySQL Provider (before 4.0.0). Unlike the Pinot and Pig provider issues, this CVE affects Airflow core itself (not solely a provider), though it is also linked to the MySQL Provider. The OSV range is 'introduced: 0, fixed: 2.5.1' for the core package. The listed affected conda-forge versions (2.1.1 through 2.5.0) are correct \u2014 they cover the range below the fix. The latest conda-forge version is 2.10.5, which is well beyond 2.5.1 and thus fixed. Historical conda-forge builds from 2.1.1 through 2.5.0 are genuinely vulnerable. The MySQL provider component is separately installable and not bundled, but the core Airflow vulnerability applies to all installs in the affected range regardless of provider installation.",
+      "runtime_applicability": {
+        "applies": "yes",
+        "reasoning": "This vulnerability affects Airflow core itself (before 2.5.1), not just an optional provider. All conda-forge builds of airflow-with-leveldb in the affected version range are vulnerable without any additional provider installation being required. The MySQL provider component adds an additional attack surface but is not the sole source of the core vulnerability."
+      },
+      "severity_in_conda_context": {
+        "assessment": "same",
+        "reasoning": "Since this vulnerability affects Airflow core and not just an optional provider, the CVSS 9.8 score is more representative of the actual risk for conda-forge users running affected versions. The core command injection is present regardless of which providers are installed."
+      },
+      "severity_seen": {
+        "cvss": 9.8,
+        "level": "CRITICAL"
+      }
+    },
+    "airflow-with-leveldb::GHSA-rmf2-pwfq-h75j": {
+      "advisory_id": "GHSA-rmf2-pwfq-h75j",
+      "affected_versions": {
+        "agrees_with_match": true,
+        "reasoning": "The OSV range covers introduced:0 to fixed:2.3.0. The listed affected conda versions (2.1.1 through 2.2.5) correctly represent the conda-forge builds that fall within this range. Versions 2.3.0 and above, including the latest 2.10.5, are not affected according to the OSV fix boundary."
+      },
+      "inputs_seen": {
+        "hash": "6f3e9a9f5f85b46630fdf125f669fd6f6ed4da7fefd81543a8d57c9a9f076bf2"
+      },
+      "notes": "This CVE is structurally very similar to GHSA-7wqf-h36w-47mc (Pinot Provider) \u2014 both require a separately installed provider on top of a pre-2.3.0 Airflow core. Conda-forge does not ship the Pig Provider as part of airflow-with-leveldb. Historical builds (2.1.1-2.2.5) remain in the affected set for users who may have installed the provider separately.",
+      "openvex_action_statement": "Upgrade to airflow-with-leveldb >= 2.3.0 (latest conda-forge version is 2.10.5, which is unaffected). Additionally, ensure the apache-airflow-providers-apache-pig package is at version 4.0.0 or later if it is installed separately, as the vulnerability requires the Pig Provider to be present.",
+      "openvex_impact_statement": null,
+      "openvex_justification": null,
+      "openvex_status": "affected",
+      "package": "airflow-with-leveldb",
+      "prompt_version": "2026-06-02.openvex-status-history-v1",
+      "rationale": "This advisory covers an OS command injection vulnerability in the Apache Airflow Pig Provider, affecting all Airflow versions prior to 2.3.0 when the Pig Provider is installed. Like the Pinot Provider issue (GHSA-7wqf-h36w-47mc), the vulnerability only manifests when the separately installable Pig Provider (apache-airflow-providers-apache-pig) is present. The OSV range is 'introduced: 0, fixed: 2.3.0'. The listed affected conda versions (2.1.1 through 2.2.5) correctly represent conda-forge builds within this range. The latest conda-forge version (2.10.5) is well beyond the fix boundary. The Pig Provider is not bundled in airflow-with-leveldb, so the vulnerable code path is absent unless users separately install it. Historical builds remain conditionally vulnerable for users who installed the Pig Provider alongside a pre-2.3.0 Airflow.",
+      "runtime_applicability": {
+        "applies": "partial",
+        "reasoning": "The vulnerability is in the Pig Provider (apache-airflow-providers-apache-pig), which is a separately installable plugin not bundled with airflow-with-leveldb. Exploitation requires that users have separately installed the Pig Provider < 4.0.0 alongside a vulnerable Airflow core version. Without the Pig Provider, the vulnerable code path is absent from the conda artifact."
+      },
+      "severity_in_conda_context": {
+        "assessment": "lower",
+        "reasoning": "The CVSS 9.8 score assumes the Pig Provider is installed and exploitable. Since the Pig Provider is not bundled with airflow-with-leveldb and must be separately installed by users, the practical severity for most conda-forge users is lower than the CVSS score suggests, as exploitation requires an additional optional component."
+      },
+      "severity_seen": {
+        "cvss": 9.8,
+        "level": "CRITICAL"
+      }
+    },
+    "airflow-with-leveldb::PYSEC-2023-314": {
+      "advisory_id": "PYSEC-2023-314",
+      "affected_versions": {
+        "agrees_with_match": false,
+        "reasoning": "The OSV range covers all apache-airflow core package versions up to 3.1.1, but the actual vulnerability is in the Sqoop Provider, a separate distribution. None of the versions of airflow-with-leveldb are affected because this package does not ship the Sqoop provider. All versions should be removed from the affected set for this conda artifact.",
+        "suggested_removes": [
+          "2.1.1",
+          "2.1.2",
+          "2.1.3",
+          "2.1.4",
+          "2.2.0",
+          "2.2.1",
+          "2.2.2",
+          "2.2.3",
+          "2.2.4",
+          "2.2.5",
+          "2.3.0",
+          "2.3.1",
+          "2.3.2",
+          "2.3.3",
+          "2.3.4",
+          "2.4.0",
+          "2.4.1",
+          "2.4.2",
+          "2.4.3",
+          "2.5.0",
+          "2.5.1",
+          "2.5.2",
+          "2.5.3",
+          "2.6.0",
+          "2.6.1",
+          "2.6.2",
+          "2.6.3",
+          "2.7.0",
+          "2.7.1",
+          "2.7.2",
+          "2.7.3",
+          "2.8.0",
+          "2.8.1",
+          "2.8.2",
+          "2.8.3",
+          "2.8.4",
+          "2.9.0",
+          "2.9.1",
+          "2.9.2",
+          "2.9.3",
+          "2.10.0",
+          "2.10.1",
+          "2.10.2",
+          "2.10.4",
+          "2.10.5"
+        ]
+      },
+      "inputs_seen": {
+        "hash": "7a451989f656e079710b089bee5bb9effc6c7486c84ad086d63b412bf08901e4"
+      },
+      "notes": "The OSV record PYSEC-2023-314 has been incorrectly attributed to the core apache-airflow package. The actual vulnerability lives in the apache-airflow-providers-sqoop package. Conda-forge maintainers should be aware that if they also ship apache-airflow-providers-sqoop, that package should be assessed separately for this CVE. The fix was introduced in apache-airflow-providers-sqoop 3.1.1 per the upstream advisory.",
+      "openvex_action_statement": null,
+      "openvex_impact_statement": "The vulnerability affects the Apache Airflow Sqoop Provider (apache-airflow-providers-sqoop), which is a separately distributed package and is not included in or vendored by the airflow-with-leveldb conda package. The conda artifact only adds the LevelDB extra to core Airflow; the Sqoop provider code path is entirely absent.",
+      "openvex_justification": "vulnerable_code_not_present",
+      "openvex_status": "not_affected",
+      "package": "airflow-with-leveldb",
+      "prompt_version": "2026-06-02.openvex-status-history-v1",
+      "rationale": "CVE-2023-25693 is a vulnerability in the Apache Airflow Sqoop Provider (apache-airflow-providers-sqoop), not in the core apache-airflow package itself. The advisory explicitly states it affects 'Apache Airflow Sqoop Provider versions before 3.1.1'. The OSV record has been applied over-broadly to the core apache-airflow PyPI package, and the affected_versions list in the conda match incorrectly includes all versions of the core package up to 2.10.5. The conda package under review is airflow-with-leveldb, which is the core Airflow package with the LevelDB extra \u2014 it does not include or vendor the Sqoop provider. The Sqoop provider is a separately installable package (apache-airflow-providers-sqoop) and would only be relevant if that provider package were included, which it is not in this artifact. Therefore, this match is a false positive for the core airflow package and for airflow-with-leveldb specifically.",
+      "runtime_applicability": {
+        "applies": "no",
+        "reasoning": "The Sqoop provider is not part of the airflow-with-leveldb conda package. The vulnerable code (airflow.providers.sqoop) is not present in the installed artifact and cannot be reached at runtime without separately installing apache-airflow-providers-sqoop."
+      },
+      "severity_in_conda_context": {
+        "assessment": "lower",
+        "reasoning": "The CVSS score of 9.8 (Critical) applies to deployments where the Sqoop provider is installed and used. Since the Sqoop provider is absent from airflow-with-leveldb, the effective severity for this specific conda artifact is not applicable \u2014 there is no exposure."
+      },
+      "severity_seen": {
+        "cvss": 9.8,
+        "level": null
+      }
+    }
+  },
+  "backend": "api",
+  "draft": true,
+  "generated_at": "2026-06-03T10:00:28+00:00",
+  "model": "claude-sonnet-4-6",
+  "openvex": {
+    "@context": "https://openvex.dev/ns/v0.2.0",
+    "@id": "https://github.com/prefix-dev/purl-associator/ai-draft/688517",
+    "author": "purl-associator AI reviewer (claude-sonnet-4-6)",
+    "statements": [
+      {
+        "impact_statement": "The vulnerability affects the Apache Airflow Sqoop Provider (apache-airflow-providers-sqoop), which is a separately distributed package and is not included in or vendored by the airflow-with-leveldb conda package. The conda artifact only adds the LevelDB extra to core Airflow; the Sqoop provider code path is entirely absent.",
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb@2.1.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb@2.1.2?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb@2.1.3?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb@2.1.4?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb@2.2.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb@2.2.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb@2.2.2?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb@2.2.3?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb@2.2.4?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb@2.2.5?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb@2.3.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb@2.3.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb@2.3.2?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb@2.3.3?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb@2.3.4?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb@2.4.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb@2.4.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb@2.4.2?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb@2.4.3?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb@2.5.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb@2.5.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb@2.5.2?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb@2.5.3?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb@2.6.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb@2.6.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb@2.6.2?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb@2.6.3?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb@2.7.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb@2.7.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb@2.7.2?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb@2.7.3?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb@2.8.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb@2.8.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb@2.8.2?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb@2.8.3?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb@2.8.4?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb@2.9.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb@2.9.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb@2.9.2?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb@2.9.3?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb@2.10.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb@2.10.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb@2.10.2?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb@2.10.4?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb@2.10.5?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2023-314"
+        }
+      },
+      {
+        "action_statement": "Upgrade to airflow-with-leveldb >= 2.3.0 (latest conda-forge version is 2.10.5, which is unaffected). Additionally, ensure the apache-airflow-providers-apache-pinot package is at version 4.0.0 or later if it is installed separately, as the vulnerability requires the Pinot Provider to be present.",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "GHSA-7wqf-h36w-47mc"
+        }
+      },
+      {
+        "action_statement": "Upgrade to airflow-with-leveldb >= 2.5.1 (latest conda-forge version is 2.10.5, which is unaffected). If the apache-airflow-providers-mysql package is also installed, upgrade it to >= 4.0.0.",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "GHSA-c732-xvv8-g94c"
+        }
+      },
+      {
+        "action_statement": "Upgrade to airflow-with-leveldb >= 2.3.0 (latest conda-forge version is 2.10.5, which is unaffected). Additionally, ensure the apache-airflow-providers-apache-pig package is at version 4.0.0 or later if it is installed separately, as the vulnerability requires the Pig Provider to be present.",
+        "products": [
+          {
+            "@id": "pkg:conda/airflow-with-leveldb?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-03T10:00:28+00:00",
+        "vulnerability": {
+          "name": "GHSA-rmf2-pwfq-h75j"
+        }
+      }
+    ],
+    "timestamp": "2026-06-03T10:00:28+00:00",
+    "tooling": "purl-associator/scripts.cve_ai_review",
+    "version": 1
+  },
+  "prompt_version": "2026-06-02.openvex-status-history-v1",
+  "run_id": "688517",
+  "schema_version": 1,
+  "skipped": [
+    {
+      "advisory_id": "GHSA-5882-5rx9-xgxp",
+      "package": "crawl4ai",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-mw26-5g2v-hqw3",
+      "package": "deepdiff",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-vv7q-7jx5-f767",
+      "package": "fastmcp",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-554w-xh4j-8w64",
+      "package": "mlflow-pipelines",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-5p3h-7fwh-92rc",
+      "package": "mlflow-pipelines",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-5q6c-ffvg-xcm9",
+      "package": "mlflow-pipelines",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-f798-qm4r-23r5",
+      "package": "mlflow-pipelines",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-fmxj-6h9g-6vw3",
+      "package": "mlflow-pipelines",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-r23q-823p-vmf7",
+      "package": "mlflow-pipelines",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-r23q-823p-vmf7",
+      "package": "mlflow-ui",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-554w-xh4j-8w64",
+      "package": "mlflow",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-5p3h-7fwh-92rc",
+      "package": "mlflow",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-5q6c-ffvg-xcm9",
+      "package": "mlflow",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-f798-qm4r-23r5",
+      "package": "mlflow",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-fmxj-6h9g-6vw3",
+      "package": "mlflow",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-r23q-823p-vmf7",
+      "package": "mlflow",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-7p94-766c-hgjp",
+      "package": "nltk",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2026-99",
+      "package": "nltk",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-hj4w-hm2g-p6w5",
+      "package": "vllm",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-f3f8-vx3w-hp5q",
+      "package": "codechecker",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-329j-jfvr-rhr6",
+      "package": "pyspark",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-mxvw-cj37-8g2h",
+      "package": "aim",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-aiobotocore",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-airbyte",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-alibaba",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-all-core",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-all",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-amazon",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-7wqf-h36w-47mc",
+      "package": "airflow-with-apache-atlas",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-c732-xvv8-g94c",
+      "package": "airflow-with-apache-atlas",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-rmf2-pwfq-h75j",
+      "package": "airflow-with-apache-atlas",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-apache-atlas",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-7wqf-h36w-47mc",
+      "package": "airflow-with-apache-beam",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-c732-xvv8-g94c",
+      "package": "airflow-with-apache-beam",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-rmf2-pwfq-h75j",
+      "package": "airflow-with-apache-beam",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-apache-beam",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-apache-cassandra",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-apache-drill",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-apache-druid",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-apache-flink",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-apache-hdfs",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-apache-hive",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-apache-iceberg",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-apache-kafka",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-apache-kylin",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-apache-livy",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-apache-pig",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-apache-pinot",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-apache-spark",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-7wqf-h36w-47mc",
+      "package": "airflow-with-apache-webhdfs",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-c732-xvv8-g94c",
+      "package": "airflow-with-apache-webhdfs",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-rmf2-pwfq-h75j",
+      "package": "airflow-with-apache-webhdfs",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-apache-webhdfs",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-apprise",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-arangodb",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-asana",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-7wqf-h36w-47mc",
+      "package": "airflow-with-async",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-c732-xvv8-g94c",
+      "package": "airflow-with-async",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-rmf2-pwfq-h75j",
+      "package": "airflow-with-async",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-async",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2025-87",
+      "package": "airflow-with-async",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-atlassian-jira",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-7wqf-h36w-47mc",
+      "package": "airflow-with-celery",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-c732-xvv8-g94c",
+      "package": "airflow-with-celery",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-rmf2-pwfq-h75j",
+      "package": "airflow-with-celery",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-celery",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2025-87",
+      "package": "airflow-with-celery",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-7wqf-h36w-47mc",
+      "package": "airflow-with-cloudant",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-c732-xvv8-g94c",
+      "package": "airflow-with-cloudant",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-rmf2-pwfq-h75j",
+      "package": "airflow-with-cloudant",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-cloudant",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2025-87",
+      "package": "airflow-with-cloudant",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-cloudpickle",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-7wqf-h36w-47mc",
+      "package": "airflow-with-cncf-kubernetes",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-c732-xvv8-g94c",
+      "package": "airflow-with-cncf-kubernetes",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-rmf2-pwfq-h75j",
+      "package": "airflow-with-cncf-kubernetes",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-cncf-kubernetes",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-common-compat",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-common-io",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-common-sql",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-7wqf-h36w-47mc",
+      "package": "airflow-with-databricks",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-c732-xvv8-g94c",
+      "package": "airflow-with-databricks",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-rmf2-pwfq-h75j",
+      "package": "airflow-with-databricks",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-databricks",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2025-87",
+      "package": "airflow-with-databricks",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-7wqf-h36w-47mc",
+      "package": "airflow-with-datadog",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-c732-xvv8-g94c",
+      "package": "airflow-with-datadog",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-rmf2-pwfq-h75j",
+      "package": "airflow-with-datadog",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-datadog",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2025-87",
+      "package": "airflow-with-datadog",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-dbt-cloud",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-dingding",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-discord",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-7wqf-h36w-47mc",
+      "package": "airflow-with-docker",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-c732-xvv8-g94c",
+      "package": "airflow-with-docker",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-vx9w-5cx4-9796",
+      "package": "crawl4ai",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-59v3-898r-qwhj",
+      "package": "mlflow-pipelines",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-c732-xvv8-g94c",
+      "package": "airflow-with-uv",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-rmf2-pwfq-h75j",
+      "package": "airflow-with-docker",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-docker",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2025-87",
+      "package": "airflow-with-docker",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-7wqf-h36w-47mc",
+      "package": "airflow-with-elasticsearch",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-c732-xvv8-g94c",
+      "package": "airflow-with-elasticsearch",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-rmf2-pwfq-h75j",
+      "package": "airflow-with-elasticsearch",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-elasticsearch",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2025-87",
+      "package": "airflow-with-elasticsearch",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-exasol",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-fab",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-facebook",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-ftp",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-github-enterprise",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-github",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-7wqf-h36w-47mc",
+      "package": "airflow-with-github_enterprise",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "GHSA-c732-xvv8-g94c",
+      "package": "airflow-with-github_enterprise",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "GHSA-rmf2-pwfq-h75j",
+      "package": "airflow-with-github_enterprise",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-github_enterprise",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2025-87",
+      "package": "airflow-with-github_enterprise",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-google-auth",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-google",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-7wqf-h36w-47mc",
+      "package": "airflow-with-google_auth",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "GHSA-c732-xvv8-g94c",
+      "package": "airflow-with-google_auth",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "GHSA-rmf2-pwfq-h75j",
+      "package": "airflow-with-google_auth",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-google_auth",
+      "reason": "already_drafted_no_drift"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-graphviz",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-7wqf-h36w-47mc",
+      "package": "airflow-with-grpc",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-c732-xvv8-g94c",
+      "package": "airflow-with-grpc",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-rmf2-pwfq-h75j",
+      "package": "airflow-with-grpc",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-grpc",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2025-87",
+      "package": "airflow-with-grpc",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-7wqf-h36w-47mc",
+      "package": "airflow-with-hashicorp",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-c732-xvv8-g94c",
+      "package": "airflow-with-hashicorp",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-rmf2-pwfq-h75j",
+      "package": "airflow-with-hashicorp",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-hashicorp",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2025-87",
+      "package": "airflow-with-hashicorp",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-http",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-imap",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-influxdb",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-7wqf-h36w-47mc",
+      "package": "airflow-with-jdbc",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-c732-xvv8-g94c",
+      "package": "airflow-with-jdbc",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-rmf2-pwfq-h75j",
+      "package": "airflow-with-jdbc",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-jdbc",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2025-87",
+      "package": "airflow-with-jdbc",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-7wqf-h36w-47mc",
+      "package": "airflow-with-jenkins",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-c732-xvv8-g94c",
+      "package": "airflow-with-jenkins",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-rmf2-pwfq-h75j",
+      "package": "airflow-with-jenkins",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-jenkins",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2025-87",
+      "package": "airflow-with-jenkins",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-7wqf-h36w-47mc",
+      "package": "airflow-with-kerberos",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-c732-xvv8-g94c",
+      "package": "airflow-with-kerberos",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-rmf2-pwfq-h75j",
+      "package": "airflow-with-kerberos",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-kerberos",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2025-87",
+      "package": "airflow-with-kerberos",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-7wqf-h36w-47mc",
+      "package": "airflow-with-ldap",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-c732-xvv8-g94c",
+      "package": "airflow-with-ldap",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-rmf2-pwfq-h75j",
+      "package": "airflow-with-ldap",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-ldap",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2025-87",
+      "package": "airflow-with-ldap",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-microsoft-azure",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-microsoft-mssql",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-microsoft-psrp",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-microsoft-winrm",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-7wqf-h36w-47mc",
+      "package": "airflow-with-mongo",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-c732-xvv8-g94c",
+      "package": "airflow-with-mongo",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-rmf2-pwfq-h75j",
+      "package": "airflow-with-mongo",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-mongo",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2025-87",
+      "package": "airflow-with-mongo",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-7wqf-h36w-47mc",
+      "package": "airflow-with-mysql",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-c732-xvv8-g94c",
+      "package": "airflow-with-mysql",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-rmf2-pwfq-h75j",
+      "package": "airflow-with-mysql",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-mysql",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2025-87",
+      "package": "airflow-with-mysql",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-neo4j",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-odbc",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-openfaas",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-openlineage",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-opsgenie",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-7wqf-h36w-47mc",
+      "package": "airflow-with-oracle",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-c732-xvv8-g94c",
+      "package": "airflow-with-oracle",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-rmf2-pwfq-h75j",
+      "package": "airflow-with-oracle",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-oracle",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2025-87",
+      "package": "airflow-with-oracle",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-otel",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-7wqf-h36w-47mc",
+      "package": "airflow-with-pagerduty",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-c732-xvv8-g94c",
+      "package": "airflow-with-pagerduty",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-rmf2-pwfq-h75j",
+      "package": "airflow-with-pagerduty",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-pagerduty",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2025-87",
+      "package": "airflow-with-pagerduty",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-7wqf-h36w-47mc",
+      "package": "airflow-with-pandas",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-c732-xvv8-g94c",
+      "package": "airflow-with-pandas",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-rmf2-pwfq-h75j",
+      "package": "airflow-with-pandas",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-314",
+      "package": "airflow-with-pandas",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-7wqf-h36w-47mc",
+      "package": "airflow-with-papermill",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-c732-xvv8-g94c",
+      "package": "airflow-with-papermill",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "GHSA-rmf2-pwfq-h75j",
+      "package": "airflow-with-papermill",
+      "reason": "human_openvex_exists"
+    },
+    {
+      "advisory_id": "PYSEC-2023-308",
+      "package": "mlflow-pipelines",
+      "reason": "no_assessment_in_reply"
+    },
+    {
+      "advisory_id": "PYSEC-2023-308",
+      "package": "mlflow",
+      "reason": "no_assessment_in_reply"
+    },
+    {
+      "advisory_id": "PYSEC-2025-70",
+      "package": "langchain-community",
+      "reason": "no_assessment_in_reply"
+    },
+    {
+      "advisory_id": "PYSEC-2026-33",
+      "package": "crawl4ai",
+      "reason": "no_assessment_in_reply"
+    },
+    {
+      "advisory_id": "PYSEC-2026-96",
+      "package": "nltk",
+      "reason": "no_assessment_in_reply"
+    }
+  ]
+}
