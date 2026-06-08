@@ -1,9 +1,9 @@
-import type { Edit, PackageEntry } from "../data/types";
+import type { Edit, MappingPackageIndex } from "../data/types";
 import { Btn, PurlChip, StatusPill, Theme } from "./Primitives";
 
 type Props = {
   theme: Theme;
-  selectedPackages: PackageEntry[];
+  selectedPackages: MappingPackageIndex[];
   edits: Record<string, Edit>;
   onApproveAll: () => void;
   onMarkUnmappedAll: () => void;

@@ -1,44 +1,77 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useGithubAuth } from "./auth/useGithubAuth";
+import { LoadingToast } from "./components/LoadingToast";
 import { LocalDraftBanner } from "./components/LocalDraftBanner";
 import { LoginModal } from "./components/LoginModal";
 import { Btn, Glyph, useTheme } from "./components/Primitives";
 import { CvePackageList } from "./components/CvePackageList";
 import { CveActiveList } from "./components/CveActiveList";
+import { CveAiWorkList } from "./components/CveAiWorkList";
 import { CveDetail } from "./components/CveDetail";
 import { CvePRDrawer } from "./components/CvePRDrawer";
-import { repoFullName } from "./config";
+import { CveEnqueueDrawer } from "./components/CveEnqueueDrawer";
+import { config, repoFullName } from "./config";
 import {
   advisoryVex,
-  bestSeverity,
   editFromVex,
-  isActiveOnLatest,
   isEditNonEmpty,
-  isFutureAffected,
-  primaryId,
-  type CvePackage,
+  loadAiDrafts,
+  loadAiQueue,
+  type CvePackageIndex,
+  type AiDraftsPayload,
+  type AiQueuePayload,
   type ReviewEdit,
 } from "./data/cves";
 import { useCveData } from "./data/useCveData";
-import { useCveEditStore } from "./stores/userState";
+import { buildCveAiWorkRows, cveReviewKey } from "./data/cveAiWorkItems";
+import { useCveAiReviewQueueStore, useCveEditStore } from "./stores/userState";
+import type { EnqueueItem } from "./github/cve_enqueue_api";
 
 export function CveApp() {
   const theme = useTheme();
-  const { payload, loadError, focusedPkg, setFocusedPkg, packages, focusedPackage } =
-    useCveData();
+  const {
+    payload,
+    loadError,
+    focusedPkg,
+    setFocusedPkg,
+    representatives,
+    membersByRep,
+    focusedPackage,
+    focusedPackageLoading,
+    detailError,
+    ensurePackageDetail,
+    packageDetails,
+  } = useCveData();
   const edits = useCveEditStore((state) => state.edits);
   const setEdits = useCveEditStore((state) => state.setEdits);
   const [focusedAdvisoryId, setFocusedAdvisoryId] = useState<string | null>(null);
   const [q, setQ] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "unreviewed" | "reviewed">(
-    "all",
-  );
-  const [view, setView] = useState<"browse" | "active">("active");
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "unreviewed" | "reviewed" | "cpe"
+  >("all");
+  const [view, setView] = useState<"browse" | "active" | "aiQueue" | "aiDrafts">("active");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
   const { token, user, error: authError, isLoggedIn, signOut } = useGithubAuth();
 
+  // AI CVE review state.
+  const [aiDrafts, setAiDrafts] = useState<AiDraftsPayload | null>(null);
+  const [aiQueue, setAiQueue] = useState<AiQueuePayload | null>(null);
+  const enqueueItems = useCveAiReviewQueueStore((state) => state.items);
+  const setEnqueueItems = useCveAiReviewQueueStore((state) => state.setItems);
+  const [enqueueOpen, setEnqueueOpen] = useState(false);
+
   const t = theme.t;
+
+  // AI CVE review sidecars — loaded once on mount. Loaders are non-throwing
+  // (return EMPTY_DRAFTS / EMPTY_QUEUE on failure with a console.warn) so a
+  // missing sidecar before the first cve_ai_review run doesn't break the
+  // dashboard.
+  useEffect(() => {
+    loadAiDrafts(config.aiDraftsUrl).then(setAiDrafts);
+    loadAiQueue(config.aiQueueUrl).then(setAiQueue);
+  }, []);
+
 
   // Packages that still have at least one unreviewed advisory shipping now
   // (or affecting a future version). Ordered the same way the triage list
@@ -49,12 +82,13 @@ export function CveApp() {
   // to land on a random CVE.
   const triageQueue = useMemo(() => {
     const out: Array<{
-      pkg: CvePackage;
+      pkg: CvePackageIndex;
       firstAdvId: string;
       worst: number;
       hasNow: boolean;
+      downloads: number;
     }> = [];
-    for (const pkg of packages) {
+    for (const pkg of representatives) {
       const rows: Array<{
         adv: (typeof pkg.advisories)[number];
         kind: "now" | "future";
@@ -62,12 +96,12 @@ export function CveApp() {
         reviewed: boolean;
       }> = [];
       for (const adv of pkg.advisories) {
-        const now = isActiveOnLatest(pkg, adv);
-        const future = !now && isFutureAffected(pkg, adv);
+        const now = adv.active_now;
+        const future = !now && adv.affects_future;
         if (!now && !future) continue;
-        const score = bestSeverity(adv)?.score_num ?? 0;
+        const score = adv.severity?.score_num ?? 0;
         const key = `${pkg.package}::${adv.id}`;
-        const effective = edits[key]?.status ?? advisoryVex(adv)?.status;
+        const effective = edits[key]?.status ?? adv.vex_status;
         const reviewed = !!effective && effective !== "under_investigation";
         rows.push({ adv, kind: now ? "now" : "future", score, reviewed });
       }
@@ -77,7 +111,7 @@ export function CveApp() {
         if (a.score !== b.score) return b.score - a.score;
         if (a.kind !== b.kind) return a.kind === "now" ? -1 : 1;
         if (a.reviewed !== b.reviewed) return a.reviewed ? 1 : -1;
-        return primaryId(a.adv).localeCompare(primaryId(b.adv));
+        return a.adv.primary_id.localeCompare(b.adv.primary_id);
       });
       const firstUnreviewed = rows.find((r) => !r.reviewed);
       if (!firstUnreviewed) continue;
@@ -86,15 +120,17 @@ export function CveApp() {
         firstAdvId: firstUnreviewed.adv.id,
         worst: rows[0].score,
         hasNow: rows.some((r) => r.kind === "now"),
+        downloads: pkg.download_count ?? -1,
       });
     }
     out.sort((a, b) => {
+      if (a.downloads !== b.downloads) return b.downloads - a.downloads;
       if (a.worst !== b.worst) return b.worst - a.worst;
       if (a.hasNow !== b.hasNow) return a.hasNow ? -1 : 1;
       return a.pkg.package.localeCompare(b.pkg.package);
     });
     return out;
-  }, [packages, edits]);
+  }, [representatives, edits]);
 
   const goToNextTriagePackage = useMemo<(() => void) | null>(() => {
     if (triageQueue.length === 0) return null;
@@ -113,7 +149,7 @@ export function CveApp() {
   const editsCount = Object.keys(edits).length;
 
   function editKey(pkg: string, advisoryId: string): string {
-    return `${pkg}::${advisoryId}`;
+    return cveReviewKey(pkg, advisoryId);
   }
 
   function handleEdit(
@@ -151,6 +187,74 @@ export function CveApp() {
       return out;
     });
   }
+
+  const enqueuedSet = useMemo(
+    () => new Set(enqueueItems.map((it) => `${it.package}::${it.advisory_id}`)),
+    [enqueueItems],
+  );
+
+  function handleAiDraftApplied(pkgName: string, advisoryId: string): void {
+    const currentKey = editKey(pkgName, advisoryId);
+    const openDrafts = buildCveAiWorkRows({
+      mode: "drafts",
+      packages: representatives,
+      membersByRep,
+      edits,
+      aiDrafts,
+      aiQueue,
+      enqueuedAdvisories: enqueuedSet,
+      includeCurrentKey: currentKey,
+    });
+    const idx = openDrafts.findIndex(
+      (row) => row.pkg.package === pkgName && row.adv.id === advisoryId,
+    );
+    const next =
+      openDrafts[idx >= 0 ? idx + 1 : 0] ??
+      openDrafts.find((row) => editKey(row.pkg.package, row.adv.id) !== currentKey);
+    if (!next) return;
+    setView("aiDrafts");
+    setFocusedPkg(next.pkg.package);
+    setFocusedAdvisoryId(next.adv.id);
+  }
+
+  function handleEnqueueAi(pkg: string, advisoryId: string): void {
+    if (!isLoggedIn) {
+      setLoginOpen(true);
+    }
+    const key = `${pkg}::${advisoryId}`;
+    if (enqueuedSet.has(key)) return;
+    setEnqueueItems((prev) => [...prev, { package: pkg, advisory_id: advisoryId }]);
+    setEnqueueOpen(true);
+  }
+
+  function handleRemoveEnqueue(pkg: string, advisoryId: string): void {
+    setEnqueueItems((prev) =>
+      prev.filter((it) => !(it.package === pkg && it.advisory_id === advisoryId)),
+    );
+  }
+
+  function handleBulkEnqueueAi(items: EnqueueItem[]): void {
+    if (items.length === 0) return;
+    if (!isLoggedIn) setLoginOpen(true);
+    setEnqueueItems((prev) => {
+      const byKey = new Map<string, EnqueueItem>(
+        prev.map((it) => [`${it.package}::${it.advisory_id}`, it]),
+      );
+      for (const it of items) {
+        const key = `${it.package}::${it.advisory_id}`;
+        const existing = byKey.get(key);
+        if (existing) {
+          // Re-staging an already-queued pair with force upgrades it.
+          if (it.force && !existing.force) byKey.set(key, { ...existing, force: true });
+          continue;
+        }
+        byKey.set(key, it);
+      }
+      return [...byKey.values()];
+    });
+    setEnqueueOpen(true);
+  }
+
 
   return (
     <div
@@ -277,6 +381,18 @@ export function CveApp() {
 
           <Btn
             theme={theme}
+            variant={enqueueItems.length > 0 ? "primary" : "ghost"}
+            onClick={() => setEnqueueOpen(true)}
+            disabled={enqueueItems.length === 0}
+          >
+            🤖{" "}
+            {enqueueItems.length === 0
+              ? "No AI reviews queued"
+              : `Ask AI (${enqueueItems.length})`}
+          </Btn>
+
+          <Btn
+            theme={theme}
             variant={editsCount > 0 ? "primary" : "ghost"}
             icon="pr"
             onClick={() => setDrawerOpen(true)}
@@ -392,7 +508,7 @@ export function CveApp() {
         </div>
       )}
 
-      {loadError && (
+      {(loadError || detailError) && (
         <div
           style={{
             padding: "7px 18px",
@@ -401,7 +517,7 @@ export function CveApp() {
             fontSize: 12,
           }}
         >
-          Failed to load advisories: {loadError}
+          Failed to load advisories: {loadError || detailError}
         </div>
       )}
 
@@ -417,12 +533,13 @@ export function CveApp() {
           }}
         >
           <div
+            role="tablist"
             style={{
               display: "flex",
-              gap: 2,
+              gap: 4,
               padding: "8px 10px 0 10px",
               borderBottom: `1px solid ${t.border}`,
-              background: t.surface,
+              background: t.inset,
               flexShrink: 0,
             }}
           >
@@ -441,13 +558,28 @@ export function CveApp() {
             >
               All packages
             </ViewTab>
+            <ViewTab
+              theme={theme}
+              active={view === "aiQueue"}
+              onClick={() => setView("aiQueue")}
+            >
+              ⏳ AI queue
+            </ViewTab>
+            <ViewTab
+              theme={theme}
+              active={view === "aiDrafts"}
+              onClick={() => setView("aiDrafts")}
+            >
+              🤖 AI drafts
+            </ViewTab>
           </div>
           <div style={{ flex: 1, minHeight: 0 }}>
             {payload ? (
               view === "browse" ? (
                 <CvePackageList
                   theme={theme}
-                  packages={packages}
+                  packages={representatives}
+                  membersByRep={membersByRep}
                   edits={edits}
                   focusedId={focusedPkg}
                   setFocusedId={(id) => {
@@ -459,15 +591,36 @@ export function CveApp() {
                   statusFilter={statusFilter}
                   setStatusFilter={setStatusFilter}
                 />
-              ) : (
+              ) : view === "active" ? (
                 <CveActiveList
                   theme={theme}
-                  packages={packages}
+                  packages={representatives}
+                  membersByRep={membersByRep}
                   edits={edits}
                   focusedPkg={focusedPkg}
                   focusedAdvisoryId={focusedAdvisoryId}
                   onNextTriagePackage={goToNextTriagePackage}
                   triageRemaining={triageQueue.length}
+                  enqueuedAdvisories={enqueuedSet}
+                  onBulkEnqueue={handleBulkEnqueueAi}
+                  onSelect={(pkgName, advisoryId) => {
+                    setFocusedPkg(pkgName);
+                    setFocusedAdvisoryId(advisoryId);
+                  }}
+                />
+              ) : (
+                <CveAiWorkList
+                  theme={theme}
+                  mode={view === "aiQueue" ? "queue" : "drafts"}
+                  packages={representatives}
+                  membersByRep={membersByRep}
+                  edits={edits}
+                  focusedPkg={focusedPkg}
+                  focusedAdvisoryId={focusedAdvisoryId}
+                  aiDrafts={aiDrafts}
+                  aiQueue={aiQueue}
+                  enqueuedAdvisories={enqueuedSet}
+                  onBulkEnqueue={handleBulkEnqueueAi}
                   onSelect={(pkgName, advisoryId) => {
                     setFocusedPkg(pkgName);
                     setFocusedAdvisoryId(advisoryId);
@@ -490,9 +643,25 @@ export function CveApp() {
         </div>
 
         <div style={{ flex: 1, minWidth: 0, display: "flex" }}>
+          {focusedPackageLoading && !focusedPackage ? (
+            <div
+              style={{
+                flex: 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: t.fg2,
+                background: t.page,
+                fontSize: 13,
+              }}
+            >
+              Loading package details…
+            </div>
+          ) : (
           <CveDetail
             theme={theme}
             pkg={focusedPackage}
+            variants={(focusedPkg && membersByRep.get(focusedPkg)) || []}
             edits={edits}
             mode={view === "active" ? "triage" : "browse"}
             focusedAdvisoryId={focusedAdvisoryId}
@@ -510,7 +679,17 @@ export function CveApp() {
               if (!focusedPackage) return;
               handleResetEdit(focusedPackage.package, advisoryId);
             }}
+            isLoggedIn={isLoggedIn}
+            onRequestLogin={() => setLoginOpen(true)}
+            aiDrafts={aiDrafts}
+            aiQueue={aiQueue}
+            enqueuedAdvisories={enqueuedSet}
+            onEnqueueAi={handleEnqueueAi}
+            onAiDraftApplied={(advisoryId) => {
+              if (focusedPackage) handleAiDraftApplied(focusedPackage.package, advisoryId);
+            }}
           />
+          )}
         </div>
       </div>
 
@@ -518,7 +697,9 @@ export function CveApp() {
         <CvePRDrawer
           theme={theme}
           edits={edits}
-          packages={payload.packages}
+          loadedPackages={packageDetails}
+          ensurePackageDetail={ensurePackageDetail}
+          membersByRep={membersByRep}
           onClose={() => setDrawerOpen(false)}
           onCommit={() => {
             setEdits({});
@@ -541,7 +722,24 @@ export function CveApp() {
         />
       )}
 
+      {enqueueOpen && (
+        <CveEnqueueDrawer
+          theme={theme}
+          items={enqueueItems}
+          onClose={() => setEnqueueOpen(false)}
+          onRemove={handleRemoveEnqueue}
+          onClear={() => setEnqueueItems([])}
+          onSubmitted={() => {
+            setEnqueueItems([]);
+          }}
+          isLoggedIn={isLoggedIn}
+          onRequestLogin={() => setLoginOpen(true)}
+          token={token}
+        />
+      )}
+
       {loginOpen && <LoginModal theme={theme} onClose={() => setLoginOpen(false)} />}
+      <LoadingToast theme={theme} />
     </div>
   );
 }
@@ -560,22 +758,35 @@ function ViewTab({
   children: React.ReactNode;
 }) {
   const t = theme.t;
+  const [hover, setHover] = useState(false);
+  const activeColor = accent ? "#a8201f" : t.accent;
   return (
     <button
+      role="tab"
+      aria-selected={active}
       onClick={onClick}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
       style={{
+        position: "relative",
         display: "inline-flex",
         alignItems: "center",
         gap: 5,
-        background: active ? t.surface2 : "transparent",
-        border: 0,
-        borderBottom: `2px solid ${active ? (accent ? "#a8201f" : t.accent) : "transparent"}`,
-        color: active ? t.fg1 : t.fg2,
-        padding: "8px 12px 6px 12px",
+        background: active ? t.surface : hover ? t.surface2 : "transparent",
+        border: `1px solid ${active ? t.border : "transparent"}`,
+        borderBottom: active ? `1px solid ${t.surface}` : "1px solid transparent",
+        borderTop: `2px solid ${active ? activeColor : "transparent"}`,
+        borderRadius: "6px 6px 0 0",
+        color: active ? t.fg1 : hover ? t.fg1 : t.fg2,
+        padding: "7px 13px 7px 13px",
+        // pull the active tab down 1px so its bottom edge overlaps the strip's
+        // bottom border, making it read as connected to the panel below
+        marginBottom: -1,
         fontSize: 12,
         fontWeight: 600,
         cursor: "pointer",
         fontFamily: "Inter, sans-serif",
+        transition: "background 0.12s, color 0.12s",
       }}
     >
       {children}

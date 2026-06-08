@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       top:
-        description: "Top-N most-downloaded packages to consider"
+        description: "Top-N most-downloaded packages to consider (blank = all packages, no cap)"
         required: false
-        default: "100"
+        default: ""
       only:
         description: "Comma-separated package names (blank = all)"
         required: false
@@ -32,7 +32,7 @@ concurrency:
 jobs:
   cpe-discover:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v6
 
@@ -44,7 +44,11 @@ jobs:
       - name: Run heuristic discovery
         run: |
           set -euo pipefail
-          ARGS=(--top "${{ inputs.top || '100' }}")
+          # No --top on the scheduled run → cpe_discover's default (0 = no
+          # cap) considers every package. A manual dispatch can still pass a
+          # numeric ``top`` input to bound a one-off run.
+          ARGS=()
+          if [ -n "${{ inputs.top }}" ]; then ARGS+=(--top "${{ inputs.top }}"); fi
           if [ -n "${{ inputs.only }}" ]; then ARGS+=(--only "${{ inputs.only }}"); fi
           pixi run cpe-discover "${ARGS[@]}"
 
@@ -94,6 +98,24 @@ jobs:
         # regenerates it on deploy.
         run: pixi run -e lite merge
 
+      - name: Generate PR body
+        # Reconstructs the promoted set (accepts + confident AI verdicts) the
+        # same way cpe_promote does, so the PR description leads with the net
+        # effect — which CPEs land on mappings.json after merge — instead of a
+        # static "review the diff" blurb. Mirror the vet-file resolution used
+        # by the promote step so the vet table reflects this run only.
+        run: |
+          set -euo pipefail
+          ARGS=(--candidates mappings/cpe_candidates/latest.json)
+          if [ "${{ inputs.skip_vet }}" != "true" ] \
+             && [ -n "${{ steps.vet.outputs.vet_file || '' }}" ]; then
+            ARGS+=(--vet "${{ steps.vet.outputs.vet_file }}")
+          fi
+          pixi run python -m scripts.cpe_summary "${ARGS[@]}" \
+            > /tmp/cpe_pr_body.md
+          echo "----- PR body preview -----"
+          cat /tmp/cpe_pr_body.md
+
       - name: Open / update PR
         uses: peter-evans/create-pull-request@v8
         with:
@@ -109,32 +131,4 @@ jobs:
           title: "cpe: refresh CPE mappings (automated)"
           commit-message: "cpe: refresh CPE mappings"
           delete-branch: true
-          body: |
-            Automated discovery + AI vet of CPE coordinates for top-downloaded
-            conda-forge packages that lack OSV-mappable PURLs.
-
-            ## Pipeline
-
-            1. `scripts.cpe_discover` — scores NVD index lookups against H1–H8
-               heuristics, buckets into accept / ambiguous / drop.
-            2. `scripts.cpe_vet` — Claude Haiku tiebreaker on the ambiguous
-               bucket (skipped when `skip_vet=true`).
-            3. `scripts.cpe_promote` — writes one contribution file unioning
-               heuristic accepts + confident AI verdicts.
-
-            ## Files in this PR
-
-            - `mappings/contributions/*--cpe-pipeline--*.json` — shipping
-              payload; the CPEs that will appear on `mappings.json` after
-              merge.
-            - `mappings/cpe_candidates/<ts>.json` — full audit of every
-              candidate seen, including drops, with per-heuristic scores.
-            - `mappings/cpe_vet/<ts>--<id>.json` — Haiku verdicts for the
-              ambiguous bucket (when AI vet ran).
-
-            Review the contribution file first; the audit files exist for
-            reference but don't directly change behaviour.
-
-            Re-running discover is naturally idempotent — already-CPE'd
-            packages are skipped by `_load_existing_cpes` before NVD is even
-            queried, so this PR won't propose duplicates on subsequent runs.
+          body-path: /tmp/cpe_pr_body.md

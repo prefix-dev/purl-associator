@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/prefix-dev/purl-associator/schemas/cves-index.schema.json",
+  "title": "purl-associator CVE dashboard index",
+  "description": "Compact startup payload for the CVE dashboard. Full OSV records live in web/public/cve_packages/*.json and are lazy-loaded per package.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "generated_at",
+    "package_count",
+    "advisory_count",
+    "packages"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "integer", "const": 3 },
+    "generated_at": { "type": "string" },
+    "contribution_count": { "type": "integer", "minimum": 0 },
+    "package_count": { "type": "integer", "minimum": 0 },
+    "advisory_count": { "type": "integer", "minimum": 0 },
+    "affected_version_count": { "type": "integer", "minimum": 0 },
+    "packages": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "package",
+          "purls",
+          "detail_path",
+          "advisory_count",
+          "affected_version_count",
+          "advisories"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "schema_version": { "type": "integer" },
+          "package": { "type": "string" },
+          "purls": { "type": "array", "items": { "type": "string" } },
+          "cpes": { "type": "array", "items": { "type": "string" } },
+          "generated_at": { "type": "string" },
+          "conda_versions_total": { "type": "integer", "minimum": 0 },
+          "latest_version": { "type": ["string", "null"] },
+          "download_count": { "type": ["integer", "null"], "minimum": 0 },
+          "detail_path": { "type": "string" },
+          "advisory_count": { "type": "integer", "minimum": 0 },
+          "affected_version_count": { "type": "integer", "minimum": 0 },
+          "unique_affected_version_count": { "type": "integer", "minimum": 0 },
+          "advisories": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "primary_id",
+                "active_now",
+                "affects_future",
+                "affected_version_count"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "id": { "type": "string" },
+                "aliases": { "type": "array", "items": { "type": "string" } },
+                "cve_ids": { "type": "array", "items": { "type": "string" } },
+                "primary_id": { "type": "string" },
+                "summary": { "type": "string" },
+                "modified": { "type": "string" },
+                "severity": {
+                  "type": "object",
+                  "properties": {
+                    "type": { "type": "string" },
+                    "score": { "type": "string" },
+                    "score_num": { "type": "number" }
+                  }
+                },
+                "active_now": { "type": "boolean" },
+                "affects_future": { "type": "boolean" },
+                "vex_status": {
+                  "type": "string",
+                  "enum": [
+                    "affected",
+                    "not_affected",
+                    "fixed",
+                    "under_investigation"
+                  ]
+                },
+                "affected_version_count": { "type": "integer", "minimum": 0 }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

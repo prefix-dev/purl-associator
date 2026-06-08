@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useGithubAuth } from "./auth/useGithubAuth";
 import { BulkPanel } from "./components/BulkPanel";
+import { LoadingToast } from "./components/LoadingToast";
 import { LocalDraftBanner } from "./components/LocalDraftBanner";
 import { LoginModal } from "./components/LoginModal";
 import { MappingEditor } from "./components/MappingEditor";
@@ -9,13 +10,21 @@ import { PRDrawer } from "./components/PRDrawer";
 import { Btn, Glyph, useTheme } from "./components/Primitives";
 import { repoFullName } from "./config";
 import { purlsFromAlternatives } from "./data/purlAlternatives";
-import type { Edit, PackageEntry } from "./data/types";
+import type { Edit, MappingPackageIndex, PackageEntry } from "./data/types";
 import { useMappingsData } from "./data/useMappingsData";
 import { usePurlEditStore } from "./stores/userState";
 
 export function App() {
   const theme = useTheme();
-  const { payload, packages, loadError } = useMappingsData();
+  const {
+    payload,
+    packages,
+    loadError,
+    detailError,
+    details,
+    loadingDetails,
+    ensurePackageDetail,
+  } = useMappingsData();
   const [selectedSet, setSelectedSet] = useState<Set<string>>(new Set());
   const [focusedId, setFocusedId] = useState<string | null>(null);
   const edits = usePurlEditStore((state) => state.edits);
@@ -41,10 +50,15 @@ export function App() {
     }
   }, [packages, focusedId]);
 
-  const focusedPkg = useMemo(
-    () => (focusedId ? packages.find((p) => p.name === focusedId) ?? null : null),
-    [packages, focusedId],
-  );
+  useEffect(() => {
+    if (focusedId && !details[focusedId]) {
+      ensurePackageDetail(focusedId).catch(() => {
+        // detailError is set by the hook.
+      });
+    }
+  }, [details, ensurePackageDetail, focusedId]);
+
+  const focusedPkg = focusedId ? details[focusedId] ?? null : null;
 
   const selectedPackages = useMemo(
     () => packages.filter((p) => selectedSet.has(p.name)),
@@ -87,7 +101,7 @@ export function App() {
     });
   }
 
-  function approveOne(p: PackageEntry): Edit | null {
+  function approveOne(p: MappingPackageIndex | PackageEntry): Edit | null {
     const auto = p.auto ?? {
       purl: p.purl,
       type: p.type,
@@ -389,7 +403,7 @@ export function App() {
         </div>
       )}
 
-      {loadError && (
+      {(loadError || detailError) && (
         <div
           style={{
             padding: "7px 18px",
@@ -398,7 +412,7 @@ export function App() {
             fontSize: 12,
           }}
         >
-          Failed to load mappings: {loadError}
+          Failed to load mappings: {loadError || detailError}
         </div>
       )}
 
@@ -410,7 +424,7 @@ export function App() {
           minHeight: 0,
         }}
       >
-        <div style={{ minWidth: 0 }}>
+        <div style={{ minWidth: 0, minHeight: 0 }}>
           {payload ? (
             <PackageTable
               theme={theme}
@@ -451,6 +465,20 @@ export function App() {
               onResetSelected={handleBulkResetSelected}
               onClearSelection={() => setSelectedSet(new Set())}
             />
+          ) : focusedId && loadingDetails.has(focusedId) && !focusedPkg ? (
+            <div
+              style={{
+                flex: 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: t.page,
+                color: t.fg2,
+                fontSize: 13,
+              }}
+            >
+              Loading package details…
+            </div>
           ) : (
             <MappingEditor
               theme={theme}
@@ -468,7 +496,8 @@ export function App() {
         <PRDrawer
           theme={theme}
           edits={edits}
-          packages={packages}
+          packages={details}
+          ensurePackageDetail={ensurePackageDetail}
           onClose={() => setDrawerOpen(false)}
           onCommit={() => {
             setEdits({});
@@ -487,6 +516,7 @@ export function App() {
       )}
 
       {loginOpen && <LoginModal theme={theme} onClose={() => setLoginOpen(false)} />}
+      <LoadingToast theme={theme} />
     </div>
   );
 }

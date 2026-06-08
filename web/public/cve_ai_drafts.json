@@ -1,0 +1,338 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-06-03T13:30:13+00:00",
+  "drafts": {
+    "airflow-with-github_enterprise": {
+      "GHSA-7wqf-h36w-47mc": {
+        "model": "claude-sonnet-4-6",
+        "run_id": "c85a2f",
+        "generated_at": "2026-06-03T09:03:10+00:00",
+        "prompt_version": "2026-06-02.openvex-status-history-v1",
+        "rationale": "This advisory describes an OS Command Injection vulnerability in the Apache Airflow Pinot Provider affecting all Apache Airflow versions prior to 2.3.0, fixed in 2.3.0. The package under review is airflow-with-github_enterprise at version 2.10.5, which is a conda-forge metapackage that installs apache-airflow with GitHub Enterprise extras \u2014 it does not bundle the Pinot Provider. The OSV range covers introduced=0, fixed=2.3.0, and the latest conda version (2.10.5) is well beyond the fixed boundary. The affected_versions list in the match (all <=2.2.5) correctly excludes the current conda version, and affects_future is False. Because the vulnerability is in the Pinot Provider (a separately installed optional component) and the conda package under review is the github_enterprise variant which would not include apache-airflow-providers-pinot, runtime applicability is extremely limited even for historical versions. Nonetheless, historical conda builds of apache-airflow prior to 2.3.0 that also had the Pinot provider installed would have been vulnerable, but the current package version is not affected.",
+        "openvex_status": "affected",
+        "openvex_justification": null,
+        "openvex_impact_statement": null,
+        "openvex_action_statement": "Upgrade to airflow-with-github_enterprise >= 2.3.0. The current latest conda-forge version (2.10.5) is well beyond the fixed boundary of 2.3.0. Historical conda builds of apache-airflow < 2.3.0 with the Pinot Provider installed remain vulnerable; users should ensure they are running a current version.",
+        "affected_versions": {
+          "agrees_with_match": true,
+          "reasoning": "The OSV range specifies introduced=0, fixed=2.3.0. The affected_versions list correctly captures only pre-2.3.0 conda releases (up to 2.2.5). The current conda version (2.10.5) is not in the affected set and affects_future is False, which is correct."
+        },
+        "runtime_applicability": {
+          "applies": "partial",
+          "reasoning": "The vulnerability is specifically in the optional Pinot Provider, which is not included in the github_enterprise extras variant of airflow. Even for historical versions, the Pinot provider would need to be separately installed. The core airflow code in this package variant does not include the vulnerable Pinot Provider code path."
+        },
+        "severity_in_conda_context": {
+          "assessment": "lower",
+          "reasoning": "The CRITICAL CVSS 9.8 score reflects worst-case network exploitation, but in practice the Pinot Provider is a separately installed optional component not bundled in this github_enterprise variant. The actual attack surface is further narrowed by requiring Pinot Provider to be manually installed alongside this conda package."
+        },
+        "notes": "The github_enterprise extras metapackage does not include apache-airflow-providers-pinot, so the vulnerable component is not present unless manually installed separately. Historical airflow conda builds < 2.3.0 are in the affected set but the current version (2.10.5) is not."
+      },
+      "GHSA-c732-xvv8-g94c": {
+        "model": "claude-sonnet-4-6",
+        "run_id": "c85a2f",
+        "generated_at": "2026-06-03T09:03:10+00:00",
+        "prompt_version": "2026-06-02.openvex-status-history-v1",
+        "rationale": "This advisory describes a Command Injection vulnerability in Apache Airflow and the Apache Airflow MySQL Provider, fixed in Airflow 2.5.1 and MySQL Provider 4.0.0. The package under review is airflow-with-github_enterprise at version 2.10.5, which is well beyond the fixed boundary of 2.5.1. The affected_versions list (all <=2.5.0) correctly excludes the current conda version, and affects_future is False. The github_enterprise extras variant of airflow does not include the MySQL Provider, so even for historical affected versions the MySQL Provider code path would not be present unless separately installed. Historical conda builds of apache-airflow < 2.5.1 with the MySQL Provider installed remain affected.",
+        "openvex_status": "affected",
+        "openvex_justification": null,
+        "openvex_impact_statement": null,
+        "openvex_action_statement": "Upgrade to airflow-with-github_enterprise >= 2.5.1. The current latest conda-forge version (2.10.5) is beyond the fixed boundary. Historical conda builds of apache-airflow < 2.5.1 with the MySQL Provider installed remain vulnerable; users should ensure they are on a current version.",
+        "affected_versions": {
+          "agrees_with_match": true,
+          "reasoning": "The OSV range specifies introduced=0, fixed=2.5.1 for apache-airflow. The affected_versions list correctly captures conda releases up to 2.5.0 and excludes 2.5.1+. The current conda version (2.10.5) is not in the affected set and affects_future is False, which is correct."
+        },
+        "runtime_applicability": {
+          "applies": "partial",
+          "reasoning": "The vulnerability affects both core airflow (fixed in 2.5.1) and the MySQL Provider (fixed in 4.0.0). The github_enterprise extras variant does not include the MySQL Provider, so the MySQL-specific vector is not present. However, the core airflow component itself was also affected (the advisory covers both), so historical airflow builds < 2.5.1 may carry some vulnerability even without the MySQL Provider."
+        },
+        "severity_in_conda_context": {
+          "assessment": "lower",
+          "reasoning": "The CRITICAL CVSS 9.8 score covers the combined risk of both the MySQL Provider and core airflow. The github_enterprise variant does not bundle the MySQL Provider, reducing the attack surface. The core airflow component was also affected, but the severity is partially mitigated by the absence of the MySQL Provider in this package variant."
+        },
+        "notes": "The advisory covers two separate affected packages: apache-airflow (fixed at 2.5.1) and apache-airflow-providers-mysql (fixed at 4.0.0). The github_enterprise variant does not include the MySQL Provider, but historical conda airflow versions < 2.5.1 may still carry the core airflow portion of this vulnerability."
+      },
+      "GHSA-rmf2-pwfq-h75j": {
+        "model": "claude-sonnet-4-6",
+        "run_id": "c85a2f",
+        "generated_at": "2026-06-03T09:03:10+00:00",
+        "prompt_version": "2026-06-02.openvex-status-history-v1",
+        "rationale": "This advisory describes an OS Command Injection vulnerability in the Apache Airflow Pig Provider affecting all Apache Airflow versions prior to 2.3.0, fixed in 2.3.0. The package under review is airflow-with-github_enterprise at version 2.10.5, which is well beyond the fixed boundary of 2.3.0. The affected_versions list (all <=2.2.5) correctly excludes the current conda version, and affects_future is False. The vulnerability is specifically in the optional Pig Provider (apache-airflow-providers-pig), which is not included in the github_enterprise extras variant of airflow and would need to be separately installed. Historical conda builds of apache-airflow < 2.3.0 with the Pig Provider installed remain in the affected set, but the current version is safe.",
+        "openvex_status": "affected",
+        "openvex_justification": null,
+        "openvex_impact_statement": null,
+        "openvex_action_statement": "Upgrade to airflow-with-github_enterprise >= 2.3.0. The current latest conda-forge version (2.10.5) is well beyond the fixed boundary. Historical conda builds of apache-airflow < 2.3.0 with the Pig Provider installed remain vulnerable; users should ensure they are running a current version.",
+        "affected_versions": {
+          "agrees_with_match": true,
+          "reasoning": "The OSV range specifies introduced=0, fixed=2.3.0 for apache-airflow. The affected_versions list correctly captures conda releases up to 2.2.5 and excludes 2.3.0+. The current conda version (2.10.5) is not in the affected set and affects_future is False, which is correct."
+        },
+        "runtime_applicability": {
+          "applies": "partial",
+          "reasoning": "The vulnerability is specifically in the optional Pig Provider, which is not included in the github_enterprise extras variant of airflow. Even for historical versions, the Pig Provider would need to be separately installed for the vulnerability to be exploitable. The core airflow code in this github_enterprise package does not include the vulnerable Pig Provider code path."
+        },
+        "severity_in_conda_context": {
+          "assessment": "lower",
+          "reasoning": "The CRITICAL CVSS 9.8 score reflects worst-case network exploitation, but the Pig Provider is a separately installed optional component not bundled in this github_enterprise variant. The actual attack surface is further reduced because Pig Provider would need to be manually installed separately alongside this conda package, making exploitation conditional on an additional user action."
+        },
+        "notes": "Similar to GHSA-7wqf-h36w-47mc (Pinot Provider), this is a provider-specific vulnerability where the affected component (Pig Provider) is not included in the github_enterprise extras. Historical airflow conda builds < 2.3.0 are listed as affected but the current version (2.10.5) is not. The Pig Provider is an uncommon extra and unlikely to be installed in most github_enterprise deployments."
+      },
+      "PYSEC-2023-314": {
+        "model": "claude-sonnet-4-6",
+        "run_id": "c85a2f",
+        "generated_at": "2026-06-03T09:03:10+00:00",
+        "prompt_version": "2026-06-02.openvex-status-history-v1",
+        "rationale": "This advisory concerns a vulnerability in the Apache Airflow Sqoop Provider (CVE-2023-25693), not in the core apache-airflow package itself. The conda-forge package under review is 'airflow-with-github_enterprise', which installs the GitHub Enterprise extras for Airflow, not the Sqoop provider. The Sqoop provider is a separate optional provider package (apache-airflow-providers-apache-sqoop) that is neither bundled nor required by the GitHub Enterprise extra. The OSV range covers apache-airflow < 3.1.1, but this is an over-broad attribution: the actual vulnerability is in the separately distributed Sqoop provider, which must be explicitly installed. Since the conda-forge artifact does not vendor or depend on the Sqoop provider, the vulnerable code path is absent from this artifact.",
+        "openvex_status": "not_affected",
+        "openvex_justification": "vulnerable_code_not_present",
+        "openvex_impact_statement": "The vulnerability is in the Apache Airflow Sqoop Provider (apache-airflow-providers-apache-sqoop), which is a separate, independently installed provider package. The 'airflow-with-github_enterprise' conda-forge artifact installs Airflow core with GitHub Enterprise extras and does not include or require the Sqoop provider. The vulnerable code is not present in this artifact.",
+        "openvex_action_statement": null,
+        "affected_versions": {
+          "agrees_with_match": false,
+          "reasoning": "All versions should be removed from the affected set because this advisory applies to the Sqoop Provider, not to the core airflow package or the GitHub Enterprise extra. The OSV ECOSYSTEM range for apache-airflow is over-broad and was attributed to the umbrella package rather than the specific provider package where the vulnerability resides.",
+          "suggested_removes": [
+            "1.9.0",
+            "1.10.0",
+            "1.10.1",
+            "1.10.2",
+            "2.0.1",
+            "2.0.2",
+            "2.1.0",
+            "2.1.1",
+            "2.1.2",
+            "2.1.3",
+            "2.1.4",
+            "2.2.0",
+            "2.2.1",
+            "2.2.2",
+            "2.2.3",
+            "2.2.4",
+            "2.2.5",
+            "2.3.0",
+            "2.3.1",
+            "2.3.2",
+            "2.3.3",
+            "2.3.4",
+            "2.4.0",
+            "2.4.1",
+            "2.4.2",
+            "2.4.3",
+            "2.5.0",
+            "2.5.1",
+            "2.5.2",
+            "2.5.3",
+            "2.6.0",
+            "2.6.1",
+            "2.6.2",
+            "2.6.3",
+            "2.7.0",
+            "2.7.1",
+            "2.7.2",
+            "2.7.3",
+            "2.8.0",
+            "2.8.1",
+            "2.8.2",
+            "2.8.3",
+            "2.8.4",
+            "2.9.0",
+            "2.9.1",
+            "2.9.2",
+            "2.9.3",
+            "2.10.0",
+            "2.10.1",
+            "2.10.2",
+            "2.10.4",
+            "2.10.5"
+          ]
+        },
+        "runtime_applicability": {
+          "applies": "no",
+          "reasoning": "The vulnerable code lives exclusively in the apache-airflow-providers-apache-sqoop provider, a separately distributed package that is not a dependency of the GitHub Enterprise extra. It is not imported or executed by this artifact."
+        },
+        "severity_in_conda_context": {
+          "assessment": "lower",
+          "reasoning": "Even in contexts where the Sqoop provider is installed separately, the CVSS 9.8 score is specific to the Sqoop provider's improper input validation. For this conda artifact which lacks the Sqoop provider, the effective severity is not applicable."
+        },
+        "notes": "The OSV record incorrectly attributes this Sqoop Provider vulnerability to the top-level apache-airflow package across all versions. The actual fix was in the Sqoop Provider package (apache-airflow-providers-apache-sqoop >= 3.1.1), not in airflow core. This is a systemic OSV data quality issue for Airflow provider CVEs."
+      },
+      "PYSEC-2025-87": {
+        "model": "claude-sonnet-4-6",
+        "run_id": "c85a2f",
+        "generated_at": "2026-06-03T09:03:10+00:00",
+        "prompt_version": "2026-06-02.openvex-status-history-v1",
+        "rationale": "CVE-2025-67895 concerns a Remote Code Execution vulnerability in the Apache Airflow Edge3 Provider when used with Airflow 2. The OSV range covers apache-airflow < 2.0.0, which is also over-broad since the details clarify the issue is in the Edge3 provider package (apache-airflow-providers-edge3 < 2.0.0) configured on Airflow 2, not in Airflow core itself. The conda-forge artifact 'airflow-with-github_enterprise' is at version 2.10.5 \u2014 well above the OSV fixed point of 2.0.0 \u2014 and does not include or require the Edge3 provider. Moreover, the conda-affected versions list only includes 1.9.0, 1.10.0, 1.10.1, and 1.10.2, none of which correspond to versions actually shipped as the 'airflow-with-github_enterprise' conda-forge package. The advisory itself explicitly states that Airflow 3 users are not affected and that the Edge3 provider had to be explicitly installed and configured, making this inapplicable to this artifact.",
+        "openvex_status": "not_affected",
+        "openvex_justification": "vulnerable_code_not_present",
+        "openvex_impact_statement": "The vulnerability is in the Edge3 provider (apache-airflow-providers-edge3 < 2.0.0) when explicitly installed and configured on Airflow 2. The 'airflow-with-github_enterprise' package does not include the Edge3 provider and the conda-forge versions of this package do not fall within the OSV-affected range (< 2.0.0). The vulnerable code is not present in this artifact.",
+        "openvex_action_statement": null,
+        "affected_versions": {
+          "agrees_with_match": false,
+          "reasoning": "The OSV ECOSYSTEM range covers apache-airflow < 2.0.0. The conda-forge 'airflow-with-github_enterprise' package ships Airflow 2.x (latest 2.10.5), which is above the fixed point. Additionally, the vulnerability is in the separately installed Edge3 provider, not airflow core. All four listed conda versions (1.9.0, 1.10.0, 1.10.1, 1.10.2) should be removed as they are 1.x versions of upstream PyPI not corresponding to this conda-forge artifact, and the Edge3 provider did not exist at those versions anyway.",
+          "suggested_removes": [
+            "1.9.0",
+            "1.10.0",
+            "1.10.1",
+            "1.10.2"
+          ]
+        },
+        "runtime_applicability": {
+          "applies": "no",
+          "reasoning": "The Edge3 provider must be separately installed and configured, and it was only a development-only feature for Airflow 2. The 'airflow-with-github_enterprise' conda artifact does not bundle the Edge3 provider. This conda package ships Airflow 2.10.5, and even if the Edge3 provider were separately installed, the advisory states Airflow 3 users and those not using the Edge3 provider are not affected."
+        },
+        "severity_in_conda_context": {
+          "assessment": "lower",
+          "reasoning": "The CVSS 9.8 score reflects the worst-case scenario where the Edge3 provider is installed, configured, and actively used on Airflow 2. Since this conda artifact does not include the Edge3 provider and the version is 2.10.5 (not in the < 2.0.0 OSV range as stated), the effective severity for this artifact is not applicable."
+        },
+        "notes": "The OSV ECOSYSTEM range attribution to apache-airflow < 2.0.0 is misleading; the actual vulnerability is in apache-airflow-providers-edge3 < 2.0.0 on Airflow 2.x deployments. The advisory itself clarifies this was a development-only feature. This is another example of Airflow provider CVEs being attributed to the core package in OSV data."
+      }
+    },
+    "airflow-with-google_auth": {
+      "GHSA-7wqf-h36w-47mc": {
+        "model": "claude-sonnet-4-6",
+        "run_id": "c85a2f",
+        "generated_at": "2026-06-03T09:03:10+00:00",
+        "prompt_version": "2026-06-02.openvex-status-history-v1",
+        "rationale": "The OSV range covers apache-airflow < 2.3.0, and the affected conda versions listed (2.0.1 through 2.2.5) are accurate for the conda-forge airflow-with-google_auth package. The current latest conda version is 2.10.5, which is well above the fixed point of 2.3.0, so the latest build is not affected. However, historical conda-forge builds in the 2.0.x\u20132.2.x range are genuinely affected. The vulnerability is in the Pinot Provider integration: OS command injection is possible without DAG write access when the Pinot Provider (< 4.0.0) is installed alongside Airflow < 2.3.0. The airflow-with-google_auth metapackage installs Apache Airflow core; the Pinot Provider is a separate optional package not included by default in this conda package, which moderates actual exploitability in the conda context. Still, users of historical builds who also installed the Pinot Provider would have been exposed, so those versions remain affected.",
+        "openvex_status": "affected",
+        "openvex_justification": null,
+        "openvex_impact_statement": null,
+        "openvex_action_statement": "Upgrade to airflow-with-google_auth >= 2.3.0 on conda-forge. The current latest conda-forge version (2.10.5) is not affected. Historical builds in the 2.0.1\u20132.2.5 range are vulnerable if apache-airflow-providers-apache-pinot < 4.0.0 is also installed; users of those versions should upgrade immediately.",
+        "affected_versions": {
+          "agrees_with_match": true,
+          "reasoning": "The OSV range introduced=0, fixed=2.3.0 aligns with the listed affected conda versions 2.0.1 through 2.2.5. These are the conda-forge versions in that range. The latest conda version 2.10.5 is above the fix point and is not listed as affected, which is correct."
+        },
+        "runtime_applicability": {
+          "applies": "partial",
+          "reasoning": "The vulnerability is in the Apache Airflow Pinot Provider, which is a separate optional package not bundled with airflow-with-google_auth. Exploitation requires the Pinot Provider to be separately installed. The vulnerable code path is only active if users have installed apache-airflow-providers-apache-pinot < 4.0.0 alongside the affected Airflow version."
+        },
+        "severity_in_conda_context": {
+          "assessment": "lower",
+          "reasoning": "The CVSS 9.8 CRITICAL score assumes the Pinot Provider is installed and active. Since the Pinot Provider is not part of the airflow-with-google_auth conda package and must be separately installed, the practical severity in the conda context is lower than the headline score suggests, though still serious if the provider is present."
+        },
+        "notes": "The conda package airflow-with-google_auth does not bundle the Pinot Provider. Users need to separately install apache-airflow-providers-apache-pinot < 4.0.0 for this vulnerability to be exploitable."
+      },
+      "GHSA-c732-xvv8-g94c": {
+        "model": "claude-sonnet-4-6",
+        "run_id": "c85a2f",
+        "generated_at": "2026-06-03T09:03:10+00:00",
+        "prompt_version": "2026-06-02.openvex-status-history-v1",
+        "rationale": "The OSV range for apache-airflow covers versions < 2.5.1, and the affected conda versions listed (2.0.1 through 2.5.0) correctly reflect this range for the conda-forge builds. The current latest conda version is 2.10.5, which is well above the 2.5.1 fix point and is not affected. Historical conda-forge builds in the 2.0.1\u20132.5.0 range are genuinely affected by this command injection vulnerability in the core Airflow package (not just a provider). The second affected component is apache-airflow-providers-mysql < 4.0.0, which is a separate optional package. However, the core Airflow vulnerability is independent of MySQL provider installation, making this more broadly applicable than the Pinot/Pig provider issues. Users of historical conda-forge builds from 2.0.1 through 2.5.0 should be considered affected.",
+        "openvex_status": "affected",
+        "openvex_justification": null,
+        "openvex_impact_statement": null,
+        "openvex_action_statement": "Upgrade to airflow-with-google_auth >= 2.5.1 on conda-forge. The current latest conda-forge version (2.10.5) is not affected. Historical builds in the 2.0.1\u20132.5.0 range contain the vulnerable code in core Airflow; users of those versions should upgrade immediately.",
+        "affected_versions": {
+          "agrees_with_match": true,
+          "reasoning": "The OSV range introduced=0, fixed=2.5.1 for apache-airflow aligns with the listed affected conda versions 2.0.1 through 2.5.0. The latest conda version 2.10.5 is above the fix point and correctly not listed as affected."
+        },
+        "runtime_applicability": {
+          "applies": "yes",
+          "reasoning": "Unlike the Pinot and Pig provider vulnerabilities, the command injection in CVE-2023-22884 affects Apache Airflow core (not just an optional provider), so affected historical conda builds are directly vulnerable without any additional package installation required. The MySQL provider component is additional optional exposure, but the core Airflow vulnerability is present in the installed package."
+        },
+        "severity_in_conda_context": {
+          "assessment": "same",
+          "reasoning": "The CVSS 9.8 CRITICAL score is appropriate for this vulnerability in the conda context because the core Airflow package (not just an optional provider) is affected. Any user running an affected historical conda-forge version is exposed without needing additional packages."
+        },
+        "notes": "This advisory covers two affected packages: core apache-airflow (fixed in 2.5.1) and apache-airflow-providers-mysql (fixed in 4.0.0). The conda assessment focuses on the core airflow component. The MySQL provider is a separate conda package."
+      },
+      "GHSA-rmf2-pwfq-h75j": {
+        "model": "claude-sonnet-4-6",
+        "run_id": "c85a2f",
+        "generated_at": "2026-06-03T09:03:10+00:00",
+        "prompt_version": "2026-06-02.openvex-status-history-v1",
+        "rationale": "The OSV range covers apache-airflow < 2.3.0, and the affected conda versions listed (2.0.1 through 2.2.5) are accurate for the conda-forge airflow-with-google_auth package. The current latest conda version is 2.10.5, which is well above the fixed point of 2.3.0, so the latest build is not affected. Historical conda-forge builds in the 2.0.x\u20132.2.x range are genuinely affected. The vulnerability is in the Pig Provider integration: OS command injection is possible without DAG write access when the Pig Provider (< 4.0.0) is installed alongside Airflow < 2.3.0. Similar to the Pinot Provider CVE, the airflow-with-google_auth metapackage does not bundle the Pig Provider, so this is an optional dependency that must be separately installed for exploitation. Users of historical builds who also installed the Pig Provider would have been exposed.",
+        "openvex_status": "affected",
+        "openvex_justification": null,
+        "openvex_impact_statement": null,
+        "openvex_action_statement": "Upgrade to airflow-with-google_auth >= 2.3.0 on conda-forge. The current latest conda-forge version (2.10.5) is not affected. Historical builds in the 2.0.1\u20132.2.5 range are vulnerable if apache-airflow-providers-apache-pig < 4.0.0 is also installed; users of those versions should upgrade immediately.",
+        "affected_versions": {
+          "agrees_with_match": true,
+          "reasoning": "The OSV range introduced=0, fixed=2.3.0 aligns with the listed affected conda versions 2.0.1 through 2.2.5. These are the conda-forge versions in that range. The latest conda version 2.10.5 is above the fix point and is not listed as affected, which is correct."
+        },
+        "runtime_applicability": {
+          "applies": "partial",
+          "reasoning": "The vulnerability is in the Apache Airflow Pig Provider, which is a separate optional package not bundled with airflow-with-google_auth. Exploitation requires the Pig Provider to be separately installed alongside the affected Airflow version. The vulnerable code path is only active if users have installed apache-airflow-providers-apache-pig < 4.0.0."
+        },
+        "severity_in_conda_context": {
+          "assessment": "lower",
+          "reasoning": "The CVSS 9.8 CRITICAL score assumes the Pig Provider is installed and active. Since the Pig Provider is not part of the airflow-with-google_auth conda package and must be separately installed, the practical severity in the conda context is lower than the headline score suggests, though still serious if the provider is present."
+        },
+        "notes": "The conda package airflow-with-google_auth does not bundle the Pig Provider. Users need to separately install apache-airflow-providers-apache-pig < 4.0.0 for this vulnerability to be exploitable. This vulnerability is structurally analogous to GHSA-7wqf-h36w-47mc (Pinot Provider) with the same fix version (2.3.0)."
+      },
+      "PYSEC-2023-314": {
+        "model": "claude-sonnet-4-6",
+        "run_id": "c85a2f",
+        "generated_at": "2026-06-03T09:03:10+00:00",
+        "prompt_version": "2026-06-02.openvex-status-history-v1",
+        "rationale": "CVE-2023-25693 (PYSEC-2023-314) describes an Improper Input Validation vulnerability in the Apache Airflow Sqoop Provider (apache-airflow-providers-sqoop), fixed in Sqoop Provider version 3.1.1. The OSV record is associated with the core apache-airflow package rather than the provider package, which causes the affected range to span all apache-airflow versions from 0 to 3.1.1 \u2014 an overly broad attribution. The conda package under review is airflow-with-google_auth, which is a metapackage or variant of apache-airflow with Google Auth extras; it does not bundle the Sqoop Provider. The Sqoop Provider is a separately installable provider package (apache-airflow-providers-sqoop) and is not included in, or required by, the google_auth extras. Therefore this CVE does not apply to airflow-with-google_auth unless the user separately installs the Sqoop Provider. The affected_versions list includes the current conda-forge version (2.10.5), but since the vulnerability is in a separate provider package not shipped with this conda artifact, the match is not applicable.",
+        "openvex_status": "not_affected",
+        "openvex_justification": "vulnerable_code_not_present",
+        "openvex_impact_statement": "The vulnerability is in the Apache Airflow Sqoop Provider (apache-airflow-providers-sqoop), which is a separately installable provider package not included in or required by the airflow-with-google_auth conda-forge package. The Sqoop Provider is not bundled with google_auth extras and is not present in this artifact.",
+        "openvex_action_statement": null,
+        "affected_versions": {
+          "agrees_with_match": false,
+          "reasoning": "The OSV range covers apache-airflow from version 0 through 3.1.1 because the advisory was filed against the core package rather than the Sqoop Provider package. The vulnerability is not in core airflow code but in the separate apache-airflow-providers-sqoop package. None of the listed conda versions of airflow-with-google_auth ship the Sqoop Provider, so all entries in the affected_versions list should be removed for this artifact.",
+          "suggested_removes": [
+            "2.0.1",
+            "2.0.2",
+            "2.1.0",
+            "2.1.1",
+            "2.1.2",
+            "2.1.3",
+            "2.1.4",
+            "2.2.0",
+            "2.2.1",
+            "2.2.2",
+            "2.2.3",
+            "2.2.4",
+            "2.2.5",
+            "2.3.0",
+            "2.3.1",
+            "2.3.2",
+            "2.3.3",
+            "2.3.4",
+            "2.4.0",
+            "2.4.1",
+            "2.4.2",
+            "2.4.3",
+            "2.5.0",
+            "2.5.1",
+            "2.5.2",
+            "2.5.3",
+            "2.6.0",
+            "2.6.1",
+            "2.6.2",
+            "2.6.3",
+            "2.7.0",
+            "2.7.1",
+            "2.7.2",
+            "2.7.3",
+            "2.8.0",
+            "2.8.1",
+            "2.8.2",
+            "2.8.3",
+            "2.8.4",
+            "2.9.0",
+            "2.9.1",
+            "2.9.2",
+            "2.9.3",
+            "2.10.0",
+            "2.10.1",
+            "2.10.2",
+            "2.10.4",
+            "2.10.5"
+          ]
+        },
+        "runtime_applicability": {
+          "applies": "no",
+          "reasoning": "The vulnerable code path is in the Sqoop Provider (apache-airflow-providers-sqoop), which is not installed or bundled as part of airflow-with-google_auth. The google_auth extras do not depend on the Sqoop Provider. Users would need to separately install apache-airflow-providers-sqoop to be exposed to this vulnerability."
+        },
+        "severity_in_conda_context": {
+          "assessment": "lower",
+          "reasoning": "While the CVSS score of 9.8 (Critical) reflects a severe input validation flaw in the Sqoop Provider, the vulnerability does not apply to this conda artifact since the Sqoop Provider is not included. The effective severity for airflow-with-google_auth users is none unless they have separately installed the provider."
+        },
+        "notes": "The OSV record incorrectly attributes this Sqoop Provider vulnerability to the core apache-airflow package with an overly broad version range. The correct affected package is apache-airflow-providers-sqoop versions before 3.1.1. A separate assessment should be made against apache-airflow-providers-sqoop if that package is tracked in conda-forge."
+      }
+    }
+  },
+  "draft_count": 9,
+  "package_count": 2
+}

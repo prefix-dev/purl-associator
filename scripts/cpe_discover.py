@@ -727,7 +727,11 @@ def _process_candidate(
 
 @app.command()
 def main(
-    top: int = typer.Option(100, help="How many top-downloaded packages to consider"),
+    top: int = typer.Option(
+        0,
+        help="How many top-downloaded packages to consider. 0 (the default) "
+        "or any value <= 0 means no cap — consider every package.",
+    ),
     only: str | None = typer.Option(
         None,
         help="Comma-separated conda names to process. When set, only these "
@@ -768,7 +772,10 @@ def main(
             if name not in only_set:
                 continue
         else:
-            if considered >= top:
+            # ``top <= 0`` is the sentinel for "no cap" — consider every
+            # ranked package. A positive ``top`` keeps the historical
+            # top-N behaviour.
+            if top > 0 and considered >= top:
                 break
         considered += 1
         if name in already_have_cpes:
@@ -777,7 +784,12 @@ def main(
             continue
         candidates.append((name, entry.download_count, entry))
 
-    scope_desc = f"--only set ({len(only_set)} names)" if only_set else f"top {top}"
+    if only_set:
+        scope_desc = f"--only set ({len(only_set)} names)"
+    elif top > 0:
+        scope_desc = f"top {top}"
+    else:
+        scope_desc = "all packages (no cap)"
     console.log(
         f"{scope_desc}: {len(candidates)} CPE candidates after filtering "
         f"({considered - len(candidates)} skipped — OSV-mapped, "

@@ -1,3 +1,5 @@
+import { fetchJsonWithProgress } from "./progressFetch";
+
 /* Types + loader for the CVE dashboard payload.
  *
  * The payload (web/public/cves.json) is produced by scripts/merge_cves.py.
@@ -120,6 +122,46 @@ export type CvePayload = {
   packages: Record<string, CvePackage>;
 };
 
+export type CveAdvisoryIndex = {
+  id: string;
+  aliases?: string[];
+  cve_ids?: string[];
+  primary_id: string;
+  summary?: string;
+  modified?: string;
+  severity?: OsvSeverity;
+  active_now: boolean;
+  affects_future: boolean;
+  vex_status?: VexStatus;
+  affected_version_count: number;
+};
+
+export type CvePackageIndex = {
+  schema_version: number;
+  package: string;
+  purls: string[];
+  cpes?: string[];
+  generated_at: string;
+  conda_versions_total: number;
+  latest_version?: string | null;
+  download_count?: number | null;
+  detail_path: string;
+  advisory_count: number;
+  affected_version_count: number;
+  unique_affected_version_count: number;
+  advisories: CveAdvisoryIndex[];
+};
+
+export type CveIndexPayload = {
+  schema_version: number;
+  generated_at: string;
+  contribution_count: number;
+  package_count: number;
+  advisory_count: number;
+  affected_version_count: number;
+  packages: Record<string, CvePackageIndex>;
+};
+
 /* ---- accessors over the OSV-record layout (mirror scripts/cve_common.py) ---- */
 
 export function condaBlock(adv: Advisory): CondaForgeBlock | undefined {
@@ -146,6 +188,23 @@ export function primaryId(adv: Advisory): string {
 
 export function osvUrl(adv: Advisory): string {
   return `https://osv.dev/vulnerability/${adv.id}`;
+}
+
+/** Key that collapses interchangeable conda packages into one row.
+ *
+ * Many feedstocks ship a base package plus a swarm of `*-with-extras`
+ * variants (e.g. 100+ `airflow-with-*`) that all carry the *same* upstream
+ * PURL set and therefore the same advisories — so the dashboard would
+ * otherwise render the same CVEs dozens of times. We also fold in
+ * ``latest_version``: members of a group must share the shipped conda-forge
+ * version too, since `isActiveOnLatest`/`isFutureAffected` are computed
+ * against it — grouping packages on different versions would hide one
+ * branch's active CVEs behind the representative's. Same PURLs + same latest
+ * version ⇒ identical advisory set *and* identical now/future split, so one
+ * member faithfully represents the rest. */
+export function purlGroupKey(pkg: Pick<CvePackage | CvePackageIndex, "purls" | "latest_version">): string {
+  const purls = [...pkg.purls].sort().join(" ");
+  return `${purls} @@ ${pkg.latest_version ?? ""}`;
 }
 
 const SEVERITY_RANK: Record<string, number> = {
@@ -203,13 +262,212 @@ export function osvRanges(adv: Advisory): OsvRange[] {
 }
 
 const DEFAULT_PATH = "./cves.json";
+const DEFAULT_INDEX_PATH = "./cves-index.json";
+
+const jsonCache = new Map<string, Promise<unknown>>();
+
+async function loadJsonCached<T>(path: string): Promise<T> {
+  const cached = jsonCache.get(path);
+  if (cached) return cached as Promise<T>;
+  const promise = fetchJsonWithProgress<T>(path, { cache: "no-cache" });
+  jsonCache.set(path, promise);
+  promise.catch(() => jsonCache.delete(path));
+  return promise;
+}
 
 export async function loadCves(path = DEFAULT_PATH): Promise<CvePayload> {
-  const res = await fetch(path, { cache: "no-cache" });
-  if (!res.ok) {
-    throw new Error(`Failed to load ${path}: ${res.status} ${res.statusText}`);
+  return loadJsonCached<CvePayload>(path);
+}
+
+export async function loadCveIndex(
+  path = DEFAULT_INDEX_PATH,
+): Promise<CveIndexPayload> {
+  return loadJsonCached<CveIndexPayload>(path);
+}
+
+export async function loadCvePackageDetail(
+  pkgOrPath: CvePackageIndex | string,
+): Promise<CvePackage> {
+  const path = typeof pkgOrPath === "string" ? pkgOrPath : `./${pkgOrPath.detail_path}`;
+  return loadJsonCached<CvePackage>(path);
+}
+
+/* ---- AI CVE review sidecars (cve_ai_drafts.json + cve_ai_queue.json) ---- */
+
+/** One per-advisory AI assessment as surfaced by scripts.merge_ai_drafts. */
+export type AiDraft = {
+  model: string;
+  run_id: string;
+  generated_at: string;
+  prompt_version?: string | null;
+  /** Narrative prose (3-6 sentences) — the AI's "why this CVE applies (or
+   *  doesn't)" headline. Surfaced at the top of the draft panel. */
+  rationale: string;
+  openvex_status: VexStatus;
+  openvex_justification: VexJustification | null;
+  openvex_impact_statement: string | null;
+  openvex_action_statement: string | null;
+  affected_versions: {
+    agrees_with_match: boolean;
+    suggested_adds?: string[];
+    suggested_removes?: string[];
+    reasoning: string;
+  };
+  runtime_applicability: {
+    applies: "yes" | "no" | "partial" | "unknown";
+    reasoning: string;
+  };
+  severity_in_conda_context: {
+    assessment: "lower" | "same" | "higher" | "unknown";
+    reasoning: string;
+  };
+  notes?: string;
+};
+
+export type AiDraftsPayload = {
+  schema_version: number;
+  generated_at: string;
+  drafts: Record<string, Record<string, AiDraft>>; // package → advisory_id → AiDraft
+  draft_count: number;
+  package_count: number;
+};
+
+export type AiQueueEntry = {
+  enqueued_at: string;
+  enqueued_by: string;
+};
+
+export type AiQueuePayload = {
+  schema_version: number;
+  generated_at: string;
+  queue: Record<string, Record<string, AiQueueEntry>>;
+  queue_count: number;
+  package_count: number;
+};
+
+const DEFAULT_AI_DRAFTS_PATH = "./cve_ai_drafts.json";
+const DEFAULT_AI_QUEUE_PATH = "./cve_ai_queue.json";
+
+const EMPTY_DRAFTS: AiDraftsPayload = {
+  schema_version: 1,
+  generated_at: "",
+  drafts: {},
+  draft_count: 0,
+  package_count: 0,
+};
+
+const EMPTY_QUEUE: AiQueuePayload = {
+  schema_version: 1,
+  generated_at: "",
+  queue: {},
+  queue_count: 0,
+  package_count: 0,
+};
+
+/** Load the AI drafts sidecar. Missing file is non-fatal — returns empty,
+ *  with a console warning so production debugging is possible. */
+export async function loadAiDrafts(
+  path = DEFAULT_AI_DRAFTS_PATH,
+): Promise<AiDraftsPayload> {
+  try {
+    const res = await fetch(path, { cache: "no-cache" });
+    if (!res.ok) {
+      // 404 is the "file not deployed yet" case — common before the first
+      // cve_ai_review run lands, not worth shouting about. Anything else is.
+      if (res.status !== 404) {
+        console.warn(
+          `loadAiDrafts(${path}): HTTP ${res.status} ${res.statusText} — AI draft chips disabled`,
+        );
+      }
+      return EMPTY_DRAFTS;
+    }
+    return (await res.json()) as AiDraftsPayload;
+  } catch (err) {
+    console.warn(
+      `loadAiDrafts(${path}): ${err instanceof Error ? err.message : String(err)} — AI draft chips disabled`,
+    );
+    return EMPTY_DRAFTS;
   }
-  return res.json();
+}
+
+/** Load the AI queue sidecar. Missing file is non-fatal — returns empty,
+ *  with a console warning so production debugging is possible. */
+export async function loadAiQueue(
+  path = DEFAULT_AI_QUEUE_PATH,
+): Promise<AiQueuePayload> {
+  try {
+    const res = await fetch(path, { cache: "no-cache" });
+    if (!res.ok) {
+      if (res.status !== 404) {
+        console.warn(
+          `loadAiQueue(${path}): HTTP ${res.status} ${res.statusText} — AI queue chips disabled`,
+        );
+      }
+      return EMPTY_QUEUE;
+    }
+    return (await res.json()) as AiQueuePayload;
+  } catch (err) {
+    console.warn(
+      `loadAiQueue(${path}): ${err instanceof Error ? err.message : String(err)} — AI queue chips disabled`,
+    );
+    return EMPTY_QUEUE;
+  }
+}
+
+export function getAiDraftFor(
+  payload: AiDraftsPayload | null,
+  pkg: string,
+  advisoryId: string,
+): AiDraft | undefined {
+  return payload?.drafts[pkg]?.[advisoryId];
+}
+
+export function isAdvisoryQueued(
+  payload: AiQueuePayload | null,
+  pkg: string,
+  advisoryId: string,
+): AiQueueEntry | undefined {
+  return payload?.queue[pkg]?.[advisoryId];
+}
+
+function coerceJustification(
+  value: string | null | undefined,
+  fallback: VexJustification,
+): VexJustification {
+  // VEX_JUSTIFICATIONS is declared further down; check membership at call
+  // time to avoid the TS "used before declaration" hoisting issue.
+  if (
+    value &&
+    VEX_JUSTIFICATIONS.some((j) => j.id === (value as VexJustification))
+  ) {
+    return value as VexJustification;
+  }
+  return fallback;
+}
+
+/** Translate an AI draft's suggested status + reasoning into a ReviewEdit so
+ *  the existing OpenVEX form can pre-fill from the AI's recommendation.
+ *
+ *  Note on validation: the AI's `openvex_justification` is constrained to the
+ *  five enum values by `scripts/cve_ai_review.py`'s response schema, but we
+ *  defensively coerce here in case the model slips through with a free-text
+ *  reason — otherwise the OpenVEX form would display a value that isn't in
+ *  the dropdown and the user couldn't toggle off. */
+export function editFromAiDraft(draft: AiDraft): ReviewEdit {
+  const base = blankReviewEdit();
+  return {
+    status: draft.openvex_status,
+    justification: coerceJustification(
+      draft.openvex_justification,
+      base.justification,
+    ),
+    action_statement: draft.openvex_action_statement ?? "",
+    notes: draft.notes ?? draft.openvex_impact_statement ?? "",
+    version_overrides: {
+      affected: draft.affected_versions.suggested_adds ?? [],
+      not_affected: draft.affected_versions.suggested_removes ?? [],
+    },
+  };
 }
 
 /* ---- staged review edits (dashboard-side, pre-submit) ---- */

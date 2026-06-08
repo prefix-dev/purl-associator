@@ -1,44 +1,46 @@
 import { useMemo, useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { advisoryVex, affectedVersions, cveIds } from "../data/cves";
-import type { CvePackage, ReviewEdit } from "../data/cves";
+import type { CvePackageIndex, ReviewEdit } from "../data/cves";
 import { Glyph, Theme } from "./Primitives";
 
 type Props = {
   theme: Theme;
-  packages: CvePackage[];
+  packages: CvePackageIndex[];
+  /** Representative package name → every conda package collapsed into it
+   *  (including the representative). Used for the "×N" badge and to let the
+   *  search match collapsed variant names. */
+  membersByRep: Map<string, string[]>;
   edits: Record<string, ReviewEdit>;
   focusedId: string | null;
   setFocusedId: (id: string) => void;
   q: string;
   setQ: (v: string) => void;
-  statusFilter: "all" | "unreviewed" | "reviewed";
-  setStatusFilter: (s: "all" | "unreviewed" | "reviewed") => void;
+  statusFilter: "all" | "unreviewed" | "reviewed" | "cpe";
+  setStatusFilter: (s: "all" | "unreviewed" | "reviewed" | "cpe") => void;
 };
 
-function packageStats(p: CvePackage, edits: Record<string, ReviewEdit>) {
+function packageStats(p: CvePackageIndex, edits: Record<string, ReviewEdit>) {
   let unreviewed = 0;
   let editsHere = 0;
-  const unique = new Set<string>();
   for (const adv of p.advisories) {
     const edit = edits[`${p.package}::${adv.id}`];
-    const status = edit?.status ?? advisoryVex(adv)?.status;
+    const status = edit?.status ?? adv.vex_status;
     if (edit) editsHere++;
     // No status, or an explicit "under investigation", counts as unreviewed.
     if (!status || status === "under_investigation") unreviewed++;
-    for (const v of affectedVersions(adv)) unique.add(v);
   }
   return {
     total: p.advisories.length,
     unreviewed,
     editsHere,
-    uniqueVersions: unique.size,
+    uniqueVersions: p.unique_affected_version_count,
   };
 }
 
 export function CvePackageList({
   theme,
   packages,
+  membersByRep,
   edits,
   focusedId,
   setFocusedId,
@@ -53,10 +55,14 @@ export function CvePackageList({
     const ql = q.trim().toLowerCase();
     return packages.filter((p) => {
       if (ql) {
-        const inName = p.package.toLowerCase().includes(ql);
+        const inName =
+          p.package.toLowerCase().includes(ql) ||
+          (membersByRep.get(p.package) ?? []).some((m) =>
+            m.toLowerCase().includes(ql),
+          );
         const inCve = p.advisories.some(
           (a) =>
-            cveIds(a).some((id) => id.toLowerCase().includes(ql)) ||
+            (a.cve_ids ?? []).some((id) => id.toLowerCase().includes(ql)) ||
             a.id.toLowerCase().includes(ql) ||
             (a.aliases ?? []).some((al) => al.toLowerCase().includes(ql)),
         );
@@ -66,6 +72,7 @@ export function CvePackageList({
         if (!inName && !inCve && !inSummary) return false;
       }
       if (statusFilter === "all") return true;
+      if (statusFilter === "cpe") return (p.cpes?.length ?? 0) > 0;
       const s = packageStats(p, edits);
       if (statusFilter === "unreviewed") return s.unreviewed > 0;
       if (statusFilter === "reviewed") return s.unreviewed === 0;
@@ -77,13 +84,21 @@ export function CvePackageList({
     let withUnreviewed = 0;
     let fullyReviewed = 0;
     let totalAdv = 0;
+    let withCpe = 0;
     for (const p of packages) {
       const s = packageStats(p, edits);
       totalAdv += s.total;
       if (s.unreviewed > 0) withUnreviewed++;
       else fullyReviewed++;
+      if ((p.cpes?.length ?? 0) > 0) withCpe++;
     }
-    return { all: packages.length, withUnreviewed, fullyReviewed, totalAdv };
+    return {
+      all: packages.length,
+      withUnreviewed,
+      fullyReviewed,
+      totalAdv,
+      withCpe,
+    };
   }, [packages, edits]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -217,6 +232,16 @@ export function CvePackageList({
               {counts.fullyReviewed}
             </Count>
           </FilterChip>
+          <FilterChip
+            theme={theme}
+            active={statusFilter === "cpe"}
+            onClick={() => setStatusFilter("cpe")}
+          >
+            Has CPE{" "}
+            <Count active={statusFilter === "cpe"} theme={theme}>
+              {counts.withCpe}
+            </Count>
+          </FilterChip>
         </div>
       </div>
 
@@ -244,6 +269,7 @@ export function CvePackageList({
               const p = filtered[vi.index];
               const focused = focusedId === p.package;
               const s = packageStats(p, edits);
+              const variants = membersByRep.get(p.package) ?? [];
               return (
                 <div
                   key={p.package}
@@ -289,6 +315,23 @@ export function CvePackageList({
                     >
                       {p.package}
                     </code>
+                    {variants.length > 1 && (
+                      <span
+                        style={{
+                          fontSize: 10,
+                          fontWeight: 600,
+                          padding: "1px 6px",
+                          borderRadius: 3,
+                          background: t.inset,
+                          color: t.fg2,
+                          border: `1px solid ${t.border}`,
+                          whiteSpace: "nowrap",
+                        }}
+                        title={`Same PURL & version as ${variants.length} conda packages — a review here applies to all of them:\n${variants.join("\n")}`}
+                      >
+                        ×{variants.length}
+                      </span>
+                    )}
                     {s.editsHere > 0 && (
                       <span
                         style={{
@@ -301,6 +344,44 @@ export function CvePackageList({
                         }}
                       >
                         +{s.editsHere}
+                      </span>
+                    )}
+                    {(p.cpes?.length ?? 0) > 0 && (
+                      <span
+                        style={{
+                          fontSize: 10,
+                          fontWeight: 600,
+                          fontFamily: "JetBrains Mono, monospace",
+                          padding: "1px 6px",
+                          borderRadius: 3,
+                          background: t.inset,
+                          color: t.fg2,
+                          border: `1px solid ${t.border}`,
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          maxWidth: 160,
+                        }}
+                        title={p.cpes![0]}
+                      >
+                        {p.cpes![0].replace(/^cpe:2\.3:[aho]:/, "")}
+                      </span>
+                    )}
+                    {(p.cpes?.length ?? 0) > 1 && (
+                      <span
+                        style={{
+                          fontSize: 10,
+                          fontWeight: 600,
+                          padding: "1px 6px",
+                          borderRadius: 3,
+                          background: t.inset,
+                          color: t.fg3,
+                          border: `1px solid ${t.border}`,
+                          whiteSpace: "nowrap",
+                        }}
+                        title={p.cpes!.slice(1).join("\n")}
+                      >
+                        +{p.cpes!.length - 1}
                       </span>
                     )}
                     <span

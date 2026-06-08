@@ -1,44 +1,55 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import {
-  advisoryVex,
-  bestSeverity,
-  cveIds,
-  isActiveOnLatest,
-  isFutureAffected,
-  primaryId,
+import type {
+  CveAdvisoryIndex,
+  CvePackageIndex,
+  ReviewEdit,
 } from "../data/cves";
-import type { Advisory, CvePackage, ReviewEdit } from "../data/cves";
-import { Glyph, Theme } from "./Primitives";
+import { Btn, Glyph, Theme } from "./Primitives";
 
 type Props = {
   theme: Theme;
-  packages: CvePackage[];
+  packages: CvePackageIndex[];
+  /** Representative package name → every conda package collapsed into it
+   *  (including the representative). Lets the header show "shared by N
+   *  packages" and the search match hidden variant names. */
+  membersByRep: Map<string, string[]>;
   edits: Record<string, ReviewEdit>;
   focusedPkg: string | null;
   focusedAdvisoryId: string | null;
   onNextTriagePackage: (() => void) | null;
   triageRemaining: number;
+  enqueuedAdvisories?: Set<string>;
+  onBulkEnqueue?: (items: { package: string; advisory_id: string }[]) => void;
   onSelect: (pkgName: string, advisoryId: string) => void;
 };
 
 type Kind = "now" | "future";
 
 type Row = {
-  pkg: CvePackage;
-  adv: Advisory;
+  pkg: CvePackageIndex;
+  adv: CveAdvisoryIndex;
   kind: Kind;
   score: number; // CVSS base score (0 when unknown)
   reviewed: boolean; // has a real VEX status other than under_investigation
 };
 
 type Group = {
-  pkg: CvePackage;
+  pkg: CvePackageIndex;
   rows: Row[]; // filtered rows visible in the list
   worst: number;
   unreviewed: number;
   hasNow: boolean;
 };
+
+function downloadCount(pkg: CvePackageIndex): number {
+  return pkg.download_count ?? -1;
+}
+
+function formatDownloads(count: number | null | undefined): string {
+  if (count == null) return "downloads unknown";
+  return `${count.toLocaleString()} downloads`;
+}
 
 type Item =
   | { type: "header"; group: Group }
@@ -63,11 +74,14 @@ type KindFilter = "all" | "now" | "future";
 export function CveActiveList({
   theme,
   packages,
+  membersByRep,
   edits,
   focusedPkg,
   focusedAdvisoryId,
   onNextTriagePackage,
   triageRemaining,
+  enqueuedAdvisories,
+  onBulkEnqueue,
   onSelect,
 }: Props) {
   const t = theme.t;
@@ -82,19 +96,19 @@ export function CveActiveList({
     for (const pkg of packages) {
       for (const adv of pkg.advisories) {
         let kind: Kind | null = null;
-        if (isActiveOnLatest(pkg, adv)) kind = "now";
-        else if (isFutureAffected(pkg, adv)) kind = "future";
+        if (adv.active_now) kind = "now";
+        else if (adv.affects_future) kind = "future";
         if (!kind) continue;
         const key = `${pkg.package}::${adv.id}`;
         const editStatus = edits[key]?.status;
-        const persisted = advisoryVex(adv)?.status;
+        const persisted = adv.vex_status;
         const effective = editStatus ?? persisted;
         const reviewed = !!effective && effective !== "under_investigation";
         out.push({
           pkg,
           adv,
           kind,
-          score: bestSeverity(adv)?.score_num ?? 0,
+          score: adv.severity?.score_num ?? 0,
           reviewed,
         });
       }
@@ -125,9 +139,14 @@ export function CveActiveList({
     if (kindFilter !== "all" && r.kind !== kindFilter) return false;
     if (onlyUnreviewed && r.reviewed) return false;
     if (ql) {
-      const inName = r.pkg.package.toLowerCase().includes(ql);
+      const inName =
+        r.pkg.package.toLowerCase().includes(ql) ||
+        (membersByRep.get(r.pkg.package) ?? []).some((m) =>
+          m.toLowerCase().includes(ql),
+        );
       const inCve =
-        cveIds(r.adv).some((id) => id.toLowerCase().includes(ql)) ||
+        (r.adv.cve_ids ?? []).some((id) => id.toLowerCase().includes(ql)) ||
+        (r.adv.aliases ?? []).some((id) => id.toLowerCase().includes(ql)) ||
         r.adv.id.toLowerCase().includes(ql);
       const inSummary = (r.adv.summary || "").toLowerCase().includes(ql);
       if (!inName && !inCve && !inSummary) return false;
@@ -164,12 +183,16 @@ export function CveActiveList({
         if (a.score !== b.score) return b.score - a.score;
         if (a.kind !== b.kind) return a.kind === "now" ? -1 : 1;
         if (a.reviewed !== b.reviewed) return a.reviewed ? 1 : -1;
-        return primaryId(a.adv).localeCompare(primaryId(b.adv));
+        return a.adv.primary_id.localeCompare(b.adv.primary_id);
       });
     }
-    // Sort packages: worst severity desc, "shipping now" first within tie,
-    // then by name.
+    // Sort packages by popularity first so the default triage path handles
+    // high-impact conda-forge packages before obscure ones. Severity and
+    // "shipping now" remain tie-breakers, and rows inside a package are still
+    // severity-sorted above.
     out.sort((a, b) => {
+      const downloads = downloadCount(b.pkg) - downloadCount(a.pkg);
+      if (downloads !== 0) return downloads;
       if (a.worst !== b.worst) return b.worst - a.worst;
       if (a.hasNow !== b.hasNow) return a.hasNow ? -1 : 1;
       return a.pkg.package.localeCompare(b.pkg.package);
@@ -193,6 +216,15 @@ export function CveActiveList({
     () => groups.reduce((sum, g) => sum + g.rows.length, 0),
     [groups],
   );
+
+  const bulkAiCandidates = useMemo(() => {
+    const queued = enqueuedAdvisories ?? new Set<string>();
+    return groups.flatMap((g) =>
+      g.rows
+        .filter((r) => !r.reviewed && !queued.has(`${r.pkg.package}::${r.adv.id}`))
+        .map((r) => ({ package: r.pkg.package, advisory_id: r.adv.id })),
+    );
+  }, [groups, enqueuedAdvisories]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const virtualizer = useVirtualizer({
@@ -277,6 +309,17 @@ export function CveActiveList({
               / {counts.total.toLocaleString()}
             </span>
           </div>
+          {onBulkEnqueue && bulkAiCandidates.length > 0 && (
+            <span style={{ marginLeft: "auto" }}>
+              <Btn
+                theme={theme}
+                variant="secondary"
+                onClick={() => onBulkEnqueue(bulkAiCandidates)}
+              >
+                🤖 Add visible to AI ({bulkAiCandidates.length})
+              </Btn>
+            </span>
+          )}
           <button
             onClick={() => onNextTriagePackage?.()}
             disabled={!onNextTriagePackage}
@@ -292,9 +335,7 @@ export function CveActiveList({
               gap: 6,
               background: onNextTriagePackage ? t.accent : t.surface2,
               color: onNextTriagePackage ? t.accentFg : t.fg3,
-              border: `1px solid ${
-                onNextTriagePackage ? t.accent : t.border
-              }`,
+              border: `1px solid ${onNextTriagePackage ? t.accent : t.border}`,
               borderRadius: 6,
               padding: "4px 10px",
               fontSize: 11.5,
@@ -309,8 +350,9 @@ export function CveActiveList({
         </div>
         <div style={{ fontSize: 11, color: t.fg3, lineHeight: 1.45 }}>
           Advisories hitting conda-forge's latest build (
-          <strong style={{ color: t.fg2 }}>now</strong>) or a version we
-          haven't shipped yet (<strong style={{ color: t.fg2 }}>future</strong>).
+          <strong style={{ color: t.fg2 }}>now</strong>) or a version we haven't
+          shipped yet (<strong style={{ color: t.fg2 }}>future</strong>), sorted by
+          package download count.
         </div>
 
         <div style={{ position: "relative" }}>
@@ -363,11 +405,25 @@ export function CveActiveList({
         </div>
 
         <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
-          <Chip theme={theme} active={sev === "all"} onClick={() => setSev("all")}>
-            All <CountTag active={sev === "all"} theme={theme}>{counts.total}</CountTag>
+          <Chip
+            theme={theme}
+            active={sev === "all"}
+            onClick={() => setSev("all")}
+          >
+            All{" "}
+            <CountTag active={sev === "all"} theme={theme}>
+              {counts.total}
+            </CountTag>
           </Chip>
-          <Chip theme={theme} active={sev === "high+"} onClick={() => setSev("high+")}>
-            High+ <CountTag active={sev === "high+"} theme={theme}>{counts.high}</CountTag>
+          <Chip
+            theme={theme}
+            active={sev === "high+"}
+            onClick={() => setSev("high+")}
+          >
+            High+{" "}
+            <CountTag active={sev === "high+"} theme={theme}>
+              {counts.high}
+            </CountTag>
           </Chip>
           <Chip
             theme={theme}
@@ -375,15 +431,15 @@ export function CveActiveList({
             onClick={() => setSev("critical")}
           >
             Critical{" "}
-            <CountTag active={sev === "critical"} theme={theme}>{counts.critical}</CountTag>
+            <CountTag active={sev === "critical"} theme={theme}>
+              {counts.critical}
+            </CountTag>
           </Chip>
           <span style={{ width: 1, background: t.border, margin: "0 3px" }} />
           <Chip
             theme={theme}
             active={kindFilter === "now"}
-            onClick={() =>
-              setKindFilter(kindFilter === "now" ? "all" : "now")
-            }
+            onClick={() => setKindFilter(kindFilter === "now" ? "all" : "now")}
           >
             Shipping now{" "}
             <CountTag active={kindFilter === "now"} theme={theme}>
@@ -409,7 +465,9 @@ export function CveActiveList({
             onClick={() => setOnlyUnreviewed(!onlyUnreviewed)}
           >
             Unreviewed only{" "}
-            <CountTag active={onlyUnreviewed} theme={theme}>{counts.unreviewed}</CountTag>
+            <CountTag active={onlyUnreviewed} theme={theme}>
+              {counts.unreviewed}
+            </CountTag>
           </Chip>
         </div>
       </div>
@@ -443,6 +501,7 @@ export function CveActiveList({
                     key={`hdr::${it.group.pkg.package}`}
                     theme={theme}
                     group={it.group}
+                    variants={membersByRep.get(it.group.pkg.package) ?? []}
                     focused={focused}
                     style={{
                       position: "absolute",
@@ -460,8 +519,7 @@ export function CveActiveList({
               }
               const r = it.row;
               const inFocusedGroup = focusedPkg === r.pkg.package;
-              const focused =
-                inFocusedGroup && focusedAdvisoryId === r.adv.id;
+              const focused = inFocusedGroup && focusedAdvisoryId === r.adv.id;
               const band = SEVERITY_BAND(r.score);
               return (
                 <div
@@ -551,7 +609,7 @@ export function CveActiveList({
                         whiteSpace: "nowrap",
                       }}
                     >
-                      {primaryId(r.adv)}
+                      {r.adv.primary_id}
                     </code>
                     <span style={{ flex: 1 }} />
                     {!r.reviewed && (
@@ -597,18 +655,21 @@ export function CveActiveList({
 function GroupHeader({
   theme,
   group,
+  variants,
   focused,
   onClick,
   style,
 }: {
   theme: Theme;
   group: Group;
+  variants: string[];
   focused: boolean;
   onClick: () => void;
   style: React.CSSProperties;
 }) {
   const t = theme.t;
   const band = SEVERITY_BAND(group.worst);
+  const variantCount = variants.length;
   return (
     <div
       onClick={onClick}
@@ -622,9 +683,7 @@ function GroupHeader({
         borderTop: `1px solid ${t.border}`,
         borderBottom: `1px solid ${t.border}`,
         cursor: "pointer",
-        borderLeft: focused
-          ? `3px solid ${t.accent}`
-          : "3px solid transparent",
+        borderLeft: focused ? `3px solid ${t.accent}` : "3px solid transparent",
       }}
     >
       <code
@@ -651,6 +710,34 @@ function GroupHeader({
       >
         {group.pkg.latest_version}
       </span>
+      <span
+        style={{
+          fontSize: 10.5,
+          color: t.fg3,
+          fontVariantNumeric: "tabular-nums",
+          whiteSpace: "nowrap",
+        }}
+        title="prefix.dev package download count"
+      >
+        {formatDownloads(group.pkg.download_count)}
+      </span>
+      {variantCount > 1 && (
+        <span
+          style={{
+            fontSize: 10,
+            fontWeight: 600,
+            padding: "1px 6px",
+            borderRadius: 3,
+            background: t.inset,
+            color: t.fg2,
+            border: `1px solid ${t.border}`,
+            whiteSpace: "nowrap",
+          }}
+          title={`Same PURL & version as ${variantCount} conda packages — a review here applies to all of them:\n${variants.join("\n")}`}
+        >
+          ×{variantCount}
+        </span>
+      )}
       <span style={{ flex: 1 }} />
       {group.hasNow && (
         <span

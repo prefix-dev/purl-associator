@@ -82,13 +82,26 @@ jobs:
           if [ -n "${{ inputs.only }}" ]; then ARGS+=(--only "${{ inputs.only }}"); fi
           pixi run python -m scripts.nvd_prototype "${ARGS[@]}"
 
+      - name: Auto-enqueue high-severity OSV advisories for AI review
+        # Walks the freshly-written mappings/cves/*.json and enqueues
+        # (package, advisory) pairs whose CVSS base score crosses the
+        # threshold (default 9.0, CVSS Critical) and are not already queued,
+        # drafted at the same severity, or covered by a human OpenVEX
+        # statement. Capped at 100 items per run. The emitted queue file
+        # rides in the same refresh PR as the per-package CVE files; the AI
+        # workflow picks it up on its next scheduled run.
+        run: pixi run cve-ai-auto-enqueue
+
       - name: Merge CVEs + reviewer contributions for the SPA
+        # Emits both the legacy cves.json bundle and the split dashboard payload
+        # (cves-index.json + cve_packages/*) used for lazy package detail loads.
         run: pixi run python -m scripts.merge_cves
 
       - name: Validate against the OSV + OpenVEX schemas
         # Standards-compliance gate: every per-package file must be a valid
-        # OSV record, every contribution a valid OpenVEX document, and
-        # cves.json a valid bundle. A failure here blocks the refresh PR.
+        # OSV record, every contribution a valid OpenVEX document, and the
+        # generated CVE dashboard payloads must validate. A failure here blocks
+        # the refresh PR.
         run: pixi run validate
 
       - name: Generate PR body
@@ -105,7 +118,7 @@ jobs:
         with:
           add-paths: |
             mappings/cves/**
-            web/public/cves.json
+            mappings/cve_review_queue/**
           branch: cves/refresh
           base: main
           title: "cves: refresh advisories"
