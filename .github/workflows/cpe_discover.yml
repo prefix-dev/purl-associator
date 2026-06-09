@@ -18,7 +18,7 @@ on:
         type: boolean
   schedule:
     # Weekly, Mondays at 06:13 UTC. Off the hour to avoid the cron rush,
-    # staggered from automap (03:17 daily) and cve_refresh (04:37 daily).
+    # staggered from automap (03:17 daily).
     - cron: "13 6 * * 1"
 
 permissions:
@@ -50,7 +50,7 @@ jobs:
           ARGS=()
           if [ -n "${{ inputs.top }}" ]; then ARGS+=(--top "${{ inputs.top }}"); fi
           if [ -n "${{ inputs.only }}" ]; then ARGS+=(--only "${{ inputs.only }}"); fi
-          pixi run cpe-discover "${ARGS[@]}"
+          pixi run cpe:discover "${ARGS[@]}"
 
       - name: AI tiebreaker for ambiguous bucket
         id: vet
@@ -69,7 +69,7 @@ jobs:
           # bucket is empty; record whether a fresh file was actually
           # written so the promote step can avoid stale-file reuse.
           rm -f mappings/cpe_vet/_workflow.json
-          pixi run cpe-vet "${ARGS[@]}"
+          pixi run cpe:vet "${ARGS[@]}"
           if [ -f mappings/cpe_vet/_workflow.json ]; then
             echo "vet_file=mappings/cpe_vet/_workflow.json" >> "$GITHUB_OUTPUT"
           fi
@@ -90,13 +90,13 @@ jobs:
             # we don't fall back to a tracked stale one.
             ARGS+=(--no-vet)
           fi
-          pixi run cpe-promote "${ARGS[@]}"
+          pixi run cpe:promote "${ARGS[@]}"
 
       - name: Merge mappings for the SPA
         # Confirms the new contribution flows through merge_mappings cleanly.
         # The output (web/public/mappings.json) is gitignored — pages.yml
         # regenerates it on deploy.
-        run: pixi run -e lite merge
+        run: pixi run -e lite mappings:merge
 
       - name: Generate PR body
         # Reconstructs the promoted set (accepts + confident AI verdicts) the

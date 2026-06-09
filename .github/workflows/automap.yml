@@ -54,10 +54,10 @@ jobs:
           if [ -n "${{ inputs.limit }}" ]; then ARGS+=(--limit "${{ inputs.limit }}"); fi
           if [ -n "${{ inputs.only }}" ]; then ARGS+=(--only "${{ inputs.only }}"); fi
           if [ "${{ inputs.force }}" = "true" ]; then ARGS+=(--force); fi
-          pixi run python -m scripts.automap "${ARGS[@]}"
+          pixi run purl:automap "${ARGS[@]}"
 
       - name: Merge mappings for the SPA
-        run: pixi run python -m scripts.merge_mappings
+        run: pixi run mappings:merge
 
       - name: Generate PR body
         run: |

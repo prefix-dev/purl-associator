@@ -1,7 +1,5 @@
 import { create } from "zustand";
 import { persist, type PersistStorage, type StorageValue } from "zustand/middleware";
-import type { ReviewEdit } from "../data/cves";
-import type { EnqueueItem } from "../github/cve_enqueue_api";
 import type { Edit } from "../data/types";
 import { storageKey } from "../storage/namespace";
 
@@ -14,9 +12,6 @@ import { storageKey } from "../storage/namespace";
  */
 const STORAGE_KEYS = {
   stagedPurlEdits: storageKey("staged_edits"),
-  stagedCveEdits: storageKey("staged_cve_edits"),
-  stagedCveAiReviews: storageKey("staged_cve_ai_reviews"),
-  cveAiWorkListPrefs: storageKey("cve_ai_work_list_prefs"),
 } as const;
 
 function safeJsonStorage<T>(
@@ -63,10 +58,6 @@ function persistedEditStorage<T>(): PersistStorage<PersistedEdits<T>> {
   });
 }
 
-function persistedJsonStorage<T>(): PersistStorage<T> {
-  return safeJsonStorage<T>();
-}
-
 type PurlEditState = {
   edits: Record<string, Edit>;
   setEdits: (
@@ -91,111 +82,6 @@ export const usePurlEditStore = create<PurlEditState>()(
       name: STORAGE_KEYS.stagedPurlEdits,
       storage: persistedEditStorage<Edit>(),
       partialize: (state) => ({ edits: state.edits }),
-    },
-  ),
-);
-
-type CveEditState = {
-  edits: Record<string, ReviewEdit>;
-  setEdits: (
-    next:
-      | Record<string, ReviewEdit>
-      | ((previous: Record<string, ReviewEdit>) => Record<string, ReviewEdit>),
-  ) => void;
-  clearEdits: () => void;
-};
-
-export const useCveEditStore = create<CveEditState>()(
-  persist(
-    (set) => ({
-      edits: {},
-      setEdits: (next) =>
-        set((state) => ({
-          edits: typeof next === "function" ? next(state.edits) : next,
-        })),
-      clearEdits: () => set({ edits: {} }),
-    }),
-    {
-      name: STORAGE_KEYS.stagedCveEdits,
-      storage: persistedEditStorage<ReviewEdit>(),
-      partialize: (state) => ({ edits: state.edits }),
-    },
-  ),
-);
-
-type CveAiReviewQueueState = {
-  items: EnqueueItem[];
-  setItems: (
-    next: EnqueueItem[] | ((previous: EnqueueItem[]) => EnqueueItem[]),
-  ) => void;
-  clearItems: () => void;
-};
-
-export const useCveAiReviewQueueStore = create<CveAiReviewQueueState>()(
-  persist(
-    (set) => ({
-      items: [],
-      setItems: (next) =>
-        set((state) => ({
-          items: typeof next === "function" ? next(state.items) : next,
-        })),
-      clearItems: () => set({ items: [] }),
-    }),
-    {
-      name: STORAGE_KEYS.stagedCveAiReviews,
-      storage: persistedJsonStorage<CveAiReviewQueueState>(),
-      partialize: (state) => ({ items: state.items }) as CveAiReviewQueueState,
-    },
-  ),
-);
-
-type ModePrefs = {
-  search: Record<string, string>;
-  severity: Record<string, string>;
-  statusChange: Record<string, string>;
-};
-
-type ModePrefField = keyof ModePrefs;
-
-type CveAiWorkListPrefsState = ModePrefs & {
-  setModePref: (field: ModePrefField, mode: string, value: string) => void;
-  setSearch: (mode: string, value: string) => void;
-  setSeverity: (mode: string, value: string) => void;
-  setStatusChange: (mode: string, value: string) => void;
-};
-
-function modePrefPatch(
-  state: ModePrefs,
-  field: ModePrefField,
-  mode: string,
-  value: string,
-): Pick<ModePrefs, ModePrefField> {
-  return { [field]: { ...state[field], [mode]: value } } as Pick<ModePrefs, ModePrefField>;
-}
-
-export const useCveAiWorkListPrefsStore = create<CveAiWorkListPrefsState>()(
-  persist(
-    (set) => ({
-      search: {},
-      severity: {},
-      statusChange: {},
-      setModePref: (field, mode, value) =>
-        set((state) => modePrefPatch(state, field, mode, value)),
-      setSearch: (mode, value) =>
-        set((state) => modePrefPatch(state, "search", mode, value)),
-      setSeverity: (mode, value) =>
-        set((state) => modePrefPatch(state, "severity", mode, value)),
-      setStatusChange: (mode, value) =>
-        set((state) => modePrefPatch(state, "statusChange", mode, value)),
-    }),
-    {
-      name: STORAGE_KEYS.cveAiWorkListPrefs,
-      storage: persistedJsonStorage<CveAiWorkListPrefsState>(),
-      partialize: (state) => ({
-        search: state.search,
-        severity: state.severity,
-        statusChange: state.statusChange,
-      }) as CveAiWorkListPrefsState,
     },
   ),
 );

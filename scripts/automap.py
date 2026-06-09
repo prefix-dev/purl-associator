@@ -41,7 +41,6 @@ from rich.progress import (
 from scripts.parselmouth_lookup import fetch_mapping_by_hash
 from scripts.purl_inference import (
     PurlGuess,
-    derive_deep_inspection,
     derive_recipe_context,
     infer_all,
     recipe_context_hints,
@@ -110,7 +109,6 @@ class AutoEntry:
     # by ``scripts.hydrate_downloads``. ``None`` means "not yet hydrated" or
     # "package not visible on prefix.dev".
     download_count: int | None = None
-    deep_inspection: dict | None = None
 
 
 def _record_sort_key(record: RepoDataRecord) -> tuple[VersionWithSource, str, str, int]:
@@ -134,7 +132,6 @@ class RecipeFacts:
     about_urls: dict[str, str]
     host_deps: list[str]
     build_deps: list[str]
-    build_scripts: list[str]
     noarch: str | None
     summary: str | None
 
@@ -190,21 +187,6 @@ def _collect_dep_lists(
             build_out.append(stringified)
 
 
-def _collect_build_scripts(node: object, out: list[str]) -> None:
-    if isinstance(node, dict):
-        for key in ("script", "script_env"):
-            value = node.get(key)
-            if isinstance(value, str):
-                out.append(value)
-            elif isinstance(value, list):
-                out.extend(v for v in value if isinstance(v, str))
-        for value in node.values():
-            _collect_build_scripts(value, out)
-    elif isinstance(node, list):
-        for item in node:
-            _collect_build_scripts(item, out)
-
-
 def _extract_recipe_facts(text: str, *, kind: str) -> RecipeFacts:
     """Parse a rendered recipe YAML.
 
@@ -220,16 +202,15 @@ def _extract_recipe_facts(text: str, *, kind: str) -> RecipeFacts:
     try:
         data = yaml.safe_load(text)
     except yaml.YAMLError:
-        return RecipeFacts([], {}, [], [], [], None, None)
+        return RecipeFacts([], {}, [], [], None, None)
     if not isinstance(data, dict):
-        return RecipeFacts([], {}, [], [], [], None, None)
+        return RecipeFacts([], {}, [], [], None, None)
 
     recipe = data.get("recipe") if isinstance(data.get("recipe"), dict) else data
 
     src_urls: list[str] = []
     host_deps: list[str] = []
     build_deps: list[str] = []
-    build_scripts: list[str] = []
 
     if "source" in recipe:
         _collect_source_urls(recipe["source"], src_urls)
@@ -237,8 +218,6 @@ def _extract_recipe_facts(text: str, *, kind: str) -> RecipeFacts:
         _collect_source_urls(recipe["sources"], src_urls)
 
     _collect_dep_lists(recipe.get("requirements"), host_deps, build_deps)
-    _collect_build_scripts(recipe.get("build"), build_scripts)
-    _collect_build_scripts(recipe.get("script"), build_scripts)
 
     # Multi-output recipes: walk each output for additional sources/deps.
     outputs = recipe.get("outputs") if isinstance(recipe.get("outputs"), list) else []
@@ -248,8 +227,6 @@ def _extract_recipe_facts(text: str, *, kind: str) -> RecipeFacts:
         if "source" in output:
             _collect_source_urls(output["source"], src_urls)
         _collect_dep_lists(output.get("requirements"), host_deps, build_deps)
-        _collect_build_scripts(output.get("build"), build_scripts)
-        _collect_build_scripts(output.get("script"), build_scripts)
 
     about = recipe.get("about") or data.get("about")
     about_urls: dict[str, str] = {}
@@ -280,7 +257,6 @@ def _extract_recipe_facts(text: str, *, kind: str) -> RecipeFacts:
         about_urls=about_urls,
         host_deps=host_deps,
         build_deps=build_deps,
-        build_scripts=build_scripts,
         noarch=noarch,
         summary=summary,
     )
@@ -363,11 +339,6 @@ async def _process_record(
         host_deps=facts.host_deps,
         build_deps=facts.build_deps,
         noarch=facts.noarch,
-    )
-    deep_inspection = derive_deep_inspection(
-        host_deps=facts.host_deps,
-        build_deps=facts.build_deps,
-        build_scripts=facts.build_scripts,
     )
     candidates: list[PurlGuess] = infer_all(candidate_urls, context=context)
     primary: PurlGuess | None = candidates[0] if candidates else None
@@ -477,7 +448,6 @@ async def _process_record(
         verification_sources=verification_sources,
         note=note,
         fetched_at=datetime.now(UTC).isoformat(timespec="seconds"),
-        deep_inspection=deep_inspection,
     )
 
 
@@ -561,10 +531,7 @@ def _load_existing_download_counts(out_path: Path) -> dict[str, int]:
 
 def _write_out(out_path: Path, entries: dict[str, AutoEntry]) -> None:
     def serialize(entry: AutoEntry) -> dict:
-        data = asdict(entry)
-        if data.get("deep_inspection") is None:
-            data.pop("deep_inspection", None)
-        return data
+        return asdict(entry)
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     payload = {

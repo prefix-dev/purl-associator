@@ -56,19 +56,12 @@ export type PackageEntry = {
   alternative_purls?: (PurlAlternative | string)[] | null;
   auto_verified?: boolean;
   verification_sources?: string[] | null;
-  /** CPE 2.3 coordinates for NVD CVE matching, curated in manual.json. */
+  /** CPE 2.3 vendor/product prefixes for downstream NVD matching. */
   cpes?: string[] | null;
   /** the original auto guess, kept for diff display when an override exists */
   auto?: AutoMapping;
   /** total downloads on prefix.dev for this package (null if not ranked) */
   download_count?: number | null;
-  deep_inspection?: {
-    candidate: boolean;
-    ecosystems: string[];
-    signals: string[];
-    uses_cargo_auditable: boolean | null;
-    warning: string | null;
-  } | null;
 };
 
 export type MappingPackageIndex = Pick<
@@ -84,7 +77,6 @@ export type MappingPackageIndex = Pick<
   | "alternative_purls"
   | "unmapped"
   | "cpes"
-  | "deep_inspection"
   | "auto"
 > & {
   detail_path: string;

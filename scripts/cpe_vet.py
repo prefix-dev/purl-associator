@@ -8,15 +8,15 @@ package ships.
 
 Design notes:
 
-* Batched requests (default 15 packages per AI call), mirroring
-  :mod:`scripts.ai_vet`. One system prompt amortizes across the batch.
+* Batched requests (default 15 packages per AI call). One system prompt
+  amortizes across the batch.
 * Strict no-hallucination rule: the model must pick from the CPE list it
   was given. If none match, ``verdict="none"`` with an empty selection.
-* Output goes to ``mappings/cpe_vet/<ts>--<runid>.json``, layout
-  parallel to ``mappings/ai_vet/``. :mod:`scripts.cpe_promote` reads
-  this directory when promoting (``--vet-file`` overrides).
+* Output goes to ``mappings/cpe_vet/<ts>--<runid>.json``.
+  :mod:`scripts.cpe_promote` reads this directory when promoting
+  (``--vet-file`` overrides).
 
-Two LLM backends (``--backend``, mirroring :mod:`scripts.cve_ai_review`):
+Two LLM backends (``--backend``):
 
 * ``api`` — Anthropic SDK with ``ANTHROPIC_API_KEY`` (CI default). Uses
   structured output (``output_config.format.json_schema``) so the reply
@@ -31,10 +31,10 @@ Two LLM backends (``--backend``, mirroring :mod:`scripts.cve_ai_review`):
 
 Run it:
 
-    pixi run cpe-vet --dry-run            # preview prompts, no LLM call
-    pixi run cpe-vet                      # auto backend, write verdicts
-    pixi run cpe-vet-local                # force the local subscription
-    pixi run cpe-vet --only libpng,libtiff   # just two packages
+    pixi run cpe:vet --dry-run            # preview prompts, no LLM call
+    pixi run cpe:vet                      # auto backend, write verdicts
+    pixi run cpe:vet:local                # force the local subscription
+    pixi run cpe:vet --only libpng,libtiff   # just two packages
 """
 
 from __future__ import annotations
@@ -304,7 +304,7 @@ def _validate_selected(
 
 # ---------- LLM backends ----------
 #
-# Two ways to reach Haiku, mirroring scripts.cve_ai_review:
+# Two ways to reach Haiku:
 #   * ``api``        — Anthropic SDK + ANTHROPIC_API_KEY (CI default). Uses
 #                      structured output (json_schema) so the reply is
 #                      guaranteed to match VERDICT_SCHEMA.
@@ -607,7 +607,7 @@ def main(
     candidates_file = candidates_file or _latest_candidates_file(DEFAULT_CANDIDATES_DIR)
     if candidates_file is None or not candidates_file.exists():
         raise typer.BadParameter(
-            "No candidates file found. Run `pixi run cpe-discover` first."
+            "No candidates file found. Run `pixi run cpe:discover` first."
         )
     payload = json.loads(candidates_file.read_text())
     # Stamp from the candidates file so cpe_promote can detect whether this

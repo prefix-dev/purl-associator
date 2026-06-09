@@ -4,7 +4,7 @@ NVD publishes ``nvdcve-2.0-<year>.json.gz`` files for every year from 2002
 onward, plus a rolling ``nvdcve-2.0-modified.json.gz`` (last 8 days of adds
 and updates). Each archive contains the same shape the REST API returns —
 ``{vulnerabilities: [{cve: {...}}, ...]}`` — so the consumer-facing record
-is byte-identical to ``scripts.nvd_prototype._fetch_nvd``'s old output.
+provides the NVD product/CVE index used by CPE discovery.
 
 This module:
 
@@ -17,7 +17,7 @@ This module:
 4. Exposes :meth:`NvdIndex.for_cpe` for prefix-style lookups
    (``cpe:2.3:a:gnu:ncurses`` → ``[cve, ...]``).
 
-Used by :mod:`scripts.nvd_prototype`. Can also be run standalone to refresh
+Used by :mod:`scripts.cpe_discover`. Can also be run standalone to refresh
 the cache:
 
     pixi run python -m scripts.nvd_fetch --cache-dir ./nvd_cache

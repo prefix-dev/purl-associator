@@ -1,6 +1,6 @@
 [workspace]
 name = "purl-associator"
-description = "Generate and edit PURL mappings for conda-forge packages"
+description = "Generate and edit package identity mappings for conda-forge packages"
 authors = ["Wolf Vollprecht <hi@prefix.dev>"]
 channels = ["conda-forge"]
 platforms = ["linux-64", "osx-arm64", "osx-64", "win-64"]
@@ -14,74 +14,46 @@ httpx = ">=0.28,<0.29"
 rich = ">=13"
 anthropic = ">=0.88,<1"
 packageurl-python = ">=0.17.6, <0.18"
-cvss = ">=3.6,<4"
-
-[feature.dev.dependencies]
 ruff = "*"
 
-# Minimal environment for the merge + validate steps (pure stdlib + jsonschema).
+# Minimal environment for the merge + validate steps.
 # Lets the Pages deploy run the pixi tasks without installing py-rattler.
 [feature.lite.dependencies]
 python = ">=3.13,<3.14"
-jsonschema = ">=4.20,<5"
 
 # The merge/validate tasks live on the `lite` feature. Both the `default`
 # and `lite` environments include it, so the tasks are defined exactly once
 # (no ambiguity) yet runnable without installing py-rattler.
 [feature.lite.tasks]
-merge = "python -m scripts.merge_mappings"
-merge-cves = "python -m scripts.merge_cves"
-merge-sboms = "python -m scripts.merge_sboms"
-validate = "python -m scripts.validate"
-# AI CVE review SPA sidecars + PR-body summary — pure stdlib, can run in lite.
-merge-ai-drafts = "python -m scripts.merge_ai_drafts"
-cve-ai-summary = "python -m scripts.cve_ai_summary"
+"mappings:merge" = "python -m scripts.merge_mappings"
+"mappings:validate" = "python -m scripts.validate"
 
 [environments]
 default = ["lite"]
-dev = ["dev"]
 lite = { features = ["lite"], no-default-feature = true }
 
 [tasks]
-automap = "python -m scripts.automap"
-top-downloads = "python -m scripts.top_downloads"
-hydrate-downloads = "python -m scripts.hydrate_downloads"
-merge = "python -m scripts.merge_mappings"
-download-counts-refresh = { cmd = "python -m scripts.hydrate_downloads --concurrency {{ concurrency }} --channel {{ channel }} && python -m scripts.merge_mappings", description = "Refresh prefix.dev download counts locally and rebuild the frontend mappings payload", args = [{ arg = "concurrency", default = "16" }, { arg = "channel", default = "conda-forge" }] }
-ai-vet = "python -m scripts.ai_vet"
-osv-fetch = "python -m scripts.osv_fetch"
-nvd-fetch = "python -m scripts.nvd_fetch"
-cve-match = "python -m scripts.cve_match"
-sbom-extract = "python -m scripts.sbom_extract"
-nvd-cve-match = "python -m scripts.nvd_prototype"
-cve-ai-review = "python -m scripts.cve_ai_review"
-cve-ai-enqueue = { cmd = "python -m scripts.cve_ai_enqueue --package {{ package }} --advisory {{ advisory }}", description = "Append one (package, advisory) pair to the AI review queue", args = [{ arg = "package" }, { arg = "advisory" }] }
-cve-ai-requeue-drafts = "python -m scripts.cve_ai_requeue_drafts"
-cve-ai-auto-enqueue = "python -m scripts.cve_ai_auto_enqueue"
-promote-ai-draft = { cmd = "python -m scripts.promote_ai_draft --package {{ package }} --advisory {{ advisory }}", description = "Promote an AI draft into mappings/cve_contributions/ as authoritative OpenVEX", args = [{ arg = "package" }, { arg = "advisory" }] }
-sbom-cve-match = "python -m scripts.sbom_cve_match"
-merge-sboms = "python -m scripts.merge_sboms"
-cpe-discover = "python -m scripts.cpe_discover"
-cpe-vet = "python -m scripts.cpe_vet"
-cpe-promote = "python -m scripts.cpe_promote"
-lint = { cmd = "ruff check scripts && ruff format --check scripts", env = {} }
-fmt = "ruff format scripts"
+"purl:automap" = "python -m scripts.automap"
+"downloads:top" = "python -m scripts.top_downloads"
+"downloads:hydrate" = "python -m scripts.hydrate_downloads"
+"mappings:merge" = "python -m scripts.merge_mappings"
+"downloads:refresh" = { cmd = "python -m scripts.hydrate_downloads --concurrency {{ concurrency }} --channel {{ channel }} && python -m scripts.merge_mappings", description = "Refresh prefix.dev download counts locally and rebuild the identity mappings payload", args = [{ arg = "concurrency", default = "16" }, { arg = "channel", default = "conda-forge" }] }
+"nvd:fetch" = "python -m scripts.nvd_fetch"
+"cpe:discover" = "python -m scripts.cpe_discover"
+"cpe:vet" = "python -m scripts.cpe_vet"
+"cpe:promote" = "python -m scripts.cpe_promote"
+"dev:lint" = { cmd = "ruff check scripts && ruff format --check scripts", env = {} }
+"dev:fmt" = "ruff format scripts"
 
-# Convenience: run the AI CVE reviewer against the local Claude subscription
-# (no API key needed — requires the `claude` CLI). Precedent: automap-test.
-[tasks.cve-ai-review-local]
-cmd = "python -m scripts.cve_ai_review --backend claude-cli --mode realtime"
-description = "Run the AI CVE reviewer using the local Claude subscription (requires `claude` CLI installed and authed)"
-
-# Same idea for the CPE vet tiebreaker — vet the ambiguous bucket on the
-# local Claude subscription instead of ANTHROPIC_API_KEY.
-[tasks.cpe-vet-local]
+# Convenience: run the CPE vet tiebreaker against a local Claude subscription
+# (no API key needed — requires the `claude` CLI).
+[tasks."cpe:vet:local"]
 cmd = "python -m scripts.cpe_vet --backend claude-cli"
 description = "Vet the CPE ambiguous bucket using the local Claude subscription (requires `claude` CLI installed and authed)"
 
-[tasks.automap-test]
+[tasks."purl:test"]
 cmd = "python -m scripts.automap --only {{ packages }} --out {{ auto }} --parallel {{ parallel }} --force && python -m scripts.merge_mappings --auto {{ auto }} --out {{ out }}"
-description = "Test auto-association on a small package set without touching committed outputs"
+description = "Test PURL auto-association on a small package set without touching committed outputs"
 args = [
   { arg = "packages", default = "numpy,ripgrep,pandas" },
   { arg = "auto", default = ".tmp/auto-test.json" },
@@ -90,25 +62,25 @@ args = [
 ]
 
 # GitHub Actions helpers. Requires `gh auth login` first.
-[tasks.gh-workflows]
+[tasks."gh:workflows"]
 cmd = "gh workflow list"
 description = "List GitHub Actions workflows"
 
-[tasks.gh-runs]
+[tasks."gh:runs"]
 cmd = "gh run list --limit {{ limit }}"
 description = "List recent GitHub Actions runs"
 args = [
   { arg = "limit", default = "10" },
 ]
 
-[tasks.gh-watch]
+[tasks."gh:watch"]
 cmd = "gh run watch {{ run }}"
 description = "Watch a GitHub Actions run by run id"
 args = [
   { arg = "run" },
 ]
 
-[tasks.gh-automap]
+[tasks."gh:purl:automap"]
 cmd = "gh workflow run automap.yml --ref {{ ref }} -f limit='{{ limit }}' -f only='{{ only }}' -f force='{{ force }}'"
 description = "Trigger the Automatic PURL mapping workflow"
 args = [
@@ -118,7 +90,7 @@ args = [
   { arg = "ref", default = "main" },
 ]
 
-[tasks.gh-automap-force]
+[tasks."gh:purl:automap:force"]
 cmd = "gh workflow run automap.yml --ref {{ ref }} -f limit='{{ limit }}' -f only='{{ only }}' -f force=true"
 description = "Trigger a forced Automatic PURL mapping workflow run"
 args = [
@@ -127,36 +99,14 @@ args = [
   { arg = "ref", default = "main" },
 ]
 
-[tasks.gh-cve-refresh]
-cmd = "gh workflow run cve_refresh.yml --ref {{ ref }} -f only='{{ only }}' -f limit='{{ limit }}' -f force_osv='{{ force_osv }}'"
-description = "Trigger the Refresh CVE assignments workflow"
-args = [
-  { arg = "only", default = "" },
-  { arg = "limit", default = "" },
-  { arg = "force_osv", default = "false" },
-  { arg = "ref", default = "main" },
-]
-
-[tasks.gh-sbom-refresh]
-cmd = "gh workflow run sbom_refresh.yml --ref {{ ref }} -f only='{{ only }}' -f refresh_automap='{{ refresh_automap }}' -f automap_top_downloads='{{ automap_top_downloads }}' -f force_osv='{{ force_osv }}' -f parallel='{{ parallel }}'"
-description = "Trigger the embedded SBOM inspection refresh workflow (default: all conda-forge)"
-args = [
-  { arg = "only", default = "" },
-  { arg = "refresh_automap", default = "true" },
-  { arg = "automap_top_downloads", default = "" },
-  { arg = "force_osv", default = "false" },
-  { arg = "parallel", default = "8" },
-  { arg = "ref", default = "main" },
-]
-
-[tasks.gh-pages]
+[tasks."gh:pages"]
 cmd = "gh workflow run pages.yml --ref {{ ref }}"
 description = "Trigger the GitHub Pages deployment workflow"
 args = [
   { arg = "ref", default = "main" },
 ]
 
-[tasks.gh-download-counts]
+[tasks."gh:downloads:refresh"]
 cmd = "gh workflow run download_counts.yml --ref {{ ref }} -f concurrency='{{ concurrency }}' -f channel='{{ channel }}'"
 description = "Trigger the weekly download-count refresh workflow"
 args = [
@@ -165,33 +115,7 @@ args = [
   { arg = "channel", default = "conda-forge" },
 ]
 
-[tasks.gh-ai-vet]
-cmd = "gh workflow run ai_vet.yml --ref {{ ref }} -f mode='{{ mode }}' -f limit='{{ limit }}' -f skip_vetted='{{ skip_vetted }}' -f only='{{ only }}' -f ai_batch_size='{{ ai_batch_size }}' -f commit_every='{{ commit_every }}'"
-description = "Trigger the AI vet PURL mappings workflow"
-args = [
-  { arg = "ref", default = "main" },
-  { arg = "mode", default = "realtime" },
-  { arg = "limit", default = "200" },
-  { arg = "skip_vetted", default = "true" },
-  { arg = "only", default = "" },
-  { arg = "ai_batch_size", default = "15" },
-  { arg = "commit_every", default = "16" },
-]
-
-[tasks.gh-cve-ai-review]
-cmd = "gh workflow run cve_ai_review.yml --ref {{ ref }} -f mode='{{ mode }}' -f limit='{{ limit }}' -f only='{{ only }}' -f redraft='{{ redraft }}' -f ai_batch_size='{{ ai_batch_size }}' -f commit_every='{{ commit_every }}'"
-description = "Trigger the AI CVE review workflow"
-args = [
-  { arg = "ref", default = "main" },
-  { arg = "mode", default = "realtime" },
-  { arg = "limit", default = "50" },
-  { arg = "only", default = "" },
-  { arg = "redraft", default = "false" },
-  { arg = "ai_batch_size", default = "3" },
-  { arg = "commit_every", default = "8" },
-]
-
-[tasks.gh-cpe-discover]
+[tasks."gh:cpe:discover"]
 cmd = "gh workflow run cpe_discover.yml --ref {{ ref }} -f top='{{ top }}' -f only='{{ only }}' -f skip_vet='{{ skip_vet }}'"
 description = "Trigger the CPE discovery workflow"
 args = [
@@ -202,70 +126,67 @@ args = [
 ]
 
 # Local app/Worker helpers.
-[tasks.install]
-depends-on = ["web-install", "worker-install"]
+[tasks."app:install"]
+depends-on = ["web:install", "worker:install"]
 description = "Install web and Worker npm dependencies"
 
-[tasks.check-local]
-depends-on = ["validate", "web-build", "worker-typecheck"]
+[tasks."app:check"]
+depends-on = ["mappings:validate", "web:build", "worker:typecheck"]
 description = "Validate data, build the web app, and typecheck the Worker"
 
-[tasks.web-install]
+[tasks."web:install"]
 cmd = "npm install"
 cwd = "web"
 description = "Install frontend npm dependencies"
 
-[tasks.web-data]
+[tasks."web:data"]
 depends-on = [
-  { task = "merge", environment = "lite" },
-  { task = "merge-cves", environment = "lite" },
-  { task = "merge-ai-drafts", environment = "lite" },
-  { task = "merge-sboms", environment = "lite" },
+  { task = "mappings:merge", environment = "lite" },
 ]
-description = "Regenerate frontend data payloads from mappings/ source files"
+description = "Regenerate frontend identity mapping payloads from mappings/ source files"
 
-[tasks.web-dev]
+[tasks."web:dev"]
 cmd = "npm run dev -- --host {{ host }} --port {{ port }}"
 cwd = "web"
-depends-on = ["web-install", "web-data"]
+depends-on = ["web:install", "web:data"]
 description = "Regenerate frontend data and run the Vite dev server"
 args = [
   { arg = "host", default = "127.0.0.1" },
   { arg = "port", default = "5173" },
 ]
 
-[tasks.web-build]
+[tasks."web:build"]
 cmd = "npm run build"
 cwd = "web"
-depends-on = ["web-install", "web-data"]
+depends-on = ["web:install", "web:data"]
 description = "Regenerate frontend data and build the frontend"
 
-[tasks.web-preview]
+[tasks."web:preview"]
 cmd = "npm run preview -- --host {{ host }} --port {{ port }}"
 cwd = "web"
-depends-on = ["web-build"]
+depends-on = ["web:build"]
 description = "Serve the built frontend locally"
 args = [
   { arg = "host", default = "127.0.0.1" },
   { arg = "port", default = "4173" },
 ]
 
-[tasks.worker-install]
+[tasks."worker:install"]
 cmd = "npm install"
 cwd = "worker"
 description = "Install Worker npm dependencies"
 
-[tasks.worker-dev]
+[tasks."worker:dev"]
 cmd = "npm run dev -- --port {{ port }}"
 cwd = "worker"
-depends-on = ["worker-install"]
+depends-on = ["worker:install"]
 description = "Run the Cloudflare Worker locally with Wrangler"
 args = [
   { arg = "port", default = "8787" },
 ]
 
-[tasks.worker-typecheck]
+[tasks."worker:typecheck"]
 cmd = "npm run typecheck"
 cwd = "worker"
-depends-on = ["worker-install"]
+depends-on = ["worker:install"]
 description = "Typecheck the Cloudflare Worker"

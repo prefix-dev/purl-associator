@@ -1,13 +1,13 @@
 """Discover candidate CPE coordinates for top-downloaded conda-forge packages
-that currently lack OSV-mappable PURLs.
+that currently lack ecosystem PURLs commonly covered by OSV.
 
 Pipeline (heuristics-only; no AI step):
 
 1. Rank ``mappings/auto.json`` entries by ``download_count`` (already
    populated by ``scripts.hydrate_downloads``) and take the top ``--top``.
-2. Skip names that are already mapped to an OSV ecosystem (PyPI, npm, etc.)
-   or already carry a ``cpes`` list in ``manual.json`` or any contribution
-   file. Remaining names are candidates for a CPE override.
+2. Skip names that are already mapped to a package ecosystem commonly covered
+   by OSV (PyPI, npm, etc.) or already carry a ``cpes`` list in ``manual.json``
+   or any contribution file. Remaining names are candidates for a CPE identity.
 3. Build the NVD ``(part, vendor, product) → [cves]`` index once
    (:mod:`scripts.nvd_fetch`).
 4. For each candidate, propose **product names** by light normalization
@@ -38,8 +38,8 @@ Pipeline (heuristics-only; no AI step):
 
 Run it:
 
-    pixi run cpe-discover
-    pixi run cpe-discover --top 50 --out .tmp/cpe-candidates.json
+    pixi run cpe:discover
+    pixi run cpe:discover --top 50 --out .tmp/cpe-candidates.json
 """
 
 from __future__ import annotations
@@ -67,8 +67,8 @@ DEFAULT_CONTRIB_DIR = ROOT / "mappings" / "contributions"
 DEFAULT_OUT_DIR = ROOT / "mappings" / "cpe_candidates"
 DEFAULT_NVD_CACHE = ROOT / "nvd_cache"
 
-# PURL types that are already covered by the OSV → cve_match pipeline. A
-# package mapped to one of these doesn't need a CPE override.
+# PURL types that downstream tooling can usually match through OSV without
+# needing a CPE identity for NVD lookup.
 OSV_PURL_TYPES = frozenset(
     {"pypi", "npm", "cargo", "gem", "maven", "golang", "cran", "bioconductor"}
 )
@@ -182,10 +182,8 @@ class AutoEntry:
     summary: str | None
     download_count: int  # 0 when missing; used for top-N ranking
     # ``alternative_purls`` entries flattened to their ``type`` strings. Used
-    # to detect packages that already have an OSV-mappable path even when
-    # their primary PURL is github/generic — those packages should NOT get
-    # CPE coverage, since nvd_prototype would overwrite the OSV-derived
-    # mappings/cves/<name>.json that cve_match produces.
+    # to detect packages that already have an OSV-mappable identity even when
+    # their primary PURL is github/generic.
     alternative_purl_types: tuple[str, ...] = ()
 
     @property
@@ -201,10 +199,11 @@ class AutoEntry:
 
     @property
     def has_osv_alternative(self) -> bool:
-        """True if any alternative PURL would be picked up by cve_match's
-        OSV ecosystem dispatch. Such packages must be excluded from CPE
-        discovery — nvd_prototype writes mappings/cves/<name>.json from
-        scratch and would overwrite cve_match's OSV-derived file."""
+        """True if any alternative PURL is in an OSV-indexed ecosystem.
+
+        Such packages do not need CPE discovery here because downstream CVE
+        tooling can use the PURL identity first.
+        """
         return any(t in OSV_PURL_TYPES for t in self.alternative_purl_types)
 
 
@@ -352,17 +351,11 @@ def _load_effective_mappings(
 
 
 def _is_cpe_candidate(name: str, entry: AutoEntry | None) -> bool:
-    """A package is a CPE candidate when the OSV → cve_match pipeline
-    cannot cover it via *any* PURL it carries.
+    """A package is a CPE candidate when no existing PURL identity is in an
+    OSV-indexed package ecosystem.
 
-    Both the primary PURL and the ``alternative_purls`` list count:
-    ``scripts.cve_match`` walks alternatives (cve_match.py:473) and will
-    match against any OSV-indexed type it finds. Shipping a CPE for such a
-    package would cause ``nvd_prototype`` to overwrite cve_match's
-    OSV-derived ``mappings/cves/<name>.json``, dropping coverage that's
-    already populated.
-
-    A package qualifies only when:
+    Both the primary PURL and the ``alternative_purls`` list count. A package
+    qualifies only when:
       * no primary PURL, or primary PURL is non-OSV (github, generic, …)
       * AND no alternative_purls entry is OSV-mappable
       * AND not a conda-build internal feedstock
@@ -375,7 +368,7 @@ def _is_cpe_candidate(name: str, entry: AutoEntry | None) -> bool:
     if entry.purl_type in OSV_PURL_TYPES:
         return False
     # Even if the primary PURL is github/generic, an OSV-mappable alternative
-    # means cve_match already produces a CVE file for this package.
+    # means downstream tooling already has an ecosystem identity to try first.
     if entry.has_osv_alternative:
         return False
     return True

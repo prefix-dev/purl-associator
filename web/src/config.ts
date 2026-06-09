@@ -7,7 +7,7 @@
  */
 
 export type RuntimeConfig = {
-  /** Repo to PR mapping changes against, e.g. "prefix-dev/purl-mappings". */
+  /** Repo to PR mapping changes against, e.g. "prefix-dev/purl-associator". */
   repoOwner: string;
   repoName: string;
   defaultBranch: string;
@@ -15,14 +15,6 @@ export type RuntimeConfig = {
   mappingsUrl: string;
   /** Optional: where mappings-index.json lives relative to the site root. */
   mappingsIndexUrl: string;
-  /** Optional: where cves.json (legacy per-advisory dataset) lives. */
-  cvesUrl: string;
-  /** Optional: where cves-index.json (compact CVE dashboard index) lives. */
-  cvesIndexUrl: string;
-  /** Optional: where cve_ai_drafts.json (AI draft sidecar) lives. */
-  aiDraftsUrl: string;
-  /** Optional: where cve_ai_queue.json (AI review queue sidecar) lives. */
-  aiQueueUrl: string;
   /** Cloudflare Worker URL handling GitHub OAuth code-exchange. */
   oauthWorkerUrl: string | null;
   /** OAuth app's public client_id. */
@@ -43,10 +35,6 @@ const fromEnv: Partial<RuntimeConfig> = {
   defaultBranch: env.VITE_REPO_BRANCH,
   mappingsUrl: env.VITE_MAPPINGS_URL,
   mappingsIndexUrl: env.VITE_MAPPINGS_INDEX_URL,
-  cvesUrl: env.VITE_CVES_URL,
-  cvesIndexUrl: env.VITE_CVES_INDEX_URL,
-  aiDraftsUrl: env.VITE_AI_DRAFTS_URL,
-  aiQueueUrl: env.VITE_AI_QUEUE_URL,
   oauthWorkerUrl: env.VITE_OAUTH_WORKER_URL,
   githubClientId: env.VITE_GITHUB_CLIENT_ID,
 };
@@ -60,13 +48,6 @@ export const config: RuntimeConfig = {
   mappingsUrl: injected.mappingsUrl ?? fromEnv.mappingsUrl ?? "./mappings.json",
   mappingsIndexUrl:
     injected.mappingsIndexUrl ?? fromEnv.mappingsIndexUrl ?? "./mappings-index.json",
-  cvesUrl: injected.cvesUrl ?? fromEnv.cvesUrl ?? "./cves.json",
-  cvesIndexUrl:
-    injected.cvesIndexUrl ?? fromEnv.cvesIndexUrl ?? "./cves-index.json",
-  aiDraftsUrl:
-    injected.aiDraftsUrl ?? fromEnv.aiDraftsUrl ?? "./cve_ai_drafts.json",
-  aiQueueUrl:
-    injected.aiQueueUrl ?? fromEnv.aiQueueUrl ?? "./cve_ai_queue.json",
   oauthWorkerUrl: injected.oauthWorkerUrl ?? fromEnv.oauthWorkerUrl ?? null,
   githubClientId: injected.githubClientId ?? fromEnv.githubClientId ?? null,
 };
