@@ -157,9 +157,6 @@ def _index_package(name: str, entry: dict, detail_path: str) -> dict:
     for key in ("alternative_purls", "unmapped", "cpes"):
         if key in entry and entry.get(key) is not None:
             out[key] = entry.get(key)
-    deep = entry.get("deep_inspection")
-    if isinstance(deep, dict):
-        out["deep_inspection"] = {"candidate": bool(deep.get("candidate"))}
     return out
 
 

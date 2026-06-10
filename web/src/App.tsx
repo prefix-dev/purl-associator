@@ -33,7 +33,6 @@ export function App() {
   const [filters, setFilters] = useState({
     unmappedOnly: false,
     unverifiedOnly: false,
-    deepOnly: false,
     ecosystem: "all",
   });
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -64,14 +63,6 @@ export function App() {
     () => packages.filter((p) => selectedSet.has(p.name)),
     [packages, selectedSet],
   );
-
-  const deepInspectionNames = useMemo(() => {
-    const names = new Set<string>();
-    for (const p of packages) {
-      if (p.deep_inspection?.candidate) names.add(p.name);
-    }
-    return names;
-  }, [packages]);
 
   const editsCount = Object.keys(edits).length;
   const showBulk = selectedSet.size > 1;
@@ -222,30 +213,8 @@ export function App() {
                 background: t.inset,
               }}
             >
-              PURL Mapper
+              Package Identity Mapper
             </span>
-            <a
-              href="./cve.html"
-              style={{
-                color: t.fg2,
-                textDecoration: "none",
-                padding: "4px 8px",
-                borderRadius: 6,
-              }}
-            >
-              CVE Dashboard
-            </a>
-            <a
-              href="./deep.html"
-              style={{
-                color: t.fg2,
-                textDecoration: "none",
-                padding: "4px 8px",
-                borderRadius: 6,
-              }}
-            >
-              Deep Package Inspection
-            </a>
           </nav>
           <div
             style={{
@@ -371,7 +340,7 @@ export function App() {
           }}
         >
           <Glyph name="edit" size={13} />
-          You can stage local mapping changes without signing in.
+          You can stage local PURL mapping changes without signing in. CPEs are shown as read-only identity metadata.
           <button
             onClick={() => setLoginOpen(true)}
             style={{
@@ -438,7 +407,6 @@ export function App() {
               setQ={setQ}
               filters={filters}
               setFilters={setFilters}
-              deepInspectionNames={deepInspectionNames}
             />
           ) : (
             <div

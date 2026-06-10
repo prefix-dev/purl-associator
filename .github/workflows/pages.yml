@@ -36,19 +36,11 @@ jobs:
           cache: true
           environments: lite
 
-      - name: Refresh served split mappings payload (index + package details)
-        run: pixi run -e lite merge
+      - name: Refresh served identity mapping payload
+        run: pixi run -e lite mappings:merge
 
-      - name: Refresh served split CVE dashboard payload (index + package details)
-        run: pixi run -e lite merge-cves
-
-      - name: Refresh served cve_ai_drafts.json + cve_ai_queue.json sidecars
-        run: pixi run -e lite merge-ai-drafts
-      - name: Refresh served SBOM inspection data
-        run: pixi run -e lite merge-sboms
-
-      - name: Validate CVE data against the OSV + OpenVEX schemas
-        run: pixi run -e lite validate
+      - name: Validate identity mapping payload
+        run: pixi run -e lite mappings:validate
 
       - name: Install web deps
         working-directory: web

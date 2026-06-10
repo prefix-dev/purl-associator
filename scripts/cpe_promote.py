@@ -17,8 +17,8 @@ running ``promote`` twice never produces duplicate contributions.
 
 Useful commands:
 
-    pixi run cpe-promote --dry-run
-    pixi run cpe-promote --in mappings/cpe_candidates/<ts>.json
+    pixi run cpe:promote --dry-run
+    pixi run cpe:promote --in mappings/cpe_candidates/<ts>.json
 """
 
 from __future__ import annotations
@@ -199,7 +199,7 @@ def main(
     candidates_file = in_ or _latest_candidates_file(DEFAULT_CANDIDATES_DIR)
     if candidates_file is None or not candidates_file.exists():
         raise typer.BadParameter(
-            "No candidates file found. Run `pixi run cpe-discover` first, "
+            "No candidates file found. Run `pixi run cpe:discover` first, "
             "or pass --in <path>."
         )
 

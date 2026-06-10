@@ -1,400 +1,150 @@
 # PURL Associator
 
-This repository maintains PURL mappings for conda-forge packages and uses
-those mappings to derive CVE assignment data.
+This repository maintains canonical **conda-forge package identity mappings**.
+Each mapping record is keyed by conda-forge package name and carries identifiers
+that downstream security tooling can use:
 
-| Output | Produced by | Purpose |
-|---|---|---|
-| `web/public/mappings.json` | `scripts.merge_mappings` | Served package to PURL mapping data |
-| `web/public/cves.json` | `scripts.merge_cves` | Served CVE dashboard data |
-| `web/public/cve_ai_drafts.json` | `scripts.merge_ai_drafts` | AI CVE draft suggestions awaiting human review |
-| `web/public/cve_ai_queue.json` | `scripts.merge_ai_drafts` | CVEs queued for AI review but not drafted yet |
-| `web/public/sboms.json` | `scripts.merge_sboms` | Served deep-inspection summary index |
-| mapping PRs | Worker `POST /api/submit` | Human review of PURL mapping edits |
-| CVE review PRs | Worker `POST /api/submit-cves` | Human review of OpenVEX CVE statements |
-| AI queue PRs | Worker `POST /api/enqueue-cve-review` | Requests for AI CVE draft review |
+- a primary Package URL (**PURL**) and optional alternative PURLs
+- optional CPE 2.3 vendor/product prefixes for NVD matching
+- package context such as latest observed version, recipe/source URLs, summary,
+  and download counts
 
-The web app is static. It reads generated JSON and submits edits to the
-Cloudflare Worker. The Worker opens pull requests through a GitHub App
-installation.
+CVE assignment, OpenVEX review state, AI CVE drafts, and SBOM-derived findings
+are intentionally out of scope. A downstream CVE project should consume the
+identity mapping payload produced here, enumerate conda-forge versions there,
+and join those versions with OSV/NVD affected-version data there.
 
-## Data Flow
+## Data model
 
-```mermaid
-flowchart LR
-  CF[conda-forge metadata] --> Automap[scripts.automap]
-  Automap --> Auto[mappings/auto.json]
-  Manual[mappings/manual.json] --> MergeMappings[scripts.merge_mappings]
-  PurlContrib[mappings/contributions/*.json] --> MergeMappings
-  Auto --> MergeMappings
-  MergeMappings --> Mappings[web/public/mappings.json]
+The core object is a conda-forge package identity record:
 
-  OSV[OSV dumps] --> Fetch[scripts.osv_fetch]
-  Fetch --> Match[scripts.cve_match]
-  Mappings --> Match
-  Match --> PackageCves[mappings/cves/*.json]
-  VexContrib[mappings/cve_contributions/*.json] --> MergeCves[scripts.merge_cves]
-  PackageCves --> MergeCves
-  MergeCves --> Cves[web/public/cves.json]
-  AiQueue[mappings/cve_review_queue/*.json] --> AiReview[scripts.cve_ai_review]
-  PackageCves --> AiReview
-  AiReview --> AiDrafts[mappings/cve_ai_drafts/*.json]
-  AiDrafts --> MergeAi[scripts.merge_ai_drafts]
-  AiQueue --> MergeAi
-  MergeAi --> AiSidecars[web/public/cve_ai_drafts.json + cve_ai_queue.json]
-
-  Auto --> SbomExtract[scripts.sbom_extract]
-  SbomExtract --> Sboms[mappings/sboms/*.json]
-  Sboms --> SbomCves[scripts.sbom_cve_match]
-  SbomCves --> SbomIndex[mappings/sboms.json]
-  SbomIndex --> MergeSboms[scripts.merge_sboms]
-  MergeSboms --> PublicSboms[web/public/sboms.json]
-
-  Mappings --> Web[GitHub Pages app]
-  Cves --> Web
-  AiSidecars --> Web
-  PublicSboms --> Web
+```json
+{
+  "name": "ncurses",
+  "version": "6.5",
+  "purl": "pkg:github/ThomasDickey/ncurses-snapshots",
+  "type": "github",
+  "namespace": "ThomasDickey",
+  "pkg_name": "ncurses-snapshots",
+  "alternative_purls": [],
+  "cpes": [
+    "cpe:2.3:a:gnu:ncurses",
+    "cpe:2.3:a:invisible-island:ncurses"
+  ],
+  "status": "verified"
+}
 ```
 
-## PURL Mapping Pipeline
+PURLs identify source/package ecosystem coordinates. CPEs identify NVD
+vendor/product coordinates. CPE strings stored here are identity-level prefixes;
+this repository does not store CVE affected ranges or per-CVE version decisions.
+
+## Sources and outputs
+
+| Path | Purpose |
+|---|---|
+| `mappings/auto.json` | automatically inferred PURL mappings |
+| `mappings/manual.json` | legacy/manual reviewed overrides |
+| `mappings/contributions/*.json` | PR-submitted mapping contributions, including CPE pipeline output |
+| `mappings/cpe_candidates/*.json` | audit output from CPE discovery |
+| `mappings/cpe_vet/*.json` | optional AI tiebreaker output for ambiguous CPE candidates |
+| `web/public/mappings.json` | generated full mapping bundle |
+| `web/public/mappings-index.json` | generated compact index for the web app |
+| `web/public/mapping_packages/*.json` | generated sharded package detail payloads |
+
+## PURL flow
 
 ```mermaid
 flowchart TD
-  A[Enumerate conda-forge packages] --> B[Select latest record]
-  B --> C[Fetch recipe file from package archive]
-  C --> D[Infer source PURL from recipe and source URLs]
-  D --> E[Write mappings/auto.json]
-  E --> F[Merge auto, manual, and contribution edits]
-  F --> G[Write web/public/mappings.json]
+  A[conda-forge metadata] --> B[scripts.automap]
+  B --> C[mappings/auto.json]
+  C --> D[scripts.merge_mappings]
+  E[mappings/manual.json] --> D
+  F[mappings/contributions/*.json] --> D
+  D --> G[web/public/mappings*.json]
+  G --> H[PURL editing UI]
+  H --> I[Worker POST /api/submit]
+  I --> F
 ```
-
-`scripts.automap` uses `rattler.repo_data.Gateway` to enumerate package
-records. It partially fetches recipe files from package archives, then
-`scripts.purl_inference` decides the source PURL. For Python packages it also
-checks the public Parselmouth conda-artifact-to-PyPI mapping by package sha256.
-When Parselmouth artifact metadata agrees with an inferred PyPI PURL, the
-mapping is marked `auto-verified` and does not need the normal human approval
-step.
-
-The inference step uses source URLs and recipe context. Recipe context matters
-because source hosting is not always the package ecosystem. For example, a
-Python package with a GitHub release tarball can still map to `pkg:pypi/<name>`
-when the recipe builds a Python distribution.
 
 Useful commands:
 
 ```sh
-pixi run automap --only numpy,ripgrep,pandas
-pixi run -e lite merge
+pixi run purl:automap --only numpy,ripgrep,pandas
+pixi run -e lite mappings:merge
+pixi run -e lite mappings:validate
+pixi run purl:test
 ```
 
-Full refresh:
+## CPE flow
 
-```sh
-pixi run automap
-pixi run -e lite merge
-```
-
-## CVE Pipeline
+CPE discovery is part of identity mapping, not CVE assignment. The retained CPE
+pipeline proposes NVD vendor/product prefixes and promotes accepted mappings as
+normal contribution files. Those CPEs then flow through `scripts.merge_mappings`
+into the public mapping payload.
 
 ```mermaid
 flowchart TD
-  A[Download OSV ecosystem dumps] --> B[Index advisories by ecosystem and package]
-  B --> C[Read web/public/mappings.json]
-  C --> D[Find advisories for mapped PURLs]
-  D --> E[Enumerate conda-forge versions]
-  E --> F[Intersect conda versions with OSV affected data]
-  F --> G[Write mappings/cves per-package files]
-  G --> H[Apply OpenVEX review documents]
-  H --> I[Write web/public/cves.json]
-  I --> J[Compile AI draft and queue sidecars]
-  J --> K[Validate OSV, OpenVEX, AI draft, queue, and bundle schemas]
+  A[mappings/auto.json + reviewed mappings] --> B[scripts.cpe_discover]
+  B --> C[mappings/cpe_candidates/*.json]
+  C --> D[scripts.cpe_vet optional]
+  D --> E[mappings/cpe_vet/*.json]
+  C --> F[scripts.cpe_promote]
+  E --> F
+  F --> G[mappings/contributions/*--cpe-pipeline--*.json]
+  G --> H[scripts.merge_mappings]
 ```
-
-`scripts.cve_match` joins mapped PURLs to OSV advisories. It supports the OSV
-ecosystems listed below.
-
-| OSV ecosystem | PURL type |
-|---|---|
-| `PyPI` | `pkg:pypi` |
-| `npm` | `pkg:npm` |
-| `crates.io` | `pkg:cargo` |
-| `RubyGems` | `pkg:gem` |
-| `Maven` | `pkg:maven` |
-| `Go` | `pkg:golang` |
-| `CRAN` | `pkg:cran` |
-
-Packages mapped only to other PURL types are skipped by this join. Common
-examples are `pkg:github/...` and native packages that would need an NVD/CPE
-bridge instead of an OSV package lookup.
 
 Useful commands:
 
 ```sh
-pixi run -e lite merge
-pixi run cve-match --only numpy,requests,pillow
-pixi run -e lite merge-cves
-pixi run merge-ai-drafts
-pixi run cve-ai-requeue-drafts --status fixed  # requeue existing drafts after prompt changes
-pixi run -e lite validate
+pixi run cpe:discover --top 50
+pixi run cpe:vet --dry-run
+pixi run cpe:promote --dry-run
+pixi run -e lite mappings:merge
+pixi run -e lite mappings:validate
 ```
 
-## CVE Data Model
+## Frontend behavior
 
-Per-package CVE files store OSV records with a conda-forge extension block:
+The GitHub Pages app is a PURL editing UI:
 
-```mermaid
-flowchart LR
-  O[OSV advisory record] --> D[database_specific]
-  D --> C[conda-forge block]
-  C --> V[affected conda versions]
-  C --> P[conda package PURL]
-  C --> S[source PURLs]
-  C --> R[resolved VEX review]
-```
+- users can review, edit, approve, or mark PURL mappings as unmapped
+- staged PURL edits are saved locally until submitted
+- submitted edits open PRs containing one new file under `mappings/contributions/`
+- CPEs are displayed read-only as package identity metadata
+- no CVE dashboard, OpenVEX review, AI CVE queue, or deep-inspection routes are
+  served from this repository
 
-The conda-forge data lives under:
+The Worker exposes only:
 
-```text
-database_specific["conda-forge"]
-```
+- `POST /exchange` for GitHub OAuth code exchange
+- `POST /api/submit` for PURL mapping contribution PRs
 
-The stored advisory remains OSV-shaped and is validated against the OSV schema.
-The matcher removes malformed empty OSV range events when necessary so the
-record validates.
+## Downstream CVE consumption
 
-Reviewer CVE contributions are OpenVEX 0.2.0 documents. AI reviews are not
-applied automatically: they are stored as drafts in `mappings/cve_ai_drafts/`,
-compiled into `web/public/cve_ai_drafts.json`, and must be applied by a human
-reviewer through the dashboard before an authoritative OpenVEX contribution is
-submitted.
+A downstream CVE project should consume `web/public/mappings.json` or the split
+`mappings-index.json` + `mapping_packages/*.json` payload. It should then:
 
-| Statement product | Meaning |
-|---|---|
-| `pkg:conda/<name>?channel=conda-forge` | package-level review for one advisory |
-| `pkg:conda/<name>@<version>?channel=conda-forge` | version-specific override |
+1. enumerate conda-forge package versions independently,
+2. use PURLs for OSV/package-ecosystem matching,
+3. use CPE prefixes for NVD matching,
+4. apply OSV/NVD affected-version logic in that downstream project, and
+5. store CVE assignment/review state outside this repository.
 
-| VEX status | Effect in `merge_cves` |
-|---|---|
-| `affected` | package status, or add a version when version-pinned |
-| `not_affected` | package status, or remove a version when version-pinned |
-| `fixed` | package status, or remove a version when version-pinned |
-| `under_investigation` | package status, or remove a version when version-pinned |
+## Verification
 
-OpenVEX field requirements:
-
-| Status | Required field |
-|---|---|
-| `affected` | `action_statement` |
-| `not_affected` | `justification` or `impact_statement` |
-
-The frontend generates these fields, the Worker validates submitted
-statements, and `scripts.validate` validates committed documents.
-
-## Standards
-
-The repository uses existing security data formats instead of a custom CVE
-review format.
-
-| Standard | Used for | Why it is used |
-|---|---|---|
-| Package URL (PURL) | Package identity in mappings and conda products | Gives one package identifier format across PyPI, npm, crates, Maven, conda, and other ecosystems |
-| OSV schema | Advisory records from OSV | Preserves the upstream advisory shape and allows validation with the published OSV schema |
-| OpenVEX 0.2.0 | Human CVE review contributions | Represents whether a vulnerability affects a product, including `not_affected` justifications and `affected` actions |
-| JSON Schema | Validation gates | Makes generated files and review contributions fail CI before bad data is published |
-
-conda-forge is not an OSV ecosystem, so conda-specific match data is stored in
-the OSV `database_specific["conda-forge"]` extension slot. That keeps the
-advisory itself OSV-shaped while still recording the conda package, conda PURL,
-matched source PURLs, and affected conda versions.
-
-OpenVEX is used only for review input. The dashboard resolves OpenVEX
-statements into the conda-forge block during `scripts.merge_cves`, so the
-served `cves.json` contains both the OSV advisory and the current resolved
-review state.
-
-## Submission Flow
-
-```mermaid
-sequenceDiagram
-  participant User
-  participant Web as GitHub Pages app
-  participant Worker as Cloudflare Worker
-  participant GitHub
-
-  User->>Web: Stage mapping or CVE edits
-  Web->>Worker: Send OAuth token and edit payload
-  Worker->>GitHub: Validate user token with /user
-  Worker->>GitHub: Mint GitHub App installation token
-  Worker->>GitHub: Create branch
-  Worker->>GitHub: Write contribution file
-  Worker->>GitHub: Open pull request
-  GitHub-->>Web: PR URL
-```
-
-The user OAuth token identifies the submitter. Repository writes use the
-GitHub App installation token minted by the Worker.
-
-| Edit type | Endpoint | Branch prefix | Written file |
-|---|---|---|---|
-| PURL mapping | `POST /api/submit` | `purl-mapping/` | `mappings/contributions/*.json` |
-| CVE review | `POST /api/submit-cves` | `cve-review/` | `mappings/cve_contributions/*.json` |
-| AI CVE review queue | `POST /api/enqueue-cve-review` | `cve-ai-review/` | `mappings/cve_review_queue/*.json` |
-
-For CVE reviews, the browser sends OpenVEX statements. The Worker owns the
-OpenVEX document envelope: document ID, author, timestamp, version, and
-tooling.
-
-## Worker
-
-```mermaid
-flowchart TD
-  Exchange[POST /exchange] --> OAuth[GitHub OAuth code exchange]
-  Submit[POST /api/submit] --> User[Validate user token]
-  SubmitCves[POST /api/submit-cves] --> ValidateVex[Validate OpenVEX statements]
-  ValidateVex --> User
-  User --> AppToken[Mint GitHub App installation token]
-  AppToken --> PR[Create branch, commit file, open PR]
-```
-
-Worker routes:
-
-| Route | Purpose |
-|---|---|
-| `POST /exchange` | Exchange a GitHub OAuth code for a user access token |
-| `POST /api/submit` | Create a PURL mapping contribution PR |
-| `POST /api/submit-cves` | Create an OpenVEX CVE review PR |
-| `POST /api/enqueue-cve-review` | Create a PR adding package/advisory pairs to the AI review queue |
-
-Worker configuration:
-
-| Name | Secret | Purpose |
-|---|---:|---|
-| `GITHUB_CLIENT_ID` | no | GitHub App OAuth client ID |
-| `GITHUB_CLIENT_SECRET` | yes | GitHub App OAuth client secret |
-| `GITHUB_APP_ID` | no | GitHub App ID for JWT issuer fallback |
-| `GITHUB_APP_PRIVATE_KEY` | yes | Private key used to sign GitHub App JWTs |
-| `GITHUB_INSTALLATION_ID` | no | Installation that can write to this repo |
-| `GITHUB_REPO_OWNER` | no | Repository owner |
-| `GITHUB_REPO_NAME` | no | Repository name |
-| `GITHUB_DEFAULT_BRANCH` | no | Pull request base branch |
-| `GITHUB_CONTRIBUTIONS_DIR` | no | PURL contribution output directory |
-| `GITHUB_CVE_CONTRIBUTIONS_DIR` | no | CVE contribution output directory |
-| `GITHUB_CVE_REVIEW_QUEUE_DIR` | no | AI CVE review queue output directory |
-| `GITHUB_CVES_DIR` | no | Per-package CVE detail directory used to validate queue requests |
-
-Local Worker commands:
+Run these checks before opening a PR:
 
 ```sh
-cd worker
-npm install
-npm run typecheck
-npm run dev
+pixi run -e lite mappings:merge
+pixi run -e lite mappings:validate
+pixi run app:check
 ```
 
-Deploy with Wrangler:
+For frontend/Worker-only checks:
 
 ```sh
-cd worker
-wrangler login
-wrangler secret put GITHUB_CLIENT_SECRET
-wrangler secret put GITHUB_APP_PRIVATE_KEY
-wrangler deploy
+cd web && npm run build
+cd worker && npm run typecheck
 ```
-
-## Web App
-
-The web app has two entry points:
-
-| Page | Purpose |
-|---|---|
-| `index.html` | edit PURL mappings |
-| `cve.html` | review CVE assignments, queue AI CVE reviews, and apply AI draft suggestions |
-
-Local development:
-
-```sh
-cd web
-npm install
-npm run dev
-```
-
-The Pages build expects these repository variables:
-
-| Variable | Purpose |
-|---|---|
-| `OAUTH_WORKER_URL` | deployed Worker URL |
-| `OAUTH_CLIENT_ID` | GitHub App OAuth client ID |
-
-Without these values, the app can load data but cannot submit pull requests.
-
-The CVE dashboard includes three task-oriented tabs:
-
-- **Triage** lists active/future advisories and can bulk add the current filtered
-  set (for example Critical or High+) to an AI review queue PR.
-- **AI queue** shows package/advisory pairs waiting for the AI workflow.
-- **AI drafts** shows model suggestions that still need human review. Each draft
-  starts with a one-line recommendation, splits the AI rationale into readable
-  sections, previews the OpenVEX fields, and lets the reviewer apply the
-  suggestion to the form. The tab can also requeue visible drafts when the AI
-  prompt or review policy changes.
-
-## GitHub Actions
-
-```mermaid
-flowchart LR
-  Automap[automap.yml] --> AutoPR[refresh mapping PR]
-  CVE[cve_refresh.yml] --> CvePR[refresh CVE PR]
-  AiCve[cve_ai_review.yml] --> AiDraftPR[AI draft PR]
-  Pages[pages.yml] --> Site[GitHub Pages deploy]
-```
-
-| Workflow | Trigger | Main steps |
-|---|---|---|
-| `automap.yml` | schedule and manual dispatch | run automap, merge mappings, open refresh PR |
-| `cve_refresh.yml` | schedule and manual dispatch | match OSV advisories, auto-enqueue high-severity AI candidates, merge OpenVEX reviews, refresh AI sidecars, validate, open refresh PR |
-| `cve_ai_review.yml` | schedule and manual dispatch | consume AI review queue items, write AI draft artifacts, refresh AI sidecars, open AI draft PR |
-| `sbom_refresh.yml` | manual dispatch | refresh recipe-derived deep-inspection candidates across all conda-forge, extract embedded SBOMs, match transitive CVEs, open refresh PR |
-| `pages.yml` | push to `main` and manual dispatch | regenerate served JSON, publish SBOM inspection index, validate, build Vite app, deploy Pages |
-
-Worker deployment is done with Wrangler from `worker/`.
-
-## Validation
-
-```mermaid
-flowchart LR
-  Package[mappings/cves/*.json] --> Validate[scripts.validate]
-  OpenVEX[mappings/cve_contributions/*.json] --> Validate
-  Bundle[web/public/cves.json] --> Validate
-  Validate --> Result[non-zero exit on schema violation]
-```
-
-Run the validation gate:
-
-```sh
-pixi run -e lite validate
-```
-
-Run Python linting:
-
-```sh
-pixi run -e dev lint
-```
-
-Run frontend checks:
-
-```sh
-cd web
-npm run build
-```
-
-Run Worker type checks:
-
-```sh
-cd worker
-npm run typecheck
-```
-
-## License
-
-MIT

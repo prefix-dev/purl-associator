@@ -72,7 +72,7 @@ export function MappingEditor({
             No package selected
           </div>
           <div style={{ fontSize: 13, color: t.fg3 }}>
-            Pick a conda-forge package on the left to view or edit its PURL mapping.
+            Pick a conda-forge package on the left to view identity metadata and edit its PURL mapping.
           </div>
         </div>
       </div>
@@ -523,8 +523,8 @@ export function MappingEditor({
 
         {p.cpes && p.cpes.length > 0 && (
           <Section
-            title="CPE coordinates"
-            subtitle="Curated in manual.json. Drive NVD CVE matching for packages OSV doesn't cover."
+            title="CPE identities"
+            subtitle="Read-only package identity metadata used by downstream NVD/CVE tooling. PURL edits do not change these CPEs."
           >
             <div
               style={{
