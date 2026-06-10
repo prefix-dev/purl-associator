@@ -1,0 +1,75 @@
+name: Validate mappings
+
+# PR-time gate for the scheduled data pipelines (automap, download-counts,
+# cpe-discover) and user contributions alike: rebuilds the served payload and
+# validates it before anything lands on main. The `validate` job is a
+# required status check on main (repo ruleset), which is what lets the
+# pipeline PRs auto-merge without a human rubber stamp.
+#
+# No `paths:` filter on purpose — a required check that a path filter skips
+# never reports a status, which would leave unrelated PRs stuck on
+# "Expected — waiting for status" forever.
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: prefix-dev/setup-pixi@v0.9.5
+        with:
+          pixi-version: latest
+          cache: true
+          environments: lite
+
+      - name: Rebuild served identity mapping payload
+        run: pixi run -e lite mappings:merge
+
+      - name: Validate identity mapping payload
+        run: pixi run -e lite mappings:validate
+
+      - name: Guard against mass removals in auto.json
+        # A pipeline bug or an upstream source returning empty shows up as a
+        # huge wave of deletions, and schema validation can't catch that — an
+        # empty-but-valid file passes. Compare package counts against the base
+        # branch and fail on a >20% drop. Intentional mass removals can still
+        # land: admins bypass the required check.
+        run: |
+          set -euo pipefail
+          git fetch --no-tags --depth=1 origin "$GITHUB_BASE_REF"
+          python3 - <<'PY'
+          import json
+          import subprocess
+          import sys
+
+          def package_count(rev):
+              show = subprocess.run(
+                  ["git", "show", f"{rev}:mappings/auto.json"],
+                  capture_output=True,
+                  text=True,
+              )
+              if show.returncode != 0:
+                  return 0
+              return len(json.loads(show.stdout).get("packages", {}))
+
+          before = package_count("FETCH_HEAD")
+          after = package_count("HEAD")
+          print(f"packages on base: {before:,}; on PR head: {after:,}")
+          if before >= 100 and after < 0.8 * before:
+              sys.exit(
+                  f"auto.json shrank from {before:,} to {after:,} packages "
+                  "(>20% drop) — refusing to validate."
+              )
+          PY

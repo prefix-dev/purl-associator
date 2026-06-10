@@ -117,8 +117,12 @@ jobs:
           cat /tmp/cpe_pr_body.md
 
       - name: Open / update PR
+        id: pr
         uses: peter-evans/create-pull-request@v8
         with:
+          # PRs created with the default GITHUB_TOKEN can't trigger the
+          # validate workflow (GitHub's recursion guard) — see automap.yml.
+          token: ${{ secrets.PIPELINE_PAT || github.token }}
           # Audit artifacts (candidates + vet) and the shipping contribution.
           # web/public/mappings.json is gitignored so won't be added even if
           # it appears in the workspace.
@@ -132,3 +136,19 @@ jobs:
           commit-message: "cpe: refresh CPE mappings"
           delete-branch: true
           body-path: /tmp/cpe_pr_body.md
+
+      - name: Enable auto-merge
+        if: steps.pr.outputs.pull-request-number
+        env:
+          # Same PAT as above: a merge performed by auto-merge enabled with
+          # GITHUB_TOKEN would not trigger the pages deploy on main.
+          GH_TOKEN: ${{ secrets.PIPELINE_PAT || github.token }}
+          PR: ${{ steps.pr.outputs.pull-request-number }}
+        run: |
+          set -euo pipefail
+          # Idempotent: when create-pull-request updates an existing PR the
+          # earlier auto-merge request is still active, and enabling it twice
+          # errors.
+          if [ -z "$(gh pr view "$PR" --json autoMergeRequest --jq '.autoMergeRequest // empty')" ]; then
+            gh pr merge --auto --squash "$PR"
+          fi
