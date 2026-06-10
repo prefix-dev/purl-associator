@@ -303,6 +303,36 @@
         "level": "CRITICAL"
       }
     },
+    "keras::GHSA-cvhh-q5g5-qprp": {
+      "advisory_id": "GHSA-cvhh-q5g5-qprp",
+      "affected_versions": {
+        "agrees_with_match": true,
+        "reasoning": "The OSV range events specify introduced=3.11.0, fixed=3.11.3, and explicitly lists 3.11.0, 3.11.1, 3.11.2 as affected PyPI versions. The automated match includes 3.11.2 as an affected conda-forge version. This is consistent with the OSV data. Whether 3.11.0 and 3.11.1 were shipped on conda-forge needs human verification, but 3.11.2 being listed as affected is correct per the OSV range."
+      },
+      "inputs_seen": {
+        "hash": "0f564434d4a14713cd6da7c28a23f58c92e5efef6c6d7040a1afa402fe57fccf"
+      },
+      "notes": "The affected_versions list in the match only shows 3.11.2. Human reviewers should verify whether conda-forge also shipped 3.11.0 and 3.11.1, and if so, add those versions to the affected set.",
+      "openvex_action_statement": "Upgrade to keras >= 3.11.3 (conda-forge latest is 3.14.1 which is fixed). Avoid loading Keras model files from untrusted sources on older installations.",
+      "openvex_impact_statement": null,
+      "openvex_justification": null,
+      "openvex_status": "affected",
+      "package": "keras",
+      "prompt_version": "2026-06-03.verify-conda-shipped-versions-v1",
+      "rationale": "The OSV range covers Keras 3.11.0 up to (not including) 3.11.3, with affected PyPI versions listed as 3.11.0, 3.11.1, and 3.11.2. The latest conda-forge version is 3.14.1, which is well above the fixed version 3.11.3, so the currently shipped conda-forge version is not vulnerable. However, the automated match lists 3.11.2 as an affected conda-forge version \u2014 this is plausible only if conda-forge shipped 3.11.2. The OSV record clearly identifies versions in this range as affected; if conda-forge did ship 3.11.2 (or 3.11.0/3.11.1), those historical builds remain affected. The vulnerability is a deserialization issue in TorchModuleWrapper that bypasses safe_mode, allowing arbitrary code execution from a crafted Keras file \u2014 this is a critical runtime concern for any user loading untrusted models. Since the fix is present in 3.11.3 and the latest conda-forge version is 3.14.1, the current latest build is patched, but historical conda-forge builds in the 3.11.0\u20133.11.2 range remain affected.",
+      "runtime_applicability": {
+        "applies": "yes",
+        "reasoning": "The vulnerability is triggered at model loading time (keras.Model.load_model) via a crafted Keras file. This is a core runtime function of the keras package \u2014 any installation that loads model files is exposed. There is no indication this is build-time only or behind an optional feature flag."
+      },
+      "severity_in_conda_context": {
+        "assessment": "same",
+        "reasoning": "The CVSS 9.8 Critical score reflects network-exploitable arbitrary code execution with no authentication required. For conda-installed keras, users routinely load model files, including from remote sources, so the attack surface aligns well with the upstream severity assessment."
+      },
+      "severity_seen": {
+        "cvss": 9.8,
+        "level": "CRITICAL"
+      }
+    },
     "langchain-community::PYSEC-2024-278": {
       "advisory_id": "PYSEC-2024-278",
       "affected_versions": {
@@ -331,6 +361,423 @@
       "severity_seen": {
         "cvss": 9.8,
         "level": null
+      }
+    },
+    "langchain::GHSA-57fc-8q82-gfp3": {
+      "advisory_id": "GHSA-57fc-8q82-gfp3",
+      "affected_versions": {
+        "agrees_with_match": true,
+        "reasoning": "All 38 listed conda-forge affected versions (0.0.136 through 0.0.190) fall within the OSV range [0, 0.0.236), so they are correctly identified as vulnerable. The latest conda-forge version 1.3.4 is far beyond the fix point and is not listed, which is correct."
+      },
+      "inputs_seen": {
+        "hash": "0e1ad7630c513e7a25ad55696ff1e8936568418df8cb7ac54f3345e4a57596d4"
+      },
+      "notes": "The `affects_future: False` flag is consistent with the fix being at 0.0.236, and conda-forge's latest (1.3.4) is safe. Historical builds remain vulnerable.",
+      "openvex_action_statement": "Upgrade to langchain >= 0.0.236 (conda-forge latest is 1.3.4, which is safe). Any historical conda-forge build in the 0.0.136\u20130.0.190 range should be replaced immediately.",
+      "openvex_impact_statement": null,
+      "openvex_justification": null,
+      "openvex_status": "affected",
+      "package": "langchain",
+      "prompt_version": "2026-06-03.verify-conda-shipped-versions-v1",
+      "rationale": "The OSV range for CVE-2023-36188 covers langchain versions from 0 up to (not including) 0.0.236, meaning the fix landed at 0.0.236. The conda-forge `affected_versions` list contains only 0.0.x versions in the range 0.0.136\u20130.0.190, all of which fall within the vulnerable window. The latest conda-forge version is 1.3.4, which is well beyond the fixed point of 0.0.236, so the current conda package is not vulnerable. However, the listed conda-forge affected versions (0.0.136\u20130.0.190) are genuinely within the vulnerable range and were shipped on conda-forge. The vulnerability involves PALChain's use of Python's `exec` to run LLM-generated code without sandboxing, which is a runtime code path that executes whenever PALChain is invoked. Users running those historical conda builds are exposed; upgrading to 1.3.4 (or any version >= 0.0.236) resolves the issue.",
+      "runtime_applicability": {
+        "applies": "yes",
+        "reasoning": "PALChain is a runtime component of the langchain package. When a user instantiates and runs a PALChain, the vulnerable `exec`-based code path executes. This is not a build-time-only path."
+      },
+      "severity_in_conda_context": {
+        "assessment": "same",
+        "reasoning": "The CVSS 9.8 Critical score reflects unauthenticated remote code execution, which is accurate since LLM-driven prompt injection can cause arbitrary Python execution at runtime. The severity is the same in the conda context."
+      },
+      "severity_seen": {
+        "cvss": 9.8,
+        "level": "CRITICAL"
+      }
+    },
+    "langchain::GHSA-8h5w-f6q9-wg35": {
+      "advisory_id": "GHSA-8h5w-f6q9-wg35",
+      "affected_versions": {
+        "agrees_with_match": true,
+        "reasoning": "All 40 listed conda-forge affected versions (0.0.136\u20130.0.190, 0.0.238, 0.0.239) fall within the OSV range [0, 0.0.247). Versions 0.0.238 and 0.0.239 are explicitly listed in the OSV versions array and are within the vulnerable window. No removals are warranted."
+      },
+      "inputs_seen": {
+        "hash": "8f043a35256147baef50678a4874fc196946010b145d70ab53757d32ca67985c"
+      },
+      "notes": "The fix version 0.0.247 is an upstream PyPI release; its conda-forge packaging status is not shown in the prompt. Conda-forge latest is 1.3.4 which is safely beyond the fix.",
+      "openvex_action_statement": "Upgrade to langchain >= 0.0.247 (conda-forge latest is 1.3.4, which is safe). Any historical conda-forge build at or below 0.0.246 and listed in affected_versions should be replaced.",
+      "openvex_impact_statement": null,
+      "openvex_justification": null,
+      "openvex_status": "affected",
+      "package": "langchain",
+      "prompt_version": "2026-06-03.verify-conda-shipped-versions-v1",
+      "rationale": "CVE-2023-32785 covers a SQL injection via prompt injection in Langchain's SQL chain, fixed at 0.0.247. The OSV range is [0, 0.0.247). The conda-forge `affected_versions` list includes both the older 0.0.136\u20130.0.190 range and two additional versions 0.0.238 and 0.0.239, all of which fall within the vulnerable range [0, 0.0.247). The latest conda-forge version 1.3.4 is far beyond the fix point and is not affected. The SQL chain is a runtime component, so when users invoke it against a database the injection vulnerability is live. The match is correct for the listed conda-forge versions.",
+      "runtime_applicability": {
+        "applies": "yes",
+        "reasoning": "The SQL chain feature is a runtime component. Prompt injection affecting SQL execution is triggered when the chain is used against a database backend, making this a direct runtime vulnerability."
+      },
+      "severity_in_conda_context": {
+        "assessment": "same",
+        "reasoning": "SQL injection via prompt injection leading to arbitrary SQL execution justifies the Critical CVSS score. The severity is the same in the conda context since the attack vector requires the user to deploy the SQL chain feature."
+      },
+      "severity_seen": {
+        "cvss": 9.8,
+        "level": "CRITICAL"
+      }
+    },
+    "langchain::GHSA-f73w-4m7g-ch9x": {
+      "advisory_id": "GHSA-f73w-4m7g-ch9x",
+      "affected_versions": {
+        "agrees_with_match": true,
+        "reasoning": "All 73 listed conda-forge affected versions fall within the OSV range [0, 0.0.308). Versions 0.0.136\u20130.0.306 are all below the fix point. No removals are warranted based on the provided conda-forge version data."
+      },
+      "inputs_seen": {
+        "hash": "4b960cc13baf8252615ea65628864297735d41968f92f54a2d034528685789b8"
+      },
+      "notes": "The advisory explicitly states numexpr is optional for langchain. Conda-forge users should check whether their environment includes numexpr < 2.8.5 alongside the vulnerable langchain versions. The fix in langchain 0.0.308 sanitizes input before passing it to numexpr.evaluate.",
+      "openvex_action_statement": "Upgrade to langchain >= 0.0.308 (conda-forge latest is 1.3.4, which is safe). If running an older conda-forge langchain build alongside numexpr < 2.8.5, both packages should be updated. Since numexpr is optional, risk is present only when it is installed.",
+      "openvex_impact_statement": null,
+      "openvex_justification": null,
+      "openvex_status": "affected",
+      "package": "langchain",
+      "prompt_version": "2026-06-03.verify-conda-shipped-versions-v1",
+      "rationale": "CVE-2023-39631 covers arbitrary code execution via langchain's use of the numexpr library's `evaluate` function, fixed in langchain 0.0.308 and numexpr 2.8.5. The OSV range for langchain is [0, 0.0.308). The conda-forge `affected_versions` list (73 entries spanning 0.0.136\u20130.0.306) all fall within the vulnerable window. The latest conda-forge version 1.3.4 is well beyond the fix point of 0.0.308 and is not affected. Importantly, the advisory notes that numexpr is an optional dependency for langchain; the vulnerability is only exploitable if numexpr is installed alongside langchain and the relevant chain that calls `numexpr.evaluate` is invoked. This makes the effective risk environment-dependent, but when numexpr is present the attack path is live.",
+      "runtime_applicability": {
+        "applies": "partial",
+        "reasoning": "numexpr is an optional dependency of langchain. The vulnerable code path (calling numexpr.evaluate with unsanitized LLM output) is only reached when numexpr is installed and the relevant LLMMathChain or similar numeric chain is invoked. If numexpr is not present in the conda environment, the vulnerability is not exploitable."
+      },
+      "severity_in_conda_context": {
+        "assessment": "same",
+        "reasoning": "When numexpr is installed and the affected chain is used, the CVSS 9.8 Critical rating is appropriate because arbitrary code execution is possible via remote prompt injection. The optional nature of numexpr slightly reduces the attack surface, but the severity rating when the code path is active is unchanged."
+      },
+      "severity_seen": {
+        "cvss": 9.8,
+        "level": "CRITICAL"
+      }
+    },
+    "langchain::PYSEC-2024-114": {
+      "advisory_id": "PYSEC-2024-114",
+      "affected_versions": {
+        "agrees_with_match": false,
+        "reasoning": "The OSV ECOSYSTEM range introduced=0, fixed=0.3.1 applies to pkg:pypi/langchain but the vulnerability itself is in the JavaScript codebase (langchainjs). The GIT range repo is https://github.com/langchain-ai/langchainjs and the fix commit is in that JS repo. This is a data-quality error in the OSV record cross-attributing a JS vulnerability to the Python PyPI package. All listed conda-forge versions should be removed because the vulnerable code is not present in any version of the Python langchain package.",
+        "suggested_removes": [
+          "0.0.136",
+          "0.0.142",
+          "0.0.144",
+          "0.0.145",
+          "0.0.146",
+          "0.0.147",
+          "0.0.148",
+          "0.0.149",
+          "0.0.150",
+          "0.0.152",
+          "0.0.153",
+          "0.0.155",
+          "0.0.157",
+          "0.0.158",
+          "0.0.160",
+          "0.0.161",
+          "0.0.163",
+          "0.0.164",
+          "0.0.165",
+          "0.0.166",
+          "0.0.168",
+          "0.0.169",
+          "0.0.170",
+          "0.0.171",
+          "0.0.172",
+          "0.0.173",
+          "0.0.174",
+          "0.0.175",
+          "0.0.177",
+          "0.0.180",
+          "0.0.181",
+          "0.0.183",
+          "0.0.184",
+          "0.0.186",
+          "0.0.187",
+          "0.0.188",
+          "0.0.189",
+          "0.0.190",
+          "0.0.238",
+          "0.0.239",
+          "0.0.268",
+          "0.0.269",
+          "0.0.270",
+          "0.0.271",
+          "0.0.272",
+          "0.0.273",
+          "0.0.274",
+          "0.0.275",
+          "0.0.276",
+          "0.0.277",
+          "0.0.278",
+          "0.0.279",
+          "0.0.281",
+          "0.0.283",
+          "0.0.284",
+          "0.0.285",
+          "0.0.286",
+          "0.0.287",
+          "0.0.288",
+          "0.0.289",
+          "0.0.291",
+          "0.0.292",
+          "0.0.293",
+          "0.0.297",
+          "0.0.298",
+          "0.0.299",
+          "0.0.300",
+          "0.0.301",
+          "0.0.302",
+          "0.0.303",
+          "0.0.304",
+          "0.0.305",
+          "0.0.306",
+          "0.0.308",
+          "0.0.309",
+          "0.0.310",
+          "0.0.311",
+          "0.0.312",
+          "0.0.313",
+          "0.0.314",
+          "0.0.315",
+          "0.0.316",
+          "0.0.317",
+          "0.0.318",
+          "0.0.319",
+          "0.0.320",
+          "0.0.321",
+          "0.0.322",
+          "0.0.323",
+          "0.0.324",
+          "0.0.325",
+          "0.0.326",
+          "0.0.327",
+          "0.0.329",
+          "0.0.330",
+          "0.0.331",
+          "0.0.332",
+          "0.0.333",
+          "0.0.334",
+          "0.0.335",
+          "0.0.336",
+          "0.0.337",
+          "0.0.338",
+          "0.0.339",
+          "0.0.340",
+          "0.0.346",
+          "0.0.350",
+          "0.0.351",
+          "0.0.352",
+          "0.0.353",
+          "0.0.354",
+          "0.1.0",
+          "0.1.1",
+          "0.1.2",
+          "0.1.4",
+          "0.1.5",
+          "0.1.6",
+          "0.1.7",
+          "0.1.8",
+          "0.1.9",
+          "0.1.10",
+          "0.1.11",
+          "0.1.12",
+          "0.1.13",
+          "0.1.14",
+          "0.1.15",
+          "0.1.16",
+          "0.1.19",
+          "0.1.20",
+          "0.2.2",
+          "0.2.3",
+          "0.2.4",
+          "0.2.5",
+          "0.2.6",
+          "0.2.7",
+          "0.2.8",
+          "0.2.10",
+          "0.2.11",
+          "0.2.12",
+          "0.2.13",
+          "0.2.14",
+          "0.2.15",
+          "0.2.16",
+          "0.2.17",
+          "0.3.0"
+        ]
+      },
+      "inputs_seen": {
+        "hash": "1710692ece98899aa5ac796e32ca6e344466e8edfb1d4303b8b57097c66691a6"
+      },
+      "notes": "The OSV record PYSEC-2024-114 has a data-quality issue: the details and fix reference langchainjs (JavaScript), but the ECOSYSTEM range is incorrectly attributed to pkg:pypi/langchain. The CVSS 9.8 score also appears inflated for the actual impact described. Human maintainers should flag this to the OSV database for correction.",
+      "openvex_action_statement": null,
+      "openvex_impact_statement": "PYSEC-2024-114 targets the GraphCypherQAChain class in langchain-ai/langchainjs (the JavaScript implementation). The conda-forge langchain package is the Python implementation (pkg:pypi/langchain) and is an entirely separate codebase; the vulnerable JavaScript code is not present in this artifact.",
+      "openvex_justification": "vulnerable_code_not_present",
+      "openvex_status": "not_affected",
+      "package": "langchain",
+      "prompt_version": "2026-06-03.verify-conda-shipped-versions-v1",
+      "rationale": "PYSEC-2024-114 describes a prompt-injection/SQL-injection vulnerability in the GraphCypherQAChain class of langchain-ai/langchainjs \u2014 the JavaScript implementation of LangChain. The GIT range points exclusively to the langchainjs repository (https://github.com/langchain-ai/langchainjs) and the fix commit is in that JS repo. The PyPI ECOSYSTEM range that sweeps langchain < 0.3.1 appears to be a cross-contamination error in the OSV record: the advisory text, the fix commit, and the reference URL all pertain to the JavaScript package, not the Python package pkg:pypi/langchain. The conda-forge artifact under review is the Python package (latest version 1.3.4), which is a wholly different codebase. Therefore all conda-forge versions listed in affected_versions are incorrectly attributed to this advisory and should be removed. The match should be rejected as not applicable to the Python/conda artifact.",
+      "runtime_applicability": {
+        "applies": "no",
+        "reasoning": "The vulnerability resides in the JavaScript langchainjs implementation of GraphCypherQAChain. The Python conda-forge langchain package is a separate codebase with no JavaScript runtime code; the vulnerable module cannot execute in this artifact."
+      },
+      "severity_in_conda_context": {
+        "assessment": "lower",
+        "reasoning": "The CVSS 9.8 score is derived from the JavaScript package context. Since the vulnerability does not exist in the Python package at all, the effective severity for conda-forge langchain is zero/not applicable."
+      },
+      "severity_seen": {
+        "cvss": 9.8,
+        "level": null
+      }
+    },
+    "lightning::GHSA-cgwc-qvrx-rf7f": {
+      "advisory_id": "GHSA-cgwc-qvrx-rf7f",
+      "affected_versions": {
+        "agrees_with_match": true,
+        "reasoning": "The OSV range specifies introduced=0 and fixed=2.3.3, so all versions < 2.3.3 are vulnerable. All 27 listed conda-forge affected versions (2.0.0 through 2.3.2) fall squarely within this range and are correctly included. The latest conda-forge version 2.6.5 is beyond the fixed point and is not listed, which is also correct."
+      },
+      "inputs_seen": {
+        "hash": "3ebba94db69f63c72bcdc70ba6f6619893e4fef362b23e8ed6f350978d23a7ad"
+      },
+      "notes": "The fix was released in upstream version 2.3.3 per the GitHub release tag referenced in the advisory. The conda-forge package at 2.6.5 is not affected. Users of historical conda-forge builds (2.0.0\u20132.3.2) should upgrade immediately. The vulnerability specifically involves deepdiff.Delta deserialization bypass of dunder attribute restrictions.",
+      "openvex_action_statement": "Upgrade the lightning conda-forge package to version 2.6.5 (or at minimum 2.3.3), which contains the upstream fix (commit 330af381). Users running any version between 2.0.0 and 2.3.2 on conda-forge are exposed to remote code execution via the delta deserialization endpoint.",
+      "openvex_impact_statement": null,
+      "openvex_justification": null,
+      "openvex_status": "affected",
+      "package": "lightning",
+      "prompt_version": "2026-06-03.verify-conda-shipped-versions-v1",
+      "rationale": "The OSV record for GHSA-cgwc-qvrx-rf7f covers all lightning PyPI versions introduced from 0 up to (but not including) 2.3.3, meaning versions 2.3.3 and later are fixed. The conda-forge package currently ships version 2.6.5, which is well past the fixed point of 2.3.3, so the latest conda-forge version is not vulnerable. However, the auto-derived affected_versions list includes 27 historical conda-forge releases spanning 2.0.0 through 2.3.2, all of which fall within the vulnerable OSV range (< 2.3.3). Those historical conda-forge builds are genuinely vulnerable to this RCE issue, which involves exploitation of deepdiff.Delta deserialization to achieve arbitrary attribute writes and remote code execution. The vulnerability is in the delta endpoint of the Lightning app framework, which is enabled by default, making it a high-impact issue for any users still running those older conda-forge builds. Since the latest conda-forge version (2.6.5) is fixed but historical versions remain affected, the appropriate status is 'affected' with a recommendation to upgrade. The affected_versions list appears correct \u2014 all 27 listed versions (2.0.0 through 2.3.2) are within the vulnerable range and none should be removed.",
+      "runtime_applicability": {
+        "applies": "yes",
+        "reasoning": "The vulnerability is in the Lightning app framework's delta endpoint, which is enabled by default in the affected versions. Any conda-forge user running a pytorch-lightning application with the default configuration on these versions is exposed to this RCE vector at runtime via network-accessible deserialization."
+      },
+      "severity_in_conda_context": {
+        "assessment": "same",
+        "reasoning": "The CVSS 9.8 CRITICAL rating is appropriate in the conda context. The vulnerable delta endpoint is enabled by default, requires no authentication, and allows full RCE on self-hosted applications. The network-accessible nature of the attack with no privileges or user interaction required justifies the critical rating."
+      },
+      "severity_seen": {
+        "cvss": 9.8,
+        "level": "CRITICAL"
+      }
+    },
+    "litellm::GHSA-46cm-pfwv-cgf8": {
+      "advisory_id": "GHSA-46cm-pfwv-cgf8",
+      "affected_versions": {
+        "agrees_with_match": true,
+        "reasoning": "The OSV ECOSYSTEM range specifies introduced=0 and fixed=1.34.42. The conda-forge affected_versions list contains 30 entries all in the 1.34.x series (1.34.0\u20131.34.41), all of which fall below the fixed version. No conda-forge versions outside that range appear to have been shipped according to the provided data, so no adds or removes are needed. The latest conda-forge version 1.88.0 is above 1.34.42 and is correctly excluded."
+      },
+      "inputs_seen": {
+        "hash": "6b98f2891c35cf45bfcc5fe5e5bf996700f85e1b5f522e1d442baccdbb9d29f5"
+      },
+      "notes": "The conda-forge feedstock appears to have started shipping litellm around the 1.34.x release cycle, which is why earlier versions in the OSV list (0.x, 1.0.x\u20131.33.x) do not appear in the conda-forge affected_versions. Human verification of exactly which versions were first packaged for conda-forge would be prudent, but the current affected list appears correct based on available data.",
+      "openvex_action_statement": "Upgrade to litellm >= 1.34.42 on conda-forge (latest: 1.88.0). All conda-forge builds in the 1.34.0\u20131.34.41 range are vulnerable to SSTI via unsanitized Jinja2 template rendering in the /completions proxy endpoint.",
+      "openvex_impact_statement": null,
+      "openvex_justification": null,
+      "openvex_status": "affected",
+      "package": "litellm",
+      "prompt_version": "2026-06-03.verify-conda-shipped-versions-v1",
+      "rationale": "The OSV range covers all litellm versions from 0 up to (not including) 1.34.42, with the fix landing in 1.34.42. The conda-forge `affected_versions` list only includes versions in the 1.34.x range (1.34.0 through 1.34.41), which are the only conda-forge builds that appear to have been shipped according to the data provided \u2014 the package was apparently first added to conda-forge around the 1.34.x series. All 30 listed conda-forge affected versions (1.34.0\u20131.34.41) are below the fixed point of 1.34.42 and are therefore genuinely vulnerable. The latest conda-forge version is 1.88.0, which is well above 1.34.42 and is therefore patched. The SSTI vulnerability in `hf_chat_template` via unsanitized Jinja2 rendering is a server-side concern \u2014 it applies when litellm is run as a proxy server and a crafted `tokenizer_config.json` is processed \u2014 so the vulnerable code path is present in all the listed affected conda-forge builds. Since historical conda-forge builds (1.34.0\u20131.34.41) remain affected but the current version (1.88.0) is fixed, the status is `affected` with an instruction to upgrade.",
+      "runtime_applicability": {
+        "applies": "yes",
+        "reasoning": "The vulnerability is in litellm's proxy server path (proxy_server.py, the /completions endpoint), which is a core runtime feature of the litellm conda package. The `hf_chat_template` method and Jinja2 rendering are exercised when the proxy server is run with Hugging Face model configurations, a supported and documented use case. No optional build-time flag is needed to expose the vulnerable code."
+      },
+      "severity_in_conda_context": {
+        "assessment": "same",
+        "reasoning": "CVSS 9.8 (CRITICAL, network-accessible, no auth required, full CIA impact) accurately reflects the severity. The vulnerability allows arbitrary code execution on the server with no authentication, which is equally severe for conda-distributed deployments as for any other distribution."
+      },
+      "severity_seen": {
+        "cvss": 9.8,
+        "level": "CRITICAL"
+      }
+    },
+    "litellm::GHSA-gppg-gqw8-wh9g": {
+      "advisory_id": "GHSA-gppg-gqw8-wh9g",
+      "affected_versions": {
+        "agrees_with_match": true,
+        "reasoning": "The OSV ECOSYSTEM range specifies introduced=0 and fixed=1.40.16. All 87 conda-forge affected versions (1.34.0\u20131.39.6) fall within this range and below the fixed version. The latest conda-forge version 1.88.0 is correctly excluded. No conda-forge versions in the 1.40.0\u20131.40.15 range appear in the provided conda-forge package data, so no adds can be verified from available data \u2014 a human should confirm whether any 1.40.x builds below 1.40.16 were ever shipped on conda-forge. No removes are warranted."
+      },
+      "inputs_seen": {
+        "hash": "393e8199a6c00e6ca95e824ce2ad520795f497e030ec550c9ce9d12fde8db441"
+      },
+      "notes": "The 1.40.0\u20131.40.15 range is theoretically vulnerable per the OSV range but no such versions appear in the conda-forge package data provided. A human maintainer should verify whether any 1.40.x pre-1.40.16 builds were shipped to conda-forge and add them to affected_versions if so. The vulnerability was reported against v1.35.8 specifically but the fix covers the full range back to 0.",
+      "openvex_action_statement": "Upgrade to litellm >= 1.40.16 on conda-forge (latest: 1.88.0). All conda-forge builds from 1.34.0 through 1.39.6 are vulnerable to remote code execution via unsafe eval in the /config/update proxy endpoint when Google KMS and a database are configured.",
+      "openvex_impact_statement": null,
+      "openvex_justification": null,
+      "openvex_status": "affected",
+      "package": "litellm",
+      "prompt_version": "2026-06-03.verify-conda-shipped-versions-v1",
+      "rationale": "The OSV range covers all litellm versions from 0 up to (not including) 1.40.16, with the fix confirmed at commit fcea4c22 merged in PR #4228. The conda-forge affected_versions list includes 87 versions spanning 1.34.0 through 1.39.6, all of which fall below the 1.40.16 fixed point and are therefore genuinely vulnerable. The latest conda-forge version is 1.88.0, which is well above 1.40.16 and is patched. The vulnerability involves unsafe `eval` via the `add_deployment` function's `/config/update` endpoint, but it requires the server to be using Google KMS and a database backend \u2014 this is a specific configuration requirement that reduces exploitability in practice, though the code path is still present in all affected conda builds. The CVSS score of 9.8 may be slightly over-stated given the Google KMS prerequisite, but the RCE primitive is real.",
+      "runtime_applicability": {
+        "applies": "partial",
+        "reasoning": "The vulnerable code path (the `add_deployment` function processing the `/config/update` endpoint with Google KMS and database-backed secrets) is present in the distributed package code, but exploitation requires a specific server configuration: Google KMS must be in use and a database must be configured to store models. Many litellm deployments on conda-forge may not use this configuration, reducing practical exploitability. However, the code and the vulnerability are still present in the runtime artifact, so applicability is partial rather than yes."
+      },
+      "severity_in_conda_context": {
+        "assessment": "lower",
+        "reasoning": "The upstream CVSS of 9.8 assumes network-accessible exploitation with no authentication required, but the advisory details indicate the attack requires the server to be using Google KMS and a database backend for model storage. This prerequisite meaningfully reduces the attack surface compared to a fully unauthenticated no-precondition RCE, making the effective severity somewhat lower than the headline score in most conda deployment contexts, though still high/critical for affected configurations."
+      },
+      "severity_seen": {
+        "cvss": 9.8,
+        "level": "CRITICAL"
+      }
+    },
+    "llama-index-core::GHSA-r6gp-rff2-p3hf": {
+      "advisory_id": "GHSA-r6gp-rff2-p3hf",
+      "affected_versions": {
+        "agrees_with_match": true,
+        "reasoning": "The OSV range specifies introduced=0, fixed=0.10.24. All 24 conda-forge versions listed (0.10.5 through 0.10.23.post1) fall within this range and are therefore correctly identified as affected. The current latest conda-forge version 0.14.22 is beyond the fix point and is not listed as affected, which is correct."
+      },
+      "inputs_seen": {
+        "hash": "789af76aded183bfd9ab089c47097e52ee1c888788933abe28d5a37381fec0d8"
+      },
+      "notes": "Both GHSA-r6gp-rff2-p3hf and GHSA-wvpx-g427-q9wc share the same fix commits and the same OSV range (fixed at 0.10.24). CVE-2024-3271 is a bypass of the safe_eval underscore-check mechanism. The latest conda-forge version 0.14.22 is patched, but historical builds remain affected.",
+      "openvex_action_statement": "Upgrade llama-index-core to version 0.10.24 or later (latest conda-forge build is 0.14.22, which is not affected). Users running any of the listed affected conda-forge versions (0.10.5 through 0.10.23.post1) should upgrade immediately to eliminate this critical RCE risk.",
+      "openvex_impact_statement": null,
+      "openvex_justification": null,
+      "openvex_status": "affected",
+      "package": "llama-index-core",
+      "prompt_version": "2026-06-03.verify-conda-shipped-versions-v1",
+      "rationale": "The OSV range for CVE-2024-3271 covers all llama-index-core versions from 0 up to (but not including) 0.10.24, meaning any conda-forge build of versions in the 0.10.x series prior to 0.10.24 is vulnerable. The latest conda-forge version is 0.14.22, which is well beyond the fixed threshold of 0.10.24, so the current shipping version is not affected. However, the 24 listed conda-forge affected versions (0.10.5 through 0.10.23.post1) represent historical conda-forge builds that remain vulnerable to this command injection in the safe_eval function. The vulnerability is in the core package itself (exec_utils/safe_eval), not a vendored dependency, so it is directly present in any affected build. The automated affected_versions list appears to be a reasonable subset of the conda-forge 0.10.x builds that predate 0.10.24; users running those historical versions should upgrade.",
+      "runtime_applicability": {
+        "applies": "yes",
+        "reasoning": "The vulnerability is in the safe_eval/exec_utils functionality within llama-index-core itself, which is a runtime component of the package. It is not a build-time-only dependency or an optional feature gated behind an import; it is part of the core library's code execution utilities."
+      },
+      "severity_in_conda_context": {
+        "assessment": "same",
+        "reasoning": "This is a critical RCE vulnerability (CVSS 9.8) that applies fully in the conda context, as the vulnerable safe_eval function is part of the core runtime library and can be triggered by crafted LLM-generated input in any deployment using this functionality."
+      },
+      "severity_seen": {
+        "cvss": 9.8,
+        "level": "CRITICAL"
+      }
+    },
+    "llama-index-core::GHSA-wvpx-g427-q9wc": {
+      "advisory_id": "GHSA-wvpx-g427-q9wc",
+      "affected_versions": {
+        "agrees_with_match": true,
+        "reasoning": "The OSV range specifies introduced=0, fixed=0.10.24. All 24 listed conda-forge versions (0.10.5 through 0.10.23.post1) fall within this vulnerable range. The current latest conda-forge version 0.14.22 exceeds the fix point and is correctly not listed as affected."
+      },
+      "inputs_seen": {
+        "hash": "a9fa4793d2e6a6ecb1892b6791f51aae671332b703f0bd2d88a1e28118064f4c"
+      },
+      "notes": "This CVE is explicitly described as a bypass of CVE-2023-39662 and shares fix commits with CVE-2024-3271 (GHSA-r6gp-rff2-p3hf). Both advisories affect the same set of conda-forge versions and were patched simultaneously at 0.10.24. The latest conda-forge version 0.14.22 is patched.",
+      "openvex_action_statement": "Upgrade llama-index-core to version 0.10.24 or later (latest conda-forge build is 0.14.22, which is not affected). Users running any of the listed affected conda-forge versions (0.10.5 through 0.10.23.post1) should upgrade immediately to eliminate this critical RCE risk.",
+      "openvex_impact_statement": null,
+      "openvex_justification": null,
+      "openvex_status": "affected",
+      "package": "llama-index-core",
+      "prompt_version": "2026-06-03.verify-conda-shipped-versions-v1",
+      "rationale": "CVE-2024-3098 covers the same OSV range as CVE-2024-3271 (introduced=0, fixed=0.10.24) and shares the same fix commits, indicating both are closely related vulnerabilities in the safe_eval function of llama-index-core. This is a prompt injection leading to arbitrary code execution, specifically a bypass of CVE-2023-39662's mitigation in the exec_utils class. The 24 listed conda-forge affected versions (0.10.5 through 0.10.23.post1) are all within the vulnerable range per the OSV data. The current latest conda-forge version 0.14.22 is well beyond 0.10.24 and is not affected. As with the companion CVE, the vulnerability resides directly in the core package runtime code, not in a vendored or optional component.",
+      "runtime_applicability": {
+        "applies": "yes",
+        "reasoning": "The vulnerability is in the exec_utils safe_eval function, which is part of the core runtime of llama-index-core. It is not an optional or build-time-only feature; it is directly invoked during normal use of the library's code execution capabilities."
+      },
+      "severity_in_conda_context": {
+        "assessment": "same",
+        "reasoning": "This critical RCE vulnerability (CVSS 9.8) applies fully in the conda context. The affected safe_eval function is a core runtime component, and exploitation via prompt injection could allow full remote code execution on any server running an affected version of the library."
+      },
+      "severity_seen": {
+        "cvss": 9.8,
+        "level": "CRITICAL"
       }
     },
     "mlflow-pipelines::GHSA-gq3w-7jj3-x7gr": {
@@ -401,7 +848,7 @@
   },
   "backend": "api",
   "draft": true,
-  "generated_at": "2026-06-10T09:36:21+00:00",
+  "generated_at": "2026-06-10T09:37:25+00:00",
   "model": "claude-sonnet-4-6",
   "openvex": {
     "@context": "https://openvex.dev/ns/v0.2.0",
@@ -415,7 +862,7 @@
           }
         ],
         "status": "under_investigation",
-        "timestamp": "2026-06-10T09:36:21+00:00",
+        "timestamp": "2026-06-10T09:37:25+00:00",
         "vulnerability": {
           "name": "GHSA-gq3w-7jj3-x7gr"
         }
@@ -428,7 +875,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-10T09:36:21+00:00",
+        "timestamp": "2026-06-10T09:37:25+00:00",
         "vulnerability": {
           "name": "GHSA-gq3w-7jj3-x7gr"
         }
@@ -441,7 +888,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-10T09:36:21+00:00",
+        "timestamp": "2026-06-10T09:37:25+00:00",
         "vulnerability": {
           "name": "GHSA-gq3w-7jj3-x7gr"
         }
@@ -454,7 +901,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-10T09:36:21+00:00",
+        "timestamp": "2026-06-10T09:37:25+00:00",
         "vulnerability": {
           "name": "GHSA-gq3w-7jj3-x7gr"
         }
@@ -467,7 +914,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-10T09:36:21+00:00",
+        "timestamp": "2026-06-10T09:37:25+00:00",
         "vulnerability": {
           "name": "GHSA-hh8p-p8mp-gqhm"
         }
@@ -480,7 +927,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-10T09:36:21+00:00",
+        "timestamp": "2026-06-10T09:37:25+00:00",
         "vulnerability": {
           "name": "PYSEC-2024-278"
         }
@@ -493,7 +940,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-10T09:36:21+00:00",
+        "timestamp": "2026-06-10T09:37:25+00:00",
         "vulnerability": {
           "name": "GHSA-x7m3-jprg-wc5g"
         }
@@ -507,7 +954,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-10T09:36:21+00:00",
+        "timestamp": "2026-06-10T09:37:25+00:00",
         "vulnerability": {
           "name": "GHSA-9v2f-6vcg-3hgv"
         }
@@ -520,7 +967,7 @@
           }
         ],
         "status": "not_affected",
-        "timestamp": "2026-06-10T09:36:21+00:00",
+        "timestamp": "2026-06-10T09:37:25+00:00",
         "vulnerability": {
           "name": "GHSA-9v2f-6vcg-3hgv"
         }
@@ -533,7 +980,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-10T09:36:21+00:00",
+        "timestamp": "2026-06-10T09:37:25+00:00",
         "vulnerability": {
           "name": "GHSA-g82g-j283-hj97"
         }
@@ -546,7 +993,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-10T09:36:21+00:00",
+        "timestamp": "2026-06-10T09:37:25+00:00",
         "vulnerability": {
           "name": "GHSA-mf8f-x4r3-jm8c"
         }
@@ -559,7 +1006,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-10T09:36:21+00:00",
+        "timestamp": "2026-06-10T09:37:25+00:00",
         "vulnerability": {
           "name": "GHSA-mrhh-3ggq-23p2"
         }
@@ -572,7 +1019,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-10T09:36:21+00:00",
+        "timestamp": "2026-06-10T09:37:25+00:00",
         "vulnerability": {
           "name": "GHSA-5w3j-gwgh-4rfv"
         }
@@ -585,7 +1032,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-10T09:36:21+00:00",
+        "timestamp": "2026-06-10T09:37:25+00:00",
         "vulnerability": {
           "name": "GHSA-h7xg-cmpp-48hf"
         }
@@ -598,7 +1045,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-10T09:36:21+00:00",
+        "timestamp": "2026-06-10T09:37:25+00:00",
         "vulnerability": {
           "name": "GHSA-chq7-94j8-cj28"
         }
@@ -611,7 +1058,7 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-10T09:36:21+00:00",
+        "timestamp": "2026-06-10T09:37:25+00:00",
         "vulnerability": {
           "name": "GHSA-747f-ww56-4q4h"
         }
@@ -624,13 +1071,2029 @@
           }
         ],
         "status": "affected",
-        "timestamp": "2026-06-10T09:36:21+00:00",
+        "timestamp": "2026-06-10T09:37:25+00:00",
         "vulnerability": {
           "name": "GHSA-9cqf-439c-j96r"
         }
+      },
+      {
+        "action_statement": "Upgrade to keras >= 3.11.3 (conda-forge latest is 3.14.1 which is fixed). Avoid loading Keras model files from untrusted sources on older installations.",
+        "products": [
+          {
+            "@id": "pkg:conda/keras?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "GHSA-cvhh-q5g5-qprp"
+        }
+      },
+      {
+        "action_statement": "Upgrade to langchain >= 0.0.236 (conda-forge latest is 1.3.4, which is safe). Any historical conda-forge build in the 0.0.136\u20130.0.190 range should be replaced immediately.",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "GHSA-57fc-8q82-gfp3"
+        }
+      },
+      {
+        "action_statement": "Upgrade to langchain >= 0.0.247 (conda-forge latest is 1.3.4, which is safe). Any historical conda-forge build at or below 0.0.246 and listed in affected_versions should be replaced.",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "GHSA-8h5w-f6q9-wg35"
+        }
+      },
+      {
+        "action_statement": "Upgrade to langchain >= 0.0.308 (conda-forge latest is 1.3.4, which is safe). If running an older conda-forge langchain build alongside numexpr < 2.8.5, both packages should be updated. Since numexpr is optional, risk is present only when it is installed.",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "GHSA-f73w-4m7g-ch9x"
+        }
+      },
+      {
+        "action_statement": "Upgrade the lightning conda-forge package to version 2.6.5 (or at minimum 2.3.3), which contains the upstream fix (commit 330af381). Users running any version between 2.0.0 and 2.3.2 on conda-forge are exposed to remote code execution via the delta deserialization endpoint.",
+        "products": [
+          {
+            "@id": "pkg:conda/lightning?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "GHSA-cgwc-qvrx-rf7f"
+        }
+      },
+      {
+        "impact_statement": "PYSEC-2024-114 targets the GraphCypherQAChain class in langchain-ai/langchainjs (the JavaScript implementation). The conda-forge langchain package is the Python implementation (pkg:pypi/langchain) and is an entirely separate codebase; the vulnerable JavaScript code is not present in this artifact.",
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.136?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.142?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.144?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.145?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.146?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.147?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.148?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.149?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.150?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.152?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.153?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.155?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.157?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.158?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.160?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.161?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.163?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.164?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.165?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.166?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.168?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.169?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.170?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.171?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.172?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.173?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.174?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.175?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.177?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.180?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.181?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.183?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.184?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.186?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.187?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.188?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.189?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.190?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.238?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.239?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.268?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.269?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.270?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.271?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.272?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.273?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.274?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.275?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.276?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.277?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.278?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.279?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.281?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.283?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.284?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.285?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.286?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.287?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.288?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.289?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.291?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.292?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.293?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.297?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.298?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.299?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.300?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.301?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.302?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.303?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.304?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.305?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.306?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.308?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.309?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.310?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.311?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.312?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.313?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.314?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.315?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.316?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.317?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.318?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.319?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.320?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.321?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.322?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.323?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.324?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.325?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.326?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.327?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.329?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.330?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.331?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.332?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.333?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.334?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.335?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.336?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.337?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.338?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.339?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.340?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.346?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.350?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.351?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.352?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.353?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.0.354?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.1.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.1.1?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.1.2?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.1.4?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.1.5?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.1.6?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.1.7?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.1.8?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.1.9?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.1.10?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.1.11?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.1.12?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.1.13?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.1.14?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.1.15?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.1.16?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.1.19?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.1.20?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.2.2?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.2.3?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.2.4?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.2.5?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.2.6?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.2.7?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.2.8?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.2.10?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.2.11?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.2.12?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.2.13?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.2.14?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.2.15?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.2.16?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.2.17?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "justification": "vulnerable_code_not_present",
+        "products": [
+          {
+            "@id": "pkg:conda/langchain@0.3.0?channel=conda-forge"
+          }
+        ],
+        "status": "not_affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "PYSEC-2024-114"
+        }
+      },
+      {
+        "action_statement": "Upgrade llama-index-core to version 0.10.24 or later (latest conda-forge build is 0.14.22, which is not affected). Users running any of the listed affected conda-forge versions (0.10.5 through 0.10.23.post1) should upgrade immediately to eliminate this critical RCE risk.",
+        "products": [
+          {
+            "@id": "pkg:conda/llama-index-core?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "GHSA-r6gp-rff2-p3hf"
+        }
+      },
+      {
+        "action_statement": "Upgrade llama-index-core to version 0.10.24 or later (latest conda-forge build is 0.14.22, which is not affected). Users running any of the listed affected conda-forge versions (0.10.5 through 0.10.23.post1) should upgrade immediately to eliminate this critical RCE risk.",
+        "products": [
+          {
+            "@id": "pkg:conda/llama-index-core?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "GHSA-wvpx-g427-q9wc"
+        }
+      },
+      {
+        "action_statement": "Upgrade to litellm >= 1.34.42 on conda-forge (latest: 1.88.0). All conda-forge builds in the 1.34.0\u20131.34.41 range are vulnerable to SSTI via unsanitized Jinja2 template rendering in the /completions proxy endpoint.",
+        "products": [
+          {
+            "@id": "pkg:conda/litellm?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "GHSA-46cm-pfwv-cgf8"
+        }
+      },
+      {
+        "action_statement": "Upgrade to litellm >= 1.40.16 on conda-forge (latest: 1.88.0). All conda-forge builds from 1.34.0 through 1.39.6 are vulnerable to remote code execution via unsafe eval in the /config/update proxy endpoint when Google KMS and a database are configured.",
+        "products": [
+          {
+            "@id": "pkg:conda/litellm?channel=conda-forge"
+          }
+        ],
+        "status": "affected",
+        "timestamp": "2026-06-10T09:37:25+00:00",
+        "vulnerability": {
+          "name": "GHSA-gppg-gqw8-wh9g"
+        }
       }
     ],
-    "timestamp": "2026-06-10T09:36:21+00:00",
+    "timestamp": "2026-06-10T09:37:25+00:00",
     "tooling": "purl-associator/scripts.cve_ai_review",
     "version": 1
   },
@@ -1911,6 +4374,46 @@
     {
       "advisory_id": "PYSEC-2026-72",
       "package": "kedro",
+      "reason": "no_assessment_in_reply"
+    },
+    {
+      "advisory_id": "PYSEC-2025-122",
+      "package": "keras",
+      "reason": "no_assessment_in_reply"
+    },
+    {
+      "advisory_id": "PYSEC-2023-138",
+      "package": "langchain",
+      "reason": "no_assessment_in_reply"
+    },
+    {
+      "advisory_id": "PYSEC-2023-145",
+      "package": "langchain",
+      "reason": "no_assessment_in_reply"
+    },
+    {
+      "advisory_id": "PYSEC-2023-146",
+      "package": "langchain",
+      "reason": "no_assessment_in_reply"
+    },
+    {
+      "advisory_id": "PYSEC-2023-147",
+      "package": "langchain",
+      "reason": "no_assessment_in_reply"
+    },
+    {
+      "advisory_id": "PYSEC-2023-151",
+      "package": "langchain",
+      "reason": "no_assessment_in_reply"
+    },
+    {
+      "advisory_id": "PYSEC-2023-162",
+      "package": "langchain",
+      "reason": "no_assessment_in_reply"
+    },
+    {
+      "advisory_id": "PYSEC-2024-115",
+      "package": "langchain",
       "reason": "no_assessment_in_reply"
     }
   ]
