@@ -1,0 +1,162 @@
+{
+  "schema_version": 1,
+  "package": "zarf",
+  "purls": [
+    "pkg:github/zarf-dev/zarf"
+  ],
+  "cpes": [
+    "cpe:2.3:a:lfprojects:zarf"
+  ],
+  "generated_at": "2026-06-10T06:09:04+00:00",
+  "conda_versions_total": 4,
+  "latest_version": "0.74.1",
+  "advisories": [
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-29064",
+      "published": "2026-03-06T17:16:34.003Z",
+      "modified": "2026-03-11T00:28:49.547Z",
+      "aliases": [],
+      "summary": "Zarf is an Airgap Native Packager Manager for Kubernetes.",
+      "details": "Zarf is an Airgap Native Packager Manager for Kubernetes. From version 0.54.0 to before version 0.73.1, a path traversal vulnerability in archive extraction allows a specifically crafted Zarf package to create symlinks pointing outside the destination directory, enabling arbitrary file read or write on the system processing the package. This issue has been patched in version 0.73.1.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "zarf",
+            "purl": "pkg:generic/lfprojects/zarf"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0.54.0"
+                },
+                {
+                  "fixed": "0.73.1"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/zarf-dev/zarf/releases/tag/v0.73.1"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/zarf-dev/zarf/security/advisories/GHSA-hcm4-6hpj-vghm"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:C/C:H/I:H/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "zarf",
+          "purl": "pkg:conda/zarf?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/lfprojects/zarf"
+          ],
+          "affected_versions": [
+            "0.72.0"
+          ],
+          "conda_versions_total": 4,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:lfprojects:zarf"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:lfprojects:zarf"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-40090",
+      "published": "2026-04-15T04:17:43.310Z",
+      "modified": "2026-04-23T17:16:31.410Z",
+      "aliases": [],
+      "summary": "Zarf is an Airgap Native Packager Manager for Kubernetes.",
+      "details": "Zarf is an Airgap Native Packager Manager for Kubernetes. Versions 0.23.0 through 0.74.1 contain an arbitrary file write vulnerability in the zarf package inspect sbom and zarf package inspect documentation subcommands. These subcommands output file paths are constructed by joining a user-controlled output directory with the package's Metadata.Name field read directly from the untrusted package's zarf.yaml manifest. Although Metadata.Name is validated against a regex on package creation, an attacker can unarchive a package to modify the Metadata.Name field to contain path traversal sequences such as ../../etc/cron.d/malicious or absolute paths like /home/user/.ssh/authorized_keys, along with the corresponding files inside SBOMS.tar. This allows writing attacker-controlled content to arbitrary filesystem locations within the permissions of the user running the inspect command. This issue has been fixed in version 0.74.2.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "zarf",
+            "purl": "pkg:generic/lfprojects/zarf"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0.23.0"
+                },
+                {
+                  "fixed": "0.74.2"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/zarf-dev/zarf/pull/4793"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/zarf-dev/zarf/security/advisories/GHSA-pj97-4p9w-gx3q"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:H/A:L"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "zarf",
+          "purl": "pkg:conda/zarf?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/lfprojects/zarf"
+          ],
+          "affected_versions": [
+            "0.72.0",
+            "0.73.1",
+            "0.74.0",
+            "0.74.1"
+          ],
+          "conda_versions_total": 4,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:lfprojects:zarf"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:lfprojects:zarf"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    }
+  ]
+}

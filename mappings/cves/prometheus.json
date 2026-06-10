@@ -1,0 +1,636 @@
+{
+  "schema_version": 1,
+  "package": "prometheus",
+  "purls": [
+    "pkg:github/prometheus/prometheus"
+  ],
+  "cpes": [
+    "cpe:2.3:a:prometheus:prometheus"
+  ],
+  "generated_at": "2026-06-10T06:09:04+00:00",
+  "conda_versions_total": 36,
+  "latest_version": "2.34.0",
+  "advisories": [
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2021-29622",
+      "published": "2021-05-19T20:15:07.487Z",
+      "modified": "2024-11-21T06:01:30.877Z",
+      "aliases": [],
+      "summary": "Prometheus is an open-source monitoring system and time series database.",
+      "details": "Prometheus is an open-source monitoring system and time series database. In 2.23.0, Prometheus changed its default UI to the New ui. To ensure a seamless transition, the URL's prefixed by /new redirect to /. Due to a bug in the code, it is possible for an attacker to craft an URL that can redirect to any other URL, in the /new endpoint. If a user visits a prometheus server with a specially crafted address, they can be redirected to an arbitrary URL. The issue was patched in the 2.26.1 and 2.27.1 releases. In 2.28.0, the /new endpoint will be removed completely. The workaround is to disable access to /new via a reverse proxy in front of Prometheus.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "prometheus",
+            "purl": "pkg:generic/prometheus/prometheus"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.23.0"
+                },
+                {
+                  "fixed": "2.26.1"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/prometheus/prometheus/releases/tag/v2.26.1"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/prometheus/prometheus/releases/tag/v2.27.1"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/prometheus/prometheus/security/advisories/GHSA-vx57-7f4q-fpc7"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/prometheus/prometheus/releases/tag/v2.26.1"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/prometheus/prometheus/releases/tag/v2.27.1"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/prometheus/prometheus/security/advisories/GHSA-vx57-7f4q-fpc7"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:H/A:N"
+        },
+        {
+          "type": "CVSS_V2",
+          "score": "AV:N/AC:M/Au:N/C:P/I:P/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "prometheus",
+          "purl": "pkg:conda/prometheus?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/prometheus/prometheus"
+          ],
+          "affected_versions": [
+            "2.23.0",
+            "2.25.0",
+            "2.26.0"
+          ],
+          "conda_versions_total": 36,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:prometheus:prometheus"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:prometheus:prometheus"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-42154",
+      "published": "2026-05-04T19:16:04.397Z",
+      "modified": "2026-05-11T17:22:42.860Z",
+      "aliases": [],
+      "summary": "Prometheus is an open-source monitoring system and time series database.",
+      "details": "Prometheus is an open-source monitoring system and time series database. Prior to versions 3.5.3 and 3.11.3, the remote read endpoint (/api/v1/read) does not validate the declared decoded length in a snappy-compressed request body before allocating memory. An unauthenticated attacker can send a small payload that causes a huge heap allocation per request. Under concurrent load this can exhaust available memory and crash the Prometheus process. This issue has been patched in versions 3.5.3 and 3.11.3.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "prometheus",
+            "purl": "pkg:generic/prometheus/prometheus"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "3.5.3"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "3.6.0"
+                },
+                {
+                  "fixed": "3.11.3"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/prometheus/prometheus/pull/18584"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/prometheus/prometheus/pull/18585"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/prometheus/prometheus/releases/tag/v3.11.3"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/prometheus/prometheus/releases/tag/v3.5.3"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/prometheus/prometheus/security/advisories/GHSA-8rm2-7qqf-34qm"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "prometheus",
+          "purl": "pkg:conda/prometheus?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/prometheus/prometheus"
+          ],
+          "affected_versions": [
+            "2.13.0",
+            "2.13.1",
+            "2.14.0",
+            "2.15.0",
+            "2.15.1",
+            "2.15.2",
+            "2.16.0",
+            "2.17.1",
+            "2.17.2",
+            "2.18.0",
+            "2.18.1",
+            "2.18.2",
+            "2.19.0",
+            "2.19.1",
+            "2.19.2",
+            "2.20.0",
+            "2.20.1",
+            "2.21.0",
+            "2.22.0",
+            "2.22.2",
+            "2.23.0",
+            "2.25.0",
+            "2.26.0",
+            "2.27.1",
+            "2.28.0",
+            "2.28.1",
+            "2.30.0",
+            "2.31.0",
+            "2.32.1",
+            "2.33.0",
+            "2.33.1",
+            "2.33.2",
+            "2.33.3",
+            "2.33.4",
+            "2.33.5",
+            "2.34.0"
+          ],
+          "conda_versions_total": 36,
+          "affects_future": true,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:prometheus:prometheus"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:prometheus:prometheus"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2019-3826",
+      "published": "2019-03-26T18:29:00.623Z",
+      "modified": "2024-11-21T04:42:37.547Z",
+      "aliases": [],
+      "summary": "A stored, DOM based, cross-site scripting (XSS) flaw was found in Prometheus before version 2.7.1.",
+      "details": "A stored, DOM based, cross-site scripting (XSS) flaw was found in Prometheus before version 2.7.1. An attacker could exploit this by convincing an authenticated user to visit a crafted URL on a Prometheus server, allowing for the execution and persistent storage of arbitrary scripts.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "prometheus",
+            "purl": "pkg:generic/prometheus/prometheus"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "2.7.1"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://access.redhat.com/errata/RHBA-2019:0327"
+        },
+        {
+          "type": "WEB",
+          "url": "https://advisory.checkmarx.net/advisory/CX-2019-4297"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugzilla.redhat.com/show_bug.cgi?id=CVE-2019-3826"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/prometheus/prometheus/commit/62e591f9"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/prometheus/prometheus/pull/5163"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread.html/r48d5019bd42e0770f7e5351e420a63a41ff1f16924942442c6aff6a8%40%3Ccommits.zookeeper.apache.org%3E"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread.html/r8e3f7da12bf5750b0a02e69a78a61073a2ac950eed7451ce70a65177%40%3Ccommits.zookeeper.apache.org%3E"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread.html/rdf2a0d94c3b5b523aeff7741ae71347415276062811b687f30ea6573%40%3Ccommits.zookeeper.apache.org%3E"
+        },
+        {
+          "type": "WEB",
+          "url": "https://access.redhat.com/errata/RHBA-2019:0327"
+        },
+        {
+          "type": "WEB",
+          "url": "https://advisory.checkmarx.net/advisory/CX-2019-4297"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugzilla.redhat.com/show_bug.cgi?id=CVE-2019-3826"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/prometheus/prometheus/commit/62e591f9"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/prometheus/prometheus/pull/5163"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread.html/r48d5019bd42e0770f7e5351e420a63a41ff1f16924942442c6aff6a8%40%3Ccommits.zookeeper.apache.org%3E"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread.html/r8e3f7da12bf5750b0a02e69a78a61073a2ac950eed7451ce70a65177%40%3Ccommits.zookeeper.apache.org%3E"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread.html/rdf2a0d94c3b5b523aeff7741ae71347415276062811b687f30ea6573%40%3Ccommits.zookeeper.apache.org%3E"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+        },
+        {
+          "type": "CVSS_V2",
+          "score": "AV:N/AC:M/Au:N/C:N/I:P/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "prometheus",
+          "purl": "pkg:conda/prometheus?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/prometheus/prometheus"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 36,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:prometheus:prometheus"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:prometheus:prometheus"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-40179",
+      "published": "2026-04-15T23:16:09.870Z",
+      "modified": "2026-04-22T20:04:15.100Z",
+      "aliases": [],
+      "summary": "Prometheus is an open-source monitoring system and time series database.",
+      "details": "Prometheus is an open-source monitoring system and time series database. Versions 3.0 through 3.5.1 and 3.6.0 through 3.11.1 have stored cross-site scripting vulnerabilities in multiple components of the Prometheus web UI where metric names and label values are injected into innerHTML without escaping. In both the Mantine UI and old React UI, chart tooltips on the Graph page render metric names containing HTML/JavaScript without sanitization. In the old React UI, the Metric Explorer fuzzy search results use dangerouslySetInnerHTML without escaping, and heatmap cell tooltips interpolate le label values without sanitization. With Prometheus v3.x defaulting to UTF-8 metric and label name validation, characters like <, >, and \" are now valid in metric names and labels. An attacker who can inject metrics via a compromised scrape target, remote write, or OTLP receiver endpoint can execute arbitrary JavaScript in the browser of any Prometheus user who views the metric in the Graph UI, potentially enabling configuration exfiltration, data deletion, or Prometheus shutdown depending on enabled flags. This issue has been fixed in versions 3.5.2 and 3.11.2. If developers are unable to immediately update, the following workarounds are recommended: ensure that the remote write receiver (--web.enable-remote-write-receiver) and the OTLP receiver (--web.enable-otlp-receiver) are not exposed to untrusted sources; verify that all scrape targets are trusted and not under attacker control; avoid enabling admin or mutating API endpoints (e.g., --web.enable-admin-api or --web.enable-lifecycle) in environments where untrusted data may be ingested; and refrain from clicking untrusted links, particularly those containing functions such as label_replace, as they may generate poisoned label names and values.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "prometheus",
+            "purl": "pkg:generic/prometheus/prometheus"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "3.0.0"
+                },
+                {
+                  "fixed": "3.5.2"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "3.6.0"
+                },
+                {
+                  "fixed": "3.11.2"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/prometheus/prometheus/commit/07c6232d159bfb474a077788be184d87adcfac3c"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/prometheus/prometheus/pull/18506"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/prometheus/prometheus/security/advisories/GHSA-vffh-x6r8-xx99"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X"
+        },
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "prometheus",
+          "purl": "pkg:conda/prometheus?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/prometheus/prometheus"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 36,
+          "affects_future": true,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:prometheus:prometheus"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:prometheus:prometheus"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-42151",
+      "published": "2026-05-04T19:16:04.220Z",
+      "modified": "2026-05-11T17:22:07.227Z",
+      "aliases": [],
+      "summary": "Prometheus is an open-source monitoring system and time series database.",
+      "details": "Prometheus is an open-source monitoring system and time series database. Prior to versions 3.5.3 and 3.11.3, the client_secret field in the Azure AD remote write OAuth configuration (storage/remote/azuread) was typed as string instead of Secret. Prometheus redacts fields of type Secret when serving the configuration via the /-/config HTTP API endpoint. Because the field was a plain string, the Azure OAuth client secret was exposed in plaintext to any user or process with access to that endpoint. This issue has been patched in versions 3.5.3 and 3.11.3.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "prometheus",
+            "purl": "pkg:generic/prometheus/prometheus"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.48.0"
+                },
+                {
+                  "fixed": "3.5.3"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "3.6.0"
+                },
+                {
+                  "fixed": "3.11.3"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/prometheus/prometheus/pull/18587"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/prometheus/prometheus/pull/18590"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/prometheus/prometheus/releases/tag/v3.11.3"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/prometheus/prometheus/releases/tag/v3.5.3"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/prometheus/prometheus/security/advisories/GHSA-wg65-39gg-5wfj"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "prometheus",
+          "purl": "pkg:conda/prometheus?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/prometheus/prometheus"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 36,
+          "affects_future": true,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:prometheus:prometheus"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:prometheus:prometheus"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-44903",
+      "published": "2026-05-26T22:16:43.010Z",
+      "modified": "2026-06-05T17:18:32.477Z",
+      "aliases": [],
+      "summary": "Prometheus is an open-source monitoring system and time series database.",
+      "details": "Prometheus is an open-source monitoring system and time series database. From 2.49.0 to before 3.5.3 and 3.11.3, in the Prometheus server's legacy web UI (enabled via the command-line flag --enable-feature=old-ui), the histogram heatmap chart view does not escape le label values when inserting them into the HTML for use as axis tick mark labels. An attacker who can inject crafted metrics can execute JavaScript in the browser of any Prometheus user who views the metric in the heatmap chart UI. This vulnerability is fixed in 3.5.3 and 3.11.3.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "prometheus",
+            "purl": "pkg:generic/prometheus/prometheus"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.49.0"
+                },
+                {
+                  "fixed": "3.5.3"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "3.6.0"
+                },
+                {
+                  "fixed": "3.11.3"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/prometheus/prometheus/commit/38f23b9075ced1de2b82d2dad8b2bebb1ecd5b7d"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/prometheus/prometheus/security/advisories/GHSA-fw8g-cg8f-9j28"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:P/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X"
+        },
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "prometheus",
+          "purl": "pkg:conda/prometheus?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/prometheus/prometheus"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 36,
+          "affects_future": true,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:prometheus:prometheus"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:prometheus:prometheus"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    }
+  ]
+}

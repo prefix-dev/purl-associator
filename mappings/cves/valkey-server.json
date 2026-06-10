@@ -1,0 +1,518 @@
+{
+  "schema_version": 1,
+  "package": "valkey-server",
+  "purls": [
+    "pkg:github/valkey-io/valkey"
+  ],
+  "cpes": [
+    "cpe:2.3:a:lfprojects:valkey"
+  ],
+  "generated_at": "2026-06-10T06:09:04+00:00",
+  "conda_versions_total": 10,
+  "latest_version": "9.1.0",
+  "advisories": [
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2025-21605",
+      "published": "2025-04-23T16:15:34.770Z",
+      "modified": "2026-02-10T18:16:13.897Z",
+      "aliases": [],
+      "summary": "Redis is an open source, in-memory database that persists on disk.",
+      "details": "Redis is an open source, in-memory database that persists on disk. In versions starting at 2.6 and prior to 7.4.3, An unauthenticated client can cause unlimited growth of output buffers, until the server runs out of memory or is killed. By default, the Redis configuration does not limit the output buffer of normal clients (see client-output-buffer-limit). Therefore, the output buffer can grow unlimitedly over time. As a result, the service is exhausted and the memory is unavailable. When password authentication is enabled on the Redis server, but no password is provided, the client can still cause the output buffer to grow from \"NOAUTH\" responses until the system will run out of memory. This issue has been patched in version 7.4.3. An additional workaround to mitigate this problem without patching the redis-server executable is to block access to prevent unauthenticated users from connecting to Redis. This can be done in different ways. Either using network access control tools like firewalls, iptables, security groups, etc, or enabling TLS and requiring users to authenticate using client side certificates.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "valkey",
+            "purl": "pkg:generic/lfprojects/valkey"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "7.2.4"
+                },
+                {
+                  "fixed": "7.2.9"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "8.0.0"
+                },
+                {
+                  "fixed": "8.0.3"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "8.1.0"
+                },
+                {
+                  "fixed": "8.1.1"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/redis/redis/releases/tag/7.4.3"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/redis/redis/security/advisories/GHSA-r67f-p999-2gff"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/valkey-io/valkey/releases/tag/8.1.1"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2025/05/msg00014.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.vicarius.io/vsociety/posts/cve-2025-21605-detection-script-memory-exhaustion-vulnerability-in-redis-database"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.vicarius.io/vsociety/posts/cve-2025-21605-mitigation-script-memory-exhaustion-vulnerability-in-redis-database"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "valkey-server",
+          "purl": "pkg:conda/valkey-server?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/lfprojects/valkey"
+          ],
+          "affected_versions": [
+            "7.2.5",
+            "8.0.1",
+            "8.0.2"
+          ],
+          "conda_versions_total": 10,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:lfprojects:valkey"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:lfprojects:valkey"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2025-49844",
+      "published": "2025-10-03T20:15:32.823Z",
+      "modified": "2026-03-20T14:16:14.130Z",
+      "aliases": [],
+      "summary": "Redis is an open source, in-memory database that persists on disk.",
+      "details": "Redis is an open source, in-memory database that persists on disk. Versions 8.2.1 and below allow an authenticated user to use a specially crafted Lua script to manipulate the garbage collector, trigger a use-after-free and potentially lead to remote code execution. The problem exists in all versions of Redis with Lua scripting. This issue is fixed in version 8.2.2. To workaround this issue without patching the redis-server executable is to prevent users from executing Lua scripts. This can be done using ACL to restrict EVAL and EVALSHA commands.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "valkey",
+            "purl": "pkg:generic/lfprojects/valkey"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "7.2.11"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "8.0.0"
+                },
+                {
+                  "fixed": "8.0.6"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "8.1.0"
+                },
+                {
+                  "fixed": "8.1.4"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/redis/redis/commit/d5728cb5795c966c5b5b1e0f0ac576a7e69af539"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/redis/redis/releases/tag/8.2.2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/redis/redis/security/advisories/GHSA-4789-qfc9-5f9q"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2025/10/07/2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/lastvocher/redis-CVE-2025-49844"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "valkey-server",
+          "purl": "pkg:conda/valkey-server?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/lfprojects/valkey"
+          ],
+          "affected_versions": [
+            "7.2.5",
+            "8.0.1",
+            "8.0.2",
+            "8.1.1",
+            "8.1.2"
+          ],
+          "conda_versions_total": 10,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:lfprojects:valkey"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:lfprojects:valkey"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2025-67733",
+      "published": "2026-02-23T20:28:53.280Z",
+      "modified": "2026-02-25T17:34:02.743Z",
+      "aliases": [],
+      "summary": "Valkey is a distributed key-value database.",
+      "details": "Valkey is a distributed key-value database. Prior to versions 9.0.2, 8.1.6, 8.0.7, and 7.2.12, a malicious user can use scripting commands to inject arbitrary information into the response stream for the given client, potentially corrupting or returning tampered data to other users on the same connection. The error handling code for lua scripts does not properly handle null characters. Versions 9.0.2, 8.1.6, 8.0.7, and 7.2.12 fix the issue.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "valkey",
+            "purl": "pkg:generic/lfprojects/valkey"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "7.2.12"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "8.0.0"
+                },
+                {
+                  "fixed": "8.0.7"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "8.1.0"
+                },
+                {
+                  "fixed": "8.1.6"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "9.0.0"
+                },
+                {
+                  "fixed": "9.0.2"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/valkey-io/valkey/security/advisories/GHSA-p876-p7q5-hv2m"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:C/C:N/I:L/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "valkey-server",
+          "purl": "pkg:conda/valkey-server?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/lfprojects/valkey"
+          ],
+          "affected_versions": [
+            "7.2.5",
+            "8.0.1",
+            "8.0.2",
+            "8.1.1",
+            "8.1.2",
+            "9.0.1"
+          ],
+          "conda_versions_total": 10,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:lfprojects:valkey"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:lfprojects:valkey"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-21863",
+      "published": "2026-02-23T20:28:53.853Z",
+      "modified": "2026-02-25T17:49:51.250Z",
+      "aliases": [],
+      "summary": "Valkey is a distributed key-value database.",
+      "details": "Valkey is a distributed key-value database. Prior to versions 9.0.2, 8.1.6, 8.0.7, and 7.2.12, a malicious actor with access to the Valkey clusterbus port can send an invalid packet that may cause an out bound read, which might result in the system crashing. The Valkey clusterbus packet processing code does not validate that a clusterbus ping extension packet is located within buffer of the clusterbus packet before attempting to read it. Versions 9.0.2, 8.1.6, 8.0.7, and 7.2.12 fix the issue. As an additional mitigation, don't expose the cluster bus connection directly to end users, and protect the connection with its own network ACLs.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "valkey",
+            "purl": "pkg:generic/lfprojects/valkey"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "7.2.12"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "8.0.0"
+                },
+                {
+                  "fixed": "8.0.7"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "8.1.0"
+                },
+                {
+                  "fixed": "8.1.6"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "9.0.0"
+                },
+                {
+                  "fixed": "9.0.2"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/valkey-io/valkey/security/advisories/GHSA-c677-q3wr-gggq"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "valkey-server",
+          "purl": "pkg:conda/valkey-server?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/lfprojects/valkey"
+          ],
+          "affected_versions": [
+            "7.2.5",
+            "8.0.1",
+            "8.0.2",
+            "8.1.1",
+            "8.1.2",
+            "9.0.1"
+          ],
+          "conda_versions_total": 10,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:lfprojects:valkey"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:lfprojects:valkey"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-27623",
+      "published": "2026-02-23T20:28:55.217Z",
+      "modified": "2026-02-25T17:58:27.510Z",
+      "aliases": [],
+      "summary": "Valkey is a distributed key-value database.",
+      "details": "Valkey is a distributed key-value database. Starting in version 9.0.0 and prior to version 9.0.3, a malicious actor with network access to Valkey can cause the system to abort by triggering an assertion. When processing incoming requests, the Valkey system does not properly reset the networking state after processing an empty request. A malicious actor can then send a request that the server incorrectly identifies as breaking server side invariants, which results in the server shutting down. Version 9.0.3 fixes the issue. As an additional mitigation, properly isolate Valkey deployments so that only trusted users have access.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "valkey",
+            "purl": "pkg:generic/lfprojects/valkey"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "9.0.0"
+                },
+                {
+                  "fixed": "9.0.3"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/valkey-io/valkey/security/advisories/GHSA-93p9-5vc7-8wgr"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "valkey-server",
+          "purl": "pkg:conda/valkey-server?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/lfprojects/valkey"
+          ],
+          "affected_versions": [
+            "9.0.1",
+            "9.0.2"
+          ],
+          "conda_versions_total": 10,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:lfprojects:valkey"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:lfprojects:valkey"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    }
+  ]
+}

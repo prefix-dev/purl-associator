@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "package": "flux-operator",
+  "purls": [
+    "pkg:github/controlplaneio-fluxcd/flux-operator"
+  ],
+  "cpes": [
+    "cpe:2.3:a:control-plane:flux_operator"
+  ],
+  "generated_at": "2026-06-10T06:09:04+00:00",
+  "conda_versions_total": 2,
+  "latest_version": "0.51.0",
+  "advisories": [
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-23990",
+      "published": "2026-01-21T23:15:52.930Z",
+      "modified": "2026-03-06T20:01:58.813Z",
+      "aliases": [],
+      "summary": "The Flux Operator is a Kubernetes CRD controller that manages the lifecycle of CNCF Flux CD and the ControlPlane enterprise distribution.",
+      "details": "The Flux Operator is a Kubernetes CRD controller that manages the lifecycle of CNCF Flux CD and the ControlPlane enterprise distribution. Starting in version 0.36.0 and prior to version 0.40.0, a privilege escalation vulnerability exists in the Flux Operator Web UI authentication code that allows an attacker to bypass Kubernetes RBAC impersonation and execute API requests with the operator's service account privileges. In order to be vulnerable, cluster admins must configure the Flux Operator with an OIDC provider that issues tokens lacking the expected claims (e.g., `email`, `groups`), or configure custom CEL expressions that can evaluate to empty values. After OIDC token claims are processed through CEL expressions, there is no validation that the resulting `username` and `groups` values are non-empty. When both values are empty, the Kubernetes client-go library does not add impersonation headers to API requests, causing them to be executed with the flux-operator service account's credentials instead of the authenticated user's limited permissions. This can result in privilege escalation, data exposure, and/or information disclosure. Version 0.40.0 patches the issue.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "flux_operator",
+            "purl": "pkg:generic/control-plane/flux_operator"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0.36.0"
+                },
+                {
+                  "fixed": "0.40.0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/controlplaneio-fluxcd/flux-operator/commit/084540424f6de8ba5d88fb1fd1e8472ba29afd7e"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/controlplaneio-fluxcd/flux-operator/pull/610"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/controlplaneio-fluxcd/flux-operator/releases/tag/v0.40.0"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/controlplaneio-fluxcd/flux-operator/security/advisories/GHSA-4xh5-jcj2-ch8q"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:H/I:N/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "flux-operator",
+          "purl": "pkg:conda/flux-operator?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/control-plane/flux_operator"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 2,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:control-plane:flux_operator"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:control-plane:flux_operator"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    }
+  ]
+}

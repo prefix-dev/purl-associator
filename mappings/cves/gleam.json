@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "package": "gleam",
+  "purls": [
+    "pkg:github/gleam-lang/gleam"
+  ],
+  "cpes": [
+    "cpe:2.3:a:lpil:gleam"
+  ],
+  "generated_at": "2026-06-10T06:09:04+00:00",
+  "conda_versions_total": 21,
+  "latest_version": "1.17.0",
+  "advisories": [
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-32146",
+      "published": "2026-04-11T14:16:03.640Z",
+      "modified": "2026-05-21T20:14:02.423Z",
+      "aliases": [],
+      "summary": "Improper path validation vulnerability in the Gleam compiler's handling of git dependencies allows arbitrary file system modification during dependency download.",
+      "details": "Improper path validation vulnerability in the Gleam compiler's handling of git dependencies allows arbitrary file system modification during dependency download.\n\nDependency names from gleam.toml and manifest.toml are incorporated into filesystem paths without sufficient validation or confinement to the intended dependency directory, allowing attacker-controlled paths (via relative traversal such as ../ or absolute paths) to target filesystem locations outside that directory. When resolving git dependencies (e.g. via gleam deps download), the computed path is used for filesystem operations including directory deletion and creation.\n\nThis vulnerability occurs during the dependency resolution and download phase, which is generally expected to be limited to fetching and preparing dependencies within a confined directory. A malicious direct or transitive git dependency can exploit this issue to delete and overwrite arbitrary directories outside the intended dependency directory, including attacker-chosen absolute paths, potentially causing data loss. In some environments, this may be further leveraged to achieve code execution, for example by overwriting git hooks or shell configuration files.\n\nThis issue affects Gleam from 1.9.0-rc1 until 1.15.4.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "gleam",
+            "purl": "pkg:generic/lpil/gleam"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "1.9.0"
+                },
+                {
+                  "fixed": "1.15.4"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://cna.erlef.org/cves/CVE-2026-32146.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/gleam-lang/gleam/commit/1aa5d8e594b0aa240bb213fce6ee19c65e6d5bcf"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/gleam-lang/gleam/commit/2dc0467f822c75de94697a912755d172928ee40a"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/gleam-lang/gleam/security/advisories/GHSA-vq5j-55vx-wq8j"
+        },
+        {
+          "type": "WEB",
+          "url": "https://osv.dev/vulnerability/EEF-CVE-2026-32146"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:A/VC:N/VI:H/VA:N/SC:H/SI:H/SA:H/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X"
+        },
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "gleam",
+          "purl": "pkg:conda/gleam?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/lpil/gleam"
+          ],
+          "affected_versions": [
+            "1.9.1",
+            "1.10.0",
+            "1.11.0",
+            "1.11.1",
+            "1.12.0",
+            "1.13.0",
+            "1.14.0",
+            "1.15.1",
+            "1.15.2",
+            "1.15.3"
+          ],
+          "conda_versions_total": 21,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:lpil:gleam"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:lpil:gleam"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,2057 @@
+{
+  "schema_version": 1,
+  "package": "libpulsar",
+  "purls": [
+    "pkg:github/apache/pulsar-client-cpp"
+  ],
+  "cpes": [
+    "cpe:2.3:a:apache:pulsar"
+  ],
+  "generated_at": "2026-06-10T06:09:04+00:00",
+  "conda_versions_total": 13,
+  "latest_version": "4.1.0",
+  "advisories": [
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2024-29834",
+      "published": "2024-04-02T20:15:09.607Z",
+      "modified": "2025-01-24T16:21:24.170Z",
+      "aliases": [],
+      "summary": "This vulnerability allows authenticated users with produce or consume permissions to perform unauthorized operations on partitioned topics, such as unloading topics and triggering compaction.",
+      "details": "This vulnerability allows authenticated users with produce or consume permissions to perform unauthorized operations on partitioned topics, such as unloading topics and triggering compaction. These management operations should be restricted to users with the tenant admin role or superuser role. An authenticated user with produce permission can create subscriptions and update subscription properties on partitioned topics, even though this should be limited to users with consume permissions. This impact analysis assumes that Pulsar has been configured with the default authorization provider. For custom authorization providers, the impact could be slightly different. Additionally, the vulnerability allows an authenticated user to read, create, modify, and delete namespace properties in any namespace in any tenant. In Pulsar, namespace properties are reserved for user provided metadata about the namespace.\n\nThis issue affects Apache Pulsar versions from 2.7.1 to 2.10.6, from 2.11.0 to 2.11.4, from 3.0.0 to 3.0.3, from 3.1.0 to 3.1.3, and from 3.2.0 to 3.2.1. \n\n3.0 Apache Pulsar users should upgrade to at least 3.0.4.\n3.1 and 3.2 Apache Pulsar users should upgrade to at least 3.2.2.\n\nUsers operating versions prior to those listed above should upgrade to the aforementioned patched versions or newer versions.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "pulsar",
+            "purl": "pkg:generic/apache/pulsar"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.7.1"
+                },
+                {
+                  "last_affected": "2.10.6"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.11.0"
+                },
+                {
+                  "last_affected": "2.11.4"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "3.0.0"
+                },
+                {
+                  "fixed": "3.0.4"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "3.1.0"
+                },
+                {
+                  "last_affected": "3.1.3"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "3.2.0"
+                },
+                {
+                  "fixed": "3.2.2"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2024/04/02/2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/v0ltl94k9lg28qfr1f54hpkvvsjc5bj5"
+        },
+        {
+          "type": "WEB",
+          "url": "https://pulsar.apache.org/security/CVE-2024-29834/"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2024/04/02/2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/v0ltl94k9lg28qfr1f54hpkvvsjc5bj5"
+        },
+        {
+          "type": "WEB",
+          "url": "https://pulsar.apache.org/security/CVE-2024-29834/"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:C/C:L/I:L/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpulsar",
+          "purl": "pkg:conda/libpulsar?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/apache/pulsar"
+          ],
+          "affected_versions": [
+            "3.2.0"
+          ],
+          "conda_versions_total": 13,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:apache:pulsar"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:apache:pulsar"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2025-30677",
+      "published": "2025-04-09T12:15:15.363Z",
+      "modified": "2025-07-15T19:15:05.073Z",
+      "aliases": [],
+      "summary": "Apache Pulsar contains multiple connectors for integrating with Apache Kafka.",
+      "details": "Apache Pulsar contains multiple connectors for integrating with Apache Kafka. The Pulsar IO Apache Kafka Source Connector, Sink Connector, and Kafka Connect Adaptor Sink Connector log sensitive configuration properties in plain text in application logs.\n\n\nThis vulnerability can lead to unintended exposure of credentials in log files, potentially allowing attackers with access to these logs to obtain Apache Kafka credentials. The vulnerability's impact is limited by the fact that an attacker would need access to the application logs to exploit this issue.\n\nThis issue affects Apache Pulsar IO's Apache Kafka connectors in all versions before 3.0.11, 3.3.6, and 4.0.4.\n\n\n3.0.x version users should upgrade to at least 3.0.11.\n\n3.3.x version users should upgrade to at least 3.3.6.\n\n4.0.x version users should upgrade to at least 4.0.4.\n\n\nUsers operating versions prior to those listed above should upgrade to the aforementioned patched versions or newer versions.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "pulsar",
+            "purl": "pkg:generic/apache/pulsar"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.3.0"
+                },
+                {
+                  "fixed": "3.0.11"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "3.3.0"
+                },
+                {
+                  "fixed": "3.3.6"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "4.0.0"
+                },
+                {
+                  "fixed": "4.0.4"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/zv5fwwrh374r1p5cmksxcd40ssxxko3d"
+        },
+        {
+          "type": "WEB",
+          "url": "https://pulsar.apache.org/security/"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2025/04/09/2"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:N/VA:N/SC:H/SI:N/SA:N/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X"
+        },
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpulsar",
+          "purl": "pkg:conda/libpulsar?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/apache/pulsar"
+          ],
+          "affected_versions": [
+            "4.0.0",
+            "4.0.1"
+          ],
+          "conda_versions_total": 13,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:apache:pulsar"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:apache:pulsar"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2021-22160",
+      "published": "2021-05-26T13:15:07.697Z",
+      "modified": "2024-11-21T05:49:37.470Z",
+      "aliases": [],
+      "summary": "If Apache Pulsar is configured to authenticate clients using tokens based on JSON Web Tokens (JWT), the signature of the token is not validated if the algorithm of the presented token is set to \"none\".",
+      "details": "If Apache Pulsar is configured to authenticate clients using tokens based on JSON Web Tokens (JWT), the signature of the token is not validated if the algorithm of the presented token is set to \"none\". This allows an attacker to connect to Pulsar instances as any user (incl. admins).",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "pulsar",
+            "purl": "pkg:generic/apache/pulsar"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "2.7.1"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread.html/r347650d15a3e9c5f58b83e918b6ad6dedc2a63d3eb63da8e6a7be87e%40%3Cusers.pulsar.apache.org%3E"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread.html/r8e545559781231a83bf0644548c660255859e52feb86bbfcd42590da%40%3Cdev.pulsar.apache.org%3E"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread.html/r9a12b4da2f26ce9b8f7e7117a879efaa973dab7e54717bbc7923fab1%40%3Cdev.pulsar.apache.org%3E"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread.html/ra49cb62105154e4795b259c79a6b27d63bfa2ab5787ff8529b089550%40%3Cdev.pulsar.apache.org%3E"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread.html/ra49cb62105154e4795b259c79a6b27d63bfa2ab5787ff8529b089550%40%3Cusers.pulsar.apache.org%3E"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread.html/rbe845aa1573a61769b9c5916c62971f4b10de87c2ea5f38a97f0cf84%40%3Cdev.pulsar.apache.org%3E"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread.html/rca54f4b26ba5e6f2e39732b47ec51640e89f57e3b6a38ac3bab314df%40%3Cdev.pulsar.apache.org%3E"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread.html/rf2e90942996dceebac8296abf39257cfeb5ae918f82f7af3d37a48c5%40%3Cdev.pulsar.apache.org%3E"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread.html/r347650d15a3e9c5f58b83e918b6ad6dedc2a63d3eb63da8e6a7be87e%40%3Cusers.pulsar.apache.org%3E"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread.html/r8e545559781231a83bf0644548c660255859e52feb86bbfcd42590da%40%3Cdev.pulsar.apache.org%3E"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread.html/r9a12b4da2f26ce9b8f7e7117a879efaa973dab7e54717bbc7923fab1%40%3Cdev.pulsar.apache.org%3E"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread.html/ra49cb62105154e4795b259c79a6b27d63bfa2ab5787ff8529b089550%40%3Cdev.pulsar.apache.org%3E"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread.html/ra49cb62105154e4795b259c79a6b27d63bfa2ab5787ff8529b089550%40%3Cusers.pulsar.apache.org%3E"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread.html/rbe845aa1573a61769b9c5916c62971f4b10de87c2ea5f38a97f0cf84%40%3Cdev.pulsar.apache.org%3E"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread.html/rca54f4b26ba5e6f2e39732b47ec51640e89f57e3b6a38ac3bab314df%40%3Cdev.pulsar.apache.org%3E"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread.html/rf2e90942996dceebac8296abf39257cfeb5ae918f82f7af3d37a48c5%40%3Cdev.pulsar.apache.org%3E"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+        },
+        {
+          "type": "CVSS_V2",
+          "score": "AV:N/AC:L/Au:N/C:P/I:P/A:P"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpulsar",
+          "purl": "pkg:conda/libpulsar?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/apache/pulsar"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 13,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:apache:pulsar"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:apache:pulsar"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2021-41571",
+      "published": "2022-02-01T13:15:09.663Z",
+      "modified": "2024-11-21T06:26:27.173Z",
+      "aliases": [],
+      "summary": "In Apache Pulsar it is possible to access data from BookKeeper that does not belong to the topics accessible by the authenticated user.",
+      "details": "In Apache Pulsar it is possible to access data from BookKeeper that does not belong to the topics accessible by the authenticated user. The Admin API get-message-by-id requires the user to input a topic and a ledger id. The ledger id is a pointer to the data, and it is supposed to be a valid it for the topic. Authorisation controls are performed against the topic name and there is not proper validation the that ledger id is valid in the context of such ledger. So it may happen that the user is able to read from a ledger that contains data owned by another tenant. This issue affects Apache Pulsar Apache Pulsar version 2.8.0 and prior versions; Apache Pulsar version 2.7.3 and prior versions; Apache Pulsar version 2.6.4 and prior versions.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "pulsar",
+            "purl": "pkg:generic/apache/pulsar"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.6.0"
+                },
+                {
+                  "fixed": "2.6.4"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.7.0"
+                },
+                {
+                  "fixed": "2.7.3"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/apache/pulsar/issues/11814"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/8n3k7pvyh4cf9q2jfzb6pb32ync6xlvr"
+        },
+        {
+          "type": "WEB",
+          "url": "https://pulsar.apache.org/admin-rest-api/#operation/getLastMessageId"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/apache/pulsar/issues/11814"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/8n3k7pvyh4cf9q2jfzb6pb32ync6xlvr"
+        },
+        {
+          "type": "WEB",
+          "url": "https://pulsar.apache.org/admin-rest-api/#operation/getLastMessageId"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N"
+        },
+        {
+          "type": "CVSS_V2",
+          "score": "AV:N/AC:L/Au:S/C:P/I:N/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpulsar",
+          "purl": "pkg:conda/libpulsar?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/apache/pulsar"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 13,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:apache:pulsar"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:apache:pulsar"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2022-24280",
+      "published": "2022-09-23T10:15:10.087Z",
+      "modified": "2025-05-22T21:15:20.660Z",
+      "aliases": [],
+      "summary": "Improper Input Validation vulnerability in Proxy component of Apache Pulsar allows an attacker to make TCP/IP connection attempts that originate from the Pulsar Proxy's IP address.",
+      "details": "Improper Input Validation vulnerability in Proxy component of Apache Pulsar allows an attacker to make TCP/IP connection attempts that originate from the Pulsar Proxy's IP address. When the Apache Pulsar Proxy component is used, it is possible to attempt to open TCP/IP connections to any IP address and port that the Pulsar Proxy can connect to. An attacker could use this as a way for DoS attacks that originate from the Pulsar Proxy's IP address. It hasn\u2019t been detected that the Pulsar Proxy authentication can be bypassed. The attacker will have to have a valid token to a properly secured Pulsar Proxy. This issue affects Apache Pulsar Proxy versions 2.7.0 to 2.7.4; 2.8.0 to 2.8.2; 2.9.0 to 2.9.1; 2.6.4 and earlier.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "pulsar",
+            "purl": "pkg:generic/apache/pulsar"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "last_affected": "2.6.4"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.7.0"
+                },
+                {
+                  "fixed": "2.7.5"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.8.0"
+                },
+                {
+                  "fixed": "2.8.3"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.9.0"
+                },
+                {
+                  "fixed": "2.9.2"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/ghs9jtjfbpy4c6xcftyvkl6swznlom1v"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/ghs9jtjfbpy4c6xcftyvkl6swznlom1v"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpulsar",
+          "purl": "pkg:conda/libpulsar?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/apache/pulsar"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 13,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:apache:pulsar"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:apache:pulsar"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2022-33681",
+      "published": "2022-09-23T10:15:10.243Z",
+      "modified": "2025-05-22T21:15:23.470Z",
+      "aliases": [],
+      "summary": "Delayed TLS hostname verification in the Pulsar Java Client and the Pulsar Proxy make each client vulnerable to a man in the middle attack.",
+      "details": "Delayed TLS hostname verification in the Pulsar Java Client and the Pulsar Proxy make each client vulnerable to a man in the middle attack. Connections from the Pulsar Java Client to the Pulsar Broker/Proxy and connections from the Pulsar Proxy to the Pulsar Broker are vulnerable. Authentication data is sent before verifying the server\u2019s TLS certificate matches the hostname, which means authentication data could be exposed to an attacker. An attacker can only take advantage of this vulnerability by taking control of a machine 'between' the client and the server. The attacker must then actively manipulate traffic to perform the attack by providing the client with a cryptographically valid certificate for an unrelated host. Because the client sends authentication data before performing hostname verification, an attacker could gain access to the client\u2019s authentication data. The client eventually closes the connection when it verifies the hostname and identifies the targeted hostname does not match a hostname on the certificate. Because the client eventually closes the connection, the value of the intercepted authentication data depends on the authentication method used by the client. Token based authentication and username/password authentication methods are vulnerable because the authentication data can be used to impersonate the client in a separate session. This issue affects Apache Pulsar Java Client versions 2.7.0 to 2.7.4; 2.8.0 to 2.8.3; 2.9.0 to 2.9.2; 2.10.0; 2.6.4 and earlier.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "pulsar",
+            "purl": "pkg:generic/apache/pulsar"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "2.7.5"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.8.0"
+                },
+                {
+                  "fixed": "2.8.4"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.9.0"
+                },
+                {
+                  "fixed": "2.9.3"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/fpo6x10trvn20hlk0dmnr5vlz5v4kl3d"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/fpo6x10trvn20hlk0dmnr5vlz5v4kl3d"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpulsar",
+          "purl": "pkg:conda/libpulsar?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/apache/pulsar"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 13,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:apache:pulsar"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:apache:pulsar"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2022-33682",
+      "published": "2022-09-23T10:15:10.297Z",
+      "modified": "2025-05-27T15:15:25.903Z",
+      "aliases": [],
+      "summary": "TLS hostname verification cannot be enabled in the Pulsar Broker's Java Client, the Pulsar Broker's Java Admin Client, the Pulsar WebSocket Proxy's Java Client, and the Pulsar Proxy's Admin Client lea",
+      "details": "TLS hostname verification cannot be enabled in the Pulsar Broker's Java Client, the Pulsar Broker's Java Admin Client, the Pulsar WebSocket Proxy's Java Client, and the Pulsar Proxy's Admin Client leaving intra-cluster connections and geo-replication connections vulnerable to man in the middle attacks, which could leak credentials, configuration data, message data, and any other data sent by these clients. The vulnerability is for both the pulsar+ssl protocol and HTTPS. An attacker can only take advantage of this vulnerability by taking control of a machine 'between' the client and the server. The attacker must then actively manipulate traffic to perform the attack by providing the client with a cryptographically valid certificate for an unrelated host. This issue affects Apache Pulsar Broker, Proxy, and WebSocket Proxy versions 2.7.0 to 2.7.4; 2.8.0 to 2.8.3; 2.9.0 to 2.9.2; 2.10.0; 2.6.4 and earlier.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "pulsar",
+            "purl": "pkg:generic/apache/pulsar"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "2.7.5"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.8.0"
+                },
+                {
+                  "fixed": "2.8.4"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.9.0"
+                },
+                {
+                  "fixed": "2.9.3"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/l0ynfl161qghwfcgbbl8ld9hzbl9t3yx"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/l0ynfl161qghwfcgbbl8ld9hzbl9t3yx"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpulsar",
+          "purl": "pkg:conda/libpulsar?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/apache/pulsar"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 13,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:apache:pulsar"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:apache:pulsar"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2022-33683",
+      "published": "2022-09-23T10:15:10.353Z",
+      "modified": "2025-05-22T19:15:33.067Z",
+      "aliases": [],
+      "summary": "Apache Pulsar Brokers and Proxies create an internal Pulsar Admin Client that does not verify peer TLS certificates, even when tlsAllowInsecureConnection is disabled via configuration.",
+      "details": "Apache Pulsar Brokers and Proxies create an internal Pulsar Admin Client that does not verify peer TLS certificates, even when tlsAllowInsecureConnection is disabled via configuration. The Pulsar Admin Client's intra-cluster and geo-replication HTTPS connections are vulnerable to man in the middle attacks, which could leak authentication data, configuration data, and any other data sent by these clients. An attacker can only take advantage of this vulnerability by taking control of a machine 'between' the client and the server. The attacker must then actively manipulate traffic to perform the attack. This issue affects Apache Pulsar Broker and Proxy versions 2.7.0 to 2.7.4; 2.8.0 to 2.8.3; 2.9.0 to 2.9.2; 2.10.0; 2.6.4 and earlier.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "pulsar",
+            "purl": "pkg:generic/apache/pulsar"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "2.7.5"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.8.0"
+                },
+                {
+                  "fixed": "2.8.4"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.9.0"
+                },
+                {
+                  "fixed": "2.9.3"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/42v5rsxj36r3nhfxhmhb2x12r5jmvx3x"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/42v5rsxj36r3nhfxhmhb2x12r5jmvx3x"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpulsar",
+          "purl": "pkg:conda/libpulsar?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/apache/pulsar"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 13,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:apache:pulsar"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:apache:pulsar"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2022-33684",
+      "published": "2022-11-04T12:15:13.123Z",
+      "modified": "2025-05-02T19:15:50.303Z",
+      "aliases": [],
+      "summary": "The Apache Pulsar C++ Client does not verify peer TLS certificates when making HTTPS calls for the OAuth2.0 Client Credential Flow, even when tlsAllowInsecureConnection is disabled via configuration.",
+      "details": "The Apache Pulsar C++ Client does not verify peer TLS certificates when making HTTPS calls for the OAuth2.0 Client Credential Flow, even when tlsAllowInsecureConnection is disabled via configuration. This vulnerability allows an attacker to perform a man in the middle attack and intercept and/or modify the GET request that is sent to the ClientCredentialFlow 'issuer url'. The intercepted credentials can be used to acquire authentication data from the OAuth2.0 server to then authenticate with an Apache Pulsar cluster. An attacker can only take advantage of this vulnerability by taking control of a machine 'between' the client and the server. The attacker must then actively manipulate traffic to perform the attack. The Apache Pulsar Python Client wraps the C++ client, so it is also vulnerable in the same way. This issue affects Apache Pulsar C++ Client and Python Client versions 2.7.0 to 2.7.4; 2.8.0 to 2.8.3; 2.9.0 to 2.9.2; 2.10.0 to 2.10.1; 2.6.4 and earlier. Any users running affected versions of the C++ Client or the Python Client should rotate vulnerable OAuth2.0 credentials, including client_id and client_secret. 2.7 C++ and Python Client users should upgrade to 2.7.5 and rotate vulnerable OAuth2.0 credentials. 2.8 C++ and Python Client users should upgrade to 2.8.4 and rotate vulnerable OAuth2.0 credentials. 2.9 C++ and Python Client users should upgrade to 2.9.3 and rotate vulnerable OAuth2.0 credentials. 2.10 C++ and Python Client users should upgrade to 2.10.2 and rotate vulnerable OAuth2.0 credentials. 3.0 C++ users are unaffected and 3.0 Python Client users will be unaffected when it is released. Any users running the C++ and Python Client for 2.6 or less should upgrade to one of the above patched versions.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "pulsar",
+            "purl": "pkg:generic/apache/pulsar"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "last_affected": "2.6.4"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.7.0"
+                },
+                {
+                  "fixed": "2.7.5"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.8.0"
+                },
+                {
+                  "fixed": "2.8.4"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.9.0"
+                },
+                {
+                  "fixed": "2.9.3"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.10.0"
+                },
+                {
+                  "fixed": "2.10.2"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://huntr.dev/bounties/df89b724-3201-47aa-b8cd-282e112a566f"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/ky1ssskvkj00y36k7nys9b5gm5jjrzwv"
+        },
+        {
+          "type": "WEB",
+          "url": "https://huntr.dev/bounties/df89b724-3201-47aa-b8cd-282e112a566f"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/ky1ssskvkj00y36k7nys9b5gm5jjrzwv"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpulsar",
+          "purl": "pkg:conda/libpulsar?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/apache/pulsar"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 13,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:apache:pulsar"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:apache:pulsar"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2022-34321",
+      "published": "2024-03-12T19:15:47.303Z",
+      "modified": "2025-01-22T17:59:49.280Z",
+      "aliases": [],
+      "summary": "Improper Authentication vulnerability in Apache Pulsar Proxy allows an attacker to connect to the /proxy-stats endpoint without authentication.",
+      "details": "Improper Authentication vulnerability in Apache Pulsar Proxy allows an attacker to connect to the /proxy-stats endpoint without authentication. The vulnerable endpoint exposes detailed statistics about live connections, along with the capability to modify the logging level of proxied connections without requiring proper authentication credentials.\n\nThis issue affects Apache Pulsar versions from 2.6.0 to 2.10.5, from 2.11.0 to 2.11.2, from 3.0.0 to 3.0.1, and 3.1.0.\n\nThe known risks include exposing sensitive information such as connected client IP and unauthorized logging level manipulation which could lead to a denial-of-service condition by significantly increasing the proxy's logging overhead. When deployed via the Apache Pulsar Helm chart within Kubernetes environments, the actual client IP might not be revealed through the load balancer's default behavior, which typically obscures the original source IP addresses when externalTrafficPolicy is being configured to \"Cluster\" by default. The /proxy-stats endpoint contains topic level statistics, however, in the default configuration, the topic level statistics aren't known to be exposed.\n\n2.10 Pulsar Proxy users should upgrade to at least 2.10.6.\n2.11 Pulsar Proxy users should upgrade to at least 2.11.3.\n3.0 Pulsar Proxy users should upgrade to at least 3.0.2.\n3.1 Pulsar Proxy users should upgrade to at least 3.1.1.\n\nUsers operating versions prior to those listed above should upgrade to the aforementioned patched versions or newer versions. Additionally, it's imperative to recognize that the Apache Pulsar Proxy is not intended for direct exposure to the internet. The architectural design of Pulsar Proxy assumes that it will operate within a secured network environment, safeguarded by appropriate perimeter defenses.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "pulsar",
+            "purl": "pkg:generic/apache/pulsar"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.6.0"
+                },
+                {
+                  "fixed": "2.10.6"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.11.0"
+                },
+                {
+                  "fixed": "2.11.3"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "3.0.0"
+                },
+                {
+                  "fixed": "3.0.2"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2024/03/12/8"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/ods5tq2hpl390hvjnvxv0bcg4rfpgjj8"
+        },
+        {
+          "type": "WEB",
+          "url": "https://pulsar.apache.org/security/CVE-2022-34321/"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2024/03/12/8"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/ods5tq2hpl390hvjnvxv0bcg4rfpgjj8"
+        },
+        {
+          "type": "WEB",
+          "url": "https://pulsar.apache.org/security/CVE-2022-34321/"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:L"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpulsar",
+          "purl": "pkg:conda/libpulsar?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/apache/pulsar"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 13,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:apache:pulsar"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:apache:pulsar"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2023-30428",
+      "published": "2023-07-12T10:15:09.853Z",
+      "modified": "2024-11-21T08:00:09.863Z",
+      "aliases": [],
+      "summary": "Incorrect Authorization vulnerability in Apache Software Foundation Apache Pulsar Broker's Rest Producer allows authenticated user with a custom HTTP header to produce a message to any topic using the",
+      "details": "Incorrect Authorization vulnerability in Apache Software Foundation Apache Pulsar Broker's Rest Producer allows authenticated user with a custom HTTP header to produce a message to any topic using the broker's admin role.\nThis issue affects Apache Pulsar Brokers: from 2.9.0 through 2.9.5, from 2.10.0 before 2.10.4, 2.11.0.\n\nThe vulnerability is exploitable when an attacker can connect directly to the Pulsar Broker. If an attacker is connecting through the Pulsar Proxy, there is no known way to exploit this authorization vulnerability.\n\nThere are two known risks for affected users. First, an attacker could produce garbage messages to any topic in the cluster. Second, an attacker could produce messages to the topic level policies topic for other tenants and influence topic settings that could lead to exfiltration and/or deletion of messages for other tenants.\n\n2.8 Pulsar Broker users and earlier are unaffected.\n2.9 Pulsar Broker users should upgrade to one of the patched versions.\n2.10 Pulsar Broker users should upgrade to at least 2.10.4.\n2.11 Pulsar Broker users should upgrade to at least 2.11.1.\n3.0 Pulsar Broker users are unaffected.\n\n",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "pulsar",
+            "purl": "pkg:generic/apache/pulsar"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.9.0"
+                },
+                {
+                  "last_affected": "2.9.5"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.10.0"
+                },
+                {
+                  "fixed": "2.10.4"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/v39hqtgrmyxr85rmofwvgrktnflbq3q5"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/v39hqtgrmyxr85rmofwvgrktnflbq3q5"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:C/C:H/I:H/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpulsar",
+          "purl": "pkg:conda/libpulsar?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/apache/pulsar"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 13,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:apache:pulsar"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:apache:pulsar"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2023-30429",
+      "published": "2023-07-12T10:15:09.937Z",
+      "modified": "2024-11-21T08:00:10.013Z",
+      "aliases": [],
+      "summary": "Incorrect Authorization vulnerability in Apache Software Foundation Apache Pulsar.",
+      "details": "Incorrect Authorization vulnerability in Apache Software Foundation Apache Pulsar.\n\nThis issue affects Apache Pulsar: before 2.10.4, and 2.11.0.\n\nWhen a client connects to the Pulsar Function Worker via the Pulsar Proxy where the Pulsar Proxy uses mTLS authentication to authenticate with the Pulsar Function Worker, the Pulsar Function Worker incorrectly performs authorization by using the Proxy's role for authorization instead of the client's role, which can lead to privilege escalation, especially if the proxy is configured with a superuser role.\n\nThe recommended mitigation for impacted users is to upgrade the Pulsar Function Worker to a patched version.\n\n2.10 Pulsar Function Worker users should upgrade to at least 2.10.4.\n2.11 Pulsar Function Worker users should upgrade to at least 2.11.1.\n3.0 Pulsar Function Worker users are unaffected.\nAny users running the Pulsar Function Worker for 2.9.* and earlier should upgrade to one of the above patched versions.\n",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "pulsar",
+            "purl": "pkg:generic/apache/pulsar"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "2.10.4"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/v0gcvvxswr830314q4b1kybsfmcf3jf8"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/v0gcvvxswr830314q4b1kybsfmcf3jf8"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpulsar",
+          "purl": "pkg:conda/libpulsar?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/apache/pulsar"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 13,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:apache:pulsar"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:apache:pulsar"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2023-31007",
+      "published": "2023-07-12T10:15:10.013Z",
+      "modified": "2024-11-21T08:01:13.920Z",
+      "aliases": [],
+      "summary": "Improper Authentication vulnerability in Apache Software Foundation Apache Pulsar Broker allows a client to stay connected to a broker after authentication data expires if the client connected through",
+      "details": "Improper Authentication vulnerability in Apache Software Foundation Apache Pulsar Broker allows a client to stay connected to a broker after authentication data expires if the client connected through the Pulsar Proxy when the broker is configured with authenticateOriginalAuthData=false or if a client connects directly to a broker with a specially crafted connect command when the broker is configured with authenticateOriginalAuthData=false.\n\nThis issue affects Apache Pulsar: through 2.9.4, from 2.10.0 through 2.10.3, 2.11.0.\n\n2.9 Pulsar Broker users should upgrade to at least 2.9.5.\n2.10 Pulsar Broker users should upgrade to at least 2.10.4.\n2.11 Pulsar Broker users should upgrade to at least 2.11.1.\n3.0 Pulsar Broker users are unaffected.\nAny users running the Pulsar Broker for 2.8.* and earlier should upgrade to one of the above patched versions.\n",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "pulsar",
+            "purl": "pkg:generic/apache/pulsar"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "2.9.5"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.10.0"
+                },
+                {
+                  "last_affected": "2.10.3"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/qxn99xxyp0zv6jchjggn3soyo5gvqfxj"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/qxn99xxyp0zv6jchjggn3soyo5gvqfxj"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpulsar",
+          "purl": "pkg:conda/libpulsar?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/apache/pulsar"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 13,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:apache:pulsar"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:apache:pulsar"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2023-37579",
+      "published": "2023-07-12T10:15:11.010Z",
+      "modified": "2024-11-21T08:11:59.647Z",
+      "aliases": [],
+      "summary": "Incorrect Authorization vulnerability in Apache Software Foundation Apache Pulsar Function Worker.",
+      "details": "Incorrect Authorization vulnerability in Apache Software Foundation Apache Pulsar Function Worker.\n\nThis issue affects Apache Pulsar: before 2.10.4, and 2.11.0.\n\nAny authenticated user can retrieve a source's configuration or a sink's configuration without authorization. Many sources and sinks contain credentials in the configuration, which could lead to leaked credentials. This vulnerability is mitigated by the fact that there is not a known way for an authenticated user to enumerate another tenant's sources or sinks, meaning the source or sink name would need to be guessed in order to exploit this vulnerability.\n\nThe recommended mitigation for impacted users is to upgrade the Pulsar Function Worker to a patched version.\n\n2.10 Pulsar Function Worker users should upgrade to at least 2.10.4.\n2.11 Pulsar Function Worker users should upgrade to at least 2.11.1.\n3.0 Pulsar Function Worker users are unaffected.\nAny users running the Pulsar Function Worker for 2.9.* and earlier should upgrade to one of the above patched versions.\n\n",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "pulsar",
+            "purl": "pkg:generic/apache/pulsar"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "2.10.4"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/0dmn3cb5n2p08o3cpj3ycfhzfqs2ppwz"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/0dmn3cb5n2p08o3cpj3ycfhzfqs2ppwz"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:C/C:H/I:H/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpulsar",
+          "purl": "pkg:conda/libpulsar?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/apache/pulsar"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 13,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:apache:pulsar"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:apache:pulsar"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2023-37544",
+      "published": "2023-12-20T09:15:07.007Z",
+      "modified": "2024-11-21T08:11:54.283Z",
+      "aliases": [],
+      "summary": "Improper Authentication vulnerability in Apache Pulsar WebSocket Proxy allows an attacker to connect to the /pingpong endpoint without authentication.",
+      "details": "Improper Authentication vulnerability in Apache Pulsar WebSocket Proxy allows an attacker to connect to the /pingpong endpoint without authentication.\n\nThis issue affects Apache Pulsar WebSocket Proxy: from 2.8.0 through 2.8.*, from 2.9.0 through 2.9.*, from 2.10.0 through 2.10.4, from 2.11.0 through 2.11.1, 3.0.0.\n\nThe known risks include a denial of service due to the WebSocket Proxy accepting any connections, and excessive data transfer due to misuse of the WebSocket ping/pong feature.\n\n2.10 Pulsar WebSocket Proxy users should upgrade to at least 2.10.5.\n2.11 Pulsar WebSocket Proxy users should upgrade to at least 2.11.2.\n3.0 Pulsar WebSocket Proxy users should upgrade to at least 3.0.1.\n3.1 Pulsar WebSocket Proxy users are unaffected.\nAny users running the Pulsar WebSocket Proxy for 2.8, 2.9, and earlier should upgrade to one of the above patched versions.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "pulsar",
+            "purl": "pkg:generic/apache/pulsar"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "2.10.5"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.11.0"
+                },
+                {
+                  "fixed": "2.11.2"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2023/12/20/2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/od0k9zts1toc9h9snbqq4pjpyx28mv4m"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2023/12/20/2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/od0k9zts1toc9h9snbqq4pjpyx28mv4m"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpulsar",
+          "purl": "pkg:conda/libpulsar?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/apache/pulsar"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 13,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:apache:pulsar"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:apache:pulsar"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2023-51437",
+      "published": "2024-02-07T10:15:08.137Z",
+      "modified": "2024-11-21T08:38:06.947Z",
+      "aliases": [],
+      "summary": "Observable timing discrepancy vulnerability in Apache Pulsar SASL Authentication Provider can allow an attacker to forge a SASL Role Token that will pass signature verification.",
+      "details": "Observable timing discrepancy vulnerability in Apache Pulsar SASL Authentication Provider can allow an attacker to forge a SASL Role Token that will pass signature verification.\nUsers are recommended to upgrade to version 2.11.3, 3.0.2, or 3.1.1 which fixes the issue. Users should also consider updating the configured secret in the `saslJaasServerRoleTokenSignerSecretPath` file.\n\nAny component matching an above version running the SASL Authentication Provider is affected. That includes the Pulsar Broker, Proxy, Websocket Proxy, or Function Worker.\n\n2.11 Pulsar users should upgrade to at least 2.11.3.\n3.0 Pulsar users should upgrade to at least 3.0.2.\n3.1 Pulsar users should upgrade to at least 3.1.1.\nAny users running Pulsar 2.8, 2.9, 2.10, and earlier should upgrade to one of the above patched versions.\n\nFor additional details on this attack vector, please refer to  https://codahale.com/a-lesson-in-timing-attacks/ .\n\n",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "pulsar",
+            "purl": "pkg:generic/apache/pulsar"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "last_affected": "2.10.5"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.11.0"
+                },
+                {
+                  "fixed": "2.11.3"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "3.0.0"
+                },
+                {
+                  "fixed": "3.0.2"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/5kgmvvolf5tzp5rz9xjwfg2ncwvqqgl5"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.openwall.com/lists/oss-security/2024/02/07/1"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/5kgmvvolf5tzp5rz9xjwfg2ncwvqqgl5"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.openwall.com/lists/oss-security/2024/02/07/1"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpulsar",
+          "purl": "pkg:conda/libpulsar?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/apache/pulsar"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 13,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:apache:pulsar"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:apache:pulsar"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2024-27135",
+      "published": "2024-03-12T19:15:47.567Z",
+      "modified": "2025-02-13T18:17:19.870Z",
+      "aliases": [],
+      "summary": "Improper input validation in the Pulsar Function Worker allows a malicious authenticated user to execute arbitrary Java code on the Pulsar Function worker, outside of the sandboxes designated for runn",
+      "details": "Improper input validation in the Pulsar Function Worker allows a malicious authenticated user to execute arbitrary Java code on the Pulsar Function worker, outside of the sandboxes designated for running user-provided functions. This vulnerability also applies to the Pulsar Broker when it is configured with \"functionsWorkerEnabled=true\".\n\nThis issue affects Apache Pulsar versions from 2.4.0 to 2.10.5, from 2.11.0 to 2.11.3, from 3.0.0 to 3.0.2, from 3.1.0 to 3.1.2, and 3.2.0. \n\n2.10 Pulsar Function Worker users should upgrade to at least 2.10.6.\n2.11 Pulsar Function Worker users should upgrade to at least 2.11.4.\n3.0 Pulsar Function Worker users should upgrade to at least 3.0.3.\n3.1 Pulsar Function Worker users should upgrade to at least 3.1.3.\n3.2 Pulsar Function Worker users should upgrade to at least 3.2.1.\n\nUsers operating versions prior to those listed above should upgrade to the aforementioned patched versions or newer versions.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "pulsar",
+            "purl": "pkg:generic/apache/pulsar"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.4.0"
+                },
+                {
+                  "fixed": "2.10.6"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.11.0"
+                },
+                {
+                  "fixed": "2.11.4"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "3.0.0"
+                },
+                {
+                  "fixed": "3.0.3"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "3.1.0"
+                },
+                {
+                  "fixed": "3.1.3"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2024/03/12/9"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/dh8nj2vmb2br6thjltq74lk9jxkz62wn"
+        },
+        {
+          "type": "WEB",
+          "url": "https://pulsar.apache.org/security/CVE-2024-27135/"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2024/03/12/9"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/dh8nj2vmb2br6thjltq74lk9jxkz62wn"
+        },
+        {
+          "type": "WEB",
+          "url": "https://pulsar.apache.org/security/CVE-2024-27135/"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:C/C:H/I:H/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpulsar",
+          "purl": "pkg:conda/libpulsar?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/apache/pulsar"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 13,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:apache:pulsar"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:apache:pulsar"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2024-27317",
+      "published": "2024-03-12T19:15:47.777Z",
+      "modified": "2025-01-19T03:23:26.087Z",
+      "aliases": [],
+      "summary": "In Pulsar Functions Worker, authenticated users can upload functions in jar or nar files.",
+      "details": "In Pulsar Functions Worker, authenticated users can upload functions in jar or nar files. These files, essentially zip files, are extracted by the Functions Worker. However, if a malicious file is uploaded, it could exploit a directory traversal vulnerability. This occurs when the filenames in the zip files, which aren't properly validated, contain special elements like \"..\", altering the directory path. This could allow an attacker to create or modify files outside of the designated extraction directory, potentially influencing system behavior. This vulnerability also applies to the Pulsar Broker when it is configured with \"functionsWorkerEnabled=true\".\n\nThis issue affects Apache Pulsar versions from 2.4.0 to 2.10.5, from 2.11.0 to 2.11.3, from 3.0.0 to 3.0.2, from 3.1.0 to 3.1.2, and 3.2.0. \n\n2.10 Pulsar Function Worker users should upgrade to at least 2.10.6.\n2.11 Pulsar Function Worker users should upgrade to at least 2.11.4.\n3.0 Pulsar Function Worker users should upgrade to at least 3.0.3.\n3.1 Pulsar Function Worker users should upgrade to at least 3.1.3.\n3.2 Pulsar Function Worker users should upgrade to at least 3.2.1.\n\nUsers operating versions prior to those listed above should upgrade to the aforementioned patched versions or newer versions.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "pulsar",
+            "purl": "pkg:generic/apache/pulsar"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.4.0"
+                },
+                {
+                  "fixed": "2.10.6"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.11.0"
+                },
+                {
+                  "fixed": "2.11.4"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "3.0.0"
+                },
+                {
+                  "fixed": "3.0.3"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "3.1.0"
+                },
+                {
+                  "fixed": "3.1.3"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2024/03/12/10"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/ct9xmvlf7lompc1pxvlsb60qstfsm9po"
+        },
+        {
+          "type": "WEB",
+          "url": "https://pulsar.apache.org/security/CVE-2024-27317/"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2024/03/12/10"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/ct9xmvlf7lompc1pxvlsb60qstfsm9po"
+        },
+        {
+          "type": "WEB",
+          "url": "https://pulsar.apache.org/security/CVE-2024-27317/"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:C/C:H/I:H/A:L"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpulsar",
+          "purl": "pkg:conda/libpulsar?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/apache/pulsar"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 13,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:apache:pulsar"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:apache:pulsar"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2024-27894",
+      "published": "2024-03-12T19:15:47.970Z",
+      "modified": "2025-01-19T03:09:08.147Z",
+      "aliases": [],
+      "summary": "The Pulsar Functions Worker includes a capability that permits authenticated users to create functions where the function's implementation is referenced by a URL.",
+      "details": "The Pulsar Functions Worker includes a capability that permits authenticated users to create functions where the function's implementation is referenced by a URL. The supported URL schemes include \"file\", \"http\", and \"https\". When a function is created using this method, the Functions Worker will retrieve the implementation from the URL provided by the user. However, this feature introduces a vulnerability that can be exploited by an attacker to gain unauthorized access to any file that the Pulsar Functions Worker process has permissions to read. This includes reading the process environment which potentially includes sensitive information, such as secrets. Furthermore, an attacker could leverage this vulnerability to use the Pulsar Functions Worker as a proxy to access the content of remote HTTP and HTTPS endpoint URLs. This could also be used to carry out denial of service attacks.\nThis vulnerability also applies to the Pulsar Broker when it is configured with \"functionsWorkerEnabled=true\".\n\nThis issue affects Apache Pulsar versions from 2.4.0 to 2.10.5, from 2.11.0 to 2.11.3, from 3.0.0 to 3.0.2, from 3.1.0 to 3.1.2, and 3.2.0. \n\n2.10 Pulsar Function Worker users should upgrade to at least 2.10.6.\n2.11 Pulsar Function Worker users should upgrade to at least 2.11.4.\n3.0 Pulsar Function Worker users should upgrade to at least 3.0.3.\n3.1 Pulsar Function Worker users should upgrade to at least 3.1.3.\n3.2 Pulsar Function Worker users should upgrade to at least 3.2.1.\n\nUsers operating versions prior to those listed above should upgrade to the aforementioned patched versions or newer versions.\n\nThe updated versions of Pulsar Functions Worker will, by default, impose restrictions on the creation of functions using URLs. For users who rely on this functionality, the Function Worker configuration provides two configuration keys: \"additionalEnabledConnectorUrlPatterns\" and \"additionalEnabledFunctionsUrlPatterns\". These keys allow users to specify a set of URL patterns that are permitted, enabling the creation of functions using URLs that match the defined patterns. This approach ensures that the feature remains available to those who require it, while limiting the potential for unauthorized access and exploitation.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "pulsar",
+            "purl": "pkg:generic/apache/pulsar"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.4.0"
+                },
+                {
+                  "fixed": "2.10.6"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.11.0"
+                },
+                {
+                  "fixed": "2.11.4"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "3.0.0"
+                },
+                {
+                  "fixed": "3.0.3"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "3.1.0"
+                },
+                {
+                  "fixed": "3.1.3"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2024/03/12/11"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/45cqhgqg8d19ongjw18ypcss8vwh206p"
+        },
+        {
+          "type": "WEB",
+          "url": "https://pulsar.apache.org/security/CVE-2024-27894/"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2024/03/12/11"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/45cqhgqg8d19ongjw18ypcss8vwh206p"
+        },
+        {
+          "type": "WEB",
+          "url": "https://pulsar.apache.org/security/CVE-2024-27894/"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:C/C:H/I:H/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpulsar",
+          "purl": "pkg:conda/libpulsar?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/apache/pulsar"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 13,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:apache:pulsar"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:apache:pulsar"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2024-28098",
+      "published": "2024-03-12T19:15:48.177Z",
+      "modified": "2025-02-13T18:17:46.583Z",
+      "aliases": [],
+      "summary": "The vulnerability allows authenticated users with only produce or consume permissions to modify topic-level policies, such as retention, TTL, and offloading settings.",
+      "details": "The vulnerability allows authenticated users with only produce or consume permissions to modify topic-level policies, such as retention, TTL, and offloading settings. These management operations should be restricted to users with the tenant admin role or super user role.\n\nThis issue affects Apache Pulsar versions from 2.7.1 to 2.10.5, from 2.11.0 to 2.11.3, from 3.0.0 to 3.0.2, from 3.1.0 to 3.1.2, and 3.2.0. \n\n2.10 Apache Pulsar users should upgrade to at least 2.10.6.\n2.11 Apache Pulsar users should upgrade to at least 2.11.4.\n3.0 Apache Pulsar users should upgrade to at least 3.0.3.\n3.1 Apache Pulsar users should upgrade to at least 3.1.3.\n3.2 Apache Pulsar users should upgrade to at least 3.2.1.\n\nUsers operating versions prior to those listed above should upgrade to the aforementioned patched versions or newer versions.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "pulsar",
+            "purl": "pkg:generic/apache/pulsar"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.7.1"
+                },
+                {
+                  "fixed": "2.10.6"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.11.0"
+                },
+                {
+                  "fixed": "2.11.4"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "3.0.0"
+                },
+                {
+                  "fixed": "3.0.3"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "3.1.0"
+                },
+                {
+                  "fixed": "3.1.3"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2024/03/12/12"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/3m6923y3wxpdcs9346sjvt8ql9swqc2z"
+        },
+        {
+          "type": "WEB",
+          "url": "https://pulsar.apache.org/security/CVE-2024-28098/"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2024/03/12/12"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/3m6923y3wxpdcs9346sjvt8ql9swqc2z"
+        },
+        {
+          "type": "WEB",
+          "url": "https://pulsar.apache.org/security/CVE-2024-28098/"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:C/C:L/I:L/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpulsar",
+          "purl": "pkg:conda/libpulsar?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/apache/pulsar"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 13,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:apache:pulsar"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:apache:pulsar"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    }
+  ]
+}

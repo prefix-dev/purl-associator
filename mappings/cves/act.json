@@ -1,0 +1,231 @@
+{
+  "schema_version": 1,
+  "package": "act",
+  "purls": [
+    "pkg:github/nektos/act"
+  ],
+  "cpes": [
+    "cpe:2.3:a:act_project:act",
+    "cpe:2.3:a:nektos:act"
+  ],
+  "generated_at": "2026-06-10T06:09:04+00:00",
+  "conda_versions_total": 20,
+  "latest_version": "0.2.89",
+  "advisories": [
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-34041",
+      "published": "2026-03-31T03:15:58.053Z",
+      "modified": "2026-04-06T15:34:15.297Z",
+      "aliases": [],
+      "summary": "act is a project which allows for local running of github actions.",
+      "details": "act is a project which allows for local running of github actions. Prior to version 0.2.86, act unconditionally processes the deprecated ::set-env:: and ::add-path:: workflow commands, which was disabled due to environment injection risks. When a workflow step echoes untrusted data to stdout, an attacker can inject these commands to set arbitrary environment variables or modify the PATH for all subsequent steps in the job. This issue has been patched in version 0.2.86.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "act",
+            "purl": "pkg:generic/act_project/act"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "0.2.86"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/nektos/act/commit/0c739c8e39c41aa5a07665f732da9cab6df0097a"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/nektos/act/releases/tag/v0.2.86"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/nektos/act/security/advisories/GHSA-xmgr-9pqc-h5vw"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:P/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X"
+        },
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "act",
+          "purl": "pkg:conda/act?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/act_project/act"
+          ],
+          "affected_versions": [
+            "0.2.63",
+            "0.2.64",
+            "0.2.65",
+            "0.2.66",
+            "0.2.74",
+            "0.2.75",
+            "0.2.76",
+            "0.2.77",
+            "0.2.78",
+            "0.2.79",
+            "0.2.80",
+            "0.2.81",
+            "0.2.82",
+            "0.2.83",
+            "0.2.84",
+            "0.2.85"
+          ],
+          "conda_versions_total": 20,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:act_project:act",
+            "cpe:2.3:a:nektos:act"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:nektos:act"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2023-22726",
+      "published": "2023-01-20T22:15:10.533Z",
+      "modified": "2024-11-21T07:45:18.123Z",
+      "aliases": [],
+      "summary": "act is a project which allows for local running of github actions.",
+      "details": "act is a project which allows for local running of github actions. The artifact server that stores artifacts from Github Action runs does not sanitize path inputs. This allows an attacker to download and overwrite arbitrary files on the host from a Github Action. This issue may lead to privilege escalation. The /upload endpoint is vulnerable to path traversal as filepath is user controlled, and ultimately flows into os.Mkdir and os.Open. The /artifact endpoint is vulnerable to path traversal as the path is variable is user controlled, and the specified file is ultimately returned by the server. This has been addressed in version 0.2.40. Users are advised to upgrade. Users unable to upgrade may, during implementation of Open and OpenAtEnd for FS, ensure to use ValidPath() to check against path traversal or clean the user-provided paths manually.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "act",
+            "purl": "pkg:generic/act_project/act"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "0.2.40"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/nektos/act/blob/master/pkg/artifacts/server.go#L65"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/nektos/act/blob/v0.2.35/pkg/artifacts/server.go#L245"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/nektos/act/blob/v0.2.35/pkg/artifacts/server.go#LL103C2-L103C2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/nektos/act/commit/63ae215071f94569d910964bdee866d91d6e3a10"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/nektos/act/issues/1553"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/nektos/act/security/advisories/GHSA-pc99-qmg4-rcff"
+        },
+        {
+          "type": "WEB",
+          "url": "https://securitylab.github.com/advisories/GHSL-2023-004_act/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/nektos/act/blob/master/pkg/artifacts/server.go#L65"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/nektos/act/blob/v0.2.35/pkg/artifacts/server.go#L245"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/nektos/act/blob/v0.2.35/pkg/artifacts/server.go#LL103C2-L103C2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/nektos/act/commit/63ae215071f94569d910964bdee866d91d6e3a10"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/nektos/act/issues/1553"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/nektos/act/security/advisories/GHSA-pc99-qmg4-rcff"
+        },
+        {
+          "type": "WEB",
+          "url": "https://securitylab.github.com/advisories/GHSL-2023-004_act/"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:R/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "act",
+          "purl": "pkg:conda/act?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/act_project/act"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 20,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:act_project:act",
+            "cpe:2.3:a:nektos:act"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:act_project:act"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    }
+  ]
+}

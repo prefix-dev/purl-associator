@@ -1,0 +1,3642 @@
+{
+  "schema_version": 1,
+  "package": "uutils-coreutils",
+  "purls": [
+    "pkg:github/uutils/coreutils"
+  ],
+  "cpes": [
+    "cpe:2.3:a:uutils:coreutils"
+  ],
+  "generated_at": "2026-06-10T06:09:04+00:00",
+  "conda_versions_total": 14,
+  "latest_version": "0.9.0",
+  "advisories": [
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-35338",
+      "published": "2026-04-22T17:16:35.583Z",
+      "modified": "2026-04-27T12:28:50.307Z",
+      "aliases": [],
+      "summary": "A vulnerability in the chmod utility of uutils coreutils allows users to bypass the --preserve-root safety mechanism.",
+      "details": "A vulnerability in the chmod utility of uutils coreutils allows users to bypass the --preserve-root safety mechanism. The implementation only validates if the target path is literally / and does not canonicalize the path. An attacker or accidental user can use path variants such as /../ or symbolic links to execute destructive recursive operations (e.g., chmod -R 000) on the entire root filesystem, leading to system-wide permission loss and potential complete system breakdown.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "coreutils",
+            "purl": "pkg:generic/uutils/coreutils"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "0.6.0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/pull/10033"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/releases/tag/0.6.0"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:R/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "uutils-coreutils",
+          "purl": "pkg:conda/uutils-coreutils?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/uutils/coreutils"
+          ],
+          "affected_versions": [
+            "0.0.16",
+            "0.0.17",
+            "0.0.18",
+            "0.0.19",
+            "0.0.20",
+            "0.0.27",
+            "0.1.0",
+            "0.3.0",
+            "0.4.0",
+            "0.5.0"
+          ],
+          "conda_versions_total": 14,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-35339",
+      "published": "2026-04-22T17:16:35.767Z",
+      "modified": "2026-05-04T20:14:43.883Z",
+      "aliases": [],
+      "summary": "The recursive mode (-R) of the chmod utility in uutils coreutils incorrectly handles exit codes when processing multiple files.",
+      "details": "The recursive mode (-R) of the chmod utility in uutils coreutils incorrectly handles exit codes when processing multiple files. The final return value is determined solely by the success or failure of the last file processed. This allows the command to return an exit code of 0 (success) even if errors were encountered on previous files, such as 'Operation not permitted'. Scripts relying on these exit codes may proceed under a false sense of success while sensitive files remain with restrictive or incorrect permissions.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "coreutils",
+            "purl": "pkg:generic/uutils/coreutils"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "0.6.0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/pull/9793"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/releases/tag/0.6.0"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "uutils-coreutils",
+          "purl": "pkg:conda/uutils-coreutils?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/uutils/coreutils"
+          ],
+          "affected_versions": [
+            "0.0.16",
+            "0.0.17",
+            "0.0.18",
+            "0.0.19",
+            "0.0.20",
+            "0.0.27",
+            "0.1.0",
+            "0.3.0",
+            "0.4.0",
+            "0.5.0"
+          ],
+          "conda_versions_total": 14,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-35340",
+      "published": "2026-04-22T17:16:35.923Z",
+      "modified": "2026-05-04T20:12:01.500Z",
+      "aliases": [],
+      "summary": "A flaw in the ChownExecutor used by uutils coreutils chown and chgrp causes the utilities to return an incorrect exit code during recursive operations.",
+      "details": "A flaw in the ChownExecutor used by uutils coreutils chown and chgrp causes the utilities to return an incorrect exit code during recursive operations. The final exit code is determined only by the last file processed. If the last operation succeeds, the command returns 0 even if earlier ownership or group changes failed due to permission errors. This can lead to security misconfigurations where administrative scripts incorrectly assume that ownership has been successfully transferred across a directory tree.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "coreutils",
+            "purl": "pkg:generic/uutils/coreutils"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "0.6.0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/pull/10035"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/releases/tag/0.6.0"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "uutils-coreutils",
+          "purl": "pkg:conda/uutils-coreutils?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/uutils/coreutils"
+          ],
+          "affected_versions": [
+            "0.0.16",
+            "0.0.17",
+            "0.0.18",
+            "0.0.19",
+            "0.0.20",
+            "0.0.27",
+            "0.1.0",
+            "0.3.0",
+            "0.4.0",
+            "0.5.0"
+          ],
+          "conda_versions_total": 14,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-35341",
+      "published": "2026-04-22T17:16:36.060Z",
+      "modified": "2026-04-24T19:05:55.067Z",
+      "aliases": [],
+      "summary": "A vulnerability in uutils coreutils mkfifo allows for the unauthorized modification of permissions on existing files.",
+      "details": "A vulnerability in uutils coreutils mkfifo allows for the unauthorized modification of permissions on existing files. When mkfifo fails to create a FIFO because a file already exists at the target path, it fails to terminate the operation for that path and continues to execute a follow-up set_permissions call. This results in the existing file's permissions being changed to the default mode (often 644 after umask), potentially exposing sensitive files such as SSH private keys to other users on the system.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "coreutils",
+            "purl": "pkg:generic/uutils/coreutils"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/issues/10020"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "uutils-coreutils",
+          "purl": "pkg:conda/uutils-coreutils?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/uutils/coreutils"
+          ],
+          "affected_versions": [
+            "0.0.16",
+            "0.0.17",
+            "0.0.18",
+            "0.0.19",
+            "0.0.20",
+            "0.0.27",
+            "0.1.0",
+            "0.3.0",
+            "0.4.0",
+            "0.5.0",
+            "0.6.0",
+            "0.7.0",
+            "0.8.0",
+            "0.9.0"
+          ],
+          "conda_versions_total": 14,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-35342",
+      "published": "2026-04-22T17:16:36.217Z",
+      "modified": "2026-05-04T20:11:32.340Z",
+      "aliases": [],
+      "summary": "The mktemp utility in uutils coreutils fails to properly handle an empty TMPDIR environment variable.",
+      "details": "The mktemp utility in uutils coreutils fails to properly handle an empty TMPDIR environment variable. Unlike GNU mktemp, which falls back to /tmp when TMPDIR is an empty string, the uutils implementation treats the empty string as a valid path. This causes temporary files to be created in the current working directory (CWD) instead of the intended secure temporary directory. If the CWD is more permissive or accessible to other users than /tmp, it may lead to unintended information disclosure or unauthorized access to temporary data.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "coreutils",
+            "purl": "pkg:generic/uutils/coreutils"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "0.6.0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/pull/10566"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/releases/tag/0.6.0"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:L/I:N/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "uutils-coreutils",
+          "purl": "pkg:conda/uutils-coreutils?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/uutils/coreutils"
+          ],
+          "affected_versions": [
+            "0.0.16",
+            "0.0.17",
+            "0.0.18",
+            "0.0.19",
+            "0.0.20",
+            "0.0.27",
+            "0.1.0",
+            "0.3.0",
+            "0.4.0",
+            "0.5.0"
+          ],
+          "conda_versions_total": 14,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-35343",
+      "published": "2026-04-22T17:16:36.357Z",
+      "modified": "2026-05-04T20:10:47.587Z",
+      "aliases": [],
+      "summary": "The cut utility in uutils coreutils incorrectly handles the -s (only-delimited) option when a newline character is specified as the delimiter.",
+      "details": "The cut utility in uutils coreutils incorrectly handles the -s (only-delimited) option when a newline character is specified as the delimiter. The implementation fails to verify the only_delimited flag in the cut_fields_newline_char_delim function, causing the utility to print non-delimited lines that should have been suppressed. This can lead to unexpected data being passed to downstream scripts that rely on strict output filtering.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "coreutils",
+            "purl": "pkg:generic/uutils/coreutils"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "0.7.0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/pull/11143"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/releases/tag/0.7.0"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:L/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "uutils-coreutils",
+          "purl": "pkg:conda/uutils-coreutils?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/uutils/coreutils"
+          ],
+          "affected_versions": [
+            "0.0.16",
+            "0.0.17",
+            "0.0.18",
+            "0.0.19",
+            "0.0.20",
+            "0.0.27",
+            "0.1.0",
+            "0.3.0",
+            "0.4.0",
+            "0.5.0",
+            "0.6.0"
+          ],
+          "conda_versions_total": 14,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-35344",
+      "published": "2026-04-22T17:16:36.490Z",
+      "modified": "2026-05-04T20:09:48.593Z",
+      "aliases": [],
+      "summary": "The dd utility in uutils coreutils suppresses errors during file truncation operations by unconditionally calling Result::ok() on truncation attempts.",
+      "details": "The dd utility in uutils coreutils suppresses errors during file truncation operations by unconditionally calling Result::ok() on truncation attempts. While intended to mimic GNU behavior for special files like /dev/null, the uutils implementation also hides failures on regular files and directories caused by full disks or read-only file systems. This can lead to silent data corruption in backup or migration scripts, as the utility may report a successful operation even when the destination file contains old or garbage data.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "coreutils",
+            "purl": "pkg:generic/uutils/coreutils"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/issues/9745"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:L/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "uutils-coreutils",
+          "purl": "pkg:conda/uutils-coreutils?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/uutils/coreutils"
+          ],
+          "affected_versions": [
+            "0.0.16",
+            "0.0.17",
+            "0.0.18",
+            "0.0.19",
+            "0.0.20",
+            "0.0.27",
+            "0.1.0",
+            "0.3.0",
+            "0.4.0",
+            "0.5.0",
+            "0.6.0",
+            "0.7.0",
+            "0.8.0",
+            "0.9.0"
+          ],
+          "conda_versions_total": 14,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-35345",
+      "published": "2026-04-22T17:16:36.627Z",
+      "modified": "2026-05-04T20:04:25.093Z",
+      "aliases": [],
+      "summary": "A vulnerability in the tail utility of uutils coreutils allows for the exfiltration of sensitive file contents when using the --follow=name option.",
+      "details": "A vulnerability in the tail utility of uutils coreutils allows for the exfiltration of sensitive file contents when using the --follow=name option. Unlike GNU tail, the uutils implementation continues to monitor a path after it has been replaced by a symbolic link, subsequently outputting the contents of the link's target. In environments where a privileged user (e.g., root) monitors a log directory, a local attacker with write access to that directory can replace a log file with a symlink to a sensitive system file (such as /etc/shadow), causing tail to disclose the contents of the sensitive file.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "coreutils",
+            "purl": "pkg:generic/uutils/coreutils"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/issues/10328"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/issues/10328"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:L/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "uutils-coreutils",
+          "purl": "pkg:conda/uutils-coreutils?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/uutils/coreutils"
+          ],
+          "affected_versions": [
+            "0.0.16",
+            "0.0.17",
+            "0.0.18",
+            "0.0.19",
+            "0.0.20",
+            "0.0.27",
+            "0.1.0",
+            "0.3.0",
+            "0.4.0",
+            "0.5.0",
+            "0.6.0",
+            "0.7.0",
+            "0.8.0",
+            "0.9.0"
+          ],
+          "conda_versions_total": 14,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-35346",
+      "published": "2026-04-22T17:16:36.760Z",
+      "modified": "2026-04-27T12:28:38.493Z",
+      "aliases": [],
+      "summary": "The comm utility in uutils coreutils silently corrupts data by performing lossy UTF-8 conversion on all output lines.",
+      "details": "The comm utility in uutils coreutils silently corrupts data by performing lossy UTF-8 conversion on all output lines. The implementation uses String::from_utf8_lossy(), which replaces invalid UTF-8 byte sequences with the Unicode replacement character (U+FFFD). This behavior differs from GNU comm, which processes raw bytes and preserves the original input. This results in corrupted output when the utility is used to compare binary files or files using non-UTF-8 legacy encodings.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "coreutils",
+            "purl": "pkg:generic/uutils/coreutils"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "0.6.0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/issues/10192"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/pull/10206"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/releases/tag/0.6.0"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/issues/10192"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:L/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "uutils-coreutils",
+          "purl": "pkg:conda/uutils-coreutils?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/uutils/coreutils"
+          ],
+          "affected_versions": [
+            "0.0.16",
+            "0.0.17",
+            "0.0.18",
+            "0.0.19",
+            "0.0.20",
+            "0.0.27",
+            "0.1.0",
+            "0.3.0",
+            "0.4.0",
+            "0.5.0"
+          ],
+          "conda_versions_total": 14,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-35347",
+      "published": "2026-04-22T17:16:36.903Z",
+      "modified": "2026-04-27T12:28:23.273Z",
+      "aliases": [],
+      "summary": "The comm utility in uutils coreutils incorrectly consumes data from non-regular file inputs before performing comparison operations.",
+      "details": "The comm utility in uutils coreutils incorrectly consumes data from non-regular file inputs before performing comparison operations. The are_files_identical function opens and reads from both input paths to compare content without first verifying if the paths refer to regular files. If an input path is a FIFO or a pipe, this pre-read operation drains the stream, leading to silent data loss before the actual comparison logic is executed. Additionally, the utility may hang indefinitely if it attempts to pre-read from infinite streams like /dev/zero.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "coreutils",
+            "purl": "pkg:generic/uutils/coreutils"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "0.6.0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/pull/9545"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/releases/tag/0.6.0"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/pull/9545"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:L/A:L"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "uutils-coreutils",
+          "purl": "pkg:conda/uutils-coreutils?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/uutils/coreutils"
+          ],
+          "affected_versions": [
+            "0.0.16",
+            "0.0.17",
+            "0.0.18",
+            "0.0.19",
+            "0.0.20",
+            "0.0.27",
+            "0.1.0",
+            "0.3.0",
+            "0.4.0",
+            "0.5.0"
+          ],
+          "conda_versions_total": 14,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-35348",
+      "published": "2026-04-22T17:16:37.040Z",
+      "modified": "2026-04-24T18:57:20.927Z",
+      "aliases": [],
+      "summary": "The sort utility in uutils coreutils is vulnerable to a process panic when using the --files0-from option with inputs containing non-UTF-8 filenames.",
+      "details": "The sort utility in uutils coreutils is vulnerable to a process panic when using the --files0-from option with inputs containing non-UTF-8 filenames. The implementation enforces UTF-8 encoding and utilizes expect(), causing an immediate crash when encountering valid but non-UTF-8 paths. This diverges from GNU sort, which treats filenames as raw bytes. A local attacker can exploit this to crash the utility and disrupt automated pipelines.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "coreutils",
+            "purl": "pkg:generic/uutils/coreutils"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/issues/9696"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/issues/9696"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "uutils-coreutils",
+          "purl": "pkg:conda/uutils-coreutils?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/uutils/coreutils"
+          ],
+          "affected_versions": [
+            "0.0.16",
+            "0.0.17",
+            "0.0.18",
+            "0.0.19",
+            "0.0.20",
+            "0.0.27",
+            "0.1.0",
+            "0.3.0",
+            "0.4.0",
+            "0.5.0",
+            "0.6.0",
+            "0.7.0",
+            "0.8.0",
+            "0.9.0"
+          ],
+          "conda_versions_total": 14,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-35349",
+      "published": "2026-04-22T17:16:37.190Z",
+      "modified": "2026-04-27T12:28:17.903Z",
+      "aliases": [],
+      "summary": "A vulnerability in the rm utility of uutils coreutils allows a bypass of the --preserve-root protection.",
+      "details": "A vulnerability in the rm utility of uutils coreutils allows a bypass of the --preserve-root protection. The implementation uses a path-string check rather than comparing device and inode numbers to identify the root directory. An attacker or accidental user can bypass this safeguard by using a symbolic link that resolves to the root directory (e.g., /tmp/rootlink -> /), potentially leading to the unintended recursive deletion of the entire root filesystem.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "coreutils",
+            "purl": "pkg:generic/uutils/coreutils"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "0.7.0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/pull/9706"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/releases/tag/0.7.0"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "uutils-coreutils",
+          "purl": "pkg:conda/uutils-coreutils?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/uutils/coreutils"
+          ],
+          "affected_versions": [
+            "0.0.16",
+            "0.0.17",
+            "0.0.18",
+            "0.0.19",
+            "0.0.20",
+            "0.0.27",
+            "0.1.0",
+            "0.3.0",
+            "0.4.0",
+            "0.5.0",
+            "0.6.0"
+          ],
+          "conda_versions_total": 14,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-35350",
+      "published": "2026-04-22T17:16:37.327Z",
+      "modified": "2026-04-24T19:04:01.207Z",
+      "aliases": [],
+      "summary": "The cp utility in uutils coreutils fails to properly handle setuid and setgid bits when ownership preservation fails.",
+      "details": "The cp utility in uutils coreutils fails to properly handle setuid and setgid bits when ownership preservation fails. When copying with the -p (preserve) flag, the utility applies the source mode bits even if the chown operation is unsuccessful. This can result in a user-owned copy retaining original privileged bits, creating unexpected privileged executables that violate local security policies. This differs from GNU cp, which clears these bits when ownership cannot be preserved.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "coreutils",
+            "purl": "pkg:generic/uutils/coreutils"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/issues/9750"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/issues/9750"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:L/I:H/A:L"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "uutils-coreutils",
+          "purl": "pkg:conda/uutils-coreutils?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/uutils/coreutils"
+          ],
+          "affected_versions": [
+            "0.0.16",
+            "0.0.17",
+            "0.0.18",
+            "0.0.19",
+            "0.0.20",
+            "0.0.27",
+            "0.1.0",
+            "0.3.0",
+            "0.4.0",
+            "0.5.0",
+            "0.6.0",
+            "0.7.0",
+            "0.8.0",
+            "0.9.0"
+          ],
+          "conda_versions_total": 14,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-35351",
+      "published": "2026-04-22T17:16:37.457Z",
+      "modified": "2026-04-27T12:28:10.220Z",
+      "aliases": [],
+      "summary": "The mv utility in uutils coreutils fails to preserve file ownership during moves across different filesystem boundaries.",
+      "details": "The mv utility in uutils coreutils fails to preserve file ownership during moves across different filesystem boundaries. The utility falls back to a copy-and-delete routine that creates the destination file using the caller's UID/GID rather than the source's metadata. This flaw breaks backups and migrations, causing files moved by a privileged user (e.g., root) to become root-owned unexpectedly, which can lead to information disclosure or restricted access for the intended owners.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "coreutils",
+            "purl": "pkg:generic/uutils/coreutils"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/issues/9714"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/issues/9714"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:L/I:L/A:L"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "uutils-coreutils",
+          "purl": "pkg:conda/uutils-coreutils?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/uutils/coreutils"
+          ],
+          "affected_versions": [
+            "0.0.16",
+            "0.0.17",
+            "0.0.18",
+            "0.0.19",
+            "0.0.20",
+            "0.0.27",
+            "0.1.0",
+            "0.3.0",
+            "0.4.0",
+            "0.5.0",
+            "0.6.0",
+            "0.7.0",
+            "0.8.0",
+            "0.9.0"
+          ],
+          "conda_versions_total": 14,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-35352",
+      "published": "2026-04-22T17:16:37.597Z",
+      "modified": "2026-05-04T18:16:28.370Z",
+      "aliases": [],
+      "summary": "A Time-of-Check to Time-of-Use (TOCTOU) race condition exists in the mkfifo utility of uutils coreutils.",
+      "details": "A Time-of-Check to Time-of-Use (TOCTOU) race condition exists in the mkfifo utility of uutils coreutils. The utility creates a FIFO and then performs a path-based chmod to set permissions. A local attacker with write access to the parent directory can swap the newly created FIFO for a symbolic link between these two operations. This redirects the chmod call to an arbitrary file, potentially enabling privilege escalation if the utility is run with elevated privileges.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "coreutils",
+            "purl": "pkg:generic/uutils/coreutils"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/issues/10020"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2026/05/04/4"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2026/05/04/5"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2026/05/04/6"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/issues/10020"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "uutils-coreutils",
+          "purl": "pkg:conda/uutils-coreutils?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/uutils/coreutils"
+          ],
+          "affected_versions": [
+            "0.0.16",
+            "0.0.17",
+            "0.0.18",
+            "0.0.19",
+            "0.0.20",
+            "0.0.27",
+            "0.1.0",
+            "0.3.0",
+            "0.4.0",
+            "0.5.0",
+            "0.6.0",
+            "0.7.0",
+            "0.8.0",
+            "0.9.0"
+          ],
+          "conda_versions_total": 14,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-35353",
+      "published": "2026-04-22T17:16:37.723Z",
+      "modified": "2026-04-27T12:27:39.040Z",
+      "aliases": [],
+      "summary": "The mkdir utility in uutils coreutils incorrectly applies permissions when using the -m flag by creating a directory with umask-derived permissions (typically 0755) before subsequently changing them t",
+      "details": "The mkdir utility in uutils coreutils incorrectly applies permissions when using the -m flag by creating a directory with umask-derived permissions (typically 0755) before subsequently changing them to the requested mode via a separate chmod system call. In multi-user environments, this introduces a brief window where a directory intended to be private is accessible to other users, potentially leading to unauthorized data access.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "coreutils",
+            "purl": "pkg:generic/uutils/coreutils"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "0.6.0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/pull/10036"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/releases/tag/0.6.0"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:L/I:N/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "uutils-coreutils",
+          "purl": "pkg:conda/uutils-coreutils?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/uutils/coreutils"
+          ],
+          "affected_versions": [
+            "0.0.16",
+            "0.0.17",
+            "0.0.18",
+            "0.0.19",
+            "0.0.20",
+            "0.0.27",
+            "0.1.0",
+            "0.3.0",
+            "0.4.0",
+            "0.5.0"
+          ],
+          "conda_versions_total": 14,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-35354",
+      "published": "2026-04-22T17:16:37.867Z",
+      "modified": "2026-04-24T19:04:08.917Z",
+      "aliases": [],
+      "summary": "A Time-of-Check to Time-of-Use (TOCTOU) vulnerability exists in the mv utility of uutils coreutils during cross-device moves.",
+      "details": "A Time-of-Check to Time-of-Use (TOCTOU) vulnerability exists in the mv utility of uutils coreutils during cross-device moves. The extended attribute (xattr) preservation logic uses multiple path-based system calls that perform fresh path-to-inode lookups for each operation. A local attacker with write access to the directory can exploit this race to swap files between calls, causing the destination file to receive an inconsistent mix of security xattrs, such as SELinux labels or file capabilities.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "coreutils",
+            "purl": "pkg:generic/uutils/coreutils"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/issues/10014"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/issues/10014"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:H/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "uutils-coreutils",
+          "purl": "pkg:conda/uutils-coreutils?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/uutils/coreutils"
+          ],
+          "affected_versions": [
+            "0.0.16",
+            "0.0.17",
+            "0.0.18",
+            "0.0.19",
+            "0.0.20",
+            "0.0.27",
+            "0.1.0",
+            "0.3.0",
+            "0.4.0",
+            "0.5.0",
+            "0.6.0",
+            "0.7.0",
+            "0.8.0",
+            "0.9.0"
+          ],
+          "conda_versions_total": 14,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-35355",
+      "published": "2026-04-22T17:16:37.993Z",
+      "modified": "2026-04-27T12:27:34.007Z",
+      "aliases": [],
+      "summary": "The install utility in uutils coreutils is vulnerable to a Time-of-Check to Time-of-Use (TOCTOU) race condition during file installation.",
+      "details": "The install utility in uutils coreutils is vulnerable to a Time-of-Check to Time-of-Use (TOCTOU) race condition during file installation. The implementation unlinks an existing destination file and then recreates it using a path-based operation without the O_EXCL flag. A local attacker can exploit the window between the unlink and the subsequent creation to swap the path with a symbolic link, allowing them to redirect privileged writes to overwrite arbitrary system files.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "coreutils",
+            "purl": "pkg:generic/uutils/coreutils"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "0.6.0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/pull/10067"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/releases/tag/0.6.0"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/pull/10067"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:H/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "uutils-coreutils",
+          "purl": "pkg:conda/uutils-coreutils?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/uutils/coreutils"
+          ],
+          "affected_versions": [
+            "0.0.16",
+            "0.0.17",
+            "0.0.18",
+            "0.0.19",
+            "0.0.20",
+            "0.0.27",
+            "0.1.0",
+            "0.3.0",
+            "0.4.0",
+            "0.5.0"
+          ],
+          "conda_versions_total": 14,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-35356",
+      "published": "2026-04-22T17:16:38.130Z",
+      "modified": "2026-04-27T12:27:28.787Z",
+      "aliases": [],
+      "summary": "A Time-of-Check to Time-of-Use (TOCTOU) vulnerability exists in the install utility of uutils coreutils when using the -D flag.",
+      "details": "A Time-of-Check to Time-of-Use (TOCTOU) vulnerability exists in the install utility of uutils coreutils when using the -D flag. The command creates parent directories and subsequently performs a second path resolution to create the target file, neither of which is anchored to a directory file descriptor. An attacker with concurrent write access can replace a path component with a symbolic link between these operations, redirecting the privileged write to an arbitrary file system location.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "coreutils",
+            "purl": "pkg:generic/uutils/coreutils"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "0.7.0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/pull/10140"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/releases/tag/0.7.0"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:H/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "uutils-coreutils",
+          "purl": "pkg:conda/uutils-coreutils?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/uutils/coreutils"
+          ],
+          "affected_versions": [
+            "0.0.16",
+            "0.0.17",
+            "0.0.18",
+            "0.0.19",
+            "0.0.20",
+            "0.0.27",
+            "0.1.0",
+            "0.3.0",
+            "0.4.0",
+            "0.5.0",
+            "0.6.0"
+          ],
+          "conda_versions_total": 14,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-35357",
+      "published": "2026-04-22T17:16:38.267Z",
+      "modified": "2026-04-24T19:02:53.557Z",
+      "aliases": [],
+      "summary": "The cp utility in uutils coreutils is vulnerable to an information disclosure race condition.",
+      "details": "The cp utility in uutils coreutils is vulnerable to an information disclosure race condition. Destination files are initially created with umask-derived permissions (e.g., 0644) before being restricted to their final mode (e.g., 0600) later in the process. A local attacker can race to open the file during this window; once obtained, the file descriptor remains valid and readable even after the permissions are tightened, exposing sensitive or private file contents.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "coreutils",
+            "purl": "pkg:generic/uutils/coreutils"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/issues/10011"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/issues/10011"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:N/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "uutils-coreutils",
+          "purl": "pkg:conda/uutils-coreutils?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/uutils/coreutils"
+          ],
+          "affected_versions": [
+            "0.0.16",
+            "0.0.17",
+            "0.0.18",
+            "0.0.19",
+            "0.0.20",
+            "0.0.27",
+            "0.1.0",
+            "0.3.0",
+            "0.4.0",
+            "0.5.0",
+            "0.6.0",
+            "0.7.0",
+            "0.8.0",
+            "0.9.0"
+          ],
+          "conda_versions_total": 14,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-35358",
+      "published": "2026-04-22T17:16:38.393Z",
+      "modified": "2026-05-04T19:03:00.590Z",
+      "aliases": [],
+      "summary": "The cp utility in uutils coreutils, when performing recursive copies (-R), incorrectly treats character and block device nodes as stream sources rather than preserving them.",
+      "details": "The cp utility in uutils coreutils, when performing recursive copies (-R), incorrectly treats character and block device nodes as stream sources rather than preserving them. Because the implementation reads bytes into regular files at the destination instead of using mknod, device semantics are destroyed (e.g., /dev/null becomes a regular file). This behavior can lead to runtime denial of service through disk exhaustion or process hangs when reading from unbounded device nodes.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "coreutils",
+            "purl": "pkg:generic/uutils/coreutils"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "0.7.0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/issues/9746"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/pull/11163"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/releases/tag/0.7.0"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/issues/9746"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:L/A:L"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "uutils-coreutils",
+          "purl": "pkg:conda/uutils-coreutils?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/uutils/coreutils"
+          ],
+          "affected_versions": [
+            "0.0.16",
+            "0.0.17",
+            "0.0.18",
+            "0.0.19",
+            "0.0.20",
+            "0.0.27",
+            "0.1.0",
+            "0.3.0",
+            "0.4.0",
+            "0.5.0",
+            "0.6.0"
+          ],
+          "conda_versions_total": 14,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-35359",
+      "published": "2026-04-22T17:16:38.537Z",
+      "modified": "2026-04-24T19:02:25.720Z",
+      "aliases": [],
+      "summary": "A Time-of-Check to Time-of-Use (TOCTOU) vulnerability in the cp utility of uutils coreutils allows an attacker to bypass no-dereference intent.",
+      "details": "A Time-of-Check to Time-of-Use (TOCTOU) vulnerability in the cp utility of uutils coreutils allows an attacker to bypass no-dereference intent. The utility checks if a source path is a symbolic link using path-based metadata but subsequently opens it without the O_NOFOLLOW flag. An attacker with concurrent write access can swap a regular file for a symbolic link during this window, causing a privileged cp process to copy the contents of arbitrary sensitive files into a destination controlled by the attacker.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "coreutils",
+            "purl": "pkg:generic/uutils/coreutils"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/issues/10017"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/issues/10017"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:N/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "uutils-coreutils",
+          "purl": "pkg:conda/uutils-coreutils?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/uutils/coreutils"
+          ],
+          "affected_versions": [
+            "0.0.16",
+            "0.0.17",
+            "0.0.18",
+            "0.0.19",
+            "0.0.20",
+            "0.0.27",
+            "0.1.0",
+            "0.3.0",
+            "0.4.0",
+            "0.5.0",
+            "0.6.0",
+            "0.7.0",
+            "0.8.0",
+            "0.9.0"
+          ],
+          "conda_versions_total": 14,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-35360",
+      "published": "2026-04-22T17:16:38.673Z",
+      "modified": "2026-04-24T19:02:11.560Z",
+      "aliases": [],
+      "summary": "The touch utility in uutils coreutils is vulnerable to a Time-of-Check to Time-of-Use (TOCTOU) race condition during file creation.",
+      "details": "The touch utility in uutils coreutils is vulnerable to a Time-of-Check to Time-of-Use (TOCTOU) race condition during file creation. When the utility identifies a missing path, it later attempts creation using File::create(), which internally uses O_TRUNC. An attacker can exploit this window to create a file or swap a symlink at the target path, causing touch to truncate an existing file and leading to permanent data loss.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "coreutils",
+            "purl": "pkg:generic/uutils/coreutils"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/issues/10019"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/issues/10019"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:H/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "uutils-coreutils",
+          "purl": "pkg:conda/uutils-coreutils?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/uutils/coreutils"
+          ],
+          "affected_versions": [
+            "0.0.16",
+            "0.0.17",
+            "0.0.18",
+            "0.0.19",
+            "0.0.20",
+            "0.0.27",
+            "0.1.0",
+            "0.3.0",
+            "0.4.0",
+            "0.5.0",
+            "0.6.0",
+            "0.7.0",
+            "0.8.0",
+            "0.9.0"
+          ],
+          "conda_versions_total": 14,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-35361",
+      "published": "2026-04-22T17:16:38.827Z",
+      "modified": "2026-04-27T12:27:20.527Z",
+      "aliases": [],
+      "summary": "The mknod utility in uutils coreutils fails to handle security labels atomically by creating device nodes before setting the SELinux context.",
+      "details": "The mknod utility in uutils coreutils fails to handle security labels atomically by creating device nodes before setting the SELinux context. If labeling fails, the utility attempts cleanup using std::fs::remove_dir, which cannot remove device nodes or FIFOs. This leaves mislabeled nodes behind with incorrect default contexts, potentially allowing unauthorized access to device nodes that should have been restricted by mandatory access controls.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "coreutils",
+            "purl": "pkg:generic/uutils/coreutils"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "0.6.0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/pull/10582"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/releases/tag/0.6.0"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/pull/10582"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:L/I:L/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "uutils-coreutils",
+          "purl": "pkg:conda/uutils-coreutils?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/uutils/coreutils"
+          ],
+          "affected_versions": [
+            "0.0.16",
+            "0.0.17",
+            "0.0.18",
+            "0.0.19",
+            "0.0.20",
+            "0.0.27",
+            "0.1.0",
+            "0.3.0",
+            "0.4.0",
+            "0.5.0"
+          ],
+          "conda_versions_total": 14,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-35362",
+      "published": "2026-04-22T17:16:38.960Z",
+      "modified": "2026-04-27T12:26:40.533Z",
+      "aliases": [],
+      "summary": "The safe_traversal module in uutils coreutils, which provides protection against Time-of-Check to Time-of-Use (TOCTOU) symlink races using file-descriptor-relative syscalls, is incorrectly limited to",
+      "details": "The safe_traversal module in uutils coreutils, which provides protection against Time-of-Check to Time-of-Use (TOCTOU) symlink races using file-descriptor-relative syscalls, is incorrectly limited to Linux targets. On other Unix-like systems such as macOS and FreeBSD, the utility fails to utilize these protections, leaving directory traversal operations vulnerable to symlink race conditions.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "coreutils",
+            "purl": "pkg:generic/uutils/coreutils"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "0.6.0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/pull/9792"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/releases/tag/0.6.0"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:L/I:L/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "uutils-coreutils",
+          "purl": "pkg:conda/uutils-coreutils?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/uutils/coreutils"
+          ],
+          "affected_versions": [
+            "0.0.16",
+            "0.0.17",
+            "0.0.18",
+            "0.0.19",
+            "0.0.20",
+            "0.0.27",
+            "0.1.0",
+            "0.3.0",
+            "0.4.0",
+            "0.5.0"
+          ],
+          "conda_versions_total": 14,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-35363",
+      "published": "2026-04-22T17:16:39.120Z",
+      "modified": "2026-04-24T19:02:00.463Z",
+      "aliases": [],
+      "summary": "A vulnerability in the rm utility of uutils coreutils allows the bypass of safeguard mechanisms intended to protect the current directory.",
+      "details": "A vulnerability in the rm utility of uutils coreutils allows the bypass of safeguard mechanisms intended to protect the current directory. While the utility correctly refuses to delete . or .., it fails to recognize equivalent paths with trailing slashes, such as ./ or .///. An accidental or malicious execution of rm -rf ./ results in the silent recursive deletion of all contents within the current directory. The command further obscures the data loss by reporting a misleading 'Invalid input' error, which may cause users to miss the critical window for data recovery.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "coreutils",
+            "purl": "pkg:generic/uutils/coreutils"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/issues/9749"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:R/S:U/C:N/I:H/A:L"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "uutils-coreutils",
+          "purl": "pkg:conda/uutils-coreutils?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/uutils/coreutils"
+          ],
+          "affected_versions": [
+            "0.0.16",
+            "0.0.17",
+            "0.0.18",
+            "0.0.19",
+            "0.0.20",
+            "0.0.27",
+            "0.1.0",
+            "0.3.0",
+            "0.4.0",
+            "0.5.0",
+            "0.6.0",
+            "0.7.0",
+            "0.8.0",
+            "0.9.0"
+          ],
+          "conda_versions_total": 14,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-35364",
+      "published": "2026-04-22T17:16:39.737Z",
+      "modified": "2026-04-24T19:19:11.777Z",
+      "aliases": [],
+      "summary": "A Time-of-Check to Time-of-Use (TOCTOU) race condition exists in the mv utility of uutils coreutils during cross-device operations.",
+      "details": "A Time-of-Check to Time-of-Use (TOCTOU) race condition exists in the mv utility of uutils coreutils during cross-device operations. The utility removes the destination path before recreating it through a copy operation. A local attacker with write access to the destination directory can exploit this window to replace the destination with a symbolic link. The subsequent privileged move operation will follow the symlink, allowing the attacker to redirect the write and overwrite an arbitrary target file with contents from the source.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "coreutils",
+            "purl": "pkg:generic/uutils/coreutils"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/issues/10015"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/issues/10015"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:H/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "uutils-coreutils",
+          "purl": "pkg:conda/uutils-coreutils?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/uutils/coreutils"
+          ],
+          "affected_versions": [
+            "0.0.16",
+            "0.0.17",
+            "0.0.18",
+            "0.0.19",
+            "0.0.20",
+            "0.0.27",
+            "0.1.0",
+            "0.3.0",
+            "0.4.0",
+            "0.5.0",
+            "0.6.0",
+            "0.7.0",
+            "0.8.0",
+            "0.9.0"
+          ],
+          "conda_versions_total": 14,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-35365",
+      "published": "2026-04-22T17:16:39.900Z",
+      "modified": "2026-05-04T18:53:45.707Z",
+      "aliases": [],
+      "summary": "The mv utility in uutils coreutils improperly handles directory trees containing symbolic links during moves across filesystem boundaries.",
+      "details": "The mv utility in uutils coreutils improperly handles directory trees containing symbolic links during moves across filesystem boundaries. Instead of preserving symlinks, the implementation expands them, copying the linked targets as real files or directories at the destination. This can lead to resource exhaustion (disk space or time) if symlinks point to large external directories, unexpected duplication of sensitive data into unintended locations, or infinite recursion and repeated copying in the presence of symlink loops.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "coreutils",
+            "purl": "pkg:generic/uutils/coreutils"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "0.7.0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/pull/10546"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/releases/tag/0.7.0"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:L/I:H/A:L"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "uutils-coreutils",
+          "purl": "pkg:conda/uutils-coreutils?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/uutils/coreutils"
+          ],
+          "affected_versions": [
+            "0.0.16",
+            "0.0.17",
+            "0.0.18",
+            "0.0.19",
+            "0.0.20",
+            "0.0.27",
+            "0.1.0",
+            "0.3.0",
+            "0.4.0",
+            "0.5.0",
+            "0.6.0"
+          ],
+          "conda_versions_total": 14,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-35366",
+      "published": "2026-04-22T17:16:40.167Z",
+      "modified": "2026-05-04T18:52:42.390Z",
+      "aliases": [],
+      "summary": "The printenv utility in uutils coreutils fails to display environment variables containing invalid UTF-8 byte sequences.",
+      "details": "The printenv utility in uutils coreutils fails to display environment variables containing invalid UTF-8 byte sequences. While POSIX permits arbitrary bytes in environment strings, the uutils implementation silently skips these entries rather than printing the raw bytes. This vulnerability allows malicious environment variables (e.g., adversarial LD_PRELOAD values) to evade inspection by administrators or security auditing tools, potentially allowing library injection or other environment-based attacks to go undetected.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "coreutils",
+            "purl": "pkg:generic/uutils/coreutils"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "0.6.0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/issues/9701"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/pull/9728"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/releases/tag/0.6.0"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/issues/9701"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:L/I:L/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "uutils-coreutils",
+          "purl": "pkg:conda/uutils-coreutils?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/uutils/coreutils"
+          ],
+          "affected_versions": [
+            "0.0.16",
+            "0.0.17",
+            "0.0.18",
+            "0.0.19",
+            "0.0.20",
+            "0.0.27",
+            "0.1.0",
+            "0.3.0",
+            "0.4.0",
+            "0.5.0"
+          ],
+          "conda_versions_total": 14,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-35367",
+      "published": "2026-04-22T17:16:40.423Z",
+      "modified": "2026-04-24T19:19:05.067Z",
+      "aliases": [],
+      "summary": "The nohup utility in uutils coreutils creates its default output file, nohup.out, without specifying explicit restricted permissions.",
+      "details": "The nohup utility in uutils coreutils creates its default output file, nohup.out, without specifying explicit restricted permissions. This causes the file to inherit umask-based permissions, typically resulting in a world-readable file (0644). In multi-user environments, this allows any user on the system to read the captured stdout/stderr output of a command, potentially exposing sensitive information. This behavior diverges from GNU coreutils, which creates nohup.out with owner-only (0600) permissions.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "coreutils",
+            "purl": "pkg:generic/uutils/coreutils"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/issues/10021"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/issues/10021"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:L/I:N/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "uutils-coreutils",
+          "purl": "pkg:conda/uutils-coreutils?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/uutils/coreutils"
+          ],
+          "affected_versions": [
+            "0.0.16",
+            "0.0.17",
+            "0.0.18",
+            "0.0.19",
+            "0.0.20",
+            "0.0.27",
+            "0.1.0",
+            "0.3.0",
+            "0.4.0",
+            "0.5.0",
+            "0.6.0",
+            "0.7.0",
+            "0.8.0",
+            "0.9.0"
+          ],
+          "conda_versions_total": 14,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-35368",
+      "published": "2026-04-22T17:16:40.560Z",
+      "modified": "2026-04-24T19:18:55.670Z",
+      "aliases": [],
+      "summary": "A vulnerability exists in the chroot utility of uutils coreutils when using the --userspec option.",
+      "details": "A vulnerability exists in the chroot utility of uutils coreutils when using the --userspec option. The utility resolves the user specification via getpwnam() after entering the chroot but before dropping root privileges. On glibc-based systems, this can trigger the Name Service Switch (NSS) to load shared libraries (e.g., libnss_*.so.2) from the new root directory. If the NEWROOT is writable by an attacker, they can inject a malicious NSS module to execute arbitrary code as root, facilitating a full container escape or privilege escalation.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "coreutils",
+            "purl": "pkg:generic/uutils/coreutils"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/issues/10327"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/issues/10327"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:C/C:H/I:H/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "uutils-coreutils",
+          "purl": "pkg:conda/uutils-coreutils?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/uutils/coreutils"
+          ],
+          "affected_versions": [
+            "0.0.16",
+            "0.0.17",
+            "0.0.18",
+            "0.0.19",
+            "0.0.20",
+            "0.0.27",
+            "0.1.0",
+            "0.3.0",
+            "0.4.0",
+            "0.5.0",
+            "0.6.0",
+            "0.7.0",
+            "0.8.0",
+            "0.9.0"
+          ],
+          "conda_versions_total": 14,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-35369",
+      "published": "2026-04-22T17:16:40.687Z",
+      "modified": "2026-05-04T18:50:23.537Z",
+      "aliases": [],
+      "summary": "An argument parsing error in the kill utility of uutils coreutils incorrectly interprets kill -1 as a request to send the default signal (SIGTERM) to PID -1.",
+      "details": "An argument parsing error in the kill utility of uutils coreutils incorrectly interprets kill -1 as a request to send the default signal (SIGTERM) to PID -1. Sending a signal to PID -1 causes the kernel to terminate all processes visible to the caller, potentially leading to a system crash or massive process termination. This differs from GNU coreutils, which correctly recognizes -1 as a signal number in this context and would instead report a missing PID argument.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "coreutils",
+            "purl": "pkg:generic/uutils/coreutils"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "0.6.0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/pull/9700"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/releases/tag/0.6.0"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "uutils-coreutils",
+          "purl": "pkg:conda/uutils-coreutils?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/uutils/coreutils"
+          ],
+          "affected_versions": [
+            "0.0.16",
+            "0.0.17",
+            "0.0.18",
+            "0.0.19",
+            "0.0.20",
+            "0.0.27",
+            "0.1.0",
+            "0.3.0",
+            "0.4.0",
+            "0.5.0"
+          ],
+          "conda_versions_total": 14,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-35370",
+      "published": "2026-04-22T17:16:40.833Z",
+      "modified": "2026-05-04T20:02:44.330Z",
+      "aliases": [],
+      "summary": "The id utility in uutils coreutils miscalculates the groups= section of its output.",
+      "details": "The id utility in uutils coreutils miscalculates the groups= section of its output. The implementation uses a user's real GID instead of their effective GID to compute the group list, leading to potentially divergent output compared to GNU coreutils. Because many scripts and automated processes rely on the output of id to make security-critical access-control or permission decisions, this discrepancy can lead to unauthorized access or security misconfigurations.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "coreutils",
+            "purl": "pkg:generic/uutils/coreutils"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/issues/10006"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/issues/10006"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:L/I:L/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "uutils-coreutils",
+          "purl": "pkg:conda/uutils-coreutils?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/uutils/coreutils"
+          ],
+          "affected_versions": [
+            "0.0.16",
+            "0.0.17",
+            "0.0.18",
+            "0.0.19",
+            "0.0.20",
+            "0.0.27",
+            "0.1.0",
+            "0.3.0",
+            "0.4.0",
+            "0.5.0",
+            "0.6.0",
+            "0.7.0",
+            "0.8.0",
+            "0.9.0"
+          ],
+          "conda_versions_total": 14,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-35371",
+      "published": "2026-04-22T17:16:40.987Z",
+      "modified": "2026-05-04T20:02:06.183Z",
+      "aliases": [],
+      "summary": "The id utility in uutils coreutils exhibits incorrect behavior in its \"pretty print\" output when the real UID and effective UID differ.",
+      "details": "The id utility in uutils coreutils exhibits incorrect behavior in its \"pretty print\" output when the real UID and effective UID differ. The implementation incorrectly uses the effective GID instead of the effective UID when performing a name lookup for the effective user. This results in misleading diagnostic output that can cause automated scripts or system administrators to make incorrect decisions regarding file permissions or access control.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "coreutils",
+            "purl": "pkg:generic/uutils/coreutils"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/issues/10006"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/issues/10006"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:L/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "uutils-coreutils",
+          "purl": "pkg:conda/uutils-coreutils?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/uutils/coreutils"
+          ],
+          "affected_versions": [
+            "0.0.16",
+            "0.0.17",
+            "0.0.18",
+            "0.0.19",
+            "0.0.20",
+            "0.0.27",
+            "0.1.0",
+            "0.3.0",
+            "0.4.0",
+            "0.5.0",
+            "0.6.0",
+            "0.7.0",
+            "0.8.0",
+            "0.9.0"
+          ],
+          "conda_versions_total": 14,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-35372",
+      "published": "2026-04-22T17:16:41.850Z",
+      "modified": "2026-05-04T18:49:46.510Z",
+      "aliases": [],
+      "summary": "A logic error in the ln utility of uutils coreutils allows the utility to dereference a symbolic link target even when the --no-dereference (or -n) flag is explicitly provided.",
+      "details": "A logic error in the ln utility of uutils coreutils allows the utility to dereference a symbolic link target even when the --no-dereference (or -n) flag is explicitly provided. The implementation previously only honored the \"no-dereference\" intent if the --force (overwrite) mode was also enabled. This flaw causes ln to follow a symbolic link that points to a directory and create new links inside that target directory instead of treating the symbolic link itself as the destination. In environments where a privileged user or system script uses ln -n to update a symlink, a local attacker could manipulate existing symbolic links to redirect file creation into sensitive directories, potentially leading to unauthorized file creation or system misconfiguration.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "coreutils",
+            "purl": "pkg:generic/uutils/coreutils"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "0.8.0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/pull/11253"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/releases/tag/0.8.0"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:R/S:U/C:N/I:H/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "uutils-coreutils",
+          "purl": "pkg:conda/uutils-coreutils?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/uutils/coreutils"
+          ],
+          "affected_versions": [
+            "0.0.16",
+            "0.0.17",
+            "0.0.18",
+            "0.0.19",
+            "0.0.20",
+            "0.0.27",
+            "0.1.0",
+            "0.3.0",
+            "0.4.0",
+            "0.5.0",
+            "0.6.0",
+            "0.7.0"
+          ],
+          "conda_versions_total": 14,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-35373",
+      "published": "2026-04-22T17:16:41.997Z",
+      "modified": "2026-05-04T20:01:25.930Z",
+      "aliases": [],
+      "summary": "A logic error in the ln utility of uutils coreutils causes the program to reject source paths containing non-UTF-8 filename bytes when using target-directory forms (e.g., ln SOURCE...",
+      "details": "A logic error in the ln utility of uutils coreutils causes the program to reject source paths containing non-UTF-8 filename bytes when using target-directory forms (e.g., ln SOURCE... DIRECTORY). While GNU ln treats filenames as raw bytes and creates the links correctly, the uutils implementation enforces UTF-8 encoding, resulting in a failure to stat the file and a non-zero exit code. In environments where automated scripts or system tasks process valid but non-UTF-8 filenames common on Unix filesystems, this divergence causes the utility to fail, leading to a local denial of service for those specific operations.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "coreutils",
+            "purl": "pkg:generic/uutils/coreutils"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/pull/11403"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:L"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "uutils-coreutils",
+          "purl": "pkg:conda/uutils-coreutils?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/uutils/coreutils"
+          ],
+          "affected_versions": [
+            "0.0.16",
+            "0.0.17",
+            "0.0.18",
+            "0.0.19",
+            "0.0.20",
+            "0.0.27",
+            "0.1.0",
+            "0.3.0",
+            "0.4.0",
+            "0.5.0",
+            "0.6.0",
+            "0.7.0",
+            "0.8.0",
+            "0.9.0"
+          ],
+          "conda_versions_total": 14,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-35374",
+      "published": "2026-04-22T17:16:42.127Z",
+      "modified": "2026-05-04T19:22:14.457Z",
+      "aliases": [],
+      "summary": "A Time-of-Check to Time-of-Use (TOCTOU) vulnerability exists in the split utility of uutils coreutils.",
+      "details": "A Time-of-Check to Time-of-Use (TOCTOU) vulnerability exists in the split utility of uutils coreutils. The program attempts to prevent data loss by checking for identity between input and output files using their file paths before initiating the split operation. However, the utility subsequently opens the output file with truncation after this path-based validation is complete. A local attacker with write access to the directory can exploit this race window by manipulating mutable path components (e.g., swapping a path with a symbolic link). This can cause split to truncate and write to an unintended target file, potentially including the input file itself or other sensitive files accessible to the process, leading to permanent data loss.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "coreutils",
+            "purl": "pkg:generic/uutils/coreutils"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/pull/11401"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:H/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "uutils-coreutils",
+          "purl": "pkg:conda/uutils-coreutils?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/uutils/coreutils"
+          ],
+          "affected_versions": [
+            "0.0.16",
+            "0.0.17",
+            "0.0.18",
+            "0.0.19",
+            "0.0.20",
+            "0.0.27",
+            "0.1.0",
+            "0.3.0",
+            "0.4.0",
+            "0.5.0",
+            "0.6.0",
+            "0.7.0",
+            "0.8.0",
+            "0.9.0"
+          ],
+          "conda_versions_total": 14,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-35375",
+      "published": "2026-04-22T17:16:42.293Z",
+      "modified": "2026-05-04T19:13:37.293Z",
+      "aliases": [],
+      "summary": "A logic error in the split utility of uutils coreutils causes the corruption of output filenames when provided with non-UTF-8 prefix or suffix inputs.",
+      "details": "A logic error in the split utility of uutils coreutils causes the corruption of output filenames when provided with non-UTF-8 prefix or suffix inputs. The implementation utilizes to_string_lossy() when constructing chunk filenames, which automatically rewrites invalid byte sequences into the UTF-8 replacement character (U+FFFD). This behavior diverges from GNU split, which preserves raw pathname bytes intact. In environments utilizing non-UTF-8 encodings, this vulnerability leads to the creation of files with incorrect names, potentially causing filename collisions, broken automation, or the misdirection of output data.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "coreutils",
+            "purl": "pkg:generic/uutils/coreutils"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "0.8.0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/pull/11397"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/releases/tag/0.8.0"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:L/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "uutils-coreutils",
+          "purl": "pkg:conda/uutils-coreutils?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/uutils/coreutils"
+          ],
+          "affected_versions": [
+            "0.0.16",
+            "0.0.17",
+            "0.0.18",
+            "0.0.19",
+            "0.0.20",
+            "0.0.27",
+            "0.1.0",
+            "0.3.0",
+            "0.4.0",
+            "0.5.0",
+            "0.6.0",
+            "0.7.0"
+          ],
+          "conda_versions_total": 14,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-35376",
+      "published": "2026-04-22T17:16:42.430Z",
+      "modified": "2026-05-04T19:06:31.930Z",
+      "aliases": [],
+      "summary": "A Time-of-Check to Time-of-Use (TOCTOU) vulnerability exists in the chcon utility of uutils coreutils during recursive operations.",
+      "details": "A Time-of-Check to Time-of-Use (TOCTOU) vulnerability exists in the chcon utility of uutils coreutils during recursive operations. The implementation resolves recursive targets using a fresh path lookup (via fts_accpath) rather than binding the traversal and label application to the specific directory state encountered during traversal. Because these operations are not anchored to file descriptors, a local attacker with write access to a directory tree can exploit timing-sensitive rename or symbolic link races to redirect a privileged recursive relabeling operation to unintended files or directories. This vulnerability breaks the hardening expectations for SELinux administration workflows and can lead to the unauthorized modification of security labels on sensitive system objects.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "coreutils",
+            "purl": "pkg:generic/uutils/coreutils"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "0.8.0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/pull/11402"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/releases/tag/0.8.0"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:L/I:L/A:L"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "uutils-coreutils",
+          "purl": "pkg:conda/uutils-coreutils?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/uutils/coreutils"
+          ],
+          "affected_versions": [
+            "0.0.16",
+            "0.0.17",
+            "0.0.18",
+            "0.0.19",
+            "0.0.20",
+            "0.0.27",
+            "0.1.0",
+            "0.3.0",
+            "0.4.0",
+            "0.5.0",
+            "0.6.0",
+            "0.7.0"
+          ],
+          "conda_versions_total": 14,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-35377",
+      "published": "2026-04-22T17:16:42.577Z",
+      "modified": "2026-04-24T19:06:46.293Z",
+      "aliases": [],
+      "summary": "A logic error in the env utility of uutils coreutils causes a failure to correctly parse command-line arguments when utilizing the -S (split-string) option.",
+      "details": "A logic error in the env utility of uutils coreutils causes a failure to correctly parse command-line arguments when utilizing the -S (split-string) option. In GNU env, backslashes within single quotes are treated literally (with the exceptions of \\\\ and \\'). However, the uutils implementation incorrectly attempts to validate these sequences, resulting in an \"invalid sequence\" error and an immediate process termination with an exit status of 125 when encountering valid but unrecognized sequences like \\a or \\x. This divergence from GNU behavior breaks compatibility for automated scripts and administrative workflows that rely on standard split-string semantics, leading to a local denial of service for those operations.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "coreutils",
+            "purl": "pkg:generic/uutils/coreutils"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/pull/11512"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:L"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "uutils-coreutils",
+          "purl": "pkg:conda/uutils-coreutils?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/uutils/coreutils"
+          ],
+          "affected_versions": [
+            "0.0.16",
+            "0.0.17",
+            "0.0.18",
+            "0.0.19",
+            "0.0.20",
+            "0.0.27",
+            "0.1.0",
+            "0.3.0",
+            "0.4.0",
+            "0.5.0",
+            "0.6.0",
+            "0.7.0",
+            "0.8.0",
+            "0.9.0"
+          ],
+          "conda_versions_total": 14,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-35378",
+      "published": "2026-04-22T17:16:42.730Z",
+      "modified": "2026-05-04T18:48:36.020Z",
+      "aliases": [],
+      "summary": "A logic error in the expr utility of uutils coreutils causes the program to evaluate parenthesized subexpressions during the parsing phase rather than at the execution phase.",
+      "details": "A logic error in the expr utility of uutils coreutils causes the program to evaluate parenthesized subexpressions during the parsing phase rather than at the execution phase. This implementation flaw prevents the utility from performing proper short-circuiting for logical OR (|) and AND (&) operations. As a result, arithmetic errors (such as division by zero) occurring within \"dead\" branches, branches that should be ignored due to short-circuiting, are raised as fatal errors. This divergence from GNU expr behavior can cause guarded expressions within shell scripts to fail with hard errors instead of returning expected boolean results, leading to premature script termination and breaking GNU-compatible shell control flow.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "coreutils",
+            "purl": "pkg:generic/uutils/coreutils"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "0.8.0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/pull/11395"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/releases/tag/0.8.0"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:L"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "uutils-coreutils",
+          "purl": "pkg:conda/uutils-coreutils?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/uutils/coreutils"
+          ],
+          "affected_versions": [
+            "0.0.16",
+            "0.0.17",
+            "0.0.18",
+            "0.0.19",
+            "0.0.20",
+            "0.0.27",
+            "0.1.0",
+            "0.3.0",
+            "0.4.0",
+            "0.5.0",
+            "0.6.0",
+            "0.7.0"
+          ],
+          "conda_versions_total": 14,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-35379",
+      "published": "2026-04-22T17:16:42.887Z",
+      "modified": "2026-04-29T15:59:08.450Z",
+      "aliases": [],
+      "summary": "A logic error in the tr utility of uutils coreutils causes the program to incorrectly define the [:graph:] and [:print:] character classes.",
+      "details": "A logic error in the tr utility of uutils coreutils causes the program to incorrectly define the [:graph:] and [:print:] character classes. The implementation mistakenly includes the ASCII space character (0x20) in the [:graph:] class and excludes it from the [:print:] class, effectively reversing the standard behavior established by POSIX and GNU coreutils. This vulnerability leads to unintended data modification or loss when the utility is used in automated scripts or data-cleaning pipelines that rely on standard character class semantics. For example, a command executed to delete all graphical characters while intending to preserve whitespace will incorrectly delete all ASCII spaces, potentially resulting in data corruption or logic failures in downstream processing.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "coreutils",
+            "purl": "pkg:generic/uutils/coreutils"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "0.8.0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/pull/11405"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/releases/tag/0.8.0"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:L/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "uutils-coreutils",
+          "purl": "pkg:conda/uutils-coreutils?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/uutils/coreutils"
+          ],
+          "affected_versions": [
+            "0.0.16",
+            "0.0.17",
+            "0.0.18",
+            "0.0.19",
+            "0.0.20",
+            "0.0.27",
+            "0.1.0",
+            "0.3.0",
+            "0.4.0",
+            "0.5.0",
+            "0.6.0",
+            "0.7.0"
+          ],
+          "conda_versions_total": 14,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-35380",
+      "published": "2026-04-22T17:16:43.047Z",
+      "modified": "2026-04-29T15:57:19.427Z",
+      "aliases": [],
+      "summary": "A logic error in the cut utility of uutils coreutils causes the program to incorrectly interpret the literal two-byte string '' (two single quotes) as an empty delimiter.",
+      "details": "A logic error in the cut utility of uutils coreutils causes the program to incorrectly interpret the literal two-byte string '' (two single quotes) as an empty delimiter. The implementation mistakenly maps this string to the NUL character for both the -d (delimiter) and --output-delimiter options. This vulnerability can lead to silent data corruption or logic errors in automated scripts and data pipelines that process strings containing these characters, as the utility may unintentionally split or join data on NUL bytes rather than the intended literal characters.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "coreutils",
+            "purl": "pkg:generic/uutils/coreutils"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "0.8.0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/pull/11399"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/releases/tag/0.8.0"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "uutils-coreutils",
+          "purl": "pkg:conda/uutils-coreutils?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/uutils/coreutils"
+          ],
+          "affected_versions": [
+            "0.0.16",
+            "0.0.17",
+            "0.0.18",
+            "0.0.19",
+            "0.0.20",
+            "0.0.27",
+            "0.1.0",
+            "0.3.0",
+            "0.4.0",
+            "0.5.0",
+            "0.6.0",
+            "0.7.0"
+          ],
+          "conda_versions_total": 14,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-35381",
+      "published": "2026-04-22T17:16:43.200Z",
+      "modified": "2026-04-24T19:19:34.493Z",
+      "aliases": [],
+      "summary": "A logic error in the cut utility of uutils coreutils causes the utility to ignore the -s (only-delimited) flag when using the -z (null-terminated) and -d '' (empty delimiter) options together.",
+      "details": "A logic error in the cut utility of uutils coreutils causes the utility to ignore the -s (only-delimited) flag when using the -z (null-terminated) and -d '' (empty delimiter) options together. The implementation incorrectly routes this specific combination through a specialized newline-delimiter code path that fails to check the record suppression status. Consequently, uutils cut emits the entire record plus a NUL byte instead of suppressing it. This divergence from GNU coreutils behavior creates a data integrity risk for automated pipelines that rely on cut -s to filter out undelimited data.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "coreutils",
+            "purl": "pkg:generic/uutils/coreutils"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "0.8.0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/pull/11394"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/uutils/coreutils/releases/tag/0.8.0"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:L/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "uutils-coreutils",
+          "purl": "pkg:conda/uutils-coreutils?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/uutils/coreutils"
+          ],
+          "affected_versions": [
+            "0.0.16",
+            "0.0.17",
+            "0.0.18",
+            "0.0.19",
+            "0.0.20",
+            "0.0.27",
+            "0.1.0",
+            "0.3.0",
+            "0.4.0",
+            "0.5.0",
+            "0.6.0",
+            "0.7.0"
+          ],
+          "conda_versions_total": 14,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:uutils:coreutils"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    }
+  ]
+}

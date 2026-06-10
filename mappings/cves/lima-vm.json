@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "package": "lima-vm",
+  "purls": [
+    "pkg:github/lima-vm/lima"
+  ],
+  "cpes": [
+    "cpe:2.3:a:linuxfoundation:lima"
+  ],
+  "generated_at": "2026-06-10T06:09:04+00:00",
+  "conda_versions_total": 11,
+  "latest_version": "2.0.3",
+  "advisories": [
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2023-32684",
+      "published": "2023-05-30T18:15:10.137Z",
+      "modified": "2024-11-21T08:03:50.763Z",
+      "aliases": [],
+      "summary": "Lima launches Linux virtual machines, typically on macOS, for running containerd.",
+      "details": "Lima launches Linux virtual machines, typically on macOS, for running containerd. Prior to version 0.16.0, a virtual machine instance with a malicious disk image could read a single file on the host filesystem, even when no filesystem is mounted from the host. The official templates of Lima and the well-known third party products (Colima, Rancher Desktop, and Finch) are unlikely to be affected by this issue. To exploit this issue, the attacker has to embed the target file path (an absolute or a relative path from the instance directory) in a malicious disk image, as the qcow2 (or vmdk) backing file path string. As Lima refuses to run as the root, it is practically impossible for the attacker to read the entire host disk via `/dev/rdiskN`. Also, practically, the attacker cannot read at least the first 512 bytes (MBR) of the target file. The issue has been patched in Lima in version 0.16.0 by prohibiting using a backing file path in the VM base image.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "lima",
+            "purl": "pkg:generic/linuxfoundation/lima"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "0.16.0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/lima-vm/lima/commit/01dbd4d9cabe692afa4517be3995771f0ebb38a5"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/lima-vm/lima/releases/tag/v0.16.0"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/lima-vm/lima/security/advisories/GHSA-f7qw-jj9c-rpq9"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/lima-vm/lima/commit/01dbd4d9cabe692afa4517be3995771f0ebb38a5"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/lima-vm/lima/releases/tag/v0.16.0"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/lima-vm/lima/security/advisories/GHSA-f7qw-jj9c-rpq9"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:H/PR:N/UI:R/S:C/C:L/I:N/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "lima-vm",
+          "purl": "pkg:conda/lima-vm?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/linuxfoundation/lima"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 11,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:linuxfoundation:lima"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:linuxfoundation:lima"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    }
+  ]
+}

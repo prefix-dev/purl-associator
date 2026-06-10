@@ -1,0 +1,985 @@
+{
+  "schema_version": 1,
+  "package": "cosign",
+  "purls": [
+    "pkg:github/sigstore/cosign"
+  ],
+  "cpes": [
+    "cpe:2.3:a:cosign:cosign",
+    "cpe:2.3:a:sigstore:cosign"
+  ],
+  "generated_at": "2026-06-10T06:09:04+00:00",
+  "conda_versions_total": 3,
+  "latest_version": "3.0.4",
+  "advisories": [
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-22703",
+      "published": "2026-01-10T07:16:03.030Z",
+      "modified": "2026-02-05T20:59:07.633Z",
+      "aliases": [],
+      "summary": "Cosign provides code signing and transparency for containers and binaries.",
+      "details": "Cosign provides code signing and transparency for containers and binaries. Prior to versions 2.6.2 and 3.0.4, Cosign bundle can be crafted to successfully verify an artifact even if the embedded Rekor entry does not reference the artifact's digest, signature or public key. When verifying a Rekor entry, Cosign verifies the Rekor entry signature, and also compares the artifact's digest, the user's public key from either a Fulcio certificate or provided by the user, and the artifact signature to the Rekor entry contents. Without these comparisons, Cosign would accept any response from Rekor as valid. A malicious actor that has compromised a user's identity or signing key could construct a valid Cosign bundle by including any arbitrary Rekor entry, thus preventing the user from being able to audit the signing event. This issue has been patched in versions 2.6.2 and 3.0.4.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "cosign",
+            "purl": "pkg:generic/cosign/cosign"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "2.6.2"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "3.0.0"
+                },
+                {
+                  "fixed": "3.0.4"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/sigstore/cosign/commit/6832fba4928c1ad69400235bbc41212de5006176"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/sigstore/cosign/pull/4623"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/sigstore/cosign/security/advisories/GHSA-whqx-f9j3-ch6m"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "cosign",
+          "purl": "pkg:conda/cosign?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/cosign/cosign"
+          ],
+          "affected_versions": [
+            "2.5.0",
+            "2.6.0"
+          ],
+          "conda_versions_total": 3,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:cosign:cosign",
+            "cpe:2.3:a:sigstore:cosign"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:sigstore:cosign"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-24122",
+      "published": "2026-02-19T23:16:24.517Z",
+      "modified": "2026-02-20T19:04:02.700Z",
+      "aliases": [],
+      "summary": "Cosign provides code signing and transparency for containers and binaries.",
+      "details": "Cosign provides code signing and transparency for containers and binaries. In versions 3.0.4 and below, an issuing certificate with a validity that expires before the leaf certificate will be considered valid during verification even if the provided timestamp would mean the issuing certificate should be considered expired. When verifying artifact signatures using a certificate, Cosign first verifies the certificate chain using the leaf certificate's \"not before\" timestamp and later checks expiry of the leaf certificate using either a signed timestamp provided by the Rekor transparency log or from a timestamp authority, or using the current time. The root and all issuing certificates are assumed to be valid during the leaf certificate's validity. There is no impact to users of the public Sigstore infrastructure. This may affect private deployments with customized PKIs. This issue has been fixed in version 3.0.5.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "cosign",
+            "purl": "pkg:generic/cosign/cosign"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "3.0.5"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/sigstore/cosign/commit/3c9a7363f563db76d78e2de2cabd945450f3781e"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/sigstore/cosign/releases/tag/v3.0.5"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/sigstore/cosign/security/advisories/GHSA-wfqv-66vq-46rm"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "cosign",
+          "purl": "pkg:conda/cosign?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/cosign/cosign"
+          ],
+          "affected_versions": [
+            "2.5.0",
+            "2.6.0",
+            "3.0.4"
+          ],
+          "conda_versions_total": 3,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:cosign:cosign",
+            "cpe:2.3:a:sigstore:cosign"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:sigstore:cosign"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-39395",
+      "published": "2026-04-07T20:16:33.140Z",
+      "modified": "2026-04-15T15:57:49.283Z",
+      "aliases": [],
+      "summary": "Cosign provides code signing and transparency for containers and binaries.",
+      "details": "Cosign provides code signing and transparency for containers and binaries. Prior to 3.0.6 and 2.6.3, cosign verify-blob-attestation may erroneously report a \"Verified OK\" result for attestations with malformed payloads or mismatched predicate types. For old-format bundles and detached signatures, this was due to a logic flaw in the error handling of the predicate type validation. For new-format bundles, the predicate type validation was bypassed completely. This vulnerability is fixed in 3.0.6 and 2.6.3.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "cosign",
+            "purl": "pkg:generic/cosign/cosign"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "2.6.3"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "3.0.0"
+                },
+                {
+                  "fixed": "3.0.6"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/sigstore/cosign/security/advisories/GHSA-w6c6-c85g-mmv6"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:L/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "cosign",
+          "purl": "pkg:conda/cosign?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/cosign/cosign"
+          ],
+          "affected_versions": [
+            "2.5.0",
+            "2.6.0",
+            "3.0.4"
+          ],
+          "conda_versions_total": 3,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:cosign:cosign",
+            "cpe:2.3:a:sigstore:cosign"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:sigstore:cosign"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2007-2232",
+      "published": "2007-04-25T15:19:00.000Z",
+      "modified": "2026-04-23T00:35:47.467Z",
+      "aliases": [],
+      "summary": "The CHECK command in Cosign 2.0.1 and earlier allows remote attackers to bypass authentication requirements via CR (\\r) sequences in the cosign cookie parameter.",
+      "details": "The CHECK command in Cosign 2.0.1 and earlier allows remote attackers to bypass authentication requirements via CR (\\r) sequences in the cosign cookie parameter.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "cosign",
+            "purl": "pkg:generic/cosign/cosign"
+          },
+          "versions": [
+            "0.7.0",
+            "0.8.0",
+            "0.9.0",
+            "1.0",
+            "1.1",
+            "1.5",
+            "1.6",
+            "1.7",
+            "1.8",
+            "1.8.5",
+            "1.9",
+            "2.0.1"
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "http://secunia.com/advisories/24845"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.securityfocus.com/archive/1/465386/100/100/threaded"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.umich.edu/~umweb/software/cosign/cosign-vuln-2007-001.txt"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.vupen.com/english/advisories/2007/1359"
+        },
+        {
+          "type": "WEB",
+          "url": "http://secunia.com/advisories/24845"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.securityfocus.com/archive/1/465386/100/100/threaded"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.umich.edu/~umweb/software/cosign/cosign-vuln-2007-001.txt"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.vupen.com/english/advisories/2007/1359"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V2",
+          "score": "AV:N/AC:L/Au:N/C:P/I:P/A:P"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "cosign",
+          "purl": "pkg:conda/cosign?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/cosign/cosign"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 3,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:cosign:cosign",
+            "cpe:2.3:a:sigstore:cosign"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:cosign:cosign"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2007-2233",
+      "published": "2007-04-25T15:19:00.000Z",
+      "modified": "2026-04-23T00:35:47.467Z",
+      "aliases": [],
+      "summary": "cosign-bin/cosign.cgi in Cosign 2.0.2 and earlier allows remote authenticated users to perform unauthorized actions as an arbitrary user by using CR (\\r) sequences in the service parameter to inject L",
+      "details": "cosign-bin/cosign.cgi in Cosign 2.0.2 and earlier allows remote authenticated users to perform unauthorized actions as an arbitrary user by using CR (\\r) sequences in the service parameter to inject LOGIN and REGISTER commands with the desired username.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "cosign",
+            "purl": "pkg:generic/cosign/cosign"
+          },
+          "versions": [
+            "0.7.0",
+            "0.8.0",
+            "0.9.0",
+            "1.0",
+            "1.1",
+            "1.5",
+            "1.6",
+            "1.7",
+            "1.8",
+            "1.8.5",
+            "1.9",
+            "2.0.1",
+            "2.0.2"
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "http://secunia.com/advisories/24845"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.securityfocus.com/archive/1/465386/100/100/threaded"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.umich.edu/~umweb/software/cosign/cosign-vuln-2007-002.txt"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.vupen.com/english/advisories/2007/1359"
+        },
+        {
+          "type": "WEB",
+          "url": "http://secunia.com/advisories/24845"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.securityfocus.com/archive/1/465386/100/100/threaded"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.umich.edu/~umweb/software/cosign/cosign-vuln-2007-002.txt"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.vupen.com/english/advisories/2007/1359"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V2",
+          "score": "AV:N/AC:L/Au:S/C:P/I:P/A:P"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "cosign",
+          "purl": "pkg:conda/cosign?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/cosign/cosign"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 3,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:cosign:cosign",
+            "cpe:2.3:a:sigstore:cosign"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:cosign:cosign"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2022-23649",
+      "published": "2022-02-18T22:15:12.793Z",
+      "modified": "2024-11-21T06:49:01.113Z",
+      "aliases": [],
+      "summary": "Cosign provides container signing, verification, and storage in an OCI registry for the sigstore project.",
+      "details": "Cosign provides container signing, verification, and storage in an OCI registry for the sigstore project. Prior to version 1.5.2, Cosign can be manipulated to claim that an entry for a signature exists in the Rekor transparency log even if it doesn't. This requires the attacker to have pull and push permissions for the signature in OCI. This can happen with both standard signing with a keypair and \"keyless signing\" with Fulcio. If an attacker has access to the signature in OCI, they can manipulate cosign into believing the entry was stored in Rekor even though it wasn't. The vulnerability has been patched in v1.5.2 of Cosign. The `signature` in the `signedEntryTimestamp` provided by Rekor is now compared to the `signature` that is being verified. If these don't match, then an error is returned. If a valid bundle is copied to a different signature, verification should fail. Cosign output now only informs the user that certificates were verified if a certificate was in fact verified. There is currently no known workaround.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "cosign",
+            "purl": "pkg:generic/cosign/cosign"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "1.5.2"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/sigstore/cosign/commit/96d410a6580e4e81d24d112a0855c70ca3fb5b49"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/sigstore/cosign/security/advisories/GHSA-ccxc-vr6p-4858"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/sigstore/cosign/commit/96d410a6580e4e81d24d112a0855c70ca3fb5b49"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/sigstore/cosign/security/advisories/GHSA-ccxc-vr6p-4858"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:L/A:N"
+        },
+        {
+          "type": "CVSS_V2",
+          "score": "AV:L/AC:L/Au:N/C:N/I:P/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "cosign",
+          "purl": "pkg:conda/cosign?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/cosign/cosign"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 3,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:cosign:cosign",
+            "cpe:2.3:a:sigstore:cosign"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:sigstore:cosign"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2022-35929",
+      "published": "2022-08-04T19:15:09.937Z",
+      "modified": "2024-11-21T07:11:59.103Z",
+      "aliases": [],
+      "summary": "cosign is a container signing and verification utility.",
+      "details": "cosign is a container signing and verification utility. In versions prior to 1.10.1 cosign can report a false positive if any attestation exists. `cosign verify-attestation` used with the `--type` flag will report a false positive verification when there is at least one attestation with a valid signature and there are NO attestations of the type being verified (--type defaults to \"custom\"). This can happen when signing with a standard keypair and with \"keyless\" signing with Fulcio. This vulnerability can be reproduced with the `distroless.dev/static@sha256:dd7614b5a12bc4d617b223c588b4e0c833402b8f4991fb5702ea83afad1986e2` image. This image has a `vuln` attestation but not an `spdx` attestation. However, if you run `cosign verify-attestation --type=spdx` on this image, it incorrectly succeeds. This issue has been addressed in version 1.10.1 of cosign. Users are advised to upgrade. There are no known workarounds for this issue.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "cosign",
+            "purl": "pkg:generic/cosign/cosign"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "1.10.1"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/sigstore/cosign/commit/c5fda01a8ff33ca981f45a9f13e7fb6bd2080b94"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/sigstore/cosign/security/advisories/GHSA-vjxv-45g9-9296"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/sigstore/cosign/commit/c5fda01a8ff33ca981f45a9f13e7fb6bd2080b94"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/sigstore/cosign/security/advisories/GHSA-vjxv-45g9-9296"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:L/UI:R/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "cosign",
+          "purl": "pkg:conda/cosign?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/cosign/cosign"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 3,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:cosign:cosign",
+            "cpe:2.3:a:sigstore:cosign"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:sigstore:cosign"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2022-36056",
+      "published": "2022-09-14T20:15:09.860Z",
+      "modified": "2024-11-21T07:12:16.937Z",
+      "aliases": [],
+      "summary": "Cosign is a project under the sigstore organization which aims to make signatures invisible infrastructure.",
+      "details": "Cosign is a project under the sigstore organization which aims to make signatures invisible infrastructure. In versions prior to 1.12.0 a number of vulnerabilities have been found in cosign verify-blob, where Cosign would successfully verify an artifact when verification should have failed. First a cosign bundle can be crafted to successfully verify a blob even if the embedded rekorBundle does not reference the given signature. Second, when providing identity flags, the email and issuer of a certificate is not checked when verifying a Rekor bundle, and the GitHub Actions identity is never checked. Third, providing an invalid Rekor bundle without the experimental flag results in a successful verification. And fourth an invalid transparency log entry will result in immediate success for verification. Details and examples of these issues can be seen in the GHSA-8gw7-4j42-w388 advisory linked. Users are advised to upgrade to 1.12.0. There are no known workarounds for these issues.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "cosign",
+            "purl": "pkg:generic/cosign/cosign"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "1.12.0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/sigstore/cosign/commit/80b79ed8b4d28ccbce3d279fd273606b5cddcc25"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/sigstore/cosign/security/advisories/GHSA-8gw7-4j42-w388"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/sigstore/cosign/commit/80b79ed8b4d28ccbce3d279fd273606b5cddcc25"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/sigstore/cosign/security/advisories/GHSA-8gw7-4j42-w388"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "cosign",
+          "purl": "pkg:conda/cosign?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/cosign/cosign"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 3,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:cosign:cosign",
+            "cpe:2.3:a:sigstore:cosign"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:sigstore:cosign"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2023-46737",
+      "published": "2023-11-07T18:15:09.283Z",
+      "modified": "2024-11-21T08:29:11.780Z",
+      "aliases": [],
+      "summary": "Cosign is a sigstore signing tool for OCI containers.",
+      "details": "Cosign is a sigstore signing tool for OCI containers. Cosign is susceptible to a denial of service by an attacker controlled registry. An attacker who controls a remote registry can return a high number of attestations and/or signatures to Cosign and cause Cosign to enter a long loop resulting in an endless data attack. The root cause is that Cosign loops through all attestations fetched from the remote registry in pkg/cosign.FetchAttestations. The attacker needs to compromise the registry or make a request to a registry they control. When doing so, the attacker must return a high number of attestations in the response to Cosign. The result will be that the attacker can cause Cosign to go into a long or infinite loop that will prevent other users from verifying their data. In Kyvernos case, an attacker whose privileges are limited to making requests to the cluster can make a request with an image reference to their own registry, trigger the infinite loop and deny other users from completing their admission requests. Alternatively, the attacker can obtain control of the registry used by an organization and return a high number of attestations instead the expected number of attestations. The issue can be mitigated rather simply by setting a limit to the limit of attestations that Cosign will loop through. The limit does not need to be high to be within the vast majority of use cases and still prevent the endless data attack. This issue has been patched in version 2.2.1 and users are advised to upgrade.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "cosign",
+            "purl": "pkg:generic/cosign/cosign"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "2.2.1"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/sigstore/cosign/commit/8ac891ff0e29ddc67965423bee8f826219c6eb0f"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/sigstore/cosign/security/advisories/GHSA-vfp6-jrw2-99g9"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/sigstore/cosign/commit/8ac891ff0e29ddc67965423bee8f826219c6eb0f"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/sigstore/cosign/security/advisories/GHSA-vfp6-jrw2-99g9"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:N/I:N/A:L"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "cosign",
+          "purl": "pkg:conda/cosign?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/cosign/cosign"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 3,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:cosign:cosign",
+            "cpe:2.3:a:sigstore:cosign"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:sigstore:cosign"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2024-29902",
+      "published": "2024-04-10T23:15:06.920Z",
+      "modified": "2025-01-09T15:56:50.707Z",
+      "aliases": [],
+      "summary": "Cosign provides code signing and transparency for containers and binaries.",
+      "details": "Cosign provides code signing and transparency for containers and binaries. Prior to version 2.2.4, a remote image with a malicious attachment can cause denial of service of the host machine running Cosign. This can impact other services on the machine that rely on having memory available such as a Redis database which can result in data loss. It can also impact the availability of other services on the machine that will not be available for the duration of the machine denial. The root cause of this issue is that Cosign reads the attachment from a remote image entirely into memory without checking the size of the attachment first. As such, a large attachment can make Cosign read a large attachment into memory; If the attachments size is larger than the machine has memory available, the machine will be denied of service. The Go runtime will make a SigKill after a few seconds of system-wide denial. This issue can allow a supply-chain escalation from a compromised registry to the Cosign user: If an attacher has compromised a registry or the account of an image vendor, they can include a malicious attachment and hurt the image consumer. Version 2.2.4 contains a patch for the vulnerability.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "cosign",
+            "purl": "pkg:generic/cosign/cosign"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "2.2.4"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/google/go-containerregistry/blob/a0658aa1d0cc7a7f1bcc4a3af9155335b6943f40/pkg/v1/remote/layer.go#L36-L40"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/sigstore/cosign/blob/9bc3ee309bf35d2f6e17f5d23f231a3d8bf580bc/pkg/oci/remote/remote.go#L228-L239"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/sigstore/cosign/commit/629f5f8fa672973503edde75f84dcd984637629e"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/sigstore/cosign/releases/tag/v2.2.4"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/sigstore/cosign/security/advisories/GHSA-88jx-383q-w4qc"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/google/go-containerregistry/blob/a0658aa1d0cc7a7f1bcc4a3af9155335b6943f40/pkg/v1/remote/layer.go#L36-L40"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/sigstore/cosign/blob/9bc3ee309bf35d2f6e17f5d23f231a3d8bf580bc/pkg/oci/remote/remote.go#L228-L239"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/sigstore/cosign/commit/629f5f8fa672973503edde75f84dcd984637629e"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/sigstore/cosign/releases/tag/v2.2.4"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/sigstore/cosign/security/advisories/GHSA-88jx-383q-w4qc"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:H/UI:R/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "cosign",
+          "purl": "pkg:conda/cosign?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/cosign/cosign"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 3,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:cosign:cosign",
+            "cpe:2.3:a:sigstore:cosign"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:sigstore:cosign"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2024-29903",
+      "published": "2024-04-10T23:15:07.130Z",
+      "modified": "2025-01-09T15:40:24.663Z",
+      "aliases": [],
+      "summary": "Cosign provides code signing and transparency for containers and binaries.",
+      "details": "Cosign provides code signing and transparency for containers and binaries. Prior to version 2.2.4, maliciously-crafted software artifacts can cause denial of service of the machine running Cosign thereby impacting all services on the machine. The root cause is that Cosign creates slices based on the number of signatures, manifests or attestations in untrusted artifacts. As such, the untrusted artifact can control the amount of memory that Cosign allocates. The exact issue is Cosign allocates excessive memory on the lines that creates a slice of the same length as the manifests. Version 2.2.4 contains a patch for the vulnerability.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "cosign",
+            "purl": "pkg:generic/cosign/cosign"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "2.2.4"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/sigstore/cosign/blob/14795db16417579fac0c00c11e166868d7976b61/pkg/cosign/verify.go#L948-L955"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/sigstore/cosign/blob/286a98a4a99c1b2f32f84b0d560e324100312280/pkg/oci/remote/signatures.go#L56-L70"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/sigstore/cosign/commit/629f5f8fa672973503edde75f84dcd984637629e"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/sigstore/cosign/releases/tag/v2.2.4"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/sigstore/cosign/security/advisories/GHSA-95pr-fxf5-86gv"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/sigstore/cosign/blob/14795db16417579fac0c00c11e166868d7976b61/pkg/cosign/verify.go#L948-L955"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/sigstore/cosign/blob/286a98a4a99c1b2f32f84b0d560e324100312280/pkg/oci/remote/signatures.go#L56-L70"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/sigstore/cosign/commit/629f5f8fa672973503edde75f84dcd984637629e"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/sigstore/cosign/releases/tag/v2.2.4"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/sigstore/cosign/security/advisories/GHSA-95pr-fxf5-86gv"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:H/UI:R/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "cosign",
+          "purl": "pkg:conda/cosign?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/cosign/cosign"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 3,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:cosign:cosign",
+            "cpe:2.3:a:sigstore:cosign"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:sigstore:cosign"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    }
+  ]
+}

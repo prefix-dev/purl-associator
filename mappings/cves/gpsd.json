@@ -1,0 +1,459 @@
+{
+  "schema_version": 1,
+  "package": "gpsd",
+  "purls": [],
+  "cpes": [
+    "cpe:2.3:a:gpsd_project:gpsd"
+  ],
+  "generated_at": "2026-06-10T06:09:04+00:00",
+  "conda_versions_total": 4,
+  "latest_version": "3.26",
+  "advisories": [
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2025-67268",
+      "published": "2026-01-02T16:17:00.990Z",
+      "modified": "2026-01-12T15:33:45.577Z",
+      "aliases": [],
+      "summary": "gpsd before commit dc966aa contains a heap-based out-of-bounds write vulnerability in the drivers/driver_nmea2000.c file.",
+      "details": "gpsd before commit dc966aa contains a heap-based out-of-bounds write vulnerability in the drivers/driver_nmea2000.c file. The hnd_129540 function, which handles NMEA2000 PGN 129540 (GNSS Satellites in View) packets, fails to validate the user-supplied satellite count against the size of the skyview array (184 elements). This allows an attacker to write beyond the bounds of the array by providing a satellite count up to 255, leading to memory corruption, Denial of Service (DoS), and potentially arbitrary code execution.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "gpsd",
+            "purl": "pkg:generic/gpsd_project/gpsd"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "3.27.1"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/Jaenact/gspd_cve/blob/main/CVE-2025-67268/README.md"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/ntpsec/gpsd/blob/master/drivers/driver_nmea2000.c"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/ntpsec/gpsd/commit/dc966aa74c075d0a6535811d98628625cbfbe3f4"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "gpsd",
+          "purl": "pkg:conda/gpsd?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/gpsd_project/gpsd"
+          ],
+          "affected_versions": [
+            "3.22",
+            "3.23",
+            "3.25",
+            "3.26"
+          ],
+          "conda_versions_total": 4,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:gpsd_project:gpsd"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:gpsd_project:gpsd"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2025-67269",
+      "published": "2026-01-02T16:17:01.100Z",
+      "modified": "2026-01-09T22:07:39.427Z",
+      "aliases": [],
+      "summary": "An integer underflow vulnerability exists in the `nextstate()` function in `gpsd/packet.c` of gpsd versions prior to commit `ffa1d6f40bca0b035fc7f5e563160ebb67199da7`.",
+      "details": "An integer underflow vulnerability exists in the `nextstate()` function in `gpsd/packet.c` of gpsd versions prior to commit `ffa1d6f40bca0b035fc7f5e563160ebb67199da7`. When parsing a NAVCOM packet, the payload length is calculated using `lexer->length = (size_t)c - 4` without checking if the input byte `c` is less than 4. This results in an unsigned integer underflow, setting `lexer->length` to a very large value (near `SIZE_MAX`). The parser then enters a loop attempting to consume this massive number of bytes, causing 100% CPU utilization and a Denial of Service (DoS) condition.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "gpsd",
+            "purl": "pkg:generic/gpsd_project/gpsd"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "3.27.1"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/Jaenact/gspd_cve/blob/main/CVE-2025-67269/README.md"
+        },
+        {
+          "type": "WEB",
+          "url": "https://gitlab.com/gpsd/gpsd"
+        },
+        {
+          "type": "WEB",
+          "url": "https://gitlab.com/gpsd/gpsd/-/commit/ffa1d6f40bca0b035fc7f5e563160ebb67199da7"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "gpsd",
+          "purl": "pkg:conda/gpsd?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/gpsd_project/gpsd"
+          ],
+          "affected_versions": [
+            "3.22",
+            "3.23",
+            "3.25",
+            "3.26"
+          ],
+          "conda_versions_total": 4,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:gpsd_project:gpsd"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:gpsd_project:gpsd"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2013-2038",
+      "published": "2014-02-06T17:00:04.400Z",
+      "modified": "2026-04-29T01:13:23.040Z",
+      "aliases": [],
+      "summary": "The NMEA0183 driver in gpsd before 3.9 allows remote attackers to cause a denial of service (daemon termination) and possibly execute arbitrary code via a GPS packet with a malformed $GPGGA interprete",
+      "details": "The NMEA0183 driver in gpsd before 3.9 allows remote attackers to cause a denial of service (daemon termination) and possibly execute arbitrary code via a GPS packet with a malformed $GPGGA interpreted sentence that lacks certain fields and a terminator.  NOTE: a separate issue in the AIS driver was also reported, but it might not be a vulnerability.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "gpsd",
+            "purl": "pkg:generic/gpsd_project/gpsd"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "last_affected": "3.8"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "http://git.savannah.gnu.org/cgit/gpsd.git/commit/?id=dd9c3c2830cb8f8fd8491ce68c82698dc5538f50"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.nongnu.org/archive/html/gpsd-dev/2013-05/msg00000.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://openwall.com/lists/oss-security/2013/05/02/20"
+        },
+        {
+          "type": "WEB",
+          "url": "http://openwall.com/lists/oss-security/2013/05/08/1"
+        },
+        {
+          "type": "WEB",
+          "url": "http://ubuntu.com/usn/usn-1820-1"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.osvdb.org/93000"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.osvdb.org/93001"
+        },
+        {
+          "type": "WEB",
+          "url": "http://git.savannah.gnu.org/cgit/gpsd.git/commit/?id=dd9c3c2830cb8f8fd8491ce68c82698dc5538f50"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.nongnu.org/archive/html/gpsd-dev/2013-05/msg00000.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://openwall.com/lists/oss-security/2013/05/02/20"
+        },
+        {
+          "type": "WEB",
+          "url": "http://openwall.com/lists/oss-security/2013/05/08/1"
+        },
+        {
+          "type": "WEB",
+          "url": "http://ubuntu.com/usn/usn-1820-1"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.osvdb.org/93000"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.osvdb.org/93001"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V2",
+          "score": "AV:N/AC:M/Au:N/C:N/I:N/A:P"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "gpsd",
+          "purl": "pkg:conda/gpsd?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/gpsd_project/gpsd"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 4,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:gpsd_project:gpsd"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:gpsd_project:gpsd"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2018-17937",
+      "published": "2019-03-13T17:29:00.227Z",
+      "modified": "2024-11-21T03:55:14.740Z",
+      "aliases": [],
+      "summary": "gpsd versions 2.90 to 3.17 and microjson versions 1.0 to 1.3, an open source project, allow a stack-based buffer overflow, which may allow remote attackers to execute arbitrary code on embedded platfo",
+      "details": "gpsd versions 2.90 to 3.17 and microjson versions 1.0 to 1.3, an open source project, allow a stack-based buffer overflow, which may allow remote attackers to execute arbitrary code on embedded platforms via traffic on Port 2947/TCP or crafted JSON inputs.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "gpsd",
+            "purl": "pkg:generic/gpsd_project/gpsd"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.90"
+                },
+                {
+                  "last_affected": "3.17"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "http://www.securityfocus.com/bid/107029"
+        },
+        {
+          "type": "WEB",
+          "url": "https://ics-cert.us-cert.gov/advisories/ICSA-18-310-01"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2019/03/msg00040.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2021/10/msg00024.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.gentoo.org/glsa/202009-17"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.securityfocus.com/bid/107029"
+        },
+        {
+          "type": "WEB",
+          "url": "https://ics-cert.us-cert.gov/advisories/ICSA-18-310-01"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2019/03/msg00040.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2021/10/msg00024.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.gentoo.org/glsa/202009-17"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:A/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+        },
+        {
+          "type": "CVSS_V2",
+          "score": "AV:A/AC:L/Au:N/C:P/I:P/A:P"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "gpsd",
+          "purl": "pkg:conda/gpsd?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/gpsd_project/gpsd"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 4,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:gpsd_project:gpsd"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:gpsd_project:gpsd"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2023-43628",
+      "published": "2023-12-05T12:15:43.000Z",
+      "modified": "2025-11-04T20:17:07.123Z",
+      "aliases": [],
+      "summary": "An integer underflow vulnerability exists in the NTRIP Stream Parsing functionality of GPSd 3.25.1~dev.",
+      "details": "An integer underflow vulnerability exists in the NTRIP Stream Parsing functionality of GPSd 3.25.1~dev. A specially crafted network packet can lead to memory corruption. An attacker can send a malicious packet to trigger this vulnerability.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "gpsd",
+            "purl": "pkg:generic/gpsd_project/gpsd"
+          },
+          "versions": [
+            "3.25.1"
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://talosintelligence.com/vulnerability_reports/TALOS-2023-1860"
+        },
+        {
+          "type": "WEB",
+          "url": "https://talosintelligence.com/vulnerability_reports/TALOS-2023-1860"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.talosintelligence.com/vulnerability_reports/TALOS-2023-1860"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "gpsd",
+          "purl": "pkg:conda/gpsd?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/gpsd_project/gpsd"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 4,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:gpsd_project:gpsd"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:gpsd_project:gpsd"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    }
+  ]
+}

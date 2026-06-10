@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "package": "presto-server",
+  "purls": [
+    "pkg:github/prestodb/presto"
+  ],
+  "cpes": [
+    "cpe:2.3:a:prestosql:presto"
+  ],
+  "generated_at": "2026-06-10T06:09:04+00:00",
+  "conda_versions_total": 1,
+  "latest_version": "0.284",
+  "advisories": [
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2020-15087",
+      "published": "2020-06-30T17:15:10.877Z",
+      "modified": "2024-11-21T05:04:47.160Z",
+      "aliases": [],
+      "summary": "In Presto before version 337, authenticated users can bypass authorization checks by directly accessing internal APIs.",
+      "details": "In Presto before version 337, authenticated users can bypass authorization checks by directly accessing internal APIs. This impacts Presto server installations with secure internal communication configured. This does not affect installations that have not configured secure internal communication, as these installations are inherently insecure. This only affects Presto server installations. This does NOT affect clients such as the CLI or JDBC driver. This vulnerability has been fixed in version 337. Additionally, this issue can be mitigated by blocking network access to internal APIs on the coordinator and workers.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "presto",
+            "purl": "pkg:generic/prestosql/presto"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "337"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/prestosql/presto/security/advisories/GHSA-f6pc-crhh-cp96"
+        },
+        {
+          "type": "WEB",
+          "url": "https://trino.io/docs/current/release/release-337.html#security-changes"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/prestosql/presto/security/advisories/GHSA-f6pc-crhh-cp96"
+        },
+        {
+          "type": "WEB",
+          "url": "https://trino.io/docs/current/release/release-337.html#security-changes"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:H/I:N/A:N"
+        },
+        {
+          "type": "CVSS_V2",
+          "score": "AV:N/AC:L/Au:S/C:P/I:P/A:P"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "presto-server",
+          "purl": "pkg:conda/presto-server?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/prestosql/presto"
+          ],
+          "affected_versions": [
+            "0.284"
+          ],
+          "conda_versions_total": 1,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:prestosql:presto"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:prestosql:presto"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    }
+  ]
+}

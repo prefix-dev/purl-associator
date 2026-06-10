@@ -1,0 +1,505 @@
+{
+  "schema_version": 1,
+  "package": "oauthenticator",
+  "purls": [],
+  "cpes": [
+    "cpe:2.3:a:jupyter:oauthenticator"
+  ],
+  "generated_at": "2026-06-10T06:09:04+00:00",
+  "conda_versions_total": 32,
+  "latest_version": "17.4.0",
+  "advisories": [
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2020-26250",
+      "published": "2020-12-01T21:15:14.317Z",
+      "modified": "2024-11-21T05:19:38.977Z",
+      "aliases": [],
+      "summary": "OAuthenticator is an OAuth login mechanism for JupyterHub.",
+      "details": "OAuthenticator is an OAuth login mechanism for JupyterHub. In oauthenticator from version 0.12.0 and before 0.12.2, the deprecated (in jupyterhub 1.2) configuration `Authenticator.whitelist`, which should be transparently mapped to `Authenticator.allowed_users` with a warning, is instead ignored by OAuthenticator classes, resulting in the same behavior as if this configuration has not been set. If this is the only mechanism of authorization restriction (i.e. no group or team restrictions in configuration) then all authenticated users will be allowed. Provider-based restrictions, including deprecated values such as `GitHubOAuthenticator.org_whitelist` are **not** affected. All users of OAuthenticator 0.12.0 and 0.12.1 with JupyterHub 1.2 (JupyterHub Helm chart 0.10.0-0.10.5) who use the `admin.whitelist.users` configuration in the jupyterhub helm chart or the `c.Authenticator.whitelist` configuration directly. Users of other deprecated configuration, e.g. `c.GitHubOAuthenticator.team_whitelist` are **not** affected. If you see a log line like this and expect a specific list of allowed usernames: \"[I 2020-11-27 16:51:54.528 JupyterHub app:1717] Not using allowed_users. Any authenticated user will be allowed.\" you are likely affected. Updating oauthenticator to 0.12.2 is recommended. A workaround is to replace the deprecated `c.Authenticator.whitelist = ...` with `c.Authenticator.allowed_users = ...`. If any users have been authorized during this time who should not have been, they must be deleted via the API or admin interface, per the referenced documentation.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "oauthenticator",
+            "purl": "pkg:generic/jupyter/oauthenticator"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0.12.0"
+                },
+                {
+                  "fixed": "0.12.2"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyterhub/oauthenticator/blob/master/docs/source/changelog.md#0122---2020-11-30"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyterhub/oauthenticator/commit/a4aac191c16cf6281f3d346615aefa75702b02d7"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyterhub/oauthenticator/security/advisories/GHSA-384w-5v3f-q499"
+        },
+        {
+          "type": "WEB",
+          "url": "https://jupyterhub.readthedocs.io/en/1.2.2/getting-started/authenticators-users-basics.html#add-or-remove-users-from-the-hub"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyterhub/oauthenticator/blob/master/docs/source/changelog.md#0122---2020-11-30"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyterhub/oauthenticator/commit/a4aac191c16cf6281f3d346615aefa75702b02d7"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyterhub/oauthenticator/security/advisories/GHSA-384w-5v3f-q499"
+        },
+        {
+          "type": "WEB",
+          "url": "https://jupyterhub.readthedocs.io/en/1.2.2/getting-started/authenticators-users-basics.html#add-or-remove-users-from-the-hub"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:C/C:H/I:N/A:N"
+        },
+        {
+          "type": "CVSS_V2",
+          "score": "AV:N/AC:M/Au:S/C:P/I:N/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "oauthenticator",
+          "purl": "pkg:conda/oauthenticator?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/jupyter/oauthenticator"
+          ],
+          "affected_versions": [
+            "0.12.0",
+            "0.12.1"
+          ],
+          "conda_versions_total": 32,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:jupyter:oauthenticator"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:jupyter:oauthenticator"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2022-31027",
+      "published": "2022-06-09T13:15:08.527Z",
+      "modified": "2024-11-21T07:03:44.520Z",
+      "aliases": [],
+      "summary": "OAuthenticator is an OAuth token library for the JupyerHub login handler.",
+      "details": "OAuthenticator is an OAuth token library for the JupyerHub login handler. CILogonOAuthenticator is provided by the OAuthenticator package, and lets users log in to a JupyterHub via CILogon. This is primarily used to restrict a JupyterHub only to users of a given institute. The allowed_idps configuration trait of CILogonOAuthenticator is documented to be a list of domains that indicate the institutions whose users are authorized to access this JupyterHub. This authorization is validated by ensuring that the *email* field provided to us by CILogon has a *domain* that matches one of the domains listed in `allowed_idps`.If `allowed_idps` contains `berkeley.edu`, you might expect only users with valid current credentials provided by University of California, Berkeley to be able to access the JupyterHub. However, CILogonOAuthenticator does *not* verify which provider is used by the user to login, only the email address provided. So a user can login with a GitHub account that has email set to `<something>@berkeley.edu`, and that will be treated exactly the same as someone logging in using the UC Berkeley official Identity Provider. The patch fixing this issue makes a *breaking change* in how `allowed_idps` is interpreted. It's no longer a list of domains, but configuration representing the `EntityID` of the IdPs that are allowed, picked from the [list maintained by CILogon](https://cilogon.org/idplist/). Users are advised to upgrade.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "oauthenticator",
+            "purl": "pkg:generic/jupyter/oauthenticator"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "15.0.0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyterhub/oauthenticator/security/advisories/GHSA-r7v4-jwx9-wx43"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyterhub/oauthenticator/security/advisories/GHSA-r7v4-jwx9-wx43"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:L/I:L/A:N"
+        },
+        {
+          "type": "CVSS_V2",
+          "score": "AV:N/AC:L/Au:S/C:P/I:N/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "oauthenticator",
+          "purl": "pkg:conda/oauthenticator?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/jupyter/oauthenticator"
+          ],
+          "affected_versions": [
+            "0.8.1",
+            "0.8.2",
+            "0.9.0",
+            "0.10.0",
+            "0.11.0",
+            "0.12.0",
+            "0.12.1",
+            "0.12.2",
+            "0.12.3",
+            "0.13.0",
+            "14.0.0",
+            "14.1.0"
+          ],
+          "conda_versions_total": 32,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:jupyter:oauthenticator"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:jupyter:oauthenticator"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2024-29033",
+      "published": "2024-03-20T21:15:31.593Z",
+      "modified": "2025-12-03T19:52:15.043Z",
+      "aliases": [],
+      "summary": "OAuthenticator provides plugins for JupyterHub to use common OAuth providers, as well as base classes for writing one's own Authenticators with any OAuth 2.0 provider.",
+      "details": "OAuthenticator provides plugins for JupyterHub to use common OAuth providers, as well as base classes for writing one's own Authenticators with any OAuth 2.0 provider. `GoogleOAuthenticator.hosted_domain` is used to restrict what Google accounts can be authorized access to a JupyterHub. The restriction is intented to be to Google accounts part of one or more Google organization verified to control specified domain(s). Prior to version 16.3.0, the actual restriction has been to Google accounts with emails ending with the domain. Such accounts could have been created by anyone which at one time was able to read an email associated with the domain. This was described by Dylan Ayrey (@dxa4481) in this [blog post] from 15th December 2023). OAuthenticator 16.3.0 contains a patch for this issue. As a workaround, restrict who can login another way, such as `allowed_users` or `allowed_google_groups`.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "oauthenticator",
+            "purl": "pkg:generic/jupyter/oauthenticator"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "16.3.0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyterhub/oauthenticator/commit/5246b09675501b09fb6ed64022099b7644812f60"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyterhub/oauthenticator/security/advisories/GHSA-55m3-44xf-hg4h"
+        },
+        {
+          "type": "WEB",
+          "url": "https://trufflesecurity.com/blog/google-oauth-is-broken-sort-of"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyterhub/oauthenticator/commit/5246b09675501b09fb6ed64022099b7644812f60"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyterhub/oauthenticator/security/advisories/GHSA-55m3-44xf-hg4h"
+        },
+        {
+          "type": "WEB",
+          "url": "https://trufflesecurity.com/blog/google-oauth-is-broken-sort-of"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "oauthenticator",
+          "purl": "pkg:conda/oauthenticator?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/jupyter/oauthenticator"
+          ],
+          "affected_versions": [
+            "0.8.1",
+            "0.8.2",
+            "0.9.0",
+            "0.10.0",
+            "0.11.0",
+            "0.12.0",
+            "0.12.1",
+            "0.12.2",
+            "0.12.3",
+            "0.13.0",
+            "14.0.0",
+            "14.1.0",
+            "15.0.0",
+            "15.0.1",
+            "15.1.0",
+            "16.0.0",
+            "16.0.1",
+            "16.0.2",
+            "16.0.3",
+            "16.0.4",
+            "16.0.5",
+            "16.0.6",
+            "16.0.7",
+            "16.1.0",
+            "16.1.1",
+            "16.2.0",
+            "16.2.1"
+          ],
+          "conda_versions_total": 32,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:jupyter:oauthenticator"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:jupyter:oauthenticator"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-33175",
+      "published": "2026-04-03T22:16:26.483Z",
+      "modified": "2026-04-15T18:42:03.173Z",
+      "aliases": [],
+      "summary": "OAuthenticator is software that allows OAuth2 identity providers to be plugged in and used with JupyterHub.",
+      "details": "OAuthenticator is software that allows OAuth2 identity providers to be plugged in and used with JupyterHub. Prior to version 17.4.0, an authentication bypass vulnerability in oauthenticator allows an attacker with an unverified email address on an Auth0 tenant to login to JupyterHub. When email is used as the usrname_claim, this gives users control over their username and the possibility of account takeover. This issue has been patched in version 17.4.0.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "oauthenticator",
+            "purl": "pkg:generic/jupyter/oauthenticator"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "17.4.0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyterhub/oauthenticator/commit/f0c7002dc36e41efae0f674033cf7888a21d96f9"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyterhub/oauthenticator/releases/tag/17.4.0"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyterhub/oauthenticator/security/advisories/GHSA-rrvg-cxh4-qhrv"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "oauthenticator",
+          "purl": "pkg:conda/oauthenticator?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/jupyter/oauthenticator"
+          ],
+          "affected_versions": [
+            "0.8.1",
+            "0.8.2",
+            "0.9.0",
+            "0.10.0",
+            "0.11.0",
+            "0.12.0",
+            "0.12.1",
+            "0.12.2",
+            "0.12.3",
+            "0.13.0",
+            "14.0.0",
+            "14.1.0",
+            "15.0.0",
+            "15.0.1",
+            "15.1.0",
+            "16.0.0",
+            "16.0.1",
+            "16.0.2",
+            "16.0.3",
+            "16.0.4",
+            "16.0.5",
+            "16.0.6",
+            "16.0.7",
+            "16.1.0",
+            "16.1.1",
+            "16.2.0",
+            "16.2.1",
+            "16.3.0",
+            "17.0.0",
+            "17.2.0",
+            "17.3.0"
+          ],
+          "conda_versions_total": 32,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:jupyter:oauthenticator"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:jupyter:oauthenticator"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2018-7206",
+      "published": "2018-02-18T03:29:00.353Z",
+      "modified": "2024-11-21T04:11:47.403Z",
+      "aliases": [],
+      "summary": "An issue was discovered in Project Jupyter JupyterHub OAuthenticator 0.6.x before 0.6.2 and 0.7.x before 0.7.3.",
+      "details": "An issue was discovered in Project Jupyter JupyterHub OAuthenticator 0.6.x before 0.6.2 and 0.7.x before 0.7.3. When using JupyterHub with GitLab group whitelisting for access control, group membership was not checked correctly, allowing members not in the whitelisted groups to create accounts on the Hub. (Users were not allowed to access other users' accounts, but could create their own accounts on the Hub linked to their GitLab account. GitLab authentication not using gitlab_group_whitelist is unaffected. No other Authenticators are affected.)",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "oauthenticator",
+            "purl": "pkg:generic/jupyter/oauthenticator"
+          },
+          "versions": [
+            "0.6.0",
+            "0.6.1",
+            "0.7.0",
+            "0.7.1",
+            "0.7.2"
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://blog.jupyter.org/security-fix-for-jupyterhub-gitlab-oauthenticator-7b14571d1f76"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyterhub/oauthenticator/blob/8499dc2/CHANGELOG.md#073---2018-02-16"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyterhub/oauthenticator/commit/1845c0e4b1bff3462c91c3108c85205acd3c75a2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://blog.jupyter.org/security-fix-for-jupyterhub-gitlab-oauthenticator-7b14571d1f76"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyterhub/oauthenticator/blob/8499dc2/CHANGELOG.md#073---2018-02-16"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jupyterhub/oauthenticator/commit/1845c0e4b1bff3462c91c3108c85205acd3c75a2"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+        },
+        {
+          "type": "CVSS_V2",
+          "score": "AV:N/AC:L/Au:S/C:P/I:P/A:P"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "oauthenticator",
+          "purl": "pkg:conda/oauthenticator?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/jupyter/oauthenticator"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 32,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:jupyter:oauthenticator"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:jupyter:oauthenticator"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    }
+  ]
+}

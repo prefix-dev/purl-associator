@@ -1,0 +1,391 @@
+{
+  "schema_version": 1,
+  "package": "libfuse3",
+  "purls": [
+    "pkg:github/libfuse/libfuse"
+  ],
+  "cpes": [
+    "cpe:2.3:a:libfuse_project:libfuse"
+  ],
+  "generated_at": "2026-06-10T06:09:04+00:00",
+  "conda_versions_total": 4,
+  "latest_version": "3.18.2",
+  "advisories": [
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-33150",
+      "published": "2026-03-20T21:17:15.410Z",
+      "modified": "2026-03-23T19:16:14.717Z",
+      "aliases": [],
+      "summary": "libfuse is the reference implementation of the Linux FUSE.",
+      "details": "libfuse is the reference implementation of the Linux FUSE. From version 3.18.0 to before version 3.18.2, a use-after-free vulnerability in the io_uring subsystem of libfuse allows a local attacker to crash FUSE filesystem processes and potentially execute arbitrary code. When io_uring thread creation fails due to resource exhaustion (e.g., cgroup pids.max), fuse_uring_start() frees the ring pool structure but stores the dangling pointer in the session state, leading to a use-after-free when the session shuts down. The trigger is reliable in containerized environments where cgroup pids.max limits naturally constrain thread creation. This issue has been patched in version 3.18.2.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "libfuse",
+            "purl": "pkg:generic/libfuse_project/libfuse"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "3.18.0"
+                },
+                {
+                  "fixed": "3.18.2"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/libfuse/libfuse/commit/49fcd891a58f622c098e2ca67d66086f7b213836"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/libfuse/libfuse/releases/tag/fuse-3.18.2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/libfuse/libfuse/security/advisories/GHSA-qxv7-xrc2-qmfx"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libfuse3",
+          "purl": "pkg:conda/libfuse3?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/libfuse_project/libfuse"
+          ],
+          "affected_versions": [
+            "3.18.0",
+            "3.18.1"
+          ],
+          "conda_versions_total": 4,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:libfuse_project:libfuse"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:libfuse_project:libfuse"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-33179",
+      "published": "2026-03-20T21:17:16.593Z",
+      "modified": "2026-03-27T21:20:47.880Z",
+      "aliases": [],
+      "summary": "libfuse is the reference implementation of the Linux FUSE.",
+      "details": "libfuse is the reference implementation of the Linux FUSE. From version 3.18.0 to before version 3.18.2, a NULL pointer dereference and memory leak in fuse_uring_init_queue allows a local user to crash the FUSE daemon or cause resource exhaustion. When numa_alloc_local fails during io_uring queue entry setup, the code proceeds with NULL pointers. When fuse_uring_register_queue fails, NUMA allocations are leaked and the function incorrectly returns success. Only the io_uring transport is affected; the traditional /dev/fuse path is not affected. PoC confirmed with AddressSanitizer/LeakSanitizer. This issue has been patched in version 3.18.2.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "libfuse",
+            "purl": "pkg:generic/libfuse_project/libfuse"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "3.18.0"
+                },
+                {
+                  "fixed": "3.18.2"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/libfuse/libfuse/commit/7beb86c09b6ec5aab14dc25256ed8a5ad18554d7"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/libfuse/libfuse/releases/tag/fuse-3.18.2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/libfuse/libfuse/security/advisories/GHSA-x669-v3mq-r358"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libfuse3",
+          "purl": "pkg:conda/libfuse3?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/libfuse_project/libfuse"
+          ],
+          "affected_versions": [
+            "3.18.0",
+            "3.18.1"
+          ],
+          "conda_versions_total": 4,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:libfuse_project:libfuse"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:libfuse_project:libfuse"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2010-3879",
+      "published": "2011-01-22T22:00:02.927Z",
+      "modified": "2026-04-29T01:13:23.040Z",
+      "aliases": [],
+      "summary": "FUSE, possibly 2.8.5 and earlier, allows local users to create mtab entries with arbitrary pathnames, and consequently unmount any filesystem, via a symlink attack on the parent directory of the mount",
+      "details": "FUSE, possibly 2.8.5 and earlier, allows local users to create mtab entries with arbitrary pathnames, and consequently unmount any filesystem, via a symlink attack on the parent directory of the mountpoint of a FUSE filesystem, a different vulnerability than CVE-2010-0789.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "libfuse",
+            "purl": "pkg:generic/libfuse_project/libfuse"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "last_affected": "2.8.5"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=602333"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.fedoraproject.org/pipermail/package-announce/2011-February/053792.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.grok.org.uk/pipermail/full-disclosure/2010-November/077247.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2011-04/msg00000.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://openwall.com/lists/oss-security/2010/11/04/8"
+        },
+        {
+          "type": "WEB",
+          "url": "http://openwall.com/lists/oss-security/2010/11/05/2"
+        },
+        {
+          "type": "WEB",
+          "url": "http://osvdb.org/70520"
+        },
+        {
+          "type": "WEB",
+          "url": "http://secunia.com/advisories/42961"
+        },
+        {
+          "type": "WEB",
+          "url": "http://secunia.com/advisories/42965"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.halfdog.net/Security/FuseTimerace/"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.mandriva.com/security/advisories?name=MDVSA-2013:155"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.securityfocus.com/bid/44623"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.ubuntu.com/usn/USN-1045-1"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.ubuntu.com/usn/USN-1045-2"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.vupen.com/english/advisories/2011/0181"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.vupen.com/english/advisories/2011/0302"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugs.launchpad.net/bugs/670622"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugzilla.novell.com/show_bug.cgi?id=651598"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugzilla.redhat.com/show_bug.cgi?id=651183"
+        },
+        {
+          "type": "WEB",
+          "url": "https://exchange.xforce.ibmcloud.com/vulnerabilities/62986"
+        },
+        {
+          "type": "WEB",
+          "url": "http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=602333"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.fedoraproject.org/pipermail/package-announce/2011-February/053792.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.grok.org.uk/pipermail/full-disclosure/2010-November/077247.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2011-04/msg00000.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://openwall.com/lists/oss-security/2010/11/04/8"
+        },
+        {
+          "type": "WEB",
+          "url": "http://openwall.com/lists/oss-security/2010/11/05/2"
+        },
+        {
+          "type": "WEB",
+          "url": "http://osvdb.org/70520"
+        },
+        {
+          "type": "WEB",
+          "url": "http://secunia.com/advisories/42961"
+        },
+        {
+          "type": "WEB",
+          "url": "http://secunia.com/advisories/42965"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.halfdog.net/Security/FuseTimerace/"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.mandriva.com/security/advisories?name=MDVSA-2013:155"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.securityfocus.com/bid/44623"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.ubuntu.com/usn/USN-1045-1"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.ubuntu.com/usn/USN-1045-2"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.vupen.com/english/advisories/2011/0181"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.vupen.com/english/advisories/2011/0302"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugs.launchpad.net/bugs/670622"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugzilla.novell.com/show_bug.cgi?id=651598"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugzilla.redhat.com/show_bug.cgi?id=651183"
+        },
+        {
+          "type": "WEB",
+          "url": "https://exchange.xforce.ibmcloud.com/vulnerabilities/62986"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V2",
+          "score": "AV:N/AC:M/Au:N/C:N/I:P/A:P"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libfuse3",
+          "purl": "pkg:conda/libfuse3?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/libfuse_project/libfuse"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 4,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:libfuse_project:libfuse"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:libfuse_project:libfuse"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    }
+  ]
+}

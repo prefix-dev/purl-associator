@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "package": "dasel",
+  "purls": [
+    "pkg:github/tomwright/dasel"
+  ],
+  "cpes": [
+    "cpe:2.3:a:tomwright:dasel"
+  ],
+  "generated_at": "2026-06-10T06:09:04+00:00",
+  "conda_versions_total": 39,
+  "latest_version": "3.11.0",
+  "advisories": [
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-33320",
+      "published": "2026-03-24T01:17:02.203Z",
+      "modified": "2026-03-25T16:08:49.057Z",
+      "aliases": [],
+      "summary": "Dasel is a command-line tool and library for querying, modifying, and transforming data structures.",
+      "details": "Dasel is a command-line tool and library for querying, modifying, and transforming data structures. Starting in version 3.0.0 and prior to version 3.3.1, Dasel's YAML reader allows an attacker who can supply YAML for processing to trigger extreme CPU and memory consumption. The issue is in the library's own `UnmarshalYAML` implementation, which manually resolves alias nodes by recursively following `yaml.Node.Alias` pointers without any expansion budget, bypassing go-yaml v4's built-in alias expansion limit. Version 3.3.2 contains a patch for the issue.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "dasel",
+            "purl": "pkg:generic/tomwright/dasel"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "3.0.0"
+                },
+                {
+                  "fixed": "3.3.2"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/TomWright/dasel/security/advisories/GHSA-4fcp-jxh7-23x8"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "dasel",
+          "purl": "pkg:conda/dasel?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/tomwright/dasel"
+          ],
+          "affected_versions": [
+            "3.2.1",
+            "3.2.2",
+            "3.2.3",
+            "3.3.0",
+            "3.3.1"
+          ],
+          "conda_versions_total": 39,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:tomwright:dasel"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:tomwright:dasel"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    }
+  ]
+}

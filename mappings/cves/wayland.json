@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "package": "wayland",
+  "purls": [],
+  "cpes": [
+    "cpe:2.3:a:wayland:wayland"
+  ],
+  "generated_at": "2026-06-10T06:09:04+00:00",
+  "conda_versions_total": 6,
+  "latest_version": "1.25.0",
+  "advisories": [
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2021-3782",
+      "published": "2022-09-23T16:15:10.143Z",
+      "modified": "2025-05-22T19:15:27.303Z",
+      "aliases": [],
+      "summary": "An internal reference count is held on the buffer pool, incremented every time a new buffer is created from the pool.",
+      "details": "An internal reference count is held on the buffer pool, incremented every time a new buffer is created from the pool. The reference count is maintained as an int; on LP64 systems this can cause the reference count to overflow if the client creates a large number of wl_shm buffer objects, or if it can coerce the server to create a large number of external references to the buffer storage. With the reference count overflowing, a use-after-free can be constructed on the wl_shm_pool tracking structure, where values may be incremented or decremented; it may also be possible to construct a limited oracle to leak 4 bytes of server-side memory to the attacking client at a time.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "wayland",
+            "purl": "pkg:generic/wayland/wayland"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "1.20.91"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://gitlab.freedesktop.org/wayland/wayland/-/issues/224"
+        },
+        {
+          "type": "WEB",
+          "url": "https://gitlab.freedesktop.org/wayland/wayland/-/issues/224"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:L/I:L/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "wayland",
+          "purl": "pkg:conda/wayland?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/wayland/wayland"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 6,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:wayland:wayland"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:wayland:wayland"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    }
+  ]
+}

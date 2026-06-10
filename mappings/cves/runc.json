@@ -1,0 +1,2629 @@
+{
+  "schema_version": 1,
+  "package": "runc",
+  "purls": [
+    "pkg:github/opencontainers/runc"
+  ],
+  "cpes": [
+    "cpe:2.3:a:linuxfoundation:runc"
+  ],
+  "generated_at": "2026-06-10T06:09:04+00:00",
+  "conda_versions_total": 10,
+  "latest_version": "1.4.1",
+  "advisories": [
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2021-43784",
+      "published": "2021-12-06T18:15:08.240Z",
+      "modified": "2024-11-21T06:29:46.873Z",
+      "aliases": [],
+      "summary": "runc is a CLI tool for spawning and running containers on Linux according to the OCI specification.",
+      "details": "runc is a CLI tool for spawning and running containers on Linux according to the OCI specification. In runc, netlink is used internally as a serialization system for specifying the relevant container configuration to the `C` portion of the code (responsible for the based namespace setup of containers). In all versions of runc prior to 1.0.3, the encoder did not handle the possibility of an integer overflow in the 16-bit length field for the byte array attribute type, meaning that a large enough malicious byte array attribute could result in the length overflowing and the attribute contents being parsed as netlink messages for container configuration. This vulnerability requires the attacker to have some control over the configuration of the container and would allow the attacker to bypass the namespace restrictions of the container by simply adding their own netlink payload which disables all namespaces. The main users impacted are those who allow untrusted images with untrusted configurations to run on their machines (such as with shared cloud infrastructure). runc version 1.0.3 contains a fix for this bug. As a workaround, one may try disallowing untrusted namespace paths from your container. It should be noted that untrusted namespace paths would allow the attacker to disable namespace protections entirely even in the absence of this bug.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "runc",
+            "purl": "pkg:generic/linuxfoundation/runc"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "1.0.3"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://bugs.chromium.org/p/project-zero/issues/detail?id=2241"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/9c444070ec7bb83995dbc0185da68284da71c554"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/d72d057ba794164c3cce9451a00b72a78b25e1ae"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/f50369af4b571e358f20b139eea52d612eb55eed"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/security/advisories/GHSA-v95c-p5hm-xq8f"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2021/12/msg00005.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2024/02/msg00005.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugs.chromium.org/p/project-zero/issues/detail?id=2241"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/9c444070ec7bb83995dbc0185da68284da71c554"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/d72d057ba794164c3cce9451a00b72a78b25e1ae"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/f50369af4b571e358f20b139eea52d612eb55eed"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/security/advisories/GHSA-v95c-p5hm-xq8f"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2021/12/msg00005.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2024/02/msg00005.html"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:C/C:L/I:L/A:L"
+        },
+        {
+          "type": "CVSS_V2",
+          "score": "AV:N/AC:M/Au:S/C:P/I:P/A:P"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "runc",
+          "purl": "pkg:conda/runc?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/linuxfoundation/runc"
+          ],
+          "affected_versions": [
+            "1.0.0rc92",
+            "1.0.0rc93",
+            "1.0.2"
+          ],
+          "conda_versions_total": 10,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:linuxfoundation:runc"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:linuxfoundation:runc"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2022-24769",
+      "published": "2022-03-24T20:15:09.493Z",
+      "modified": "2024-11-21T06:51:03.593Z",
+      "aliases": [],
+      "summary": "Moby is an open-source project created by Docker to enable and accelerate software containerization.",
+      "details": "Moby is an open-source project created by Docker to enable and accelerate software containerization. A bug was found in Moby (Docker Engine) prior to version 20.10.14 where containers were incorrectly started with non-empty inheritable Linux process capabilities, creating an atypical Linux environment and enabling programs with inheritable file capabilities to elevate those capabilities to the permitted set during `execve(2)`. Normally, when executable programs have specified permitted file capabilities, otherwise unprivileged users and processes can execute those programs and gain the specified file capabilities up to the bounding set. Due to this bug, containers which included executable programs with inheritable file capabilities allowed otherwise unprivileged users and processes to additionally gain these inheritable file capabilities up to the container's bounding set. Containers which use Linux users and groups to perform privilege separation inside the container are most directly impacted. This bug did not affect the container security sandbox as the inheritable set never contained more capabilities than were included in the container's bounding set. This bug has been fixed in Moby (Docker Engine) 20.10.14. Running containers should be stopped, deleted, and recreated for the inheritable capabilities to be reset. This fix changes Moby (Docker Engine) behavior such that containers are started with a more typical Linux environment. As a workaround, the entry point of a container can be modified to use a utility like `capsh(1)` to drop inheritable capabilities prior to the primary process starting.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "runc",
+            "purl": "pkg:generic/linuxfoundation/runc"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "1.1.2"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2022/05/12/1"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/moby/moby/commit/2bbc786e4c59761d722d2d1518cd0a32829bc07f"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/moby/moby/releases/tag/v20.10.14"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/moby/moby/security/advisories/GHSA-2mm7-x5h6-5pvq"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/6PMQKCAPK2AR3DCYITJYMMNBEGQBGLCC/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/A5AFKOQ5CE3CEIULWW4FLQKHFFU6FSYG/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/A5FQJ3MLFSEKQYCFPFZIKYGBXPZUJFVY/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/FPOJUJZXGMIVKRS4QR75F6OIXNQ6LDBL/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/HIMAHZ6AUIKN7AX26KHZYBXVECIOVWBH/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/HQCVS7WBFSTKJFNX5PGDRARMTOFWV2O7/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.gentoo.org/glsa/202401-31"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.debian.org/security/2022/dsa-5162"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2022/05/12/1"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/moby/moby/commit/2bbc786e4c59761d722d2d1518cd0a32829bc07f"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/moby/moby/releases/tag/v20.10.14"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/moby/moby/security/advisories/GHSA-2mm7-x5h6-5pvq"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/6PMQKCAPK2AR3DCYITJYMMNBEGQBGLCC/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/A5AFKOQ5CE3CEIULWW4FLQKHFFU6FSYG/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/A5FQJ3MLFSEKQYCFPFZIKYGBXPZUJFVY/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/FPOJUJZXGMIVKRS4QR75F6OIXNQ6LDBL/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/HIMAHZ6AUIKN7AX26KHZYBXVECIOVWBH/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/HQCVS7WBFSTKJFNX5PGDRARMTOFWV2O7/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.gentoo.org/glsa/202401-31"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.debian.org/security/2022/dsa-5162"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L"
+        },
+        {
+          "type": "CVSS_V2",
+          "score": "AV:L/AC:L/Au:N/C:P/I:P/A:P"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "runc",
+          "purl": "pkg:conda/runc?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/linuxfoundation/runc"
+          ],
+          "affected_versions": [
+            "1.0.0rc92",
+            "1.0.0rc93",
+            "1.0.2",
+            "1.0.3",
+            "1.1.0"
+          ],
+          "conda_versions_total": 10,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:linuxfoundation:runc"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:linuxfoundation:runc"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2022-29162",
+      "published": "2022-05-17T21:15:08.320Z",
+      "modified": "2024-11-21T06:58:36.893Z",
+      "aliases": [],
+      "summary": "runc is a CLI tool for spawning and running containers on Linux according to the OCI specification.",
+      "details": "runc is a CLI tool for spawning and running containers on Linux according to the OCI specification. A bug was found in runc prior to version 1.1.2 where `runc exec --cap` created processes with non-empty inheritable Linux process capabilities, creating an atypical Linux environment and enabling programs with inheritable file capabilities to elevate those capabilities to the permitted set during execve(2). This bug did not affect the container security sandbox as the inheritable set never contained more capabilities than were included in the container's bounding set. This bug has been fixed in runc 1.1.2. This fix changes `runc exec --cap` behavior such that the additional capabilities granted to the process being executed (as specified via `--cap` arguments) do not include inheritable capabilities. In addition, `runc spec` is changed to not set any inheritable capabilities in the created example OCI spec (`config.json`) file.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "runc",
+            "purl": "pkg:generic/linuxfoundation/runc"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "1.1.2"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/d04de3a9b72d7a2455c1885fc75eb36d02cd17b5"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/releases/tag/v1.1.2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/security/advisories/GHSA-f3fp-gc8g-vw66"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2023/03/msg00023.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/AVPZBV7ISA7QKRPTC7ZXWKMIQI2HZEBB/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/D77CKD3AXPMU4PMQIQI5Q74SI4JATNND/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/GPQU4YC4AAY54JDXGDQHJEYKSXXG5T2Y/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/d04de3a9b72d7a2455c1885fc75eb36d02cd17b5"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/releases/tag/v1.1.2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/security/advisories/GHSA-f3fp-gc8g-vw66"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2023/03/msg00023.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/AVPZBV7ISA7QKRPTC7ZXWKMIQI2HZEBB/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/D77CKD3AXPMU4PMQIQI5Q74SI4JATNND/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/GPQU4YC4AAY54JDXGDQHJEYKSXXG5T2Y/"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L"
+        },
+        {
+          "type": "CVSS_V2",
+          "score": "AV:L/AC:L/Au:N/C:P/I:P/A:P"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "runc",
+          "purl": "pkg:conda/runc?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/linuxfoundation/runc"
+          ],
+          "affected_versions": [
+            "1.0.0rc92",
+            "1.0.0rc93",
+            "1.0.2",
+            "1.0.3",
+            "1.1.0"
+          ],
+          "conda_versions_total": 10,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:linuxfoundation:runc"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:linuxfoundation:runc"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2023-27561",
+      "published": "2023-03-03T19:15:11.330Z",
+      "modified": "2024-12-06T14:15:19.037Z",
+      "aliases": [],
+      "summary": "runc through 1.1.4 has Incorrect Access Control leading to Escalation of Privileges, related to libcontainer/rootfs_linux.go.",
+      "details": "runc through 1.1.4 has Incorrect Access Control leading to Escalation of Privileges, related to libcontainer/rootfs_linux.go. To exploit this, an attacker must be able to spawn two containers with custom volume-mount configurations, and be able to run custom images. NOTE: this issue exists because of a CVE-2019-19921 regression.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "runc",
+            "purl": "pkg:generic/linuxfoundation/runc"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "1.1.5"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://gist.github.com/LiveOverflow/c937820b688922eb127fb760ce06dab9"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/issues/2197#issuecomment-1437617334"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/issues/3751"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2023/03/msg00023.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/ANUGDBJ7NBUMSUFZUSKU3ZMQYZ2Z3STN/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/DHGVGGMKGZSJ7YO67TGGPFEHBYMS63VF/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/FNB2UEDIIJCRQW4WJLZOPQJZXCVSXMLD/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/FYVE3GB4OG3BNT5DLQHYO4M5SXX33AQ5/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/I6BF24VCZRFTYBTT3T7HDZUOTKOTNPLZ/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://gist.github.com/LiveOverflow/c937820b688922eb127fb760ce06dab9"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/issues/2197#issuecomment-1437617334"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/issues/3751"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2023/03/msg00023.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/ANUGDBJ7NBUMSUFZUSKU3ZMQYZ2Z3STN/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/DHGVGGMKGZSJ7YO67TGGPFEHBYMS63VF/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/FNB2UEDIIJCRQW4WJLZOPQJZXCVSXMLD/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/FYVE3GB4OG3BNT5DLQHYO4M5SXX33AQ5/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/I6BF24VCZRFTYBTT3T7HDZUOTKOTNPLZ/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.netapp.com/advisory/ntap-20241206-0004/"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "runc",
+          "purl": "pkg:conda/runc?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/linuxfoundation/runc"
+          ],
+          "affected_versions": [
+            "1.0.0rc92",
+            "1.0.0rc93",
+            "1.0.2",
+            "1.0.3",
+            "1.1.0"
+          ],
+          "conda_versions_total": 10,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:linuxfoundation:runc"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:linuxfoundation:runc"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2023-25809",
+      "published": "2023-03-29T19:15:22.170Z",
+      "modified": "2024-11-21T07:50:14.570Z",
+      "aliases": [],
+      "summary": "runc is a CLI tool for spawning and running containers according to the OCI specification.",
+      "details": "runc is a CLI tool for spawning and running containers according to the OCI specification. In affected versions it was found that rootless runc makes `/sys/fs/cgroup` writable in following conditons: 1. when runc is executed inside the user namespace, and the `config.json` does not specify the cgroup namespace to be unshared (e.g.., `(docker|podman|nerdctl) run --cgroupns=host`, with Rootless Docker/Podman/nerdctl) or 2. when runc is executed outside the user namespace, and `/sys` is mounted with `rbind, ro` (e.g., `runc spec --rootless`; this condition is very rare). A container may gain the write access to user-owned cgroup hierarchy `/sys/fs/cgroup/user.slice/...` on the host . Other users's cgroup hierarchies are not affected. Users are advised to upgrade to version 1.1.5. Users unable to upgrade may unshare the cgroup namespace (`(docker|podman|nerdctl) run --cgroupns=private)`. This is the default behavior of Docker/Podman/nerdctl on cgroup v2 hosts. or add `/sys/fs/cgroup` to `maskedPaths`.\n",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "runc",
+            "purl": "pkg:generic/linuxfoundation/runc"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "1.1.5"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/0d62b950e60f6980b54fe3bafd9a9c608dc1df17"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/security/advisories/GHSA-m8cg-xc2p-r3fc"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/0d62b950e60f6980b54fe3bafd9a9c608dc1df17"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/security/advisories/GHSA-m8cg-xc2p-r3fc"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:H/PR:H/UI:N/S:C/C:L/I:L/A:L"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "runc",
+          "purl": "pkg:conda/runc?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/linuxfoundation/runc"
+          ],
+          "affected_versions": [
+            "1.0.0rc92",
+            "1.0.0rc93",
+            "1.0.2",
+            "1.0.3",
+            "1.1.0"
+          ],
+          "conda_versions_total": 10,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:linuxfoundation:runc"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:linuxfoundation:runc"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2023-28642",
+      "published": "2023-03-29T19:15:22.397Z",
+      "modified": "2024-12-06T14:15:19.250Z",
+      "aliases": [],
+      "summary": "runc is a CLI tool for spawning and running containers according to the OCI specification.",
+      "details": "runc is a CLI tool for spawning and running containers according to the OCI specification. It was found that AppArmor can be bypassed when `/proc` inside the container is symlinked with a specific mount configuration. This issue has been fixed in runc version 1.1.5, by prohibiting symlinked `/proc`. See PR #3785 for details. users are advised to upgrade. Users unable to upgrade should avoid using an untrusted container image.\n\n",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "runc",
+            "purl": "pkg:generic/linuxfoundation/runc"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "1.1.5"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/pull/3785"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/security/advisories/GHSA-g2j6-57v7-gm8c"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/pull/3785"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/security/advisories/GHSA-g2j6-57v7-gm8c"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.netapp.com/advisory/ntap-20241206-0005/"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:L"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "runc",
+          "purl": "pkg:conda/runc?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/linuxfoundation/runc"
+          ],
+          "affected_versions": [
+            "1.0.0rc92",
+            "1.0.0rc93",
+            "1.0.2",
+            "1.0.3",
+            "1.1.0"
+          ],
+          "conda_versions_total": 10,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:linuxfoundation:runc"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:linuxfoundation:runc"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2024-21626",
+      "published": "2024-01-31T22:15:53.780Z",
+      "modified": "2024-11-21T08:54:45.180Z",
+      "aliases": [],
+      "summary": "runc is a CLI tool for spawning and running containers on Linux according to the OCI specification.",
+      "details": "runc is a CLI tool for spawning and running containers on Linux according to the OCI specification. In runc 1.1.11 and earlier, due to an internal file descriptor leak, an attacker could cause a newly-spawned container process (from runc exec) to have a working directory in the host filesystem namespace, allowing for a container escape by giving access to the host filesystem (\"attack 2\"). The same attack could be used by a malicious image to allow a container process to gain access to the host filesystem through runc run (\"attack 1\"). Variants of attacks 1 and 2 could be also be used to overwrite semi-arbitrary host binaries, allowing for complete container escapes (\"attack 3a\" and \"attack 3b\"). runc 1.1.12 includes patches for this issue.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "runc",
+            "purl": "pkg:generic/linuxfoundation/runc"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "1.1.12"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "http://packetstormsecurity.com/files/176993/runc-1.1.11-File-Descriptor-Leak-Privilege-Escalation.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2024/02/01/1"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2024/02/02/3"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/02120488a4c0fc487d1ed2867e901eeed7ce8ecf"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/releases/tag/v1.1.12"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/security/advisories/GHSA-xr7r-f8xq-vfvv"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2024/02/msg00005.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/2NLXNE23Q5ESQUAI22Z7A63JX2WMPJ2J/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/SYMO3BANINS6RGFQFKPRG4FIOJ7GWYTL/"
+        },
+        {
+          "type": "WEB",
+          "url": "http://packetstormsecurity.com/files/176993/runc-1.1.11-File-Descriptor-Leak-Privilege-Escalation.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2024/02/01/1"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2024/02/02/3"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/02120488a4c0fc487d1ed2867e901eeed7ce8ecf"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/releases/tag/v1.1.12"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/security/advisories/GHSA-xr7r-f8xq-vfvv"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2024/02/msg00005.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/2NLXNE23Q5ESQUAI22Z7A63JX2WMPJ2J/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/SYMO3BANINS6RGFQFKPRG4FIOJ7GWYTL/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.vicarius.io/vsociety/posts/leaky-vessels-part-1-cve-2024-21626"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:C/C:H/I:H/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "runc",
+          "purl": "pkg:conda/runc?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/linuxfoundation/runc"
+          ],
+          "affected_versions": [
+            "1.0.0rc92",
+            "1.0.0rc93",
+            "1.0.2",
+            "1.0.3",
+            "1.1.0"
+          ],
+          "conda_versions_total": 10,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:linuxfoundation:runc"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:linuxfoundation:runc"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2024-45310",
+      "published": "2024-09-03T19:15:15.243Z",
+      "modified": "2025-11-25T14:07:27.740Z",
+      "aliases": [],
+      "summary": "runc is a CLI tool for spawning and running containers according to the OCI specification.",
+      "details": "runc is a CLI tool for spawning and running containers according to the OCI specification. runc 1.1.13 and earlier, as well as 1.2.0-rc2 and earlier, can be tricked into creating empty files or directories in arbitrary locations in the host filesystem by sharing a volume between two containers and exploiting a race with `os.MkdirAll`. While this could be used to create empty files, existing files would not be truncated. An attacker must have the ability to start containers using some kind of custom volume configuration. Containers using user namespaces are still affected, but the scope of places an attacker can create inodes can be significantly reduced. Sufficiently strict LSM policies (SELinux/Apparmor) can also in principle block this attack -- we suspect the industry standard SELinux policy may restrict this attack's scope but the exact scope of protection hasn't been analysed. This is exploitable using runc directly as well as through Docker and Kubernetes. The issue is fixed in runc v1.1.14 and v1.2.0-rc3.\n\nSome workarounds are available. Using user namespaces restricts this attack fairly significantly such that the attacker can only create inodes in directories that the remapped root user/group has write access to. Unless the root user is remapped to an actual\nuser on the host (such as with rootless containers that don't use `/etc/sub[ug]id`), this in practice means that an attacker would only be able to create inodes in world-writable directories. A strict enough SELinux or AppArmor policy could in principle also restrict the scope if a specific label is applied to the runc runtime, though neither the extent to which the standard existing policies block this attack nor what exact policies are needed to sufficiently restrict this attack have been thoroughly tested.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "runc",
+            "purl": "pkg:generic/linuxfoundation/runc"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "1.1.14"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/63c2908164f3a1daea455bf5bcd8d363d70328c7"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/8781993968fd964ac723ff5f360b6f259e809a3e"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/f0b652ea61ff6750a8fcc69865d45a7abf37accf"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/pull/4359"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/security/advisories/GHSA-jfvp-7x6p-h2pv"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2024/09/03/1"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.netapp.com/advisory/ntap-20250221-0008/"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:C/C:N/I:L/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "runc",
+          "purl": "pkg:conda/runc?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/linuxfoundation/runc"
+          ],
+          "affected_versions": [
+            "1.0.0rc92",
+            "1.0.0rc93",
+            "1.0.2",
+            "1.0.3",
+            "1.1.0"
+          ],
+          "conda_versions_total": 10,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:linuxfoundation:runc"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:linuxfoundation:runc"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2025-31133",
+      "published": "2025-11-06T19:15:41.343Z",
+      "modified": "2025-12-03T18:30:15.430Z",
+      "aliases": [],
+      "summary": "runc is a CLI tool for spawning and running containers according to the OCI specification.",
+      "details": "runc is a CLI tool for spawning and running containers according to the OCI specification. In versions 1.2.7 and below, 1.3.0-rc.1 through 1.3.1, 1.4.0-rc.1 and 1.4.0-rc.2 files, runc would not perform sufficient verification that the source of the bind-mount (i.e., the container's /dev/null) was actually a real /dev/null inode when using the container's /dev/null to mask. This exposes two methods of attack:  an arbitrary mount gadget, leading to host information disclosure, host denial of service, container escape, or a bypassing of maskedPaths. This issue is fixed in versions 1.2.8, 1.3.3 and 1.4.0-rc.3.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "runc",
+            "purl": "pkg:generic/linuxfoundation/runc"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "1.2.8"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "1.3.0"
+                },
+                {
+                  "fixed": "1.3.3"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/1a30a8f3d921acbbb6a4bb7e99da2c05f8d48522"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/5d7b2424072449872d1cd0c937f2ca25f418eb66"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/8476df83b534a2522b878c0507b3491def48db9f"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/db19bbed5348847da433faa9d69e9f90192bfa64"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/security/advisories/GHSA-9493-h29p-rfm2"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:L/AC:L/AT:P/PR:L/UI:A/VC:H/VI:H/VA:H/SC:H/SI:H/SA:H/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X"
+        },
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:C/C:H/I:H/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "runc",
+          "purl": "pkg:conda/runc?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/linuxfoundation/runc"
+          ],
+          "affected_versions": [
+            "1.0.0rc92",
+            "1.0.0rc93",
+            "1.0.2",
+            "1.0.3",
+            "1.1.0",
+            "1.2.7"
+          ],
+          "conda_versions_total": 10,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:linuxfoundation:runc"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:linuxfoundation:runc"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2025-52565",
+      "published": "2025-11-06T20:15:49.240Z",
+      "modified": "2025-12-03T18:33:33.357Z",
+      "aliases": [],
+      "summary": "runc is a CLI tool for spawning and running containers according to the OCI specification.",
+      "details": "runc is a CLI tool for spawning and running containers according to the OCI specification. Versions 1.0.0-rc3 through 1.2.7, 1.3.0-rc.1 through 1.3.2, and 1.4.0-rc.1 through 1.4.0-rc.2, due to insufficient checks when bind-mounting `/dev/pts/$n` to `/dev/console` inside the container, an attacker can trick runc into bind-mounting paths which would normally be made read-only or be masked onto a path that the attacker can write to. This attack is very similar in concept and application to CVE-2025-31133, except that it attacks a similar vulnerability in a different target (namely, the bind-mount of `/dev/pts/$n` to `/dev/console` as configured for all containers that allocate a console). This happens after `pivot_root(2)`, so this cannot be used to write to host files directly -- however, as with CVE-2025-31133, this can load to denial of service of the host or a container breakout by providing the attacker with a writable copy of `/proc/sysrq-trigger` or `/proc/sys/kernel/core_pattern` (respectively). This issue is fixed in versions 1.2.8, 1.3.3 and 1.4.0-rc.3.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "runc",
+            "purl": "pkg:generic/linuxfoundation/runc"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "1.0.1"
+                },
+                {
+                  "fixed": "1.2.8"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "1.3.0"
+                },
+                {
+                  "fixed": "1.3.3"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/01de9d65dc72f67b256ef03f9bfb795a2bf143b4"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/398955bccb7f20565c224a3064d331c19e422398"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/531ef794e4ecd628006a865ad334a048ee2b4b2e"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/9be1dbf4ac67d9840a043ebd2df5c68f36705d1d"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/aee7d3fe355dd02939d44155e308ea0052e0d53a"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/db19bbed5348847da433faa9d69e9f90192bfa64"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/de87203e625cd7a27141fb5f2ad00a320c69c5e8"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/ff94f9991bd32076c871ef0ad8bc1b763458e480"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/security/advisories/GHSA-qw9x-cqr3-wc7r"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:P/VC:N/VI:H/VA:N/SC:H/SI:H/SA:H/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X"
+        },
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:H/PR:L/UI:R/S:C/C:H/I:H/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "runc",
+          "purl": "pkg:conda/runc?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/linuxfoundation/runc"
+          ],
+          "affected_versions": [
+            "1.0.2",
+            "1.0.3",
+            "1.1.0",
+            "1.2.7"
+          ],
+          "conda_versions_total": 10,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:linuxfoundation:runc"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:linuxfoundation:runc"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2025-52881",
+      "published": "2025-11-06T21:15:42.817Z",
+      "modified": "2025-12-03T18:37:17.917Z",
+      "aliases": [],
+      "summary": "runc is a CLI tool for spawning and running containers according to the OCI specification.",
+      "details": "runc is a CLI tool for spawning and running containers according to the OCI specification. In versions 1.2.7, 1.3.2 and 1.4.0-rc.2, an attacker can trick runc into misdirecting writes to /proc to other procfs files through the use of a racing container with shared mounts (we have also verified this attack is possible to exploit using a standard Dockerfile with docker buildx build as that also permits triggering parallel execution of containers with custom shared mounts configured). This redirect could be through symbolic links in a tmpfs or theoretically other methods such as regular bind-mounts. While similar, the mitigation applied for the related CVE, CVE-2019-19921, was fairly limited and effectively only caused runc to verify that when LSM labels are written they are actually procfs files. This issue is fixed in versions 1.2.8, 1.3.3, and 1.4.0-rc.3.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "runc",
+            "purl": "pkg:generic/linuxfoundation/runc"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "1.2.8"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "1.3.0"
+                },
+                {
+                  "fixed": "1.3.3"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "http://github.com/opencontainers/runc/commit/a41366e74080fa9f26a2cd3544e2801449697322"
+        },
+        {
+          "type": "WEB",
+          "url": "http://github.com/opencontainers/runc/commit/fdcc9d3cad2f85954a241ccb910a61aaa1ef47f3"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/blob/v1.4.0-rc.2/RELEASES.md"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/3f925525b44d247e390e529e772a0dc0c0bc3557"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/435cc81be6b79cdec73b4002c0dae549b2f6ae6d"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/44a0fcf685db051c80b8c269812bb177f5802c58"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/4b37cd93f86e72feac866442988b549b5b7bf3e6"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/6fc191449109ea14bb7d61238f24a33fe08c651f"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/77889b56db939c323d29d1130f28f9aea2edb544"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/77d217c7c3775d8ca5af89e477e81568ef4572db"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/b3dd1bc562ed9996d1a0f249e056c16624046d28"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/d40b3439a9614a86e87b81a94c6811ec6fa2d7d2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/d61fd29d854b416feaaf128bf650325cd2182165"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/db19bbed5348847da433faa9d69e9f90192bfa64"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/ed6b1693b8b3ae7eb0250a7e76fc888cdacf98c1"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/ff6fe1324663538167eca8b3d3eec61e1bd4fa51"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/ff94f9991bd32076c871ef0ad8bc1b763458e480"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/security/advisories/GHSA-9493-h29p-rfm2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/security/advisories/GHSA-cgrx-mc8f-2prm"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/security/advisories/GHSA-qw9x-cqr3-wc7r"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:L/AC:L/AT:P/PR:L/UI:A/VC:H/VI:H/VA:H/SC:H/SI:H/SA:H/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X"
+        },
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:H/PR:L/UI:R/S:C/C:H/I:H/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "runc",
+          "purl": "pkg:conda/runc?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/linuxfoundation/runc"
+          ],
+          "affected_versions": [
+            "1.0.0rc92",
+            "1.0.0rc93",
+            "1.0.2",
+            "1.0.3",
+            "1.1.0",
+            "1.2.7"
+          ],
+          "conda_versions_total": 10,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:linuxfoundation:runc"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:linuxfoundation:runc"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2016-3697",
+      "published": "2016-06-01T20:59:06.137Z",
+      "modified": "2026-05-06T22:30:45.220Z",
+      "aliases": [],
+      "summary": "libcontainer/user/user.go in runC before 0.1.0, as used in Docker before 1.11.2, improperly treats a numeric UID as a potential username, which allows local users to gain privileges via a numeric user",
+      "details": "libcontainer/user/user.go in runC before 0.1.0, as used in Docker before 1.11.2, improperly treats a numeric UID as a potential username, which allows local users to gain privileges via a numeric username in the password file in a container.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "runc",
+            "purl": "pkg:generic/linuxfoundation/runc"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "last_affected": "0.0.9"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-updates/2016-05/msg00111.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://rhn.redhat.com/errata/RHSA-2016-1034.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://rhn.redhat.com/errata/RHSA-2016-2634.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/docker/docker/issues/21436"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/69af385de62ea68e2e608335cffbb0f4aa3db091"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/pull/708"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/releases/tag/v0.1.0"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.gentoo.org/glsa/201612-28"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-updates/2016-05/msg00111.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://rhn.redhat.com/errata/RHSA-2016-1034.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://rhn.redhat.com/errata/RHSA-2016-2634.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/docker/docker/issues/21436"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/69af385de62ea68e2e608335cffbb0f4aa3db091"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/pull/708"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/releases/tag/v0.1.0"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.gentoo.org/glsa/201612-28"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+        },
+        {
+          "type": "CVSS_V2",
+          "score": "AV:L/AC:L/Au:N/C:P/I:N/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "runc",
+          "purl": "pkg:conda/runc?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/linuxfoundation/runc"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 10,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:linuxfoundation:runc"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:linuxfoundation:runc"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2019-5736",
+      "published": "2019-02-11T19:29:00.297Z",
+      "modified": "2024-11-21T04:45:24.603Z",
+      "aliases": [],
+      "summary": "runc through 1.0-rc6, as used in Docker before 18.09.2 and other products, allows attackers to overwrite the host runc binary (and consequently obtain host root access) by leveraging the ability to ex",
+      "details": "runc through 1.0-rc6, as used in Docker before 18.09.2 and other products, allows attackers to overwrite the host runc binary (and consequently obtain host root access) by leveraging the ability to execute a command as root within one of these types of containers: (1) a new container with an attacker-controlled image, or (2) an existing container, to which the attacker previously had write access, that can be attached with docker exec. This occurs because of file-descriptor mishandling, related to /proc/self/exe.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "runc",
+            "purl": "pkg:generic/linuxfoundation/runc"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "last_affected": "0.1.1"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2019-03/msg00044.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2019-04/msg00074.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2019-04/msg00091.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2019-05/msg00060.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2019-05/msg00073.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2019-06/msg00011.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2019-06/msg00015.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2019-08/msg00084.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2019-10/msg00007.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2019-10/msg00029.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://packetstormsecurity.com/files/163339/Docker-Container-Escape.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://packetstormsecurity.com/files/165197/Docker-runc-Command-Execution-Proof-Of-Concept.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2019/03/23/1"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2019/06/28/2"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2019/07/06/3"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2019/07/06/4"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2019/10/24/1"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2019/10/29/3"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2024/01/31/6"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2024/02/01/1"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2024/02/02/3"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.securityfocus.com/bid/106976"
+        },
+        {
+          "type": "WEB",
+          "url": "https://access.redhat.com/errata/RHSA-2019:0303"
+        },
+        {
+          "type": "WEB",
+          "url": "https://access.redhat.com/errata/RHSA-2019:0304"
+        },
+        {
+          "type": "WEB",
+          "url": "https://access.redhat.com/errata/RHSA-2019:0401"
+        },
+        {
+          "type": "WEB",
+          "url": "https://access.redhat.com/errata/RHSA-2019:0408"
+        },
+        {
+          "type": "WEB",
+          "url": "https://access.redhat.com/errata/RHSA-2019:0975"
+        },
+        {
+          "type": "WEB",
+          "url": "https://access.redhat.com/security/cve/cve-2019-5736"
+        },
+        {
+          "type": "WEB",
+          "url": "https://access.redhat.com/security/vulnerabilities/runcescape"
+        },
+        {
+          "type": "WEB",
+          "url": "https://aws.amazon.com/security/security-bulletins/AWS-2019-002/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://azure.microsoft.com/en-us/updates/cve-2019-5736-and-runc-vulnerability/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://azure.microsoft.com/en-us/updates/iot-edge-fix-cve-2019-5736/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://blog.dragonsector.pl/2019/02/cve-2019-5736-escape-from-docker-and.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://brauner.github.io/2019/02/12/privileged-containers.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugzilla.suse.com/show_bug.cgi?id=1121967"
+        },
+        {
+          "type": "WEB",
+          "url": "https://cloud.google.com/kubernetes-engine/docs/security-bulletins#february-11-2019-runc"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/Frichetten/CVE-2019-5736-PoC"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/docker/docker-ce/releases/tag/v18.09.2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/0a8e4117e7f715d5fbeef398405813ce8e88558b"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/6635b4f0c6af3810594d2770f662f34ddc15b40d"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/q3k/cve-2019-5736-poc"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/rancher/runc-cve"
+        },
+        {
+          "type": "WEB",
+          "url": "https://kubernetes.io/blog/2019/02/11/runc-and-cve-2019-5736/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread.html/24e54e3c6b2259e3903b6b8fe26896ac649c481ea99c5739468c92a3%40%3Cdev.dlab.apache.org%3E"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread.html/a258757af84c5074dc7bf932622020fd4f60cef65a84290380386706%40%3Cuser.mesos.apache.org%3E"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread.html/a585f64d14c31ab393b90c5f17e41d9765a1a17eec63856ce750af46%40%3Cdev.dlab.apache.org%3E"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread.html/acacf018c12636e41667e94ac0a1e9244e887eef2debdd474640aa6e%40%3Cdev.dlab.apache.org%3E"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread.html/b162dd624dc088cd634292f0402282a1d1d0ce853baeae8205bc033c%40%3Cdev.mesos.apache.org%3E"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread.html/rc494623986d76593873ce5a40dd69cb3629400d10750d5d7e96b8587%40%3Cdev.dlab.apache.org%3E"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread.html/rf1bbc0ea4a9f014cf94df9a12a6477d24a27f52741dbc87f2fd52ff2%40%3Cissues.geode.apache.org%3E"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/DLC52IOJN6IQJWJ6CUI6AIUP6GVVG2QP/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/EGZKRCKI3Y7FMADO2MENMT4TU24QGHFR/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/SWFJGIPYAAAMVSWWI3QWYXGA3ZBU2H4W/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/V6A4OSFM5GGOWW4ECELV5OHX2XRAUSPH/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.gentoo.org/glsa/202003-21"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.netapp.com/advisory/ntap-20190307-0008/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://softwaresupport.softwaregrp.com/document/-/facetsearch/document/KM03410944"
+        },
+        {
+          "type": "WEB",
+          "url": "https://support.hpe.com/hpsc/doc/public/display?docLocale=en_US&docId=emr_na-hpesbhf03913en_us"
+        },
+        {
+          "type": "WEB",
+          "url": "https://support.mesosphere.com/s/article/Known-Issue-Container-Runtime-Vulnerability-MSPH-2019-0003"
+        },
+        {
+          "type": "WEB",
+          "url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-20190215-runc"
+        },
+        {
+          "type": "WEB",
+          "url": "https://usn.ubuntu.com/4048-1/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.exploit-db.com/exploits/46359/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.exploit-db.com/exploits/46369/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.openwall.com/lists/oss-security/2019/02/11/2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.synology.com/security/advisory/Synology_SA_19_06"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.twistlock.com/2019/02/11/how-to-mitigate-cve-2019-5736-in-runc-and-docker/"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2019-03/msg00044.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2019-04/msg00074.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2019-04/msg00091.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2019-05/msg00060.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2019-05/msg00073.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2019-06/msg00011.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2019-06/msg00015.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2019-08/msg00084.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2019-10/msg00007.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2019-10/msg00029.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://packetstormsecurity.com/files/163339/Docker-Container-Escape.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://packetstormsecurity.com/files/165197/Docker-runc-Command-Execution-Proof-Of-Concept.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2019/03/23/1"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2019/06/28/2"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2019/07/06/3"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2019/07/06/4"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2019/10/24/1"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2019/10/29/3"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2024/01/31/6"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2024/02/01/1"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2024/02/02/3"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.securityfocus.com/bid/106976"
+        },
+        {
+          "type": "WEB",
+          "url": "https://access.redhat.com/errata/RHSA-2019:0303"
+        },
+        {
+          "type": "WEB",
+          "url": "https://access.redhat.com/errata/RHSA-2019:0304"
+        },
+        {
+          "type": "WEB",
+          "url": "https://access.redhat.com/errata/RHSA-2019:0401"
+        },
+        {
+          "type": "WEB",
+          "url": "https://access.redhat.com/errata/RHSA-2019:0408"
+        },
+        {
+          "type": "WEB",
+          "url": "https://access.redhat.com/errata/RHSA-2019:0975"
+        },
+        {
+          "type": "WEB",
+          "url": "https://access.redhat.com/security/cve/cve-2019-5736"
+        },
+        {
+          "type": "WEB",
+          "url": "https://access.redhat.com/security/vulnerabilities/runcescape"
+        },
+        {
+          "type": "WEB",
+          "url": "https://aws.amazon.com/security/security-bulletins/AWS-2019-002/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://azure.microsoft.com/en-us/updates/cve-2019-5736-and-runc-vulnerability/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://azure.microsoft.com/en-us/updates/iot-edge-fix-cve-2019-5736/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://blog.dragonsector.pl/2019/02/cve-2019-5736-escape-from-docker-and.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://brauner.github.io/2019/02/12/privileged-containers.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugzilla.suse.com/show_bug.cgi?id=1121967"
+        },
+        {
+          "type": "WEB",
+          "url": "https://cloud.google.com/kubernetes-engine/docs/security-bulletins#february-11-2019-runc"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/Frichetten/CVE-2019-5736-PoC"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/docker/docker-ce/releases/tag/v18.09.2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/0a8e4117e7f715d5fbeef398405813ce8e88558b"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/6635b4f0c6af3810594d2770f662f34ddc15b40d"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/q3k/cve-2019-5736-poc"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/rancher/runc-cve"
+        },
+        {
+          "type": "WEB",
+          "url": "https://kubernetes.io/blog/2019/02/11/runc-and-cve-2019-5736/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread.html/24e54e3c6b2259e3903b6b8fe26896ac649c481ea99c5739468c92a3%40%3Cdev.dlab.apache.org%3E"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread.html/a258757af84c5074dc7bf932622020fd4f60cef65a84290380386706%40%3Cuser.mesos.apache.org%3E"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread.html/a585f64d14c31ab393b90c5f17e41d9765a1a17eec63856ce750af46%40%3Cdev.dlab.apache.org%3E"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread.html/acacf018c12636e41667e94ac0a1e9244e887eef2debdd474640aa6e%40%3Cdev.dlab.apache.org%3E"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread.html/b162dd624dc088cd634292f0402282a1d1d0ce853baeae8205bc033c%40%3Cdev.mesos.apache.org%3E"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread.html/rc494623986d76593873ce5a40dd69cb3629400d10750d5d7e96b8587%40%3Cdev.dlab.apache.org%3E"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread.html/rf1bbc0ea4a9f014cf94df9a12a6477d24a27f52741dbc87f2fd52ff2%40%3Cissues.geode.apache.org%3E"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/DLC52IOJN6IQJWJ6CUI6AIUP6GVVG2QP/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/EGZKRCKI3Y7FMADO2MENMT4TU24QGHFR/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/SWFJGIPYAAAMVSWWI3QWYXGA3ZBU2H4W/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/V6A4OSFM5GGOWW4ECELV5OHX2XRAUSPH/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.gentoo.org/glsa/202003-21"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.netapp.com/advisory/ntap-20190307-0008/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://softwaresupport.softwaregrp.com/document/-/facetsearch/document/KM03410944"
+        },
+        {
+          "type": "WEB",
+          "url": "https://support.hpe.com/hpsc/doc/public/display?docLocale=en_US&docId=emr_na-hpesbhf03913en_us"
+        },
+        {
+          "type": "WEB",
+          "url": "https://support.mesosphere.com/s/article/Known-Issue-Container-Runtime-Vulnerability-MSPH-2019-0003"
+        },
+        {
+          "type": "WEB",
+          "url": "https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-20190215-runc"
+        },
+        {
+          "type": "WEB",
+          "url": "https://usn.ubuntu.com/4048-1/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.exploit-db.com/exploits/46359/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.exploit-db.com/exploits/46369/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.openwall.com/lists/oss-security/2019/02/11/2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.synology.com/security/advisory/Synology_SA_19_06"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.twistlock.com/2019/02/11/how-to-mitigate-cve-2019-5736-in-runc-and-docker/"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:C/C:H/I:H/A:H"
+        },
+        {
+          "type": "CVSS_V2",
+          "score": "AV:N/AC:M/Au:N/C:C/I:C/A:C"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "runc",
+          "purl": "pkg:conda/runc?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/linuxfoundation/runc"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 10,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:linuxfoundation:runc"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:linuxfoundation:runc"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2019-16884",
+      "published": "2019-09-25T18:15:13.057Z",
+      "modified": "2024-11-21T04:31:16.327Z",
+      "aliases": [],
+      "summary": "runc through 1.0.0-rc8, as used in Docker through 19.03.2-ce and other products, allows AppArmor restriction bypass because libcontainer/rootfs_linux.go incorrectly checks mount targets, and thus a ma",
+      "details": "runc through 1.0.0-rc8, as used in Docker through 19.03.2-ce and other products, allows AppArmor restriction bypass because libcontainer/rootfs_linux.go incorrectly checks mount targets, and thus a malicious Docker image can mount over a /proc directory.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "runc",
+            "purl": "pkg:generic/linuxfoundation/runc"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0.0.1"
+                },
+                {
+                  "last_affected": "0.1.1"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2019-10/msg00073.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2019-11/msg00009.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2020-01/msg00010.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://access.redhat.com/errata/RHSA-2019:3940"
+        },
+        {
+          "type": "WEB",
+          "url": "https://access.redhat.com/errata/RHSA-2019:4074"
+        },
+        {
+          "type": "WEB",
+          "url": "https://access.redhat.com/errata/RHSA-2019:4269"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/issues/2128"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2023/02/msg00016.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2023/03/msg00023.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/62OQ2P7K5YDZ5BRCH2Q6DHUJIHQD3QCD/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/DGK6IV5JGVDXHOXEKJOJWKOVNZLT6MYR/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/SPK4JWP32BUIVDJ3YODZSOEVEW6BHQCF/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.gentoo.org/glsa/202003-21"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.netapp.com/advisory/ntap-20220221-0004/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://usn.ubuntu.com/4297-1/"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2019-10/msg00073.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2019-11/msg00009.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2020-01/msg00010.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://access.redhat.com/errata/RHSA-2019:3940"
+        },
+        {
+          "type": "WEB",
+          "url": "https://access.redhat.com/errata/RHSA-2019:4074"
+        },
+        {
+          "type": "WEB",
+          "url": "https://access.redhat.com/errata/RHSA-2019:4269"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/issues/2128"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2023/02/msg00016.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2023/03/msg00023.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/62OQ2P7K5YDZ5BRCH2Q6DHUJIHQD3QCD/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/DGK6IV5JGVDXHOXEKJOJWKOVNZLT6MYR/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/SPK4JWP32BUIVDJ3YODZSOEVEW6BHQCF/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.gentoo.org/glsa/202003-21"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.netapp.com/advisory/ntap-20220221-0004/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://usn.ubuntu.com/4297-1/"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N"
+        },
+        {
+          "type": "CVSS_V2",
+          "score": "AV:N/AC:L/Au:N/C:N/I:P/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "runc",
+          "purl": "pkg:conda/runc?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/linuxfoundation/runc"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 10,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:linuxfoundation:runc"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:linuxfoundation:runc"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2019-19921",
+      "published": "2020-02-12T15:15:12.210Z",
+      "modified": "2024-11-21T04:35:40.107Z",
+      "aliases": [],
+      "summary": "runc through 1.0.0-rc9 has Incorrect Access Control leading to Escalation of Privileges, related to libcontainer/rootfs_linux.go.",
+      "details": "runc through 1.0.0-rc9 has Incorrect Access Control leading to Escalation of Privileges, related to libcontainer/rootfs_linux.go. To exploit this, an attacker must be able to spawn two containers with custom volume-mount configurations, and be able to run custom images. (This vulnerability does not affect Docker due to an implementation detail that happens to block the attack.)",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "runc",
+            "purl": "pkg:generic/linuxfoundation/runc"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "last_affected": "0.1.1"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2020-02/msg00018.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://access.redhat.com/errata/RHSA-2020:0688"
+        },
+        {
+          "type": "WEB",
+          "url": "https://access.redhat.com/errata/RHSA-2020:0695"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/issues/2197"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/pull/2190"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/releases"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2023/03/msg00023.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/ANUGDBJ7NBUMSUFZUSKU3ZMQYZ2Z3STN/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/DHGVGGMKGZSJ7YO67TGGPFEHBYMS63VF/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/FNB2UEDIIJCRQW4WJLZOPQJZXCVSXMLD/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/FYVE3GB4OG3BNT5DLQHYO4M5SXX33AQ5/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/I6BF24VCZRFTYBTT3T7HDZUOTKOTNPLZ/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security-tracker.debian.org/tracker/CVE-2019-19921"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.gentoo.org/glsa/202003-21"
+        },
+        {
+          "type": "WEB",
+          "url": "https://usn.ubuntu.com/4297-1/"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2020-02/msg00018.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://access.redhat.com/errata/RHSA-2020:0688"
+        },
+        {
+          "type": "WEB",
+          "url": "https://access.redhat.com/errata/RHSA-2020:0695"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/issues/2197"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/pull/2190"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/releases"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2023/03/msg00023.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/ANUGDBJ7NBUMSUFZUSKU3ZMQYZ2Z3STN/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/DHGVGGMKGZSJ7YO67TGGPFEHBYMS63VF/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/FNB2UEDIIJCRQW4WJLZOPQJZXCVSXMLD/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/FYVE3GB4OG3BNT5DLQHYO4M5SXX33AQ5/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/I6BF24VCZRFTYBTT3T7HDZUOTKOTNPLZ/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security-tracker.debian.org/tracker/CVE-2019-19921"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.gentoo.org/glsa/202003-21"
+        },
+        {
+          "type": "WEB",
+          "url": "https://usn.ubuntu.com/4297-1/"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H"
+        },
+        {
+          "type": "CVSS_V2",
+          "score": "AV:L/AC:M/Au:N/C:P/I:P/A:P"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "runc",
+          "purl": "pkg:conda/runc?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/linuxfoundation/runc"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 10,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:linuxfoundation:runc"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:linuxfoundation:runc"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2021-30465",
+      "published": "2021-05-27T13:15:08.077Z",
+      "modified": "2024-11-21T06:03:58.593Z",
+      "aliases": [],
+      "summary": "runc before 1.0.0-rc95 allows a Container Filesystem Breakout via Directory Traversal.",
+      "details": "runc before 1.0.0-rc95 allows a Container Filesystem Breakout via Directory Traversal. To exploit the vulnerability, an attacker must be able to create multiple containers with a fairly specific mount configuration. The problem occurs via a symlink-exchange attack that relies on a race condition.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "runc",
+            "purl": "pkg:generic/linuxfoundation/runc"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "last_affected": "0.1.1"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2021/05/19/2"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2021/05/19/2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugzilla.opensuse.org/show_bug.cgi?id=1185405"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/0ca91f44f1664da834bc61115a849b56d22f595f"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/releases"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/security/advisories/GHSA-c3xm-pvg7-gh7r"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2023/03/msg00023.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/35ZW6NBZSBH5PWIT7JU4HXOXGFVDCOHH/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/4HOARVIT47RULTTFWAU7XBG4WY6TDDHV/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.gentoo.org/glsa/202107-26"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.netapp.com/advisory/ntap-20210708-0003/"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2021/05/19/2"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2021/05/19/2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugzilla.opensuse.org/show_bug.cgi?id=1185405"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/commit/0ca91f44f1664da834bc61115a849b56d22f595f"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/releases"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/opencontainers/runc/security/advisories/GHSA-c3xm-pvg7-gh7r"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2023/03/msg00023.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/35ZW6NBZSBH5PWIT7JU4HXOXGFVDCOHH/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/4HOARVIT47RULTTFWAU7XBG4WY6TDDHV/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.gentoo.org/glsa/202107-26"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.netapp.com/advisory/ntap-20210708-0003/"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:C/C:H/I:H/A:H"
+        },
+        {
+          "type": "CVSS_V2",
+          "score": "AV:N/AC:M/Au:S/C:P/I:P/A:P"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "runc",
+          "purl": "pkg:conda/runc?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/linuxfoundation/runc"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 10,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:linuxfoundation:runc"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:linuxfoundation:runc"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    }
+  ]
+}

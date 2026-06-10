@@ -1,0 +1,234 @@
+{
+  "schema_version": 1,
+  "package": "syft",
+  "purls": [
+    "pkg:github/anchore/syft"
+  ],
+  "cpes": [
+    "cpe:2.3:a:anchore:syft"
+  ],
+  "generated_at": "2026-06-10T06:09:04+00:00",
+  "conda_versions_total": 77,
+  "latest_version": "1.45.1",
+  "advisories": [
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-33481",
+      "published": "2026-03-26T18:16:29.733Z",
+      "modified": "2026-03-31T21:15:56.197Z",
+      "aliases": [],
+      "summary": "Syft is a a CLI tool and Go library for generating a Software Bill of Materials (SBOM) from container images and filesystems.",
+      "details": "Syft is a a CLI tool and Go library for generating a Software Bill of Materials (SBOM) from container images and filesystems. Syft versions before v1.42.3 would not properly cleanup temporary storage if the temporary storage was exhausted during a scan. When scanning archives Syft will unpack those archives into temporary storage then inspect the unpacked contents. Under normal operation Syft will remove the temporary data it writes after completing a scan. This vulnerability would affect users of Syft that were scanning content that could cause Syft to fill the temporary storage that would then cause Syft to raise an error and exit. When the error is triggered Syft would exit without properly removing the temporary files in use. In our testing this was most easily reproduced by scanning very large artifacts or highly compressed artifacts such as a zipbomb. Because Syft would not clean up its temporary files, the result would be filling temporary file storage preventing future runs of Syft or other system utilities that rely on temporary storage being available. The patch has been released in v1.42.3. Syft now cleans up temporary files when an error condition is encountered. There are no workarounds for this vulnerability in Syft. Users that find their temporary storage depleted can manually remove the temporary files.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "syft",
+            "purl": "pkg:generic/anchore/syft"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "1.42.3"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/anchore/stereoscope/pull/537"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/anchore/syft/pull/4629"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/anchore/syft/pull/4668"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/anchore/syft/security/advisories/GHSA-rjcw-vg7j-m9rc"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "syft",
+          "purl": "pkg:conda/syft?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/anchore/syft"
+          ],
+          "affected_versions": [
+            "0.92.0",
+            "0.98.0",
+            "0.99.0",
+            "0.100.0",
+            "0.101.0",
+            "0.101.1",
+            "0.102.0",
+            "0.103.1",
+            "0.104.0",
+            "0.105.0",
+            "0.105.1",
+            "1.0.0",
+            "1.1.0",
+            "1.1.1",
+            "1.2.0",
+            "1.3.0",
+            "1.4.1",
+            "1.5.0",
+            "1.6.0",
+            "1.7.0",
+            "1.8.0",
+            "1.9.0",
+            "1.10.0",
+            "1.11.0",
+            "1.11.1",
+            "1.12.1",
+            "1.12.2",
+            "1.13.0",
+            "1.14.0",
+            "1.14.1",
+            "1.14.2",
+            "1.15.0",
+            "1.16.0",
+            "1.17.0",
+            "1.18.0",
+            "1.18.1",
+            "1.19.0",
+            "1.21.0",
+            "1.23.0",
+            "1.23.1",
+            "1.24.0",
+            "1.25.0",
+            "1.25.1",
+            "1.26.0",
+            "1.26.1",
+            "1.27.0",
+            "1.27.1",
+            "1.28.0",
+            "1.29.0",
+            "1.29.1",
+            "1.30.0",
+            "1.31.0",
+            "1.32.0",
+            "1.33.0",
+            "1.34.0",
+            "1.34.1",
+            "1.34.2",
+            "1.35.0",
+            "1.36.0",
+            "1.37.0",
+            "1.38.0",
+            "1.38.2",
+            "1.39.0",
+            "1.40.0",
+            "1.40.1",
+            "1.41.0",
+            "1.41.1",
+            "1.41.2",
+            "1.42.0",
+            "1.42.1",
+            "1.42.2"
+          ],
+          "conda_versions_total": 77,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:anchore:syft"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:anchore:syft"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2023-24827",
+      "published": "2023-02-07T01:15:09.660Z",
+      "modified": "2024-11-21T07:48:28.527Z",
+      "aliases": [],
+      "summary": "syft is a a CLI tool and Go library for generating a Software Bill of Materials (SBOM) from container images and filesystems.",
+      "details": "syft is a a CLI tool and Go library for generating a Software Bill of Materials (SBOM) from container images and filesystems. A password disclosure flaw was found in Syft versions v0.69.0 and v0.69.1. This flaw leaks the password stored in the SYFT_ATTEST_PASSWORD environment variable. The `SYFT_ATTEST_PASSWORD` environment variable is for the `syft attest` command to generate attested SBOMs for the given container image. This environment variable is used to decrypt the private key (provided with `syft attest --key <path-to-key-file>`)  during the signing process while generating an SBOM attestation. This vulnerability affects users running syft that have the `SYFT_ATTEST_PASSWORD` environment variable set with credentials (regardless of if the attest command is being used or not). Users that do not have the environment variable `SYFT_ATTEST_PASSWORD` set are not affected by this issue. The credentials are leaked in two ways: in the syft logs when `-vv` or `-vvv` are used in the syft command (which is any log level >= `DEBUG`) and in the attestation or SBOM only when the `syft-json` format is used. Note that as of v0.69.0 any generated attestations by the `syft attest` command are uploaded to the OCI registry (if you have write access to that registry) in the same way `cosign attach` is done. This means that any attestations generated for the affected versions of syft when the `SYFT_ATTEST_PASSWORD` environment variable was set would leak credentials in the attestation payload uploaded to the OCI registry. This issue has been patched in commit `9995950c70` and has been released as v0.70.0. There are no workarounds for this vulnerability. Users are advised to upgrade.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "syft",
+            "purl": "pkg:generic/anchore/syft"
+          },
+          "versions": [
+            "0.69.0",
+            "0.69.1"
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/anchore/syft/commit/9995950c70e849f9921919faffbfcf46401f71f3"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/anchore/syft/security/advisories/GHSA-jp7v-3587-2956"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/anchore/syft/commit/9995950c70e849f9921919faffbfcf46401f71f3"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/anchore/syft/security/advisories/GHSA-jp7v-3587-2956"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:N/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "syft",
+          "purl": "pkg:conda/syft?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/anchore/syft"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 77,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:anchore:syft"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:anchore:syft"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    }
+  ]
+}

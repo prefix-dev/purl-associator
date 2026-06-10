@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "package": "actions-runner",
+  "purls": [
+    "pkg:github/actions/runner"
+  ],
+  "cpes": [
+    "cpe:2.3:a:github:runner"
+  ],
+  "generated_at": "2026-06-10T06:09:04+00:00",
+  "conda_versions_total": 24,
+  "latest_version": "2.324.0",
+  "advisories": [
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2022-39321",
+      "published": "2022-10-25T17:15:55.953Z",
+      "modified": "2024-11-21T07:18:01.990Z",
+      "aliases": [],
+      "summary": "GitHub Actions Runner is the application that runs a job from a GitHub Actions workflow.",
+      "details": "GitHub Actions Runner is the application that runs a job from a GitHub Actions workflow. The actions runner invokes the docker cli directly in order to run job containers, service containers, or container actions. A bug in the logic for how the environment is encoded into these docker commands was discovered in versions prior to 2.296.2, 2.293.1, 2.289.4, 2.285.2, and 2.283.4 that allows an input to escape the environment variable and modify that docker command invocation directly. Jobs that use container actions, job containers, or service containers alongside untrusted user inputs in environment variables may be vulnerable. The Actions Runner has been patched, both on `github.com` and hotfixes for GHES and GHAE customers in versions 2.296.2, 2.293.1, 2.289.4, 2.285.2, and 2.283.4. GHES and GHAE customers may want to patch their instance in order to have their runners automatically upgrade to these new runner versions. As a workaround, users may consider removing any container actions, job containers, or service containers from their jobs until they are able to upgrade their runner versions.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "runner",
+            "purl": "pkg:generic/github/runner"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "2.283.4"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.284.0"
+                },
+                {
+                  "fixed": "2.285.2"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.286.0"
+                },
+                {
+                  "fixed": "2.289.4"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.290.0"
+                },
+                {
+                  "fixed": "2.293.1"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.294.0"
+                },
+                {
+                  "fixed": "2.296.2"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/actions/runner/pull/2107"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/actions/runner/pull/2108"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/actions/runner/security/advisories/GHSA-2c6m-6gqh-6qg3"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/actions/runner/pull/2107"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/actions/runner/pull/2108"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/actions/runner/security/advisories/GHSA-2c6m-6gqh-6qg3"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "actions-runner",
+          "purl": "pkg:conda/actions-runner?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/github/runner"
+          ],
+          "affected_versions": [
+            "2.294.0",
+            "2.295.0",
+            "2.296.0",
+            "2.296.1"
+          ],
+          "conda_versions_total": 24,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:github:runner"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:github:runner"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    }
+  ]
+}

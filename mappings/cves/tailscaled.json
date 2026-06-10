@@ -1,0 +1,281 @@
+{
+  "schema_version": 1,
+  "package": "tailscaled",
+  "purls": [
+    "pkg:github/tailscale/tailscale"
+  ],
+  "cpes": [
+    "cpe:2.3:a:tailscale:tailscale"
+  ],
+  "generated_at": "2026-06-10T06:09:04+00:00",
+  "conda_versions_total": 42,
+  "latest_version": "1.100.0",
+  "advisories": [
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2022-41924",
+      "published": "2022-11-23T19:15:12.400Z",
+      "modified": "2024-11-21T07:24:04.797Z",
+      "aliases": [],
+      "summary": "A vulnerability identified in the Tailscale Windows client allows a malicious website to reconfigure the Tailscale daemon `tailscaled`, which can then be used to remotely execute code.",
+      "details": "A vulnerability identified in the Tailscale Windows client allows a malicious website to reconfigure the Tailscale daemon `tailscaled`, which can then be used to remotely execute code. In the Tailscale Windows client, the local API was bound to a local TCP socket, and communicated with the Windows client GUI in cleartext with no Host header verification. This allowed an attacker-controlled website visited by the node to rebind DNS to an attacker-controlled DNS server, and then make local API requests in the client, including changing the coordination server to an attacker-controlled coordination server. An attacker-controlled coordination server can send malicious URL responses to the client, including pushing executables or installing an SMB share. These allow the attacker to remotely execute code on the node. All Windows clients prior to version v.1.32.3 are affected. If you are running Tailscale on Windows, upgrade to v1.32.3 or later to remediate the issue.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "tailscale",
+            "purl": "pkg:generic/tailscale/tailscale"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "1.32.3"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://emily.id.au/tailscale"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tailscale/tailscale/security/advisories/GHSA-vqp6-rc3h-83cp"
+        },
+        {
+          "type": "WEB",
+          "url": "https://tailscale.com/security-bulletins/#ts-2022-004"
+        },
+        {
+          "type": "WEB",
+          "url": "https://emily.id.au/tailscale"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tailscale/tailscale/security/advisories/GHSA-vqp6-rc3h-83cp"
+        },
+        {
+          "type": "WEB",
+          "url": "https://tailscale.com/security-bulletins/#ts-2022-004"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:H/I:H/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "tailscaled",
+          "purl": "pkg:conda/tailscaled?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/tailscale/tailscale"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 42,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:tailscale:tailscale"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:tailscale:tailscale"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2022-41925",
+      "published": "2022-11-23T19:15:12.487Z",
+      "modified": "2024-11-21T07:24:04.933Z",
+      "aliases": [],
+      "summary": "A vulnerability identified in the Tailscale client allows a malicious website to access the peer API, which can then be used to access Tailscale environment variables.",
+      "details": "A vulnerability identified in the Tailscale client allows a malicious website to access the peer API, which can then be used to access Tailscale environment variables. In the Tailscale client, the peer API was vulnerable to DNS rebinding. This allowed an attacker-controlled website visited by the node to rebind DNS for the peer API to an attacker-controlled DNS server, and then making peer API requests in the client, including accessing the node\u2019s Tailscale environment variables. An attacker with access to the peer API on a node could use that access to read the node\u2019s environment variables, including any credentials or secrets stored in environment variables. This may include Tailscale authentication keys, which could then be used to add new nodes to the user\u2019s tailnet. The peer API access could also be used to learn of other nodes in the tailnet or send files via Taildrop. All Tailscale clients prior to version v1.32.3 are affected. Upgrade to v1.32.3 or later to remediate the issue.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "tailscale",
+            "purl": "pkg:generic/tailscale/tailscale"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "1.32.3"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://emily.id.au/tailscale"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tailscale/tailscale/security/advisories/GHSA-qccm-wmcq-pwr6"
+        },
+        {
+          "type": "WEB",
+          "url": "https://tailscale.com/security-bulletins/#ts-2022-005"
+        },
+        {
+          "type": "WEB",
+          "url": "https://emily.id.au/tailscale"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tailscale/tailscale/security/advisories/GHSA-qccm-wmcq-pwr6"
+        },
+        {
+          "type": "WEB",
+          "url": "https://tailscale.com/security-bulletins/#ts-2022-005"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:A/AC:L/PR:N/UI:R/S:C/C:H/I:H/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "tailscaled",
+          "purl": "pkg:conda/tailscaled?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/tailscale/tailscale"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 42,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:tailscale:tailscale"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:tailscale:tailscale"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2023-28436",
+      "published": "2023-03-23T20:15:15.487Z",
+      "modified": "2024-11-21T07:55:03.773Z",
+      "aliases": [],
+      "summary": "Tailscale is software for using Wireguard and multi-factor authentication (MFA).",
+      "details": "Tailscale is software for using Wireguard and multi-factor authentication (MFA). A vulnerability identified in the implementation of Tailscale SSH starting in version 1.34.0 and prior to prior to 1.38.2 in FreeBSD allows commands to be run with a higher privilege group ID than that specified in Tailscale SSH access rules. A difference in the behavior of the FreeBSD `setgroups` system call from POSIX meant that the Tailscale client running on a FreeBSD-based operating system did not appropriately restrict groups on the host when using Tailscale SSH. When accessing a FreeBSD host over Tailscale SSH, the egid of the tailscaled process was used instead of that of the user specified in Tailscale SSH access rules.\n\nTailscale SSH commands may have been run with a higher privilege group ID than that specified in Tailscale SSH access rules if they met all of the following criteria: the destination node was a FreeBSD device with Tailscale SSH enabled; Tailscale SSH access rules permitted access for non-root users; and a non-interactive SSH session was used.\n\nAffected users should upgrade to version 1.38.2 to remediate the issue.\n\n",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "tailscale",
+            "purl": "pkg:generic/tailscale/tailscale"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "1.34"
+                },
+                {
+                  "fixed": "1.38.2"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/tailscale/tailscale/commit/d00c046b723dff6e3775d7d35f891403ac21a47d"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tailscale/tailscale/releases/tag/v1.38.2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tailscale/tailscale/security/advisories/GHSA-vfgq-g5x8-g595"
+        },
+        {
+          "type": "WEB",
+          "url": "https://tailscale.com/security-bulletins/#ts-2023-003"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tailscale/tailscale/commit/d00c046b723dff6e3775d7d35f891403ac21a47d"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tailscale/tailscale/releases/tag/v1.38.2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tailscale/tailscale/security/advisories/GHSA-vfgq-g5x8-g595"
+        },
+        {
+          "type": "WEB",
+          "url": "https://tailscale.com/security-bulletins/#ts-2023-003"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:A/AC:L/PR:H/UI:R/S:C/C:H/I:N/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "tailscaled",
+          "purl": "pkg:conda/tailscaled?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/tailscale/tailscale"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 42,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:tailscale:tailscale"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:tailscale:tailscale"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    }
+  ]
+}

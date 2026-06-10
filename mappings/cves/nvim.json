@@ -1,0 +1,805 @@
+{
+  "schema_version": 1,
+  "package": "nvim",
+  "purls": [
+    "pkg:github/neovim/neovim"
+  ],
+  "cpes": [
+    "cpe:2.3:a:neovim:neovim"
+  ],
+  "generated_at": "2026-06-10T06:09:04+00:00",
+  "conda_versions_total": 19,
+  "latest_version": "0.12.2",
+  "advisories": [
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2024-43374",
+      "published": "2024-08-16T02:15:17.687Z",
+      "modified": "2026-06-09T18:28:22.780Z",
+      "aliases": [],
+      "summary": "The UNIX editor Vim prior to version 9.1.0678 has a use-after-free error in argument list handling.",
+      "details": "The UNIX editor Vim prior to version 9.1.0678 has a use-after-free error in argument list handling. When adding a new file to the argument list, this triggers `Buf*` autocommands. If in such an autocommand the buffer that was just opened is closed (including the window where it is shown), this causes the window structure to be freed which contains a reference to the argument list that we are actually modifying. Once the autocommands are completed, the references to the window and argument list are no longer valid and as such cause an use-after-free. Impact is low since the user must either intentionally add some unusual autocommands that wipe a buffer during creation (either manually or by sourcing a malicious plugin), but it will crash Vim. The issue has been fixed as of Vim patch v9.1.0678.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "neovim",
+            "purl": "pkg:generic/neovim/neovim"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "last_affected": "0.10.4"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/vim/vim/commit/0a6e57b09bc8c76691b367a5babfb79b31b770e8"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/vim/vim/security/advisories/GHSA-2w8m-443v-cgvw"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2024/08/15/6"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.netapp.com/advisory/ntap-20240920-0004/"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:H/PR:N/UI:R/S:U/C:L/I:L/A:L"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "nvim",
+          "purl": "pkg:conda/nvim?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/neovim/neovim"
+          ],
+          "affected_versions": [
+            "0.9.0",
+            "0.9.4",
+            "0.9.5",
+            "0.10.0",
+            "0.10.1",
+            "0.10.2",
+            "0.10.3",
+            "0.10.4"
+          ],
+          "conda_versions_total": 19,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:neovim:neovim"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:neovim:neovim"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2025-22134",
+      "published": "2025-01-13T21:15:14.333Z",
+      "modified": "2026-06-09T18:28:13.703Z",
+      "aliases": [],
+      "summary": "When switching to other buffers using the :all command and visual mode still being active, this may cause a heap-buffer overflow, because Vim does not properly end visual mode and therefore may try to",
+      "details": "When switching to other buffers using the :all command and visual mode still being active, this may cause a heap-buffer overflow, because Vim does not properly end visual mode and therefore may try to access beyond the end of a line in a buffer. In Patch 9.1.1003 Vim will correctly reset the visual mode before opening other windows and buffers and therefore fix this bug. In addition it does verify that it won't try to access a position if the position is greater than the corresponding buffer line. Impact is medium since the user must have switched on visual mode when executing the :all ex command. The Vim project would like to thank github user gandalf4a for reporting this issue. The issue has been fixed as of Vim patch v9.1.1003",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "neovim",
+            "purl": "pkg:generic/neovim/neovim"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "last_affected": "0.10.4"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/vim/vim/commit/c9a1e257f1630a0866447e53a564f7ff96a80ead"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/vim/vim/security/advisories/GHSA-5rgf-26wj-48v8"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2025/01/11/1"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.netapp.com/advisory/ntap-20250314-0004/"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:H/PR:L/UI:R/S:U/C:L/I:L/A:L"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "nvim",
+          "purl": "pkg:conda/nvim?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/neovim/neovim"
+          ],
+          "affected_versions": [
+            "0.9.0",
+            "0.9.4",
+            "0.9.5",
+            "0.10.0",
+            "0.10.1",
+            "0.10.2",
+            "0.10.3",
+            "0.10.4"
+          ],
+          "conda_versions_total": 19,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:neovim:neovim"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:neovim:neovim"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-25749",
+      "published": "2026-02-06T23:15:54.230Z",
+      "modified": "2026-06-09T18:28:09.597Z",
+      "aliases": [],
+      "summary": "Vim is an open source, command line text editor.",
+      "details": "Vim is an open source, command line text editor. Prior to version 9.1.2132, a heap buffer overflow vulnerability exists in Vim's tag file resolution logic when processing the 'helpfile' option. The vulnerability is located in the get_tagfname() function in src/tag.c. When processing help file tags, Vim copies the user-controlled 'helpfile' option value into a fixed-size heap buffer of MAXPATHL + 1 bytes (typically 4097 bytes) using an unsafe STRCPY() operation without any bounds checking. This issue has been patched in version 9.1.2132.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "neovim",
+            "purl": "pkg:generic/neovim/neovim"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "last_affected": "0.11.6"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/vim/vim/commit/0714b15940b245108e6e9d7aa2260dd849a26fa9"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/vim/vim/releases/tag/v9.1.2132"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/vim/vim/security/advisories/GHSA-5w93-4g67-mm43"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:R/S:U/C:N/I:H/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "nvim",
+          "purl": "pkg:conda/nvim?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/neovim/neovim"
+          ],
+          "affected_versions": [
+            "0.9.0",
+            "0.9.4",
+            "0.9.5",
+            "0.10.0",
+            "0.10.1",
+            "0.10.2",
+            "0.10.3",
+            "0.10.4",
+            "0.11.0",
+            "0.11.1",
+            "0.11.2",
+            "0.11.3",
+            "0.11.4",
+            "0.11.5",
+            "0.11.6"
+          ],
+          "conda_versions_total": 19,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:neovim:neovim"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:neovim:neovim"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-45130",
+      "published": "2026-05-08T23:16:40.053Z",
+      "modified": "2026-06-09T18:28:04.333Z",
+      "aliases": [],
+      "summary": "Vim is an open source, command line text editor.",
+      "details": "Vim is an open source, command line text editor. Prior to version 9.2.0450, a heap buffer overflow exists in read_compound() in src/spellfile.c when loading a crafted spell file (.spl) with UTF-8 encoding active. An attacker-controlled length field in the spell file's compound section overflows a 32-bit signed integer multiplication, causing a small buffer to be allocated for a write loop that runs many iterations, overflowing the heap. Because the 'spelllang' option can be set from a modeline, a text file modeline can trigger spell file loading if a malicious .spl file has been planted on the runtimepath. This issue has been patched in version 9.2.0450.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "neovim",
+            "purl": "pkg:generic/neovim/neovim"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "last_affected": "0.12.2"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/vim/vim/commit/92993329178cb1f72d700fff45ca86e1c2d369f8"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/vim/vim/releases/tag/v9.2.0450"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/vim/vim/security/advisories/GHSA-q4jv-r9gj-6cwv"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2026/05/14/3"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "nvim",
+          "purl": "pkg:conda/nvim?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/neovim/neovim"
+          ],
+          "affected_versions": [
+            "0.9.0",
+            "0.9.4",
+            "0.9.5",
+            "0.10.0",
+            "0.10.1",
+            "0.10.2",
+            "0.10.3",
+            "0.10.4",
+            "0.11.0",
+            "0.11.1",
+            "0.11.2",
+            "0.11.3",
+            "0.11.4",
+            "0.11.5",
+            "0.11.6",
+            "0.11.7",
+            "0.12.0",
+            "0.12.1",
+            "0.12.2"
+          ],
+          "conda_versions_total": 19,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:neovim:neovim"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:neovim:neovim"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2019-12735",
+      "published": "2019-06-05T14:29:11.387Z",
+      "modified": "2025-11-11T17:15:34.740Z",
+      "aliases": [],
+      "summary": "getchar.c in Vim before 8.1.1365 and Neovim before 0.3.6 allows remote attackers to execute arbitrary OS commands via the :source!",
+      "details": "getchar.c in Vim before 8.1.1365 and Neovim before 0.3.6 allows remote attackers to execute arbitrary OS commands via the :source! command in a modeline, as demonstrated by execute in Vim, and assert_fails or nvim_input in Neovim.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "neovim",
+            "purl": "pkg:generic/neovim/neovim"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "0.3.6"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2019-06/msg00031.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2019-06/msg00036.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2019-06/msg00037.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2019-07/msg00034.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2019-07/msg00050.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2019-08/msg00075.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.securityfocus.com/bid/108724"
+        },
+        {
+          "type": "WEB",
+          "url": "https://access.redhat.com/errata/RHSA-2019:1619"
+        },
+        {
+          "type": "WEB",
+          "url": "https://access.redhat.com/errata/RHSA-2019:1774"
+        },
+        {
+          "type": "WEB",
+          "url": "https://access.redhat.com/errata/RHSA-2019:1793"
+        },
+        {
+          "type": "WEB",
+          "url": "https://access.redhat.com/errata/RHSA-2019:1947"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugs.debian.org/930020"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugs.debian.org/930024"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/neovim/neovim/pull/10082"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/numirias/security/blob/master/doc/2019-06-04_ace-vim-neovim.md"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/vim/vim/commit/53575521406739cf20bbe4e384d88e7dca11f040"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2019/08/msg00003.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/2BMDSHTF754TITC6AQJPCS5IRIDMMIM7/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/TRIRBC2YRGKPAWVRMZS4SZTGGCVRVZPR/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://seclists.org/bugtraq/2019/Jul/39"
+        },
+        {
+          "type": "WEB",
+          "url": "https://seclists.org/bugtraq/2019/Jun/33"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.gentoo.org/glsa/202003-04"
+        },
+        {
+          "type": "WEB",
+          "url": "https://support.f5.com/csp/article/K93144355"
+        },
+        {
+          "type": "WEB",
+          "url": "https://support.f5.com/csp/article/K93144355?utm_source=f5support&amp;utm_medium=RSS"
+        },
+        {
+          "type": "WEB",
+          "url": "https://usn.ubuntu.com/4016-1/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://usn.ubuntu.com/4016-2/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.debian.org/security/2019/dsa-4467"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.debian.org/security/2019/dsa-4487"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.exploit-db.com/exploits/46973"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2019-06/msg00031.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2019-06/msg00036.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2019-06/msg00037.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2019-07/msg00034.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2019-07/msg00050.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2019-08/msg00075.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.securityfocus.com/bid/108724"
+        },
+        {
+          "type": "WEB",
+          "url": "https://access.redhat.com/errata/RHSA-2019:1619"
+        },
+        {
+          "type": "WEB",
+          "url": "https://access.redhat.com/errata/RHSA-2019:1774"
+        },
+        {
+          "type": "WEB",
+          "url": "https://access.redhat.com/errata/RHSA-2019:1793"
+        },
+        {
+          "type": "WEB",
+          "url": "https://access.redhat.com/errata/RHSA-2019:1947"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugs.debian.org/930020"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugs.debian.org/930024"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/neovim/neovim/pull/10082"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/numirias/security/blob/master/doc/2019-06-04_ace-vim-neovim.md"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/vim/vim/commit/53575521406739cf20bbe4e384d88e7dca11f040"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2019/08/msg00003.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/2BMDSHTF754TITC6AQJPCS5IRIDMMIM7/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/TRIRBC2YRGKPAWVRMZS4SZTGGCVRVZPR/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://seclists.org/bugtraq/2019/Jul/39"
+        },
+        {
+          "type": "WEB",
+          "url": "https://seclists.org/bugtraq/2019/Jun/33"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.gentoo.org/glsa/202003-04"
+        },
+        {
+          "type": "WEB",
+          "url": "https://support.f5.com/csp/article/K93144355"
+        },
+        {
+          "type": "WEB",
+          "url": "https://support.f5.com/csp/article/K93144355?utm_source=f5support&amp%3Butm_medium=RSS"
+        },
+        {
+          "type": "WEB",
+          "url": "https://usn.ubuntu.com/4016-1/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://usn.ubuntu.com/4016-2/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.debian.org/security/2019/dsa-4467"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.debian.org/security/2019/dsa-4487"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.0/AV:L/AC:L/PR:N/UI:R/S:C/C:H/I:H/A:H"
+        },
+        {
+          "type": "CVSS_V2",
+          "score": "AV:N/AC:M/Au:N/C:C/I:C/A:C"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "nvim",
+          "purl": "pkg:conda/nvim?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/neovim/neovim"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 19,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:neovim:neovim"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:neovim:neovim"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2021-4019",
+      "published": "2021-12-01T10:15:07.913Z",
+      "modified": "2026-05-29T20:09:37.023Z",
+      "aliases": [],
+      "summary": "vim is vulnerable to Heap-based Buffer Overflow",
+      "details": "vim is vulnerable to Heap-based Buffer Overflow",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "neovim",
+            "purl": "pkg:generic/neovim/neovim"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "0.7.0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2022/01/15/1"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/vim/vim/commit/bd228fd097b41a798f90944b5d1245eddd484142"
+        },
+        {
+          "type": "WEB",
+          "url": "https://huntr.dev/bounties/d8798584-a6c9-4619-b18f-001b9a6fca92"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2022/03/msg00018.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2022/11/msg00009.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/DRPAI5JVZLI7WHWSBR6NWAPBQAYUQREW/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/FNXY7T5OORA7UJIMGSJBGHFMU6UZWS6P/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.gentoo.org/glsa/202208-32"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2022/01/15/1"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/vim/vim/commit/bd228fd097b41a798f90944b5d1245eddd484142"
+        },
+        {
+          "type": "WEB",
+          "url": "https://huntr.dev/bounties/d8798584-a6c9-4619-b18f-001b9a6fca92"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2022/03/msg00018.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2022/11/msg00009.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2025/03/msg00023.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/DRPAI5JVZLI7WHWSBR6NWAPBQAYUQREW/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/FNXY7T5OORA7UJIMGSJBGHFMU6UZWS6P/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.gentoo.org/glsa/202208-32"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H"
+        },
+        {
+          "type": "CVSS_V2",
+          "score": "AV:N/AC:M/Au:N/C:P/I:P/A:P"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "nvim",
+          "purl": "pkg:conda/nvim?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/neovim/neovim"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 19,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:neovim:neovim"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:neovim:neovim"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    }
+  ]
+}

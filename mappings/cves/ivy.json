@@ -1,0 +1,271 @@
+{
+  "schema_version": 1,
+  "package": "ivy",
+  "purls": [],
+  "cpes": [
+    "cpe:2.3:a:apache:ivy"
+  ],
+  "generated_at": "2026-06-10T06:09:04+00:00",
+  "conda_versions_total": 2,
+  "latest_version": "2.5.3",
+  "advisories": [
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2022-37865",
+      "published": "2022-11-07T11:15:10.043Z",
+      "modified": "2025-05-02T19:15:50.960Z",
+      "aliases": [],
+      "summary": "With Apache Ivy 2.4.0 an optional packaging attribute has been introduced that allows artifacts to be unpacked on the fly if they used pack200 or zip packaging.",
+      "details": "With Apache Ivy 2.4.0 an optional packaging attribute has been introduced that allows artifacts to be unpacked on the fly if they used pack200 or zip packaging. For artifacts using the \"zip\", \"jar\" or \"war\" packaging Ivy prior to 2.5.1 doesn't verify the target path when extracting the archive. An archive containing absolute paths or paths that try to traverse \"upwards\" using \"..\" sequences can then write files to any location on the local fie system that the user executing Ivy has write access to. Ivy users of version 2.4.0 to 2.5.0 should upgrade to Ivy 2.5.1.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "ivy",
+            "purl": "pkg:generic/apache/ivy"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.4.0"
+                },
+                {
+                  "fixed": "2.5.1"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/gqvvv7qsm2dfjg6xzsw1s2h08tbr0sdy"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/YDIFDL5WSBEKBUVKTABUFDDD25SBNJLS/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/gqvvv7qsm2dfjg6xzsw1s2h08tbr0sdy"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/YDIFDL5WSBEKBUVKTABUFDDD25SBNJLS/"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "ivy",
+          "purl": "pkg:conda/ivy?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/apache/ivy"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 2,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:apache:ivy"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:apache:ivy"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2022-37866",
+      "published": "2022-11-07T14:15:12.357Z",
+      "modified": "2025-05-01T21:15:50.343Z",
+      "aliases": [],
+      "summary": "When Apache Ivy downloads artifacts from a repository it stores them in the local file system based on a user-supplied \"pattern\" that may include placeholders for artifacts coordinates like the organi",
+      "details": "When Apache Ivy downloads artifacts from a repository it stores them in the local file system based on a user-supplied \"pattern\" that may include placeholders for artifacts coordinates like the organisation, module or version. If said coordinates contain \"../\" sequences - which are valid characters for Ivy coordinates in general - it is possible the artifacts are stored outside of Ivy's local cache or repository or can overwrite different artifacts inside of the local cache. In order to exploit this vulnerability an attacker needs collaboration by the remote repository as Ivy will issue http requests containing \"..\" sequences and a \"normal\" repository will not interpret them as part of the artifact coordinates. Users of Apache Ivy 2.0.0 to 2.5.1 should upgrade to Ivy 2.5.1.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "ivy",
+            "purl": "pkg:generic/apache/ivy"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.0.0"
+                },
+                {
+                  "fixed": "2.5.1"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/htxbr8oc464hxrgroftnz3my70whk93b"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/YDIFDL5WSBEKBUVKTABUFDDD25SBNJLS/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/htxbr8oc464hxrgroftnz3my70whk93b"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/YDIFDL5WSBEKBUVKTABUFDDD25SBNJLS/"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "ivy",
+          "purl": "pkg:conda/ivy?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/apache/ivy"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 2,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:apache:ivy"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:apache:ivy"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2022-46751",
+      "published": "2023-08-21T07:15:33.740Z",
+      "modified": "2025-02-13T17:15:48.227Z",
+      "aliases": [],
+      "summary": "Improper Restriction of XML External Entity Reference, XML Injection (aka Blind XPath Injection) vulnerability in Apache Software Foundation Apache Ivy.This issue affects any version of Apache Ivy pri",
+      "details": "Improper Restriction of XML External Entity Reference, XML Injection (aka Blind XPath Injection) vulnerability in Apache Software Foundation Apache Ivy.This issue affects any version of Apache Ivy prior to 2.5.2.\n\nWhen Apache Ivy prior to 2.5.2 parses XML files - either its own configuration, Ivy files or Apache Maven POMs - it will allow downloading external document type definitions and expand any entity references contained therein when used.\n\nThis can be used to exfiltrate data, access resources only the machine running Ivy has access to or disturb the execution of Ivy in different ways.\n\nStarting with Ivy 2.5.2 DTD processing is disabled by default except when parsing Maven POMs where the default is to allow DTD processing but only to include a DTD snippet shipping with Ivy that is needed to deal with existing Maven POMs that are not valid XML files but are nevertheless accepted by Maven. Access can be be made more lenient via newly introduced system properties where needed.\n\nUsers of Ivy prior to version 2.5.2 can use Java system properties to restrict processing of external DTDs, see the section about \"JAXP Properties for External Access restrictions\" inside Oracle's \"Java API for XML Processing (JAXP) Security Guide\".",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "ivy",
+            "purl": "pkg:generic/apache/ivy"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "2.5.2"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2023/09/06/9"
+        },
+        {
+          "type": "WEB",
+          "url": "https://docs.oracle.com/en/java/javase/13/security/java-api-xml-processing-jaxp-security-guide.html#GUID-94ABC0EE-9DC8-44F0-84AD-47ADD5340477"
+        },
+        {
+          "type": "WEB",
+          "url": "https://gitbox.apache.org/repos/asf?p=ant-ivy.git;a=commit;h=2be17bc18b0e1d4123007d579e43ba1a4b6fab3d"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/1dj60hg5nr36kjr4p1100dwjrqookps8"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/9gcz4xrsn8c7o9gb377xfzvkb8jltffr"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.openwall.com/lists/oss-security/2023/09/06/9"
+        },
+        {
+          "type": "WEB",
+          "url": "https://docs.oracle.com/en/java/javase/13/security/java-api-xml-processing-jaxp-security-guide.html#GUID-94ABC0EE-9DC8-44F0-84AD-47ADD5340477"
+        },
+        {
+          "type": "WEB",
+          "url": "https://gitbox.apache.org/repos/asf?p=ant-ivy.git;a=commit;h=2be17bc18b0e1d4123007d579e43ba1a4b6fab3d"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/1dj60hg5nr36kjr4p1100dwjrqookps8"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.apache.org/thread/9gcz4xrsn8c7o9gb377xfzvkb8jltffr"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:L"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "ivy",
+          "purl": "pkg:conda/ivy?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/apache/ivy"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 2,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:apache:ivy"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:apache:ivy"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    }
+  ]
+}

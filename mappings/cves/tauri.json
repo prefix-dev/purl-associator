@@ -1,0 +1,693 @@
+{
+  "schema_version": 1,
+  "package": "tauri",
+  "purls": [
+    "pkg:github/tauri-apps/tauri"
+  ],
+  "cpes": [
+    "cpe:2.3:a:tauri:tauri"
+  ],
+  "generated_at": "2026-06-10T06:09:04+00:00",
+  "conda_versions_total": 28,
+  "latest_version": "2.11.2",
+  "advisories": [
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2023-46115",
+      "published": "2023-10-20T00:15:16.920Z",
+      "modified": "2024-11-21T08:27:54.503Z",
+      "aliases": [],
+      "summary": "Tauri is a framework for building binaries for all major desktop platforms.",
+      "details": "Tauri is a framework for building binaries for all major desktop platforms. This advisory is not describing a vulnerability in the Tauri code base itself but a commonly used misconfiguration which could lead to leaking of the private key and updater key password into bundled Tauri applications using the Vite frontend in a specific configuration. The Tauri documentation used an insecure example configuration in the `Vite guide` to showcase how to use Tauri together with Vite.  Copying the following snippet `envPrefix: ['VITE_', 'TAURI_'],` from this guide into the `vite.config.ts` of a Tauri project leads to bundling the `TAURI_PRIVATE_KEY` and `TAURI_KEY_PASSWORD` into the Vite frontend code and therefore leaking this value to the released Tauri application. Using the `envPrefix: ['VITE_'],` or any other framework than Vite means you are not impacted by this advisory. Users are advised to rotate their updater private key if they are affected by this (requires Tauri CLI >=1.5.5). After updating the envPrefix configuration, generate a new private key with `tauri signer generate`, saving the new private key and updating the updater's `pubkey` value on `tauri.conf.json` with the new public key. To update your existing application, the next application build must be signed with the older private key in order to be accepted by the existing application.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "tauri",
+            "purl": "pkg:generic/tauri/tauri"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "2.0.0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/tauri-apps/tauri/security/advisories/GHSA-2rcp-jvr4-r259"
+        },
+        {
+          "type": "WEB",
+          "url": "https://tauri.app/v1/guides/getting-started/setup/vite/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tauri-apps/tauri/security/advisories/GHSA-2rcp-jvr4-r259"
+        },
+        {
+          "type": "WEB",
+          "url": "https://tauri.app/v1/guides/getting-started/setup/vite/"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "tauri",
+          "purl": "pkg:conda/tauri?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/tauri/tauri"
+          ],
+          "affected_versions": [
+            "1.6.2"
+          ],
+          "conda_versions_total": 28,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:tauri:tauri"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:tauri:tauri"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-42184",
+      "published": "2026-05-27T15:16:27.560Z",
+      "modified": "2026-06-02T00:52:44.913Z",
+      "aliases": [],
+      "summary": "Tauri is a framework for building binaries for all major desktop platforms.",
+      "details": "Tauri is a framework for building binaries for all major desktop platforms. From 2.0 to 2.11.0, a flaw in Tauri's is_local_url() function causes it to incorrectly classify remote URLs as trusted local origins on Windows and Android. On these systems, Tauri maps custom URI scheme protocols to http://<scheme>.localhost/ because those platforms' WebView implementations cannot serve custom URI schemes directly. The issue is that Tauri's check to see if the origin is local, only checks the first subdomain of the URL. An attacker can abuse this by hosting a page on a domain whose subdomain matches the custom scheme of the application. This vulnerability is fixed in 2.10.3.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "tauri",
+            "purl": "pkg:generic/tauri/tauri"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.0.0"
+                },
+                {
+                  "fixed": "2.10.3"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/tauri-apps/tauri/security/advisories/GHSA-7gmj-67g7-phm9"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tauri-apps/tauri/security/advisories/GHSA-7gmj-67g7-phm9"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:H/AT:P/PR:N/UI:P/VC:L/VI:H/VA:L/SC:N/SI:N/SA:N/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X"
+        },
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "tauri",
+          "purl": "pkg:conda/tauri?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/tauri/tauri"
+          ],
+          "affected_versions": [
+            "2.1.0",
+            "2.2.4",
+            "2.2.5",
+            "2.2.7",
+            "2.3.0",
+            "2.3.1",
+            "2.4.0",
+            "2.4.1",
+            "2.5.0",
+            "2.6.0",
+            "2.6.1",
+            "2.6.2",
+            "2.7.0",
+            "2.7.1",
+            "2.8.3",
+            "2.8.4",
+            "2.9.1",
+            "2.9.2",
+            "2.9.3",
+            "2.9.4",
+            "2.9.5",
+            "2.9.6",
+            "2.10.0",
+            "2.10.1"
+          ],
+          "conda_versions_total": 28,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:tauri:tauri"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:tauri:tauri"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2022-39215",
+      "published": "2022-09-15T22:15:11.527Z",
+      "modified": "2024-11-21T07:17:48.317Z",
+      "aliases": [],
+      "summary": "Tauri is a framework for building binaries for all major desktop platforms.",
+      "details": "Tauri is a framework for building binaries for all major desktop platforms. Due to missing canonicalization when `readDir` is called recursively, it was possible to display directory listings outside of the defined `fs` scope. This required a crafted symbolic link or junction folder inside an allowed path of the `fs` scope. No arbitrary file content could be leaked. The issue has been resolved in version 1.0.6 and the implementation now properly checks if the requested (sub) directory is a symbolic link outside of the defined `scope`. Users are advised to upgrade. Users unable to upgrade should disable the `readDir` endpoint in the `allowlist` inside the `tauri.conf.json`.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "tauri",
+            "purl": "pkg:generic/tauri/tauri"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "1.0.6"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/tauri-apps/tauri/issues/4882"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tauri-apps/tauri/pull/5123"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tauri-apps/tauri/pull/5123/commits/1f9b9e8d26a2c915390323e161020bcb36d44678"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tauri-apps/tauri/security/advisories/GHSA-28m8-9j7v-x499"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tauri-apps/tauri/issues/4882"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tauri-apps/tauri/pull/5123"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tauri-apps/tauri/pull/5123/commits/1f9b9e8d26a2c915390323e161020bcb36d44678"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tauri-apps/tauri/security/advisories/GHSA-28m8-9j7v-x499"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:L/I:L/A:L"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "tauri",
+          "purl": "pkg:conda/tauri?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/tauri/tauri"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 28,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:tauri:tauri"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:tauri:tauri"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2022-41874",
+      "published": "2022-11-10T21:15:10.413Z",
+      "modified": "2024-11-21T07:23:57.910Z",
+      "aliases": [],
+      "summary": "Tauri is a framework for building binaries for all major desktop platforms.",
+      "details": "Tauri is a framework for building binaries for all major desktop platforms. In versions prior to 1.0.7 and 1.1.2, Tauri is vulnerable to an Incorrectly-Resolved Name. Due to incorrect escaping of special characters in paths selected via the file dialog and drag and drop functionality, it is possible to partially bypass the `fs` scope definition. It is not possible to traverse into arbitrary paths, as the issue is limited to neighboring files and sub folders of already allowed paths. The impact differs on Windows, MacOS and Linux due to different specifications of valid path characters. This bypass depends on the file picker dialog or dragged files, as user selected paths are automatically added to the allow list at runtime. A successful bypass requires the user to select a pre-existing malicious file or directory during the file picker dialog and an adversary controlled logic to access these files. The issue has been patched in versions 1.0.7, 1.1.2 and 1.2.0. As a workaround, disable the dialog and fileDropEnabled component inside the tauri.conf.json.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "tauri",
+            "purl": "pkg:generic/tauri/tauri"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "1.0.0"
+                },
+                {
+                  "fixed": "1.0.7"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "1.1.0"
+                },
+                {
+                  "fixed": "1.1.2"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/tauri-apps/tauri/security/advisories/GHSA-q9wv-22m9-vhqh"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tauri-apps/tauri/security/advisories/GHSA-q9wv-22m9-vhqh"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:A/AC:H/PR:L/UI:R/S:C/C:L/I:N/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "tauri",
+          "purl": "pkg:conda/tauri?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/tauri/tauri"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 28,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:tauri:tauri"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:tauri:tauri"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2022-46171",
+      "published": "2022-12-23T14:15:10.360Z",
+      "modified": "2024-11-21T07:30:15.227Z",
+      "aliases": [],
+      "summary": "Tauri is a framework for building binaries for all major desktop platforms.",
+      "details": "Tauri is a framework for building binaries for all major desktop platforms. The filesystem glob pattern wildcards `*`, `?`, and `[...]` match file path literals and leading dots by default, which unintentionally exposes sub folder content of allowed paths. Scopes without the wildcards are not affected. As `**` allows for sub directories the behavior there is also as expected. The issue has been patched in the latest release and was backported into the currently supported 1.x branches. There are no known workarounds at the time of publication.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "tauri",
+            "purl": "pkg:generic/tauri/tauri"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "1.0.0"
+                },
+                {
+                  "fixed": "1.0.8"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "1.1.0"
+                },
+                {
+                  "fixed": "1.1.3"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "1.2.0"
+                },
+                {
+                  "fixed": "1.2.3"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/tauri-apps/tauri/commit/72389b00d7b495ffd7750eb1e75a3b8537d07cf3"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tauri-apps/tauri/commit/f0602e7c294245ab6ef6fbf2a976ef398340ef58"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tauri-apps/tauri/security/advisories/GHSA-6mv3-wm7j-h4w5"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tauri-apps/tauri/commit/72389b00d7b495ffd7750eb1e75a3b8537d07cf3"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tauri-apps/tauri/commit/f0602e7c294245ab6ef6fbf2a976ef398340ef58"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tauri-apps/tauri/security/advisories/GHSA-6mv3-wm7j-h4w5"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:A/AC:L/PR:L/UI:N/S:C/C:H/I:N/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "tauri",
+          "purl": "pkg:conda/tauri?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/tauri/tauri"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 28,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:tauri:tauri"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:tauri:tauri"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2023-31134",
+      "published": "2023-05-09T14:15:13.427Z",
+      "modified": "2024-11-21T08:01:27.743Z",
+      "aliases": [],
+      "summary": "Tauri is software for building applications for multi-platform deployment.",
+      "details": "Tauri is software for building applications for multi-platform deployment. The Tauri IPC is usually strictly isolated from external websites, but in versions 1.0.0 until 1.0.9, 1.1.0 until 1.1.4, and 1.2.0 until 1.2.5, the isolation can be bypassed by redirecting an existing Tauri window to an external website. This is either possible by an application implementing a feature for users to visit\narbitrary websites or due to a bug allowing the open redirect. This allows the external website access to the IPC layer and therefore to all configured and exposed Tauri API endpoints and application specific implemented Tauri commands. This issue has been patched in versions 1.0.9, 1.1.4, and 1.2.5. As a workaround, prevent arbitrary input in redirect features and/or only allow trusted websites access to the IPC.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "tauri",
+            "purl": "pkg:generic/tauri/tauri"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "1.0.0"
+                },
+                {
+                  "fixed": "1.0.9"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "1.1.0"
+                },
+                {
+                  "fixed": "1.1.4"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "1.2.0"
+                },
+                {
+                  "fixed": "1.2.5"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/tauri-apps/tauri/releases/tag/tauri-v1.0.9"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tauri-apps/tauri/releases/tag/tauri-v1.1.4"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tauri-apps/tauri/releases/tag/tauri-v1.2.5"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tauri-apps/tauri/security/advisories/GHSA-4wm2-cwcf-wwvp"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.github.com/tauri-apps/tauri/commit/58ea0b45268dbd46cbac0ebb0887353d057ca767"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.github.com/tauri-apps/tauri/commit/fa90214b052b1a5d38d54fbf1ca422b4c37cfd1f"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tauri-apps/tauri/releases/tag/tauri-v1.0.9"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tauri-apps/tauri/releases/tag/tauri-v1.1.4"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tauri-apps/tauri/releases/tag/tauri-v1.2.5"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tauri-apps/tauri/security/advisories/GHSA-4wm2-cwcf-wwvp"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.github.com/tauri-apps/tauri/commit/58ea0b45268dbd46cbac0ebb0887353d057ca767"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.github.com/tauri-apps/tauri/commit/fa90214b052b1a5d38d54fbf1ca422b4c37cfd1f"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:A/AC:L/PR:L/UI:R/S:C/C:L/I:L/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "tauri",
+          "purl": "pkg:conda/tauri?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/tauri/tauri"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 28,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:tauri:tauri"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:tauri:tauri"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2023-34460",
+      "published": "2023-06-23T20:15:09.147Z",
+      "modified": "2024-11-21T08:07:18.050Z",
+      "aliases": [],
+      "summary": "Tauri is a framework for building binaries for all major desktop platforms.",
+      "details": "Tauri is a framework for building binaries for all major desktop platforms. The 1.4.0 release includes a regression on the Filesystem scope check for dotfiles on Unix. Previously dotfiles were not implicitly allowed by the glob wildcard scopes (eg. `$HOME/*`), but a regression was introduced when a configuration option for this behavior was implemented. Only Tauri applications using wildcard scopes in the `fs` endpoint are affected. The regression has been patched on version 1.4.1.\n\n",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "tauri",
+            "purl": "pkg:generic/tauri/tauri"
+          },
+          "versions": [
+            "1.4.0"
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/tauri-apps/tauri/commit/066c09a6ea06f42f550d090715e06beb65cd5564"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tauri-apps/tauri/pull/6969#discussion_r1232018347"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tauri-apps/tauri/pull/7227"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tauri-apps/tauri/security/advisories/GHSA-wmff-grcw-jcfm"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tauri-apps/tauri/commit/066c09a6ea06f42f550d090715e06beb65cd5564"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tauri-apps/tauri/pull/6969#discussion_r1232018347"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tauri-apps/tauri/pull/7227"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/tauri-apps/tauri/security/advisories/GHSA-wmff-grcw-jcfm"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:A/AC:L/PR:H/UI:N/S:C/C:L/I:L/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "tauri",
+          "purl": "pkg:conda/tauri?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/tauri/tauri"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 28,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:tauri:tauri"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:tauri:tauri"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    }
+  ]
+}

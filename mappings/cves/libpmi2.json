@@ -1,0 +1,3012 @@
+{
+  "schema_version": 1,
+  "package": "libpmi2",
+  "purls": [
+    "pkg:github/schedmd/slurm"
+  ],
+  "cpes": [
+    "cpe:2.3:a:schedmd:slurm",
+    "cpe:2.3:a:llnl:slurm"
+  ],
+  "generated_at": "2026-06-10T06:09:04+00:00",
+  "conda_versions_total": 7,
+  "latest_version": "26.05.0.1",
+  "advisories": [
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2016-10030",
+      "published": "2017-01-05T11:59:00.133Z",
+      "modified": "2026-05-06T22:30:45.220Z",
+      "aliases": [],
+      "summary": "The _prolog_error function in slurmd/req.c in Slurm before 15.08.13, 16.x before 16.05.7, and 17.x before 17.02.0-pre4 has a vulnerability in how the slurmd daemon informs users of a Prolog failure on",
+      "details": "The _prolog_error function in slurmd/req.c in Slurm before 15.08.13, 16.x before 16.05.7, and 17.x before 17.02.0-pre4 has a vulnerability in how the slurmd daemon informs users of a Prolog failure on a compute node. That vulnerability could allow a user to assume control of an arbitrary file on the system. Any exploitation of this is dependent on the user being able to cause or anticipate the failure (non-zero return code) of a Prolog script that their job would run on. This issue affects all Slurm versions from 0.6.0 (September 2005) to present. Workarounds to prevent exploitation of this are to either disable your Prolog script, or modify it such that it always returns 0 (\"success\") and adjust it to set the node as down using scontrol instead of relying on the slurmd to handle that automatically. If you do not have a Prolog set you are unaffected by this issue.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "slurm",
+            "purl": "pkg:generic/schedmd/slurm"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "last_affected": "15.08.12"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "http://www.securityfocus.com/bid/95299"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/SchedMD/slurm/commit/92362a92fffe60187df61f99ab11c249d44120ee"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/news.php?id=178"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.securityfocus.com/bid/95299"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/SchedMD/slurm/commit/92362a92fffe60187df61f99ab11c249d44120ee"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/news.php?id=178"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.0/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H"
+        },
+        {
+          "type": "CVSS_V2",
+          "score": "AV:N/AC:H/Au:N/C:C/I:C/A:C"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpmi2",
+          "purl": "pkg:conda/libpmi2?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/schedmd/slurm"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 7,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:schedmd:slurm",
+            "cpe:2.3:a:llnl:slurm"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:schedmd:slurm"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2017-15566",
+      "published": "2017-11-01T17:29:00.307Z",
+      "modified": "2026-05-13T00:24:29.033Z",
+      "aliases": [],
+      "summary": "Insecure SPANK environment variable handling exists in SchedMD Slurm before 16.05.11, 17.x before 17.02.9, and 17.11.x before 17.11.0rc2, allowing privilege escalation to root during Prolog or Epilog",
+      "details": "Insecure SPANK environment variable handling exists in SchedMD Slurm before 16.05.11, 17.x before 17.02.9, and 17.11.x before 17.11.0rc2, allowing privilege escalation to root during Prolog or Epilog execution.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "slurm",
+            "purl": "pkg:generic/schedmd/slurm"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "16.05.11"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "17.02.0"
+                },
+                {
+                  "fixed": "17.2.09"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "http://www.securityfocus.com/bid/101675"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.debian.org/security/2017/dsa-4023"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/news.php?id=193#OPT_193"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.securityfocus.com/bid/101675"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.debian.org/security/2017/dsa-4023"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/news.php?id=193#OPT_193"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.0/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+        },
+        {
+          "type": "CVSS_V2",
+          "score": "AV:L/AC:L/Au:N/C:C/I:C/A:C"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpmi2",
+          "purl": "pkg:conda/libpmi2?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/schedmd/slurm"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 7,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:schedmd:slurm",
+            "cpe:2.3:a:llnl:slurm"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:schedmd:slurm"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2018-7033",
+      "published": "2018-03-15T22:29:00.527Z",
+      "modified": "2024-11-21T04:11:32.767Z",
+      "aliases": [],
+      "summary": "SchedMD Slurm before 17.02.10 and 17.11.x before 17.11.5 allows SQL Injection attacks against SlurmDBD.",
+      "details": "SchedMD Slurm before 17.02.10 and 17.11.x before 17.11.5 allows SQL Injection attacks against SlurmDBD.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "slurm",
+            "purl": "pkg:generic/schedmd/slurm"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "17.02.10.0"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "17.11.0.0"
+                },
+                {
+                  "fixed": "17.11.5.0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2018/04/msg00032.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2018/07/msg00029.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.schedmd.com/pipermail/slurm-announce/2018/000006.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.debian.org/security/2018/dsa-4254"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/news.php?id=201"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2018/04/msg00032.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2018/07/msg00029.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.schedmd.com/pipermail/slurm-announce/2018/000006.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.debian.org/security/2018/dsa-4254"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/news.php?id=201"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+        },
+        {
+          "type": "CVSS_V2",
+          "score": "AV:N/AC:L/Au:N/C:P/I:P/A:P"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpmi2",
+          "purl": "pkg:conda/libpmi2?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/schedmd/slurm"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 7,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:schedmd:slurm",
+            "cpe:2.3:a:llnl:slurm"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:schedmd:slurm"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2018-10995",
+      "published": "2018-05-30T20:29:00.220Z",
+      "modified": "2024-11-21T03:42:27.473Z",
+      "aliases": [],
+      "summary": "SchedMD Slurm before 17.02.11 and 17.1x.x before 17.11.7 mishandles user names (aka user_name fields) and group ids (aka gid fields).",
+      "details": "SchedMD Slurm before 17.02.11 and 17.1x.x before 17.11.7 mishandles user names (aka user_name fields) and group ids (aka gid fields).",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "slurm",
+            "purl": "pkg:generic/schedmd/slurm"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "last_affected": "17.02.10.1"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2018/07/msg00029.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2018/08/msg00008.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.schedmd.com/pipermail/slurm-announce/2018/000008.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.debian.org/security/2018/dsa-4254"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/news.php?id=203"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2018/07/msg00029.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2018/08/msg00008.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.schedmd.com/pipermail/slurm-announce/2018/000008.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.debian.org/security/2018/dsa-4254"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/news.php?id=203"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N"
+        },
+        {
+          "type": "CVSS_V2",
+          "score": "AV:N/AC:L/Au:N/C:N/I:P/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpmi2",
+          "purl": "pkg:conda/libpmi2?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/schedmd/slurm"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 7,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:schedmd:slurm",
+            "cpe:2.3:a:llnl:slurm"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:schedmd:slurm"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2019-6438",
+      "published": "2019-01-31T09:29:00.500Z",
+      "modified": "2024-11-21T04:46:26.930Z",
+      "aliases": [],
+      "summary": "SchedMD Slurm before 17.11.13 and 18.x before 18.08.5 mishandles 32-bit systems.",
+      "details": "SchedMD Slurm before 17.11.13 and 18.x before 18.08.5 mishandles 32-bit systems.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "slurm",
+            "purl": "pkg:generic/schedmd/slurm"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "17.11.13"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "18.08.0"
+                },
+                {
+                  "fixed": "18.08.5"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2019-04/msg00090.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2020/03/msg00016.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.schedmd.com/pipermail/slurm-announce/2019/000018.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/news.php?id=213"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2019-04/msg00090.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2020/03/msg00016.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.schedmd.com/pipermail/slurm-announce/2019/000018.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/news.php?id=213"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+        },
+        {
+          "type": "CVSS_V2",
+          "score": "AV:N/AC:L/Au:N/C:P/I:P/A:P"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpmi2",
+          "purl": "pkg:conda/libpmi2?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/schedmd/slurm"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 7,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:schedmd:slurm",
+            "cpe:2.3:a:llnl:slurm"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:schedmd:slurm"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2019-12838",
+      "published": "2019-07-11T13:15:10.930Z",
+      "modified": "2024-11-21T04:23:41.407Z",
+      "aliases": [],
+      "summary": "SchedMD Slurm 17.11.x, 18.08.0 through 18.08.7, and 19.05.0 allows SQL Injection.",
+      "details": "SchedMD Slurm 17.11.x, 18.08.0 through 18.08.7, and 19.05.0 allows SQL Injection.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "slurm",
+            "purl": "pkg:generic/schedmd/slurm"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "17.11.0.0"
+                },
+                {
+                  "last_affected": "17.11.13.2"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "18.08.0"
+                },
+                {
+                  "last_affected": "18.08.7"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2019-09/msg00005.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2019-11/msg00051.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2020-01/msg00038.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2020/03/msg00016.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2022/01/msg00011.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/2O47F72FWMYLEGF35QGNYY5VS33SUQS5/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/AQ6EV3OWKGMTBWCSXZGS4MYADUBLVXSQ/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.schedmd.com/pipermail/slurm-announce/2019/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.schedmd.com/pipermail/slurm-announce/2019/000025.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://seclists.org/bugtraq/2019/Nov/30"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.debian.org/security/2019/dsa-4572"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/news.php"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/news.php?id=218"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2019-09/msg00005.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2019-11/msg00051.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2020-01/msg00038.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2020/03/msg00016.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2022/01/msg00011.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/2O47F72FWMYLEGF35QGNYY5VS33SUQS5/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/AQ6EV3OWKGMTBWCSXZGS4MYADUBLVXSQ/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.schedmd.com/pipermail/slurm-announce/2019/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.schedmd.com/pipermail/slurm-announce/2019/000025.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://seclists.org/bugtraq/2019/Nov/30"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.debian.org/security/2019/dsa-4572"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/news.php"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/news.php?id=218"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+        },
+        {
+          "type": "CVSS_V2",
+          "score": "AV:N/AC:L/Au:N/C:P/I:P/A:P"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpmi2",
+          "purl": "pkg:conda/libpmi2?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/schedmd/slurm"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 7,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:schedmd:slurm",
+            "cpe:2.3:a:llnl:slurm"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:schedmd:slurm"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2019-19727",
+      "published": "2020-01-13T19:15:12.100Z",
+      "modified": "2024-11-21T04:35:15.907Z",
+      "aliases": [],
+      "summary": "SchedMD Slurm before 18.08.9 and 19.x before 19.05.5 has weak slurmdbd.conf permissions.",
+      "details": "SchedMD Slurm before 18.08.9 and 19.x before 19.05.5 has weak slurmdbd.conf permissions.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "slurm",
+            "purl": "pkg:generic/schedmd/slurm"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "18.08.9"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "19.05.0"
+                },
+                {
+                  "fixed": "19.05.5"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2020-01/msg00038.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugzilla.suse.com/show_bug.cgi?id=1155784"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.schedmd.com/pipermail/slurm-announce/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/news.php"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2020-01/msg00038.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugzilla.suse.com/show_bug.cgi?id=1155784"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.schedmd.com/pipermail/slurm-announce/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/news.php"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N"
+        },
+        {
+          "type": "CVSS_V2",
+          "score": "AV:L/AC:L/Au:N/C:P/I:N/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpmi2",
+          "purl": "pkg:conda/libpmi2?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/schedmd/slurm"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 7,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:schedmd:slurm",
+            "cpe:2.3:a:llnl:slurm"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:schedmd:slurm"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2019-19728",
+      "published": "2020-01-13T19:15:12.210Z",
+      "modified": "2024-11-21T04:35:16.050Z",
+      "aliases": [],
+      "summary": "SchedMD Slurm before 18.08.9 and 19.x before 19.05.5 executes srun --uid with incorrect privileges.",
+      "details": "SchedMD Slurm before 18.08.9 and 19.x before 19.05.5 executes srun --uid with incorrect privileges.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "slurm",
+            "purl": "pkg:generic/schedmd/slurm"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "18.08.9"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "19.05.0"
+                },
+                {
+                  "fixed": "19.05.5"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2020-01/msg00038.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugzilla.suse.com/show_bug.cgi?id=1159692"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.schedmd.com/pipermail/slurm-announce/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.debian.org/security/2021/dsa-4841"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/news.php"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2020-01/msg00038.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://bugzilla.suse.com/show_bug.cgi?id=1159692"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.schedmd.com/pipermail/slurm-announce/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.debian.org/security/2021/dsa-4841"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/news.php"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H"
+        },
+        {
+          "type": "CVSS_V2",
+          "score": "AV:N/AC:M/Au:S/C:P/I:P/A:P"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpmi2",
+          "purl": "pkg:conda/libpmi2?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/schedmd/slurm"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 7,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:schedmd:slurm",
+            "cpe:2.3:a:llnl:slurm"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:schedmd:slurm"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2020-12693",
+      "published": "2020-05-21T23:15:11.413Z",
+      "modified": "2024-11-21T05:00:05.190Z",
+      "aliases": [],
+      "summary": "Slurm 19.05.x before 19.05.7 and 20.02.x before 20.02.3, in the rare case where Message Aggregation is enabled, allows Authentication Bypass via an Alternate Path or Channel.",
+      "details": "Slurm 19.05.x before 19.05.7 and 20.02.x before 20.02.3, in the rare case where Message Aggregation is enabled, allows Authentication Bypass via an Alternate Path or Channel. A race condition allows a user to launch a process as an arbitrary user.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "slurm",
+            "purl": "pkg:generic/schedmd/slurm"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "19.05.0"
+                },
+                {
+                  "fixed": "19.05.7"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "20.02.0"
+                },
+                {
+                  "fixed": "20.02.3"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2020-09/msg00035.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2020-09/msg00063.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2022/01/msg00011.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/KNL5E5SK4WP6M3DKU4IKW2NPQD2XTZ4Y/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/T3RGQB3EWDLOLTSPAJPPWZEPQK3O3AUH/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.schedmd.com/pipermail/slurm-announce/2020/000036.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.debian.org/security/2021/dsa-4841"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/news.php?id=236"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2020-09/msg00035.html"
+        },
+        {
+          "type": "WEB",
+          "url": "http://lists.opensuse.org/opensuse-security-announce/2020-09/msg00063.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2022/01/msg00011.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/KNL5E5SK4WP6M3DKU4IKW2NPQD2XTZ4Y/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/T3RGQB3EWDLOLTSPAJPPWZEPQK3O3AUH/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.schedmd.com/pipermail/slurm-announce/2020/000036.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.debian.org/security/2021/dsa-4841"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/news.php?id=236"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H"
+        },
+        {
+          "type": "CVSS_V2",
+          "score": "AV:N/AC:H/Au:N/C:P/I:P/A:P"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpmi2",
+          "purl": "pkg:conda/libpmi2?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/schedmd/slurm"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 7,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:schedmd:slurm",
+            "cpe:2.3:a:llnl:slurm"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:schedmd:slurm"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2020-27745",
+      "published": "2020-11-27T17:15:11.983Z",
+      "modified": "2024-11-21T05:21:44.733Z",
+      "aliases": [],
+      "summary": "Slurm before 19.05.8 and 20.x before 20.02.6 has an RPC Buffer Overflow in the PMIx MPI plugin.",
+      "details": "Slurm before 19.05.8 and 20.x before 20.02.6 has an RPC Buffer Overflow in the PMIx MPI plugin.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "slurm",
+            "purl": "pkg:generic/schedmd/slurm"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "19.05.8"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "20.0.0"
+                },
+                {
+                  "fixed": "20.02.6"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2022/01/msg00011.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.debian.org/security/2021/dsa-4841"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/news.php"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2022/01/msg00011.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.debian.org/security/2021/dsa-4841"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/news.php"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+        },
+        {
+          "type": "CVSS_V2",
+          "score": "AV:N/AC:M/Au:N/C:P/I:P/A:P"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpmi2",
+          "purl": "pkg:conda/libpmi2?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/schedmd/slurm"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 7,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:schedmd:slurm",
+            "cpe:2.3:a:llnl:slurm"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:schedmd:slurm"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2020-27746",
+      "published": "2020-11-27T18:15:11.707Z",
+      "modified": "2024-11-21T05:21:44.897Z",
+      "aliases": [],
+      "summary": "Slurm before 19.05.8 and 20.x before 20.02.6 exposes Sensitive Information to an Unauthorized Actor because xauth for X11 magic cookies is affected by a race condition in a read operation on the /proc",
+      "details": "Slurm before 19.05.8 and 20.x before 20.02.6 exposes Sensitive Information to an Unauthorized Actor because xauth for X11 magic cookies is affected by a race condition in a read operation on the /proc filesystem.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "slurm",
+            "purl": "pkg:generic/schedmd/slurm"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "19.05.8"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "20.0.0"
+                },
+                {
+                  "fixed": "20.02.6"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://www.debian.org/security/2021/dsa-4841"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/news.php"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.debian.org/security/2021/dsa-4841"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/news.php"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:N/A:N"
+        },
+        {
+          "type": "CVSS_V2",
+          "score": "AV:N/AC:M/Au:N/C:P/I:N/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpmi2",
+          "purl": "pkg:conda/libpmi2?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/schedmd/slurm"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 7,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:schedmd:slurm",
+            "cpe:2.3:a:llnl:slurm"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:schedmd:slurm"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2021-31215",
+      "published": "2021-05-13T06:15:07.180Z",
+      "modified": "2024-11-21T06:05:18.960Z",
+      "aliases": [],
+      "summary": "SchedMD Slurm before 20.02.7 and 20.03.x through 20.11.x before 20.11.7 allows remote code execution as SlurmUser because use of a PrologSlurmctld or EpilogSlurmctld script leads to environment mishan",
+      "details": "SchedMD Slurm before 20.02.7 and 20.03.x through 20.11.x before 20.11.7 allows remote code execution as SlurmUser because use of a PrologSlurmctld or EpilogSlurmctld script leads to environment mishandling.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "slurm",
+            "purl": "pkg:generic/schedmd/slurm"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "20.02.7"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "20.11"
+                },
+                {
+                  "fixed": "20.11.7"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2022/01/msg00011.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/3ODMJQNY4FAV7G3DSKVIO5KY7Q7DKBPU/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/PRHTASFAU5FNB2MJOG67YID2ONQS5MCQ/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.schedmd.com/pipermail/slurm-announce/2021/000055.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/news.php?id=248#OPT_248"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2022/01/msg00011.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/3ODMJQNY4FAV7G3DSKVIO5KY7Q7DKBPU/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/PRHTASFAU5FNB2MJOG67YID2ONQS5MCQ/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.schedmd.com/pipermail/slurm-announce/2021/000055.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/news.php?id=248#OPT_248"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+        },
+        {
+          "type": "CVSS_V2",
+          "score": "AV:N/AC:L/Au:S/C:P/I:P/A:P"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpmi2",
+          "purl": "pkg:conda/libpmi2?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/schedmd/slurm"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 7,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:schedmd:slurm",
+            "cpe:2.3:a:llnl:slurm"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:schedmd:slurm"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2021-43337",
+      "published": "2021-11-17T06:15:06.987Z",
+      "modified": "2024-11-21T06:29:06.650Z",
+      "aliases": [],
+      "summary": "SchedMD Slurm 21.08.* before 21.08.4 has Incorrect Access Control.",
+      "details": "SchedMD Slurm 21.08.* before 21.08.4 has Incorrect Access Control. On sites using the new AccountingStoreFlags=job_script and/or job_env options, the access control rules in SlurmDBD may permit users to request job scripts and environment files to which they should not have access.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "slurm",
+            "purl": "pkg:generic/schedmd/slurm"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "21.08.0"
+                },
+                {
+                  "fixed": "21.08.4"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/5VY34WSSPRPA6MISNYBZWHSGX2SYSEEE/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/DUWNGDQTS7AWFI7FIHUWQOYJSD2IQTCG/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.schedmd.com/pipermail/slurm-announce/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.schedmd.com/pipermail/slurm-announce/2021/000068.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/news.php"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/news.php?id=256"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/5VY34WSSPRPA6MISNYBZWHSGX2SYSEEE/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/DUWNGDQTS7AWFI7FIHUWQOYJSD2IQTCG/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.schedmd.com/pipermail/slurm-announce/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.schedmd.com/pipermail/slurm-announce/2021/000068.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/news.php"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/news.php?id=256"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N"
+        },
+        {
+          "type": "CVSS_V2",
+          "score": "AV:N/AC:L/Au:S/C:P/I:N/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpmi2",
+          "purl": "pkg:conda/libpmi2?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/schedmd/slurm"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 7,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:schedmd:slurm",
+            "cpe:2.3:a:llnl:slurm"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:schedmd:slurm"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2022-29500",
+      "published": "2022-05-05T17:15:15.297Z",
+      "modified": "2024-11-21T06:59:12.137Z",
+      "aliases": [],
+      "summary": "SchedMD Slurm 21.08.x through 20.11.x has Incorrect Access Control that leads to Information Disclosure.",
+      "details": "SchedMD Slurm 21.08.x through 20.11.x has Incorrect Access Control that leads to Information Disclosure.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "slurm",
+            "purl": "pkg:generic/schedmd/slurm"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "20.11.9"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "21.08.0"
+                },
+                {
+                  "fixed": "21.08.08"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/HXLOI3ERTKMZR2KWNRN7OR5S55VPWENH/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/Y6B7OWVNVCJUDE6VDWGCBUWMRCRETAO3/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/YBI4NFDGGMBKWG4EMSZL5UHATDCLPCQW/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.schedmd.com/pipermail/slurm-announce/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.debian.org/security/2022/dsa-5166"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/news.php"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/news.php?id=260"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/HXLOI3ERTKMZR2KWNRN7OR5S55VPWENH/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/Y6B7OWVNVCJUDE6VDWGCBUWMRCRETAO3/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/YBI4NFDGGMBKWG4EMSZL5UHATDCLPCQW/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.schedmd.com/pipermail/slurm-announce/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.debian.org/security/2022/dsa-5166"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/news.php"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/news.php?id=260"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+        },
+        {
+          "type": "CVSS_V2",
+          "score": "AV:N/AC:L/Au:S/C:C/I:C/A:C"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpmi2",
+          "purl": "pkg:conda/libpmi2?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/schedmd/slurm"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 7,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:schedmd:slurm",
+            "cpe:2.3:a:llnl:slurm"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:schedmd:slurm"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2022-29501",
+      "published": "2022-05-05T17:15:15.340Z",
+      "modified": "2024-11-21T06:59:12.317Z",
+      "aliases": [],
+      "summary": "SchedMD Slurm 21.08.x through 20.11.x has Incorrect Access Control that leads to Escalation of Privileges and code execution.",
+      "details": "SchedMD Slurm 21.08.x through 20.11.x has Incorrect Access Control that leads to Escalation of Privileges and code execution.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "slurm",
+            "purl": "pkg:generic/schedmd/slurm"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "20.11.9"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "21.08.0"
+                },
+                {
+                  "fixed": "21.08.08"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/HXLOI3ERTKMZR2KWNRN7OR5S55VPWENH/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/Y6B7OWVNVCJUDE6VDWGCBUWMRCRETAO3/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/YBI4NFDGGMBKWG4EMSZL5UHATDCLPCQW/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.schedmd.com/pipermail/slurm-announce/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.debian.org/security/2022/dsa-5166"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/news.php"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/news.php?id=260"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/HXLOI3ERTKMZR2KWNRN7OR5S55VPWENH/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/Y6B7OWVNVCJUDE6VDWGCBUWMRCRETAO3/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/YBI4NFDGGMBKWG4EMSZL5UHATDCLPCQW/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.schedmd.com/pipermail/slurm-announce/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.debian.org/security/2022/dsa-5166"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/news.php"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/news.php?id=260"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+        },
+        {
+          "type": "CVSS_V2",
+          "score": "AV:N/AC:L/Au:S/C:C/I:C/A:C"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpmi2",
+          "purl": "pkg:conda/libpmi2?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/schedmd/slurm"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 7,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:schedmd:slurm",
+            "cpe:2.3:a:llnl:slurm"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:schedmd:slurm"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2022-29502",
+      "published": "2022-05-05T17:15:15.383Z",
+      "modified": "2024-11-21T06:59:12.497Z",
+      "aliases": [],
+      "summary": "SchedMD Slurm 21.08.x through 20.11.x has Incorrect Access Control that leads to Escalation of Privileges.",
+      "details": "SchedMD Slurm 21.08.x through 20.11.x has Incorrect Access Control that leads to Escalation of Privileges.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "slurm",
+            "purl": "pkg:generic/schedmd/slurm"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "21.08.0"
+                },
+                {
+                  "fixed": "21.08.08"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/HXLOI3ERTKMZR2KWNRN7OR5S55VPWENH/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/Y6B7OWVNVCJUDE6VDWGCBUWMRCRETAO3/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/YBI4NFDGGMBKWG4EMSZL5UHATDCLPCQW/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.schedmd.com/pipermail/slurm-announce/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/news.php"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/news.php?id=260"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/HXLOI3ERTKMZR2KWNRN7OR5S55VPWENH/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/Y6B7OWVNVCJUDE6VDWGCBUWMRCRETAO3/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/YBI4NFDGGMBKWG4EMSZL5UHATDCLPCQW/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.schedmd.com/pipermail/slurm-announce/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/news.php"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/news.php?id=260"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+        },
+        {
+          "type": "CVSS_V2",
+          "score": "AV:N/AC:L/Au:N/C:P/I:P/A:P"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpmi2",
+          "purl": "pkg:conda/libpmi2?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/schedmd/slurm"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 7,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:schedmd:slurm",
+            "cpe:2.3:a:llnl:slurm"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:schedmd:slurm"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2023-41914",
+      "published": "2023-11-03T05:15:30.000Z",
+      "modified": "2024-11-21T08:21:54.603Z",
+      "aliases": [],
+      "summary": "SchedMD Slurm 23.02.x before 23.02.6 and 22.05.x before 22.05.10 allows filesystem race conditions for gaining ownership of a file, overwriting a file, or deleting files.",
+      "details": "SchedMD Slurm 23.02.x before 23.02.6 and 22.05.x before 22.05.10 allows filesystem race conditions for gaining ownership of a file, overwriting a file, or deleting files.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "slurm",
+            "purl": "pkg:generic/schedmd/slurm"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "22.05"
+                },
+                {
+                  "fixed": "22.05.10"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "23.02"
+                },
+                {
+                  "fixed": "23.02.6"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/OWKTCYZT3DXEH66QXQJYB7NI7ONDRS4M/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.schedmd.com/pipermail/slurm-announce/2023/000100.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://schedmd.com/security.php"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/OWKTCYZT3DXEH66QXQJYB7NI7ONDRS4M/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.schedmd.com/pipermail/slurm-announce/2023/000100.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://schedmd.com/security.php"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpmi2",
+          "purl": "pkg:conda/libpmi2?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/schedmd/slurm"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 7,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:schedmd:slurm",
+            "cpe:2.3:a:llnl:slurm"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:schedmd:slurm"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2023-49933",
+      "published": "2023-12-14T05:15:08.810Z",
+      "modified": "2025-11-04T19:16:11.590Z",
+      "aliases": [],
+      "summary": "An issue was discovered in SchedMD Slurm 22.05.x, 23.02.x, and 23.11.x.",
+      "details": "An issue was discovered in SchedMD Slurm 22.05.x, 23.02.x, and 23.11.x. There is Improper Enforcement of Message Integrity During Transmission in a Communication Channel. This allows attackers to modify RPC traffic in a way that bypasses message hash checks. The fixed versions are 22.05.11, 23.02.7, and 23.11.1.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "slurm",
+            "purl": "pkg:generic/schedmd/slurm"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "22.05"
+                },
+                {
+                  "fixed": "22.05.12"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "23.02"
+                },
+                {
+                  "fixed": "23.02.7"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/63FEDDYEE2WK7FHWBHKON3OZVQI56WSQ/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/AYQS3LFGC4HE4WCW4L3NAA2I6FRIWMNO/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.schedmd.com/pipermail/slurm-announce/2023/000103.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/security-archive.php"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/63FEDDYEE2WK7FHWBHKON3OZVQI56WSQ/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/AYQS3LFGC4HE4WCW4L3NAA2I6FRIWMNO/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/63FEDDYEE2WK7FHWBHKON3OZVQI56WSQ/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.schedmd.com/pipermail/slurm-announce/2023/000103.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/security-archive.php"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpmi2",
+          "purl": "pkg:conda/libpmi2?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/schedmd/slurm"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 7,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:schedmd:slurm",
+            "cpe:2.3:a:llnl:slurm"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:schedmd:slurm"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2023-49934",
+      "published": "2023-12-14T05:15:10.023Z",
+      "modified": "2025-11-04T19:16:11.737Z",
+      "aliases": [],
+      "summary": "An issue was discovered in SchedMD Slurm 23.11.x.",
+      "details": "An issue was discovered in SchedMD Slurm 23.11.x. There is SQL Injection against the SlurmDBD database. The fixed version is 23.11.1.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "slurm",
+            "purl": "pkg:generic/schedmd/slurm"
+          },
+          "versions": [
+            "23.11"
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/63FEDDYEE2WK7FHWBHKON3OZVQI56WSQ/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/AYQS3LFGC4HE4WCW4L3NAA2I6FRIWMNO/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.schedmd.com/pipermail/slurm-announce/2023/000103.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/security-archive.php"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/63FEDDYEE2WK7FHWBHKON3OZVQI56WSQ/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/AYQS3LFGC4HE4WCW4L3NAA2I6FRIWMNO/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/63FEDDYEE2WK7FHWBHKON3OZVQI56WSQ/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/AYQS3LFGC4HE4WCW4L3NAA2I6FRIWMNO/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.schedmd.com/pipermail/slurm-announce/2023/000103.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/security-archive.php"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpmi2",
+          "purl": "pkg:conda/libpmi2?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/schedmd/slurm"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 7,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:schedmd:slurm",
+            "cpe:2.3:a:llnl:slurm"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:schedmd:slurm"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2023-49935",
+      "published": "2023-12-14T05:15:10.490Z",
+      "modified": "2025-11-04T19:16:11.860Z",
+      "aliases": [],
+      "summary": "An issue was discovered in SchedMD Slurm 23.02.x and 23.11.x.",
+      "details": "An issue was discovered in SchedMD Slurm 23.02.x and 23.11.x. There is Incorrect Access Control because of a slurmd Message Integrity Bypass. An attacker can reuse root-level authentication tokens during interaction with the slurmd process. This bypasses the RPC message hashes that protect against undesired MUNGE credential reuse. The fixed versions are 23.02.7 and 23.11.1.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "slurm",
+            "purl": "pkg:generic/schedmd/slurm"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "23.02"
+                },
+                {
+                  "fixed": "23.02.7"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/63FEDDYEE2WK7FHWBHKON3OZVQI56WSQ/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/AYQS3LFGC4HE4WCW4L3NAA2I6FRIWMNO/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.schedmd.com/pipermail/slurm-announce/2023/000103.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/security-archive.php"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/63FEDDYEE2WK7FHWBHKON3OZVQI56WSQ/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/AYQS3LFGC4HE4WCW4L3NAA2I6FRIWMNO/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/63FEDDYEE2WK7FHWBHKON3OZVQI56WSQ/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/AYQS3LFGC4HE4WCW4L3NAA2I6FRIWMNO/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.schedmd.com/pipermail/slurm-announce/2023/000103.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/security-archive.php"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpmi2",
+          "purl": "pkg:conda/libpmi2?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/schedmd/slurm"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 7,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:schedmd:slurm",
+            "cpe:2.3:a:llnl:slurm"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:schedmd:slurm"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2023-49936",
+      "published": "2023-12-14T05:15:10.980Z",
+      "modified": "2025-11-04T19:16:11.990Z",
+      "aliases": [],
+      "summary": "An issue was discovered in SchedMD Slurm 22.05.x, 23.02.x, and 23.11.x.",
+      "details": "An issue was discovered in SchedMD Slurm 22.05.x, 23.02.x, and 23.11.x. A NULL pointer dereference leads to denial of service. The fixed versions are 22.05.11, 23.02.7, and 23.11.1.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "slurm",
+            "purl": "pkg:generic/schedmd/slurm"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "22.05"
+                },
+                {
+                  "fixed": "22.05.12"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "23.02"
+                },
+                {
+                  "fixed": "23.02.7"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/63FEDDYEE2WK7FHWBHKON3OZVQI56WSQ/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/AYQS3LFGC4HE4WCW4L3NAA2I6FRIWMNO/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.schedmd.com/pipermail/slurm-announce/2023/000103.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/security-archive.php"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/63FEDDYEE2WK7FHWBHKON3OZVQI56WSQ/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/AYQS3LFGC4HE4WCW4L3NAA2I6FRIWMNO/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/63FEDDYEE2WK7FHWBHKON3OZVQI56WSQ/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/AYQS3LFGC4HE4WCW4L3NAA2I6FRIWMNO/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.schedmd.com/pipermail/slurm-announce/2023/000103.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/security-archive.php"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpmi2",
+          "purl": "pkg:conda/libpmi2?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/schedmd/slurm"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 7,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:schedmd:slurm",
+            "cpe:2.3:a:llnl:slurm"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:schedmd:slurm"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2023-49937",
+      "published": "2023-12-14T05:15:11.493Z",
+      "modified": "2025-11-04T19:16:12.110Z",
+      "aliases": [],
+      "summary": "An issue was discovered in SchedMD Slurm 22.05.x, 23.02.x, and 23.11.x.",
+      "details": "An issue was discovered in SchedMD Slurm 22.05.x, 23.02.x, and 23.11.x. Because of a double free, attackers can cause a denial of service or possibly execute arbitrary code. The fixed versions are 22.05.11, 23.02.7, and 23.11.1.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "slurm",
+            "purl": "pkg:generic/schedmd/slurm"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "22.05"
+                },
+                {
+                  "fixed": "22.05.12"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "23.02"
+                },
+                {
+                  "fixed": "23.02.7"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/63FEDDYEE2WK7FHWBHKON3OZVQI56WSQ/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/AYQS3LFGC4HE4WCW4L3NAA2I6FRIWMNO/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.schedmd.com/pipermail/slurm-announce/2023/000103.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/security-archive.php"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/63FEDDYEE2WK7FHWBHKON3OZVQI56WSQ/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/AYQS3LFGC4HE4WCW4L3NAA2I6FRIWMNO/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/63FEDDYEE2WK7FHWBHKON3OZVQI56WSQ/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/AYQS3LFGC4HE4WCW4L3NAA2I6FRIWMNO/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.schedmd.com/pipermail/slurm-announce/2023/000103.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/security-archive.php"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpmi2",
+          "purl": "pkg:conda/libpmi2?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/schedmd/slurm"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 7,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:schedmd:slurm",
+            "cpe:2.3:a:llnl:slurm"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:schedmd:slurm"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2023-49938",
+      "published": "2023-12-14T05:15:11.890Z",
+      "modified": "2025-11-04T19:16:12.413Z",
+      "aliases": [],
+      "summary": "An issue was discovered in SchedMD Slurm 22.05.x and 23.02.x.",
+      "details": "An issue was discovered in SchedMD Slurm 22.05.x and 23.02.x. There is Incorrect Access Control: an attacker can modified their extended group list that is used with the sbcast subsystem, and open files with an unauthorized set of extended groups. The fixed versions are 22.05.11 and 23.02.7.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "slurm",
+            "purl": "pkg:generic/schedmd/slurm"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "22.05.0"
+                },
+                {
+                  "fixed": "22.05.11"
+                }
+              ]
+            },
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "23.02.0"
+                },
+                {
+                  "fixed": "23.02.7"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/63FEDDYEE2WK7FHWBHKON3OZVQI56WSQ/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/AYQS3LFGC4HE4WCW4L3NAA2I6FRIWMNO/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.schedmd.com/pipermail/slurm-announce/2023/000103.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/security-archive.php"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/63FEDDYEE2WK7FHWBHKON3OZVQI56WSQ/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/AYQS3LFGC4HE4WCW4L3NAA2I6FRIWMNO/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/63FEDDYEE2WK7FHWBHKON3OZVQI56WSQ/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce@lists.fedoraproject.org/message/AYQS3LFGC4HE4WCW4L3NAA2I6FRIWMNO/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.schedmd.com/pipermail/slurm-announce/2023/000103.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/security-archive.php"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:L/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpmi2",
+          "purl": "pkg:conda/libpmi2?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/schedmd/slurm"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 7,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:schedmd:slurm",
+            "cpe:2.3:a:llnl:slurm"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:schedmd:slurm"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2024-48936",
+      "published": "2024-10-28T04:15:02.900Z",
+      "modified": "2025-04-17T18:52:54.900Z",
+      "aliases": [],
+      "summary": "SchedMD Slurm before 24.05.4 has Incorrect Authorization.",
+      "details": "SchedMD Slurm before 24.05.4 has Incorrect Authorization. A mistake in authentication handling in stepmgr could permit an attacker to execute processes under other users' jobs. This is limited to jobs explicitly running with --stepmgr, or on systems that have globally enabled stepmgr via SlurmctldParameters=enable_stepmgr in their configuration.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "slurm",
+            "purl": "pkg:generic/schedmd/slurm"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "24.05.4"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://lists.schedmd.com/mailman3/hyperkitty/list/slurm-announce%40lists.schedmd.com/message/44MFMN7R35YZFWTNO43R2754W5B5XUAI/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.schedmd.com/pipermail/slurm-announce/2024/date.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.schedmd.com/security-policy/"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:L/I:L/A:L"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpmi2",
+          "purl": "pkg:conda/libpmi2?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/schedmd/slurm"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 7,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:schedmd:slurm",
+            "cpe:2.3:a:llnl:slurm"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:schedmd:slurm"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2009-0128",
+      "published": "2009-01-15T17:30:00.610Z",
+      "modified": "2026-04-23T00:35:47.467Z",
+      "aliases": [],
+      "summary": "plugins/crypto/openssl/crypto_openssl.c in Simple Linux Utility for Resource Management (aka SLURM or slurm-llnl) does not properly check the return value from the OpenSSL EVP_VerifyFinal function, wh",
+      "details": "plugins/crypto/openssl/crypto_openssl.c in Simple Linux Utility for Resource Management (aka SLURM or slurm-llnl) does not properly check the return value from the OpenSSL EVP_VerifyFinal function, which allows remote attackers to bypass validation of the certificate chain via a malformed SSL/TLS signature, a similar vulnerability to CVE-2008-5077.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "slurm",
+            "purl": "pkg:generic/schedmd/slurm"
+          },
+          "versions": [
+            "_nil_"
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=511511"
+        },
+        {
+          "type": "WEB",
+          "url": "http://openwall.com/lists/oss-security/2009/01/12/4"
+        },
+        {
+          "type": "WEB",
+          "url": "http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=511511"
+        },
+        {
+          "type": "WEB",
+          "url": "http://openwall.com/lists/oss-security/2009/01/12/4"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V2",
+          "score": "AV:N/AC:L/Au:N/C:P/I:N/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpmi2",
+          "purl": "pkg:conda/libpmi2?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/schedmd/slurm"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 7,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:schedmd:slurm",
+            "cpe:2.3:a:llnl:slurm"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:llnl:slurm"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2009-2084",
+      "published": "2009-06-16T23:30:00.267Z",
+      "modified": "2026-04-23T00:35:47.467Z",
+      "aliases": [],
+      "summary": "Simple Linux Utility for Resource Management (SLURM) 1.2 and 1.3 before 1.3.14 does not properly set supplementary groups before invoking (1) sbcast from the slurmd daemon or (2) strigger from the slu",
+      "details": "Simple Linux Utility for Resource Management (SLURM) 1.2 and 1.3 before 1.3.14 does not properly set supplementary groups before invoking (1) sbcast from the slurmd daemon or (2) strigger from the slurmctld daemon, which might allow local SLURM users to modify files and gain privileges.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "slurm",
+            "purl": "pkg:generic/schedmd/slurm"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "last_affected": "1.3.13"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=524980"
+        },
+        {
+          "type": "WEB",
+          "url": "http://secunia.com/advisories/34831"
+        },
+        {
+          "type": "WEB",
+          "url": "http://sourceforge.net/project/shownotes.php?release_id=676055&group_id=157944"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.debian.org/security/2009/dsa-1776"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.securityfocus.com/bid/34638"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.vupen.com/english/advisories/2009/1128"
+        },
+        {
+          "type": "WEB",
+          "url": "https://exchange.xforce.ibmcloud.com/vulnerabilities/50126"
+        },
+        {
+          "type": "WEB",
+          "url": "https://exchange.xforce.ibmcloud.com/vulnerabilities/50127"
+        },
+        {
+          "type": "WEB",
+          "url": "http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=524980"
+        },
+        {
+          "type": "WEB",
+          "url": "http://secunia.com/advisories/34831"
+        },
+        {
+          "type": "WEB",
+          "url": "http://sourceforge.net/project/shownotes.php?release_id=676055&group_id=157944"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.debian.org/security/2009/dsa-1776"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.securityfocus.com/bid/34638"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.vupen.com/english/advisories/2009/1128"
+        },
+        {
+          "type": "WEB",
+          "url": "https://exchange.xforce.ibmcloud.com/vulnerabilities/50126"
+        },
+        {
+          "type": "WEB",
+          "url": "https://exchange.xforce.ibmcloud.com/vulnerabilities/50127"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V2",
+          "score": "AV:L/AC:L/Au:N/C:C/I:C/A:C"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpmi2",
+          "purl": "pkg:conda/libpmi2?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/schedmd/slurm"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 7,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:schedmd:slurm",
+            "cpe:2.3:a:llnl:slurm"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:llnl:slurm"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2010-3380",
+      "published": "2010-09-29T17:00:05.057Z",
+      "modified": "2026-04-29T01:13:23.040Z",
+      "aliases": [],
+      "summary": "The (1) init.d/slurm and (2) init.d/slurmdbd scripts in SLURM before 2.1.14 place the .",
+      "details": "The (1) init.d/slurm and (2) init.d/slurmdbd scripts in SLURM before 2.1.14 place the . (dot) directory in the LD_LIBRARY_PATH, which allows local users to gain privileges via a Trojan horse shared library in the current working directory.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "slurm",
+            "purl": "pkg:generic/schedmd/slurm"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "last_affected": "2.1.13"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "http://secunia.com/advisories/41614"
+        },
+        {
+          "type": "WEB",
+          "url": "http://sourceforge.net/projects/slurm/files//slurm/version_2.1/2.1.14/RELEASE_NOTES_2.1.14/view"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.securityfocus.com/bid/43537"
+        },
+        {
+          "type": "WEB",
+          "url": "http://secunia.com/advisories/41614"
+        },
+        {
+          "type": "WEB",
+          "url": "http://sourceforge.net/projects/slurm/files//slurm/version_2.1/2.1.14/RELEASE_NOTES_2.1.14/view"
+        },
+        {
+          "type": "WEB",
+          "url": "http://www.securityfocus.com/bid/43537"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V2",
+          "score": "AV:L/AC:M/Au:N/C:C/I:C/A:C"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libpmi2",
+          "purl": "pkg:conda/libpmi2?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/schedmd/slurm"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 7,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:schedmd:slurm",
+            "cpe:2.3:a:llnl:slurm"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:llnl:slurm"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    }
+  ]
+}

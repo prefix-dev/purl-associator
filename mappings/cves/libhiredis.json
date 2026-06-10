@@ -1,0 +1,232 @@
+{
+  "schema_version": 1,
+  "package": "libhiredis",
+  "purls": [
+    "pkg:github/redis/hiredis"
+  ],
+  "cpes": [
+    "cpe:2.3:a:redislabs:hiredis",
+    "cpe:2.3:a:redis:hiredis"
+  ],
+  "generated_at": "2026-06-10T06:09:04+00:00",
+  "conda_versions_total": 3,
+  "latest_version": "1.3.0",
+  "advisories": [
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2021-32765",
+      "published": "2021-10-04T21:15:12.527Z",
+      "modified": "2024-11-21T06:07:41.780Z",
+      "aliases": [],
+      "summary": "Hiredis is a minimalistic C client library for the Redis database.",
+      "details": "Hiredis is a minimalistic C client library for the Redis database. In affected versions Hiredis is vulnurable to integer overflow if provided maliciously crafted or corrupted `RESP` `mult-bulk` protocol data. When parsing `multi-bulk` (array-like) replies, hiredis fails to check if `count * sizeof(redisReply*)` can be represented in `SIZE_MAX`. If it can not, and the `calloc()` call doesn't itself make this check, it would result in a short allocation and subsequent buffer overflow. Users of hiredis who are unable to update may set the [maxelements](https://github.com/redis/hiredis#reader-max-array-elements) context option to a value small enough that no overflow is possible.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "hiredis",
+            "purl": "pkg:generic/redislabs/hiredis"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "1.0.1"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/redis/hiredis/commit/76a7b10005c70babee357a7d0f2becf28ec7ed1e"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/redis/hiredis/security/advisories/GHSA-hfm9-39pp-55p2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2021/10/msg00007.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.gentoo.org/glsa/202210-32"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.netapp.com/advisory/ntap-20211104-0003/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://wiki.sei.cmu.edu/confluence/display/c/MEM07-C.+Ensure+that+the+arguments+to+calloc%28%29%2C+when+multiplied%2C+do+not+wrap"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/redis/hiredis/commit/76a7b10005c70babee357a7d0f2becf28ec7ed1e"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/redis/hiredis/security/advisories/GHSA-hfm9-39pp-55p2"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2021/10/msg00007.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.gentoo.org/glsa/202210-32"
+        },
+        {
+          "type": "WEB",
+          "url": "https://security.netapp.com/advisory/ntap-20211104-0003/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://wiki.sei.cmu.edu/confluence/display/c/MEM07-C.+Ensure+that+the+arguments+to+calloc%28%29%2C+when+multiplied%2C+do+not+wrap"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+        },
+        {
+          "type": "CVSS_V2",
+          "score": "AV:N/AC:L/Au:S/C:P/I:P/A:P"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libhiredis",
+          "purl": "pkg:conda/libhiredis?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/redislabs/hiredis"
+          ],
+          "affected_versions": [
+            "1.0.0"
+          ],
+          "conda_versions_total": 3,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:redislabs:hiredis",
+            "cpe:2.3:a:redis:hiredis"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:redis:hiredis"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2020-7105",
+      "published": "2020-01-16T04:15:11.617Z",
+      "modified": "2024-11-21T05:36:38.203Z",
+      "aliases": [],
+      "summary": "async.c and dict.c in libhiredis.a in hiredis through 0.14.0 allow a NULL pointer dereference because malloc return values are unchecked.",
+      "details": "async.c and dict.c in libhiredis.a in hiredis through 0.14.0 allow a NULL pointer dereference because malloc return values are unchecked.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "hiredis",
+            "purl": "pkg:generic/redislabs/hiredis"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "last_affected": "0.14.0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/redis/hiredis/issues/747"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2020/01/msg00028.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/76ZDGWBV3YEEQ2YC65ZJEQLKQFVFBZHX/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/ZKOTCIYFEWJJILUGL4JQ3CJAM3TWYZ2A/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/redis/hiredis/issues/747"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.debian.org/debian-lts-announce/2020/01/msg00028.html"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/76ZDGWBV3YEEQ2YC65ZJEQLKQFVFBZHX/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/ZKOTCIYFEWJJILUGL4JQ3CJAM3TWYZ2A/"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        },
+        {
+          "type": "CVSS_V2",
+          "score": "AV:N/AC:L/Au:N/C:N/I:N/A:P"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "libhiredis",
+          "purl": "pkg:conda/libhiredis?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/redislabs/hiredis"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 3,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:redislabs:hiredis",
+            "cpe:2.3:a:redis:hiredis"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:redislabs:hiredis"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    }
+  ]
+}

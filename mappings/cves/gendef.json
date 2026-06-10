@@ -1,0 +1,190 @@
+{
+  "schema_version": 1,
+  "package": "gendef",
+  "purls": [
+    "pkg:github/mingw-w64/mingw-w64"
+  ],
+  "cpes": [
+    "cpe:2.3:a:mingw-w64:mingw-w64",
+    "cpe:2.3:a:mingw:mingw-w64"
+  ],
+  "generated_at": "2026-06-10T06:09:04+00:00",
+  "conda_versions_total": 1,
+  "latest_version": "v12.0.0.r1.ggdc42231f0",
+  "advisories": [
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2018-1000101",
+      "published": "2018-03-06T17:29:00.260Z",
+      "modified": "2024-11-21T03:39:38.967Z",
+      "aliases": [],
+      "summary": "Mingw-w64 version 5.0.3 and earlier, 5.0.4, 6.0.0 and 7.0.0 contains an Improper Null Termination (CWE-170) vulnerability in mingw-w64-crt (libc)->(v)snprintf that can result in The bug may be used to",
+      "details": "Mingw-w64 version 5.0.3 and earlier, 5.0.4, 6.0.0 and 7.0.0 contains an Improper Null Termination (CWE-170) vulnerability in mingw-w64-crt (libc)->(v)snprintf that can result in The bug may be used to corrupt subsequent string functions. This attack appear to be exploitable via Depending on the usage, worst case: network.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "mingw-w64",
+            "purl": "pkg:generic/mingw-w64/mingw-w64"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "last_affected": "5.0.3"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://raw.githubusercontent.com/distributedweaknessfiling/cvelist/master/2018/1000xxx/CVE-2018-1000101.json"
+        },
+        {
+          "type": "WEB",
+          "url": "https://sourceforge.net/p/mingw-w64/bugs/709/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://sourceforge.net/p/mingw-w64/bugs/709/?limit=25#1d38/fefc/39aa"
+        },
+        {
+          "type": "WEB",
+          "url": "https://sourceforge.net/p/mingw-w64/mingw-w64/ci/v5.x/tree/mingw-w64-crt/stdio/snprintf.c#l15"
+        },
+        {
+          "type": "WEB",
+          "url": "https://sourceforge.net/p/mingw-w64/mingw-w64/ci/v5.x/tree/mingw-w64-crt/stdio/vsnprintf.c#l12"
+        },
+        {
+          "type": "WEB",
+          "url": "https://raw.githubusercontent.com/distributedweaknessfiling/cvelist/master/2018/1000xxx/CVE-2018-1000101.json"
+        },
+        {
+          "type": "WEB",
+          "url": "https://sourceforge.net/p/mingw-w64/bugs/709/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://sourceforge.net/p/mingw-w64/bugs/709/?limit=25#1d38/fefc/39aa"
+        },
+        {
+          "type": "WEB",
+          "url": "https://sourceforge.net/p/mingw-w64/mingw-w64/ci/v5.x/tree/mingw-w64-crt/stdio/snprintf.c#l15"
+        },
+        {
+          "type": "WEB",
+          "url": "https://sourceforge.net/p/mingw-w64/mingw-w64/ci/v5.x/tree/mingw-w64-crt/stdio/vsnprintf.c#l12"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+        },
+        {
+          "type": "CVSS_V2",
+          "score": "AV:N/AC:L/Au:N/C:P/I:P/A:P"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "gendef",
+          "purl": "pkg:conda/gendef?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/mingw-w64/mingw-w64"
+          ],
+          "affected_versions": [
+            "v12.0.0.r1.ggdc42231f0"
+          ],
+          "conda_versions_total": 1,
+          "affects_future": true,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:mingw-w64:mingw-w64",
+            "cpe:2.3:a:mingw:mingw-w64"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:mingw-w64:mingw-w64"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    },
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2018-5392",
+      "published": "2018-08-14T16:29:01.867Z",
+      "modified": "2024-11-21T04:08:44.193Z",
+      "aliases": [],
+      "summary": "mingw-w64 version 5.0.4 by default produces executables that opt in to ASLR, but are not compatible with ASLR.",
+      "details": "mingw-w64 version 5.0.4 by default produces executables that opt in to ASLR, but are not compatible with ASLR. ASLR is an exploit mitigation technique used by modern Windows platforms. For ASLR to function, Windows executables must contain a relocations table. Despite containing the \"Dynamic base\" PE header, which indicates ASLR compatibility, Windows executables produced by mingw-w64 have the relocations table stripped from them by default. This means that executables produced by mingw-w64 are vulnerable to return-oriented programming (ROP) attacks. Windows executables generated by mingw-w64 claim to be ASLR compatible, but are not. Vulnerabilities in such executables are more easily exploitable as a result.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "mingw-w64",
+            "purl": "pkg:generic/mingw-w64/mingw-w64"
+          },
+          "versions": [
+            "5.0.4"
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://www.kb.cert.org/vuls/id/307144"
+        },
+        {
+          "type": "WEB",
+          "url": "https://www.kb.cert.org/vuls/id/307144"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N"
+        },
+        {
+          "type": "CVSS_V2",
+          "score": "AV:N/AC:L/Au:N/C:N/I:P/A:N"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "gendef",
+          "purl": "pkg:conda/gendef?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/mingw-w64/mingw-w64"
+          ],
+          "affected_versions": [],
+          "conda_versions_total": 1,
+          "affects_future": true,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:mingw-w64:mingw-w64",
+            "cpe:2.3:a:mingw:mingw-w64"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:mingw:mingw-w64"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    }
+  ]
+}

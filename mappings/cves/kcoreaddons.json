@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "package": "kcoreaddons",
+  "purls": [],
+  "cpes": [
+    "cpe:2.3:a:kde:kcoreaddons"
+  ],
+  "generated_at": "2026-06-10T06:09:04+00:00",
+  "conda_versions_total": 13,
+  "latest_version": "5.76.0",
+  "advisories": [
+    {
+      "schema_version": "1.6.0",
+      "id": "CVE-2026-41526",
+      "published": "2026-04-28T08:16:01.647Z",
+      "modified": "2026-05-05T17:25:06.683Z",
+      "aliases": [],
+      "summary": "In KDE KCoreAddons before 6.25, KShell::quoteArgs is intended to safely quote arguments so that they can be passed to a shell command.",
+      "details": "In KDE KCoreAddons before 6.25, KShell::quoteArgs is intended to safely quote arguments so that they can be passed to a shell command. This parsing does not adequately handle metacharacters, leading to an escape from the shell. All applications relying on this method in a security-critical path to handle user input are affected and could be exploited. In particular, because sendInput() sends a string to a terminal, a control character such as \\x01 can be used during injection.",
+      "affected": [
+        {
+          "package": {
+            "ecosystem": "GIT",
+            "name": "kcoreaddons",
+            "purl": "pkg:generic/kde/kcoreaddons"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "6.25.0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/KDE/kcoreaddons/blob/50d360736c399502fedf203e95482b0d0e5a3ea2/src/lib/util/kshell.h#L168"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/KDE/kcoreaddons/blob/50d360736c399502fedf203e95482b0d0e5a3ea2/src/lib/util/kshell.h#L43-L49"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/KDE/kcoreaddons/releases/tag/v6.25.0"
+        },
+        {
+          "type": "WEB",
+          "url": "https://invent.kde.org/frameworks/kcoreaddons/"
+        },
+        {
+          "type": "WEB",
+          "url": "https://kde.org/info/security/advisory-20260427-1.txt"
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:H/PR:N/UI:R/S:U/C:H/I:H/A:L"
+        }
+      ],
+      "database_specific": {
+        "conda-forge": {
+          "package": "kcoreaddons",
+          "purl": "pkg:conda/kcoreaddons?channel=conda-forge",
+          "source_purls": [
+            "pkg:generic/kde/kcoreaddons"
+          ],
+          "affected_versions": [
+            "5.64.0",
+            "5.65.0",
+            "5.66.0",
+            "5.67.0",
+            "5.68.0",
+            "5.69.0",
+            "5.70.0",
+            "5.71.0",
+            "5.72.0",
+            "5.73.0",
+            "5.74.0",
+            "5.75.0",
+            "5.76.0"
+          ],
+          "conda_versions_total": 13,
+          "affects_future": false,
+          "derived_by": "purl-associator/scripts.nvd_prototype",
+          "generated_at": "2026-06-10T06:09:04+00:00"
+        },
+        "nvd": {
+          "cpes": [
+            "cpe:2.3:a:kde:kcoreaddons"
+          ],
+          "matched_via": [
+            "cpe:2.3:a:kde:kcoreaddons"
+          ],
+          "source": "nvd-rest-api"
+        }
+      }
+    }
+  ]
+}
