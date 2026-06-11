@@ -346,7 +346,15 @@ export function PurlChip({
  *  matcher actually keys on; the ``cpe:2.3:a:`` prefix is dimmed.
  *  Trailing wildcard/version segments (after ``product``) are stripped from
  *  display since the curated entries in ``manual.json`` only fix the head. */
-export function CpeChip({ cpe, theme }: { cpe: string; theme: Theme }) {
+export function CpeChip({
+  cpe,
+  theme,
+  edited = false,
+}: {
+  cpe: string;
+  theme: Theme;
+  edited?: boolean;
+}) {
   const t = theme.t;
   const m = cpe.match(/^(cpe:2\.3:)([aoh]):([^:]+):([^:]+)/);
   return (
@@ -358,7 +366,13 @@ export function CpeChip({ cpe, theme }: { cpe: string; theme: Theme }) {
         fontSize: 12,
         padding: "3px 7px",
         borderRadius: 6,
-        background: theme.dark ? "#0a0d11" : "#f5f1e7",
+        background: edited
+          ? theme.dark
+            ? "#1a2233"
+            : "#e9efff"
+          : theme.dark
+            ? "#0a0d11"
+            : "#f5f1e7",
         border: `1px solid ${t.border}`,
         color: t.fg1,
         letterSpacing: "-0.01em",

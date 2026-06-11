@@ -76,6 +76,16 @@ export function App() {
     const altsMatch =
       currentAltSet.size === editAltSet.size &&
       [...currentAltSet].every((p) => editAltSet.has(p));
+    // CPEs are a set; an edit that ends up matching the package's current
+    // list is untouched, so the contribution keeps omitting the field.
+    const currentCpeSet = new Set(focusedPkg.cpes ?? []);
+    const cpesMatch =
+      newEdit.cpes === undefined ||
+      (newEdit.cpes.length === currentCpeSet.size &&
+        newEdit.cpes.every((c) => currentCpeSet.has(c)));
+    if (newEdit.cpes !== undefined && cpesMatch) {
+      newEdit = { ...newEdit, cpes: undefined };
+    }
     const isSame =
       !newEdit.unmapped &&
       newEdit.purl === (focusedPkg.purl ?? "") &&
@@ -83,6 +93,7 @@ export function App() {
       (newEdit.namespace || "") === (focusedPkg.namespace || "") &&
       newEdit.pkgName === (focusedPkg.pkg_name ?? focusedPkg.name) &&
       altsMatch &&
+      cpesMatch &&
       !newEdit.note;
     setEdits((prev) => {
       const next = { ...prev };

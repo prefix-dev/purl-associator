@@ -102,6 +102,9 @@ export type Edit = {
   pkgName: string;
   purl: string;
   alternative_purls: string[];
+  /** Full replacement CPE list. undefined = untouched — the contribution
+   *  omits the field so the cpe-pipeline layer keeps owning CPEs. */
+  cpes?: string[];
   unmapped: boolean;
   note: string;
   approved?: boolean;
