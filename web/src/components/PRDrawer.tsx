@@ -92,7 +92,7 @@ export function PRDrawer({
     const lines: string[] = [];
     // Headline summary: counts by transition so a reviewer can size up the
     // PR at a glance before scrolling.
-    const stats = { approved: 0, overrode: 0, unmapped: 0, updated: 0 };
+    const stats = { approved: 0, overrode: 0, unmapped: 0, updated: 0, cpes: 0 };
     const bullets: string[] = [];
 
     for (const [id, e] of editEntries) {
@@ -123,24 +123,32 @@ export function PRDrawer({
       const matchesAuto =
         !!pkg.auto?.purl && afterPrimary === pkg.auto.purl;
 
+      // CPE diff — only present when the edit touched CPEs (e.cpes defined).
+      const beforeCpes = pkg.cpes ?? [];
+      const afterCpes = e.cpes ?? beforeCpes;
+      const beforeCpeSet = new Set(beforeCpes);
+      const afterCpeSet = new Set(afterCpes);
+      const cpeAdded = afterCpes.filter((c) => !beforeCpeSet.has(c));
+      const cpeRemoved = beforeCpes.filter((c) => !afterCpeSet.has(c));
+      const purlChanged = added.length > 0 || removed.length > 0 || primaryChanged;
+
       // Classify the transition for the headline counter and prefix tag.
       let tag = "approved auto guess";
       if (e.unmapped) {
         stats.unmapped++;
         tag = "marked as no-PURL";
-      } else if (pkg.status === "verified" && (added.length || removed.length || primaryChanged)) {
+      } else if (pkg.status === "verified" && purlChanged) {
         stats.updated++;
         tag = "updated verified mapping";
-      } else if (
-        pkg.auto?.purl &&
-        !matchesAuto &&
-        (added.length || removed.length || primaryChanged)
-      ) {
+      } else if (pkg.auto?.purl && !matchesAuto && purlChanged) {
         stats.overrode++;
         tag = "overrode auto guess";
       } else if (matchesAuto && (added.length || removed.length)) {
         stats.updated++;
         tag = "approved auto guess + added alternates";
+      } else if (!purlChanged && (cpeAdded.length || cpeRemoved.length)) {
+        stats.cpes++;
+        tag = "updated CPEs";
       } else {
         stats.approved++;
         tag = "approved auto guess";
@@ -175,6 +183,12 @@ export function PRDrawer({
       if (e.unmapped) {
         bullets.push(`  - now: _unmapped_`);
       }
+      for (const cpe of cpeRemoved) {
+        bullets.push(`  - \`-\` \`${cpe}\` (cpe)`);
+      }
+      for (const cpe of cpeAdded) {
+        bullets.push(`  - \`+\` \`${cpe}\` (cpe)`);
+      }
       if (e.note) bullets.push(`  - _${e.note}_`);
     }
 
@@ -183,6 +197,7 @@ export function PRDrawer({
     if (stats.approved) parts.push(`${stats.approved} approved`);
     if (stats.overrode) parts.push(`${stats.overrode} overrode auto`);
     if (stats.updated) parts.push(`${stats.updated} updated existing`);
+    if (stats.cpes) parts.push(`${stats.cpes} updated CPEs`);
     if (stats.unmapped) parts.push(`${stats.unmapped} marked no-PURL`);
 
     lines.push(
@@ -368,6 +383,18 @@ export function PRDrawer({
                     const beforeSet = new Set(beforePurls);
                     const afterSet = new Set(afterPurls);
 
+                    // CPE diff lines — only when the edit touched CPEs.
+                    const beforeCpes = pkg.cpes ?? [];
+                    const afterCpes = e.cpes ?? beforeCpes;
+                    const beforeCpeSet = new Set(beforeCpes);
+                    const afterCpeSet = new Set(afterCpes);
+                    const cpeRemoved = beforeCpes.filter(
+                      (c) => !afterCpeSet.has(c),
+                    );
+                    const cpeAdded = afterCpes.filter(
+                      (c) => !beforeCpeSet.has(c),
+                    );
+
                     return (
                       <div
                         key={id}
@@ -497,6 +524,70 @@ export function PRDrawer({
                               </div>
                             );
                           })}
+                          {cpeRemoved.map((cpe, i) => (
+                            <div
+                              key={`cr-${i}`}
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 6,
+                                color: theme.dark ? "#ff8e6a" : "#a8401b",
+                                background: theme.dark
+                                  ? "rgba(255,142,106,.08)"
+                                  : "#ffece5",
+                                padding: "2px 6px",
+                                borderRadius: 3,
+                                marginTop: 2,
+                              }}
+                            >
+                              <span style={{ opacity: 0.7 }}>−</span>
+                              <span>{cpe}</span>
+                              <span
+                                style={{
+                                  fontSize: 9,
+                                  fontWeight: 700,
+                                  letterSpacing: ".06em",
+                                  textTransform: "uppercase",
+                                  color: t.fg3,
+                                  marginLeft: "auto",
+                                }}
+                              >
+                                cpe
+                              </span>
+                            </div>
+                          ))}
+                          {cpeAdded.map((cpe, i) => (
+                            <div
+                              key={`ca-${i}`}
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 6,
+                                color: theme.dark ? "#9adf6d" : "#5b9b2c",
+                                background: theme.dark
+                                  ? "rgba(154,223,109,.08)"
+                                  : "#ecf5dc",
+                                padding: "2px 6px",
+                                borderRadius: 3,
+                                marginTop: 2,
+                              }}
+                            >
+                              <span style={{ opacity: 0.7 }}>+</span>
+                              <span>{cpe}</span>
+                              <span
+                                style={{
+                                  fontSize: 9,
+                                  fontWeight: 700,
+                                  letterSpacing: ".06em",
+                                  textTransform: "uppercase",
+                                  color: t.fg3,
+                                  marginLeft: "auto",
+                                }}
+                              >
+                                cpe
+                              </span>
+                            </div>
+                          ))}
                         </div>
                         {e.note && (
                           <div

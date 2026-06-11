@@ -247,6 +247,9 @@ type EditPayload = {
   pkgName: string;
   purl: string;
   alternative_purls: string[];
+  /** Full replacement CPE list; absent when the edit didn't touch CPEs so
+   *  the cpe-pipeline layer keeps owning them. */
+  cpes?: string[];
   unmapped: boolean;
   note: string;
 };
@@ -277,9 +280,15 @@ function buildContributionFile(
 ): string {
   const packages: Record<string, unknown> = {};
   for (const [name, edit] of Object.entries(edits)) {
+    // CPE identity is independent of PURL existence, so the list rides along
+    // even for unmapped packages. Like alternative_purls, a present list
+    // (including []) replaces all earlier layers; an absent one leaves the
+    // cpe-pipeline layer in charge.
+    const cpes = Array.isArray(edit.cpes) ? edit.cpes : undefined;
     if (edit.unmapped) {
       packages[name] = {
         unmapped: true,
+        cpes,
         note: edit.note || undefined,
       };
     } else {
@@ -292,6 +301,7 @@ function buildContributionFile(
         // lets merge_mappings keep auto-generated alternatives from the base
         // layer, which makes reviewer removals ineffective.
         alternative_purls: edit.alternative_purls,
+        cpes,
         note: edit.note || undefined,
       };
     }

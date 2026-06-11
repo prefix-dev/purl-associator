@@ -106,9 +106,11 @@ export function MappingEditor({
     pkgName: edit?.pkgName ?? p.pkg_name ?? auto.pkg_name ?? p.name,
     purl: edit?.purl ?? p.purl ?? auto.purl ?? "",
     alternative_purls: edit?.alternative_purls ?? currentAlternativePurls,
+    cpes: edit?.cpes,
     unmapped: edit?.unmapped ?? p.unmapped ?? p.purl === null,
     note: edit?.note ?? "",
   };
+  const effCpes = eff.cpes ?? p.cpes ?? [];
 
   const isEdited = !!edit;
   const isVerified =
@@ -158,6 +160,15 @@ export function MappingEditor({
       alternative_purls: [...eff.alternative_purls, purl],
       unmapped: false,
     });
+  }
+
+  function removeCpe(cpe: string): void {
+    onEdit({ ...eff, cpes: effCpes.filter((c) => c !== cpe) });
+  }
+
+  function addCpe(cpe: string): void {
+    if (!isValidCpe(cpe) || effCpes.includes(cpe)) return;
+    onEdit({ ...eff, cpes: [...effCpes, cpe] });
   }
 
   function updatePurlString(str: string): void {
@@ -521,28 +532,18 @@ export function MappingEditor({
           </div>
         </Section>
 
-        {p.cpes && p.cpes.length > 0 && (
-          <Section
-            title="CPE identities"
-            subtitle="Read-only package identity metadata used by downstream NVD/CVE tooling. PURL edits do not change these CPEs."
-          >
-            <div
-              style={{
-                background: t.surface,
-                border: `1px solid ${t.border}`,
-                borderRadius: 12,
-                padding: 14,
-                display: "flex",
-                flexWrap: "wrap",
-                gap: 8,
-              }}
-            >
-              {p.cpes.map((cpe) => (
-                <CpeChip key={cpe} cpe={cpe} theme={theme} />
-              ))}
-            </div>
-          </Section>
-        )}
+        <Section
+          title="CPE identities"
+          subtitle="Package identity metadata used by downstream NVD/CVE tooling. Edits are recorded in the mapping alongside the PURL."
+        >
+          <CpeList
+            theme={theme}
+            cpes={effCpes}
+            isEdited={eff.cpes !== undefined}
+            onRemove={removeCpe}
+            onAdd={addCpe}
+          />
+        </Section>
 
         {p.status === "verified" && p.approved_by && !isEdited && (
           <Section title="Verification">
@@ -926,6 +927,176 @@ function ResultingPurls({
             }}
           >
             Add another
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+/** Mirrors CPE23_RE in scripts/validate.py — CPE 2.3 vendor/product prefix. */
+const CPE23_RE = /^cpe:2\.3:[aho*-]:[^:]+:[^:]+(?::[^:]*){0,10}$/;
+
+function isValidCpe(cpe: string): boolean {
+  return CPE23_RE.test(cpe);
+}
+
+function CpeList({
+  theme,
+  cpes,
+  isEdited,
+  onRemove,
+  onAdd,
+}: {
+  theme: Theme;
+  cpes: string[];
+  isEdited: boolean;
+  onRemove: (cpe: string) => void;
+  onAdd: (cpe: string) => void;
+}) {
+  const t = theme.t;
+  const [draft, setDraft] = useState("");
+  const draftValid = isValidCpe(draft.trim());
+
+  return (
+    <div
+      style={{
+        background: t.surface,
+        border: `1px solid ${t.border}`,
+        borderRadius: 12,
+        padding: 14,
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          marginBottom: 10,
+        }}
+      >
+        <span
+          style={{
+            fontSize: 11,
+            color: t.fg2,
+            fontWeight: 600,
+            letterSpacing: ".04em",
+            textTransform: "uppercase",
+          }}
+        >
+          CPE identities
+        </span>
+        <span
+          style={{
+            fontSize: 10,
+            fontWeight: 700,
+            background: theme.dark ? "#0a0d11" : "#ece8df",
+            color: t.fg2,
+            padding: "0 6px",
+            borderRadius: 3,
+            fontVariantNumeric: "tabular-nums",
+          }}
+        >
+          {cpes.length}
+        </span>
+        <span style={{ fontSize: 11, color: t.fg3 }}>
+          all are recorded in the mapping
+        </span>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        {cpes.length === 0 && (
+          <div
+            style={{
+              fontSize: 12,
+              color: t.fg3,
+              fontStyle: "italic",
+              padding: "6px 0",
+            }}
+          >
+            No CPEs.
+          </div>
+        )}
+
+        {cpes.map((cpe) => (
+          <div
+            key={cpe}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              padding: "7px 10px",
+              background: t.surface2,
+              border: `1px solid ${t.border}`,
+              borderRadius: 8,
+            }}
+          >
+            <CpeChip cpe={cpe} theme={theme} edited={isEdited} />
+            <div style={{ flex: 1 }} />
+            <button
+              onClick={() => onRemove(cpe)}
+              title="Remove"
+              style={{
+                background: "transparent",
+                border: `1px solid ${t.border}`,
+                borderRadius: 6,
+                color: t.fg2,
+                width: 24,
+                height: 24,
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+              }}
+            >
+              <Glyph name="close" size={11} />
+            </button>
+          </div>
+        ))}
+
+        <form
+          onSubmit={(e) =>
+            handleDraftSubmit(e, () => {
+              if (draftValid) {
+                onAdd(draft.trim());
+                setDraft("");
+              }
+            })
+          }
+          style={{ display: "flex", gap: 6, marginTop: 4 }}
+        >
+          <input
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            placeholder="cpe:2.3:a:vendor:product"
+            style={{
+              flex: 1,
+              background: t.surface,
+              color: t.fg1,
+              border: `1px solid ${t.border}`,
+              borderRadius: 8,
+              padding: "6px 10px",
+              fontSize: 12,
+              fontFamily: "JetBrains Mono, monospace",
+              outline: "none",
+            }}
+          />
+          <button
+            type="submit"
+            disabled={!draftValid}
+            style={{
+              background: t.surface2,
+              border: `1px solid ${t.border}`,
+              borderRadius: 8,
+              color: t.fg1,
+              fontSize: 12,
+              fontWeight: 600,
+              padding: "0 12px",
+              cursor: draftValid ? "pointer" : "not-allowed",
+              opacity: draftValid ? 1 : 0.5,
+            }}
+          >
+            Add
           </button>
         </form>
       </div>
