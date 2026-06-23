@@ -136,6 +136,29 @@ def guess_pypi(url: str) -> PurlGuess | None:
     return None
 
 
+def pypi_project_from_url(url: str) -> str | None:
+    """Return the normalized PyPI *project* name embedded in a source URL.
+
+    Unlike :func:`guess_pypi`, this reads the project from the canonical
+    ``/packages/source/<initial>/<project>/<file>`` (and ``/project/<name>/``,
+    ``/simple/<name>/``) layouts rather than parsing the sdist filename, so it is
+    not fooled by names whose suffix looks like a version: the filename
+    ``polars_runtime_32-1.41.2.tar.gz`` parses to ``polars-runtime`` (the ``32``
+    is mistaken for a version), but the project directory is the true
+    ``polars-runtime-32``. Returns ``None`` for non-PyPI URLs.
+    """
+    parsed = urlparse(url)
+    if parsed.netloc not in _PYPI_HOSTS:
+        return None
+    m = re.search(r"/packages/source/[^/]+/([^/]+)/", parsed.path)
+    if m:
+        return normalize_pypi_name(m.group(1))
+    m = re.search(r"/(?:project|simple)/([^/]+)/", parsed.path)
+    if m:
+        return normalize_pypi_name(m.group(1))
+    return None
+
+
 def guess_github(url: str) -> PurlGuess | None:
     parsed = urlparse(url)
     if parsed.netloc != "github.com":
