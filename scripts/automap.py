@@ -43,6 +43,8 @@ from scripts.purl_inference import (
     PurlGuess,
     derive_recipe_context,
     infer_all,
+    normalize_pypi_name,
+    pypi_project_from_url,
     recipe_context_hints,
 )
 from scripts.top_downloads import fetch_top_names
@@ -155,6 +157,26 @@ def _stringify_dep(node: object) -> str | None:
                     return value
         return None
     return None
+
+
+def _select_primary_source(source_urls: list[str], conda_name: str) -> str | None:
+    """Choose the recipe source URL that represents *this* package.
+
+    Multi-output recipes can render several source downloads into a single
+    artifact: ``polars-runtime-32``, for instance, pulls both the ``polars`` and
+    ``polars-runtime-32`` sdists. Taking the first listed source then attributes
+    the wrong upstream (the ``polars`` sdist) to ``polars-runtime-32`` (#162). So
+    prefer a PyPI source whose project name matches the conda package name, and
+    only fall back to the first available URL when nothing matches.
+    """
+    urls = [u for u in source_urls if u]
+    if not urls:
+        return None
+    target = normalize_pypi_name(conda_name)
+    for url in urls:
+        if pypi_project_from_url(url) == target:
+            return url
+    return urls[0]
 
 
 def _collect_source_urls(node: object, out: list[str]) -> None:
@@ -421,7 +443,7 @@ async def _process_record(
     note_parts.extend(recipe_context_hints(context, primary.type if primary else None))
     note: str | None = " ".join(note_parts) if note_parts else None
 
-    primary_source = next((u for u in facts.source_urls if u), None)
+    primary_source = _select_primary_source(facts.source_urls, name)
     return AutoEntry(
         name=name,
         version=str(record.version),
