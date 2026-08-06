@@ -781,5 +781,147 @@ class RealDataLegacyCompatibilityTest(unittest.TestCase):
                         self.assertEqual(actual[name].get(key), wanted)
 
 
+class OverriddenPrimaryAlternativeTest(unittest.TestCase):
+    """Reviewed layers overlay field by field, so an override that promotes a
+    PURL the auto layer already listed as an alternative inherits that
+    alternative untouched.  The merge has to resolve the collision itself —
+    per-file validation only ever sees one layer, and letting it reach
+    ``scripts/validate.py`` would fail CI on a routine automap demotion.
+    """
+
+    def setUp(self) -> None:
+        self.tempdir = tempfile.TemporaryDirectory()
+        self.root = Path(self.tempdir.name)
+        self.auto = self.root / "auto.json"
+        self.manual = self.root / "manual.json"
+        self.contributions = self.root / "contributions"
+        self.downloads = self.root / "downloads.json"
+        self.contributions.mkdir()
+        self._write_json(self.downloads, {"packages": []})
+
+    def tearDown(self) -> None:
+        self.tempdir.cleanup()
+
+    @staticmethod
+    def _write_json(path: Path, value: object) -> None:
+        path.write_text(json.dumps(value))
+
+    def _merge(self, auto_entry: dict, override: dict) -> dict:
+        self._write_json(
+            self.auto,
+            {
+                "schema_version": 1,
+                "generated_at": "2026-01-01T00:00:00Z",
+                "channel": "conda-forge",
+                "packages": {"widget": auto_entry},
+            },
+        )
+        self._write_json(
+            self.manual,
+            {
+                "schema_version": 1,
+                "updated_at": "2026-01-01T00:00:00Z",
+                "updated_by": "package-reviewer",
+                "packages": {"widget": override},
+            },
+        )
+        self.bundle = self.root / "mappings.json"
+        self.index = self.root / "mappings-index.json"
+        self.details = self.root / "mapping_packages"
+        merge_mappings.main(
+            self.auto,
+            self.manual,
+            self.contributions,
+            self.downloads,
+            self.bundle,
+            self.index,
+            self.details,
+            generated_at=GENERATED_AT,
+        )
+        return json.loads(self.bundle.read_text())["packages"]["widget"]
+
+    def _validation_errors(self) -> list[str]:
+        errors: list[str] = []
+        validate.validate_mapping_alternatives(
+            self.manual, self.contributions, self.bundle, errors, self.auto
+        )
+        validate.validate_split_mappings(self.index, self.details, errors, self.bundle)
+        return errors
+
+    @staticmethod
+    def _auto_entry(alternatives: list) -> dict:
+        return {
+            "purl": "pkg:pypi/widget",
+            "type": "pypi",
+            "namespace": None,
+            "pkg_name": "widget",
+            "confidence": 0.9,
+            "sources": ["recipe-source"],
+            "alternative_purls": alternatives,
+        }
+
+    def test_inherited_alternative_matching_new_primary_is_dropped(self) -> None:
+        widget = self._merge(
+            self._auto_entry(["pkg:github/acme/widget"]),
+            {"purl": "pkg:github/acme/widget"},
+        )
+        self.assertEqual(widget["purl"], "pkg:github/acme/widget")
+        self.assertEqual(widget["alternative_purls"], [])
+        self.assertEqual(
+            [(item["role"], item["value"]) for item in widget["identities"]],
+            [("primary", "pkg:github/acme/widget")],
+        )
+        self.assertEqual(self._validation_errors(), [])
+
+    def test_detailed_inherited_alternative_matching_new_primary_is_dropped(
+        self,
+    ) -> None:
+        widget = self._merge(
+            self._auto_entry(
+                [
+                    {
+                        "purl": "pkg:github/acme/widget",
+                        "type": "github",
+                        "namespace": "acme",
+                        "pkg_name": "widget",
+                        "confidence": 0.6,
+                        "source": "recipe-source",
+                    }
+                ]
+            ),
+            {"purl": "pkg:github/acme/widget"},
+        )
+        self.assertEqual(widget["alternative_purls"], [])
+        self.assertEqual(self._validation_errors(), [])
+
+    def test_unrelated_inherited_alternatives_survive_the_override(self) -> None:
+        widget = self._merge(
+            self._auto_entry(["pkg:github/acme/widget", "pkg:npm/widget"]),
+            {"purl": "pkg:github/acme/widget"},
+        )
+        self.assertEqual(widget["alternative_purls"], ["pkg:npm/widget"])
+        self.assertEqual(self._validation_errors(), [])
+
+    def test_override_without_a_primary_keeps_inherited_alternatives(self) -> None:
+        widget = self._merge(
+            self._auto_entry(["pkg:github/acme/widget"]),
+            {"cpes": ["cpe:2.3:a:acme:widget"]},
+        )
+        self.assertEqual(widget["purl"], "pkg:pypi/widget")
+        self.assertEqual(widget["alternative_purls"], ["pkg:github/acme/widget"])
+        self.assertEqual(self._validation_errors(), [])
+
+    def test_override_supplied_alternatives_replace_the_inherited_list(self) -> None:
+        widget = self._merge(
+            self._auto_entry(["pkg:github/acme/widget"]),
+            {
+                "purl": "pkg:github/acme/widget",
+                "alternative_purls": ["pkg:pypi/widget"],
+            },
+        )
+        self.assertEqual(widget["alternative_purls"], ["pkg:pypi/widget"])
+        self.assertEqual(self._validation_errors(), [])
+
+
 if __name__ == "__main__":
     unittest.main()

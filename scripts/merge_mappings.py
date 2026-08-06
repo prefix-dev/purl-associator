@@ -12,6 +12,7 @@ import hashlib
 import json
 import math
 import re
+import sys
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -317,6 +318,39 @@ def _reviews_primary(override: dict) -> bool:
     )
 
 
+def _prune_colliding_alternatives(
+    alternatives: list, primary: Any, *, label: str
+) -> list:
+    """Drop alternatives that collide with the primary PURL or with each other.
+
+    Reviewed layers overlay field by field, so an override that promotes a PURL
+    the base layer already carried as an alternative inherits that alternative
+    untouched.  Per-file validation only ever sees one layer, so the collision
+    first exists in the merged record — dropping it here keeps a routine automap
+    demotion from failing ``scripts/validate.py`` and stalling the pipeline.
+    """
+    kept: list[Any] = []
+    seen: set[str] = set()
+    for alternative in alternatives:
+        purl = alternative if isinstance(alternative, str) else alternative["purl"]
+        if purl == primary:
+            print(
+                f"{label}: dropping inherited alternative {purl!r} now used as the "
+                "primary PURL",
+                file=sys.stderr,
+            )
+            continue
+        if purl in seen:
+            print(
+                f"{label}: dropping duplicate inherited alternative {purl!r}",
+                file=sys.stderr,
+            )
+            continue
+        seen.add(purl)
+        kept.append(alternative)
+    return kept
+
+
 def _effective_attribution(override: dict, attribution: dict, label: str) -> dict:
     reviewer = override.get("approved_by", attribution.get("approved_by"))
     reviewed_at = override.get("approved_at", attribution.get("approved_at"))
@@ -381,6 +415,11 @@ def _apply_reviewed_override(
                 "reviewed_at": current_attribution["approved_at"],
             },
         }
+
+    if result.get("alternative_purls"):
+        result["alternative_purls"] = _prune_colliding_alternatives(
+            result["alternative_purls"], result.get("purl"), label=label
+        )
 
     if name in auto_packages and "auto" not in result:
         result["auto"] = _auto_snapshot(auto_packages[name])
