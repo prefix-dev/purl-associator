@@ -6,6 +6,7 @@ import {
   purlsFromAlternatives,
 } from "../data/purlAlternatives";
 import type { Edit, PackageEntry } from "../data/types";
+import { IdentityProvenance } from "./IdentityProvenance";
 import {
   DraftButton,
   DraftCheckbox,
@@ -544,6 +545,20 @@ export function MappingEditor({
             onAdd={addCpe}
           />
         </Section>
+
+        {p.identities && p.identities.length > 0 && (
+          <Section
+            title="Identity provenance"
+            subtitle="Where each published identity came from and how it was reviewed. The mapping status above is a sign-off on the package; an identity's review state is about that identity alone."
+          >
+            <IdentityProvenance
+              theme={theme}
+              identities={p.identities}
+              mappingStatus={p.status}
+              stale={isEdited}
+            />
+          </Section>
+        )}
 
         {p.status === "verified" && p.approved_by && !isEdited && (
           <Section title="Verification">
