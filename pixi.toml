@@ -27,6 +27,7 @@ python = ">=3.13,<3.14"
 [feature.lite.tasks]
 "mappings:merge" = "python -m scripts.merge_mappings"
 "mappings:validate" = "python -m scripts.validate"
+"mappings:test" = "python -m unittest discover -s tests -v"
 
 [environments]
 default = ["lite"]
@@ -131,13 +132,20 @@ depends-on = ["web:install", "worker:install"]
 description = "Install web and Worker npm dependencies"
 
 [tasks."app:check"]
-depends-on = ["mappings:validate", "web:build", "worker:typecheck"]
-description = "Validate data, build the web app, and typecheck the Worker"
+cmd = "python -m unittest discover -s tests -v && npm --prefix web test && python -m scripts.merge_mappings && python -m scripts.validate && npm --prefix web run build && npm --prefix worker run typecheck"
+depends-on = ["app:install"]
+description = "Run contract tests, validate data, build the web app, and typecheck the Worker"
 
 [tasks."web:install"]
 cmd = "npm install"
 cwd = "web"
 description = "Install frontend npm dependencies"
+
+[tasks."web:test"]
+cmd = "npm test"
+cwd = "web"
+depends-on = ["web:install"]
+description = "Run browser payload decoder contract tests"
 
 [tasks."web:data"]
 depends-on = [

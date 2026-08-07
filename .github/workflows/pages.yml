@@ -6,6 +6,11 @@ on:
     paths:
       - "web/**"
       - "mappings/**"
+      - "scripts/merge_mappings.py"
+      - "scripts/validate.py"
+      - "tests/**"
+      - "pixi.toml"
+      - "pixi.lock"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -38,6 +43,9 @@ jobs:
 
       - name: Refresh served identity mapping payload
         run: pixi run -e lite mappings:merge
+
+      - name: Test identity mapping contract
+        run: pixi run -e lite mappings:test
 
       - name: Validate identity mapping payload
         run: pixi run -e lite mappings:validate

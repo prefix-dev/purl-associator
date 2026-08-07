@@ -17,6 +17,85 @@ export type PurlAlternative = {
   source: string;
 };
 
+export type ReviewStatus =
+  | "auto-unverified"
+  | "auto-verified"
+  | "verified"
+  | "unmapped"
+  | "edited";
+
+export type AutomaticPrimaryIdentity = {
+  kind: "purl";
+  role: "primary";
+  value: string;
+  provenance: {
+    availability: "available";
+    source: "auto";
+    confidence: number;
+    sources: string[];
+    review: {
+      status: "auto-unverified" | "auto-verified";
+      reviewer: null;
+    };
+  };
+};
+
+export type ManualPrimaryIdentity = {
+  kind: "purl";
+  role: "primary";
+  value: string;
+  provenance: {
+    availability: "available";
+    source: "manual";
+    review: {
+      status: "verified" | "edited";
+      reviewer: string;
+      reviewed_at: string;
+    };
+  };
+};
+
+export type BareAlternativeIdentity = {
+  kind: "purl";
+  role: "alternative";
+  value: string;
+  provenance: { availability: "unavailable" };
+};
+
+export type DetailedAlternativeIdentity = {
+  kind: "purl";
+  role: "alternative";
+  value: string;
+  coordinates: {
+    type: string;
+    namespace: string | null;
+    pkg_name: string;
+  };
+  provenance: {
+    availability: "available";
+    source:
+      | "recipe-source"
+      | "recipe-deps"
+      | "recipe-source+recipe-deps"
+      | "parselmouth-artifact";
+    confidence: number;
+  };
+};
+
+export type CpeIdentity = {
+  kind: "cpe";
+  role: "associated";
+  value: string;
+  provenance: { availability: "unavailable" };
+};
+
+export type PublishedIdentity =
+  | AutomaticPrimaryIdentity
+  | ManualPrimaryIdentity
+  | BareAlternativeIdentity
+  | DetailedAlternativeIdentity
+  | CpeIdentity;
+
 export type ManualOverride = {
   purl: string | null;
   type: string | null;
@@ -48,7 +127,7 @@ export type PackageEntry = {
   source_url: string | null;
   note: string | null;
   fetched_at: string | null;
-  status: "auto-unverified" | "auto-verified" | "verified" | "unmapped" | "edited";
+  status: ReviewStatus;
   source: "auto" | "manual";
   unmapped?: boolean;
   approved_by?: string;
@@ -58,6 +137,8 @@ export type PackageEntry = {
   verification_sources?: string[] | null;
   /** CPE 2.3 vendor/product prefixes for downstream NVD matching. */
   cpes?: string[] | null;
+  /** Versioned public per-identity provenance (absent on legacy schemas). */
+  identities?: PublishedIdentity[];
   /** the original auto guess, kept for diff display when an override exists */
   auto?: AutoMapping;
   /** total downloads on prefix.dev for this package (null if not ranked) */
@@ -77,24 +158,52 @@ export type MappingPackageIndex = Pick<
   | "alternative_purls"
   | "unmapped"
   | "cpes"
+  | "identities"
   | "auto"
 > & {
   detail_path: string;
 };
 
-export type MappingsPayload = {
-  schema_version: number;
+type MappingPayloadMetadata = {
   generated_at: string | null;
   auto_generated_at: string | null;
   manual_updated_at: string | null;
   channel: string;
   package_count: number;
+};
+
+export type LegacyMappingsPayload = MappingPayloadMetadata & {
+  schema_version: 1;
   packages: Record<string, PackageEntry>;
 };
 
-export type MappingsIndexPayload = Omit<MappingsPayload, "packages"> & {
+export type CurrentMappingsPayload = MappingPayloadMetadata & {
+  schema_version: 2;
+  packages: Record<string, PackageEntry & { identities: PublishedIdentity[] }>;
+};
+
+export type MappingsPayload = LegacyMappingsPayload | CurrentMappingsPayload;
+
+export type LegacyMappingsIndexPayload = MappingPayloadMetadata & {
+  schema_version: 2;
   packages: Record<string, MappingPackageIndex>;
 };
+
+export type CurrentMappingsIndexPayload = MappingPayloadMetadata & {
+  schema_version: 3;
+  packages: Record<MappingPackageIndex["name"], MappingPackageIndex & { identities: PublishedIdentity[] }>;
+};
+
+export type MappingsIndexPayload =
+  | LegacyMappingsIndexPayload
+  | CurrentMappingsIndexPayload;
+
+export type MappingDetailPayload =
+  | { schema_version: 1; packages: Record<string, PackageEntry> }
+  | {
+      schema_version: 2;
+      packages: Record<string, PackageEntry & { identities: PublishedIdentity[] }>;
+    };
 
 export type Edit = {
   type: string;

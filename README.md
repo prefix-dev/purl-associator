@@ -31,13 +31,58 @@ The core object is a conda-forge package identity record:
     "cpe:2.3:a:gnu:ncurses",
     "cpe:2.3:a:invisible-island:ncurses"
   ],
-  "status": "verified"
+  "status": "verified",
+  "identities": [
+    {
+      "kind": "purl",
+      "role": "primary",
+      "value": "pkg:github/ThomasDickey/ncurses-snapshots",
+      "provenance": {
+        "availability": "available",
+        "source": "manual",
+        "review": {
+          "status": "verified",
+          "reviewer": "nichmor",
+          "reviewed_at": "2026-05-25T00:00:00Z"
+        }
+      }
+    },
+    {
+      "kind": "cpe",
+      "role": "associated",
+      "value": "cpe:2.3:a:gnu:ncurses",
+      "provenance": { "availability": "unavailable" }
+    }
+  ]
 }
 ```
 
 PURLs identify source/package ecosystem coordinates. CPEs identify NVD
 vendor/product coordinates. CPE strings stored here are identity-level prefixes;
 this repository does not store CVE affected ranges or per-CVE version decisions.
+
+### Published identity provenance contract
+
+The generated payload's `identities` array is the authoritative per-identity
+view for downstream consumers:
+
+- `kind: "purl", role: "primary"` identifies the primary PURL. Its provenance
+  contains a required review `status`, a nullable `reviewer`, and an optional
+  `reviewed_at`. Automatic primary identities additionally retain their
+  available confidence and source evidence.
+- `kind: "purl", role: "alternative"` identifies an alternative PURL. Detailed
+  alternatives retain their own `source` and `confidence`; bare string
+  alternatives use `availability: "unavailable"`. They never inherit the
+  primary PURL's review object.
+- `kind: "cpe", role: "associated"` identifies a CPE prefix. The current source
+  model does not retain CPE-level attribution, so its provenance is explicitly
+  `unavailable` and never inferred from primary review state.
+
+Identity order is deterministic: primary PURL, alternatives in source order,
+then CPEs in source order. A missing primary PURL produces no primary identity.
+Every published confidence is a finite JSON number; `NaN` and infinities are
+rejected. Contribution precedence compares timezone-aware timestamps as UTC
+instants, with the on-disk filename as the deterministic tie-breaker.
 
 ## Sources and outputs
 
@@ -51,6 +96,27 @@ this repository does not store CVE affected ranges or per-CVE version decisions.
 | `web/public/mappings.json` | generated full mapping bundle |
 | `web/public/mappings-index.json` | generated compact index for the web app |
 | `web/public/mapping_packages/*.json` | generated sharded package detail payloads |
+
+### Payload versions and compatibility
+
+PFX-1826 advances `mappings.json` from schema 1 to **2**,
+`mappings-index.json` from schema 2 to **3**, and mapping detail shards from
+schema 1 to **2**. These versions add `identities` without removing or changing
+legacy `purl`, `alternative_purls`, `cpes`, `status`, or attribution fields.
+This additive compatibility window lets existing clients continue reading the
+legacy fields while provenance-aware clients migrate to `identities`. New
+clients should reject unknown future schema versions rather than guessing.
+The validator accepts the immediately preceding schemas during this window but
+requires and validates the per-identity contract on current schemas.
+
+The payload deployed by the Pages workflow is canonical. The checked-in
+`mappings-index.json` and shard files are build inputs/cache for the app, not a
+supported raw-consumer contract on their own: a source change can leave them
+stale until `mappings:merge` regenerates the bundle, index, and all shards
+atomically. Consumers should use the deployed Pages payload rather than mixing
+checked-in generations. Routine changes should not commit the 257-file shard
+churn unless repository policy explicitly requires an atomic generated-data
+refresh.
 
 ## PURL flow
 
@@ -82,6 +148,12 @@ CPE discovery is part of identity mapping, not CVE assignment. The retained CPE
 pipeline proposes NVD vendor/product prefixes and promotes accepted mappings as
 normal contribution files. Those CPEs then flow through `scripts.merge_mappings`
 into the public mapping payload.
+
+CPE list behavior is intentionally unchanged: a contribution containing `cpes`
+replaces the prior list. Changing that to union semantics could make explicit
+UI/pipeline removals impossible, so PFX-1826 does not silently change it. A
+separate follow-up should decide whether CPE contributions need an explicit
+replace/union operation before any union behavior is introduced.
 
 ```mermaid
 flowchart TD
@@ -138,6 +210,7 @@ Run these checks before opening a PR:
 
 ```sh
 pixi run -e lite mappings:merge
+pixi run -e lite mappings:test
 pixi run -e lite mappings:validate
 pixi run app:check
 ```
