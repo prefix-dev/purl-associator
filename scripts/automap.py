@@ -38,7 +38,7 @@ from rich.progress import (
     TimeElapsedColumn,
 )
 
-from scripts.parselmouth_lookup import fetch_mapping_by_hash
+from scripts.parselmouth_lookup import ParselmouthMapping, fetch_mapping_by_hash
 from scripts.purl_inference import (
     PurlGuess,
     derive_recipe_context,
@@ -315,6 +315,25 @@ async def _fetch_rendered_recipe(client: Client, url: str) -> tuple[str, str] | 
     return None
 
 
+def _artifact_identity_pairs(
+    mapping: ParselmouthMapping, *, conda_name: str
+) -> list[tuple[str, str]]:
+    """Return artifact distributions that plausibly identify the conda package.
+
+    Parselmouth reports every Python distribution contained in an artifact,
+    including vendored dependencies. A sole distribution is unambiguous. For a
+    multi-distribution artifact, only the conda package's normalized name is
+    identity evidence; other contained distributions still require independent
+    recipe evidence.
+    """
+    pairs = list(zip(mapping.pypi_purls, mapping.pypi_normalized_names))
+    if len(pairs) <= 1:
+        return pairs
+
+    normalized_conda_name = normalize_pypi_name(conda_name)
+    return [(purl, name) for purl, name in pairs if name == normalized_conda_name]
+
+
 async def _process_record(
     client: Client,
     record: RepoDataRecord,
@@ -393,13 +412,12 @@ async def _process_record(
         )
         candidates = [primary] + [c for c in candidates if c.purl != primary.purl]
 
-    # Surface Parselmouth-discovered PyPI names as alternatives when they do not
-    # duplicate the primary/URL-inferred candidates.
+    # Parselmouth describes package contents, not identity: old or broken
+    # artifacts can vendor their dependency tree. Only surface unambiguous or
+    # package-correlated distributions as alternative identities.
     seen_purls = {c.purl for c in candidates}
     if parselmouth:
-        for purl, pypi_name in zip(
-            parselmouth.pypi_purls, parselmouth.pypi_normalized_names
-        ):
+        for purl, pypi_name in _artifact_identity_pairs(parselmouth, conda_name=name):
             if purl in seen_purls:
                 continue
             candidates.append(
