@@ -20,12 +20,12 @@ DEFAULT_MAPPINGS_DETAIL_DIR = ROOT / "web" / "public" / "mapping_packages"
 
 CPE23_RE = merge_mappings.CPE23_RE
 PURL_RE = merge_mappings.PURL_RE
-SUPPORTED_BUNDLE_SCHEMAS = {1, 2}
-SUPPORTED_INDEX_SCHEMAS = {2, 3}
-SUPPORTED_DETAIL_SCHEMAS = {1, 2}
-CURRENT_BUNDLE_SCHEMA = 2
-CURRENT_INDEX_SCHEMA = 3
-CURRENT_DETAIL_SCHEMA = 2
+SUPPORTED_BUNDLE_SCHEMAS = {1, 2, 3}
+SUPPORTED_INDEX_SCHEMAS = {2, 3, 4}
+SUPPORTED_DETAIL_SCHEMAS = {1, 2, 3}
+CURRENT_BUNDLE_SCHEMA = 3
+CURRENT_INDEX_SCHEMA = 4
+CURRENT_DETAIL_SCHEMA = 3
 REVIEW_STATUSES = merge_mappings.REVIEW_STATUSES
 PRIMARY_SOURCES = merge_mappings.PRIMARY_SOURCES
 ALTERNATIVE_SOURCES = merge_mappings.ALTERNATIVE_SOURCES
@@ -355,10 +355,44 @@ def _validate_identity_contract(
         elif kind == "cpe" and role == "associated":
             if set(identity) != {"kind", "role", "value", "provenance"}:
                 errors.append(f"{identity_label}: CPE contains forbidden fields")
-            if provenance != {"availability": "unavailable"}:
-                errors.append(
-                    f"{identity_label}: CPE provenance must be exactly unavailable"
+            _error_extra_fields(
+                provenance,
+                {"availability", "source", "review"},
+                f"{identity_label}.provenance",
+                errors,
+            )
+            if provenance.get("availability") != "available":
+                errors.append(f"{identity_label}: CPE provenance must be available")
+            source = provenance.get("source")
+            if source not in PRIMARY_SOURCES:
+                errors.append(f"{identity_label}: unsupported CPE source {source!r}")
+            review = provenance.get("review")
+            if not isinstance(review, dict):
+                errors.append(f"{identity_label}: CPE review is required")
+            else:
+                _error_extra_fields(
+                    review,
+                    {"status", "reviewer", "reviewed_at"},
+                    f"{identity_label}.provenance.review",
+                    errors,
                 )
+                status = review.get("status")
+                if source == "auto":
+                    if (
+                        status not in {"auto-unverified", "auto-verified"}
+                        or review.get("reviewer") is not None
+                        or "reviewed_at" in review
+                    ):
+                        errors.append(
+                            f"{identity_label}: automatic CPE review is malformed"
+                        )
+                elif (
+                    status not in {"verified", "edited"}
+                    or not isinstance(review.get("reviewer"), str)
+                    or not review.get("reviewer")
+                    or not _valid_timestamp(review.get("reviewed_at"))
+                ):
+                    errors.append(f"{identity_label}: manual CPE review is malformed")
         else:
             errors.append(
                 f"{identity_label}: unsupported identity kind/role {kind!r}/{role!r}"
@@ -621,9 +655,7 @@ def validate_split_mappings(
             bundle, str(_rel(bundle_path)), SUPPORTED_BUNDLE_SCHEMAS, errors
         )
         expected_bundle_version = (
-            CURRENT_BUNDLE_SCHEMA
-            if index_version == CURRENT_INDEX_SCHEMA
-            else CURRENT_BUNDLE_SCHEMA - 1
+            index_version - 1 if index_version is not None else None
         )
         if bundle_version != expected_bundle_version:
             errors.append(
@@ -671,9 +703,7 @@ def validate_split_mappings(
             shard, str(_rel(path)), SUPPORTED_DETAIL_SCHEMAS, errors
         )
         expected_detail_version = (
-            CURRENT_DETAIL_SCHEMA
-            if index_version == CURRENT_INDEX_SCHEMA
-            else CURRENT_DETAIL_SCHEMA - 1
+            index_version - 1 if index_version is not None else None
         )
         if shard_version is not None and shard_version != expected_detail_version:
             errors.append(
@@ -712,7 +742,7 @@ def validate_split_mappings(
             name,
             {key: value for key, value in detail.items() if key != "name"},
             detail_path,
-            current=index_version == CURRENT_INDEX_SCHEMA,
+            current=index_version >= CURRENT_INDEX_SCHEMA - 1,
         )
         if index_entry != expected_index:
             errors.append(

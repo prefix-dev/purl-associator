@@ -26,9 +26,9 @@ DEFAULT_OUT = ROOT / "web" / "public" / "mappings.json"
 DEFAULT_INDEX_OUT = ROOT / "web" / "public" / "mappings-index.json"
 DEFAULT_DETAIL_DIR = ROOT / "web" / "public" / "mapping_packages"
 
-BUNDLE_SCHEMA_VERSION = 2
-INDEX_SCHEMA_VERSION = 3
-DETAIL_SCHEMA_VERSION = 2
+BUNDLE_SCHEMA_VERSION = 3
+INDEX_SCHEMA_VERSION = 4
+DETAIL_SCHEMA_VERSION = 3
 SOURCE_SCHEMA_VERSION = 1
 REVIEW_STATUSES = {"auto-unverified", "auto-verified", "verified", "unmapped", "edited"}
 PRIMARY_SOURCES = {"auto", "manual"}
@@ -54,6 +54,7 @@ REVIEWED_MAPPING_FIELDS = (
 )
 PRIMARY_REVIEW_FIELDS = ("purl", "type", "namespace", "pkg_name", "unmapped", "status")
 _INTERNAL_PRIMARY = "_primary_identity_provenance"
+_INTERNAL_CPES = "_cpe_identity_provenance"
 
 
 def _duplicate_safe_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
@@ -192,7 +193,7 @@ def _validate_alternatives(value: Any, label: str, primary: Any) -> None:
 def _validate_package_entry(entry: Any, label: str, *, auto: bool) -> None:
     if not isinstance(entry, dict):
         raise ValueError(f"{label} must be an object")
-    if _INTERNAL_PRIMARY in entry or "_filename" in entry:
+    if _INTERNAL_PRIMARY in entry or _INTERNAL_CPES in entry or "_filename" in entry:
         raise ValueError(f"{label} uses a reserved internal field")
     purl = entry.get("purl")
     if purl is not None:
@@ -251,7 +252,7 @@ def _validate_source_payload(
             "approved_at": payload.get("updated_at"),
         }
         for name, entry in packages.items():
-            if _reviews_primary(entry):
+            if _reviews_primary(entry) or entry.get("cpes") is not None:
                 _effective_attribution(entry, attribution, f"{label}:{name}")
     if kind == "contribution":
         _require_string(payload.get("author"), f"{label}.author")
@@ -371,11 +372,17 @@ def _apply_reviewed_override(
 ) -> None:
     base = merged.get(name, {"name": name})
     reviews_primary = _reviews_primary(override)
+    reviews_cpes = override.get("cpes") is not None
     patch = {
         key: override[key]
         for key in REVIEWED_MAPPING_FIELDS
         if key in override and override[key] is not None
     }
+    current_attribution = (
+        _effective_attribution(override, attribution, label)
+        if reviews_primary or reviews_cpes
+        else None
+    )
 
     # Preserve the legacy package-level merge behavior during the additive
     # window: every reviewed layer marks the package manual/verified and owns
@@ -391,7 +398,7 @@ def _apply_reviewed_override(
         # the historical package-level fields omitted it. Contributions carry
         # the same current attribution at file level. Do not rewrite legacy
         # attribution merely to make the additive identity view convenient.
-        current_attribution = _effective_attribution(override, attribution, label)
+        assert current_attribution is not None
         if override.get("unmapped") is True:
             result.update(
                 {
@@ -414,6 +421,24 @@ def _apply_reviewed_override(
                 "reviewer": current_attribution["approved_by"],
                 "reviewed_at": current_attribution["approved_at"],
             },
+        }
+
+    if reviews_cpes:
+        assert current_attribution is not None
+        review_status = override.get("status")
+        if review_status not in {"verified", "edited"}:
+            review_status = "verified"
+        result[_INTERNAL_CPES] = {
+            cpe: {
+                "availability": "available",
+                "source": "manual",
+                "review": {
+                    "status": review_status,
+                    "reviewer": current_attribution["approved_by"],
+                    "reviewed_at": current_attribution["approved_at"],
+                },
+            }
+            for cpe in override["cpes"]
         }
 
     if result.get("alternative_purls"):
@@ -462,20 +487,25 @@ def _identity_records(entry: dict) -> list[dict]:
                 },
             }
         identities.append(identity)
+    cpe_provenance = entry.get(_INTERNAL_CPES, {})
     for cpe in entry.get("cpes") or []:
         identities.append(
             {
                 "kind": "cpe",
                 "role": "associated",
                 "value": cpe,
-                "provenance": {"availability": "unavailable"},
+                "provenance": cpe_provenance[cpe],
             }
         )
     return identities
 
 
 def _with_identities(entry: dict) -> dict:
-    result = {key: value for key, value in entry.items() if key != _INTERNAL_PRIMARY}
+    result = {
+        key: value
+        for key, value in entry.items()
+        if key not in {_INTERNAL_PRIMARY, _INTERNAL_CPES}
+    }
     result["identities"] = _identity_records(entry)
     return result
 
@@ -553,11 +583,20 @@ def _build_published_packages(
             "sources": entry["sources"],
             "review": {"status": status, "reviewer": None},
         }
+        cpe_provenance = {
+            cpe: {
+                "availability": "available",
+                "source": "auto",
+                "review": {"status": status, "reviewer": None},
+            }
+            for cpe in entry.get("cpes") or []
+        }
         merged[name] = {
             **entry,
             "status": status,
             "source": "auto",
             _INTERNAL_PRIMARY: primary,
+            _INTERNAL_CPES: cpe_provenance,
         }
 
     legacy_attribution = {

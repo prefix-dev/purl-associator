@@ -9,9 +9,9 @@ import type {
 
 const DEFAULT_PATH = "./mappings.json";
 const DEFAULT_INDEX_PATH = "./mappings-index.json";
-const SUPPORTED_BUNDLE_SCHEMAS = new Set([1, 2]);
-const SUPPORTED_INDEX_SCHEMAS = new Set([2, 3]);
-const SUPPORTED_DETAIL_SCHEMAS = new Set([1, 2]);
+const SUPPORTED_BUNDLE_SCHEMAS = new Set([1, 2, 3]);
+const SUPPORTED_INDEX_SCHEMAS = new Set([2, 3, 4]);
+const SUPPORTED_DETAIL_SCHEMAS = new Set([1, 2, 3]);
 const PURL_PATTERN = /^pkg:[a-z][a-z0-9.+-]*\/[^\s?#]+(?:\?[^\s#]+)?(?:#[^\s]+)?$/;
 const CPE_PATTERN = /^cpe:2\.3:[aho*\-]:[^:]+:[^:]+(?::[^:]*){0,10}$/;
 const REVIEW_STATUSES = new Set([
@@ -293,7 +293,11 @@ function decodeAutoMapping(value: unknown, label: string): void {
   }
 }
 
-function decodeIdentity(value: unknown, label: string): void {
+function decodeIdentity(
+  value: unknown,
+  label: string,
+  cpeProvenance: "unavailable" | "available",
+): void {
   const identity = record(value, label);
   const identityValue = stringValue(identity.value, `${label}.value`, false);
   if (identity.kind === "purl" && !PURL_PATTERN.test(identityValue)) {
@@ -373,11 +377,38 @@ function decodeIdentity(value: unknown, label: string): void {
       throw new Error(`${label} has unsupported alternative provenance`);
     }
   } else if (identity.kind === "cpe" && identity.role === "associated") {
-    if (
-      provenance.availability !== "unavailable" ||
-      !hasOnlyKeys(provenance, ["availability"])
-    ) {
-      throw new Error(`${label} CPE provenance must be unavailable`);
+    if (cpeProvenance === "unavailable") {
+      if (
+        provenance.availability !== "unavailable" ||
+        !hasOnlyKeys(provenance, ["availability"])
+      ) {
+        throw new Error(`${label} CPE provenance must be unavailable`);
+      }
+    } else {
+      if (provenance.availability !== "available") {
+        throw new Error(`${label} CPE provenance must be available`);
+      }
+      const review = record(provenance.review, `${label}.provenance.review`);
+      const source = String(provenance.source);
+      const automatic =
+        source === "auto" &&
+        hasOnlyKeys(provenance, ["availability", "source", "review"]) &&
+        hasOnlyKeys(review, ["status", "reviewer"]) &&
+        ["auto-unverified", "auto-verified"].includes(String(review.status)) &&
+        review.reviewer === null;
+      const manual =
+        source === "manual" &&
+        hasOnlyKeys(provenance, ["availability", "source", "review"]) &&
+        hasOnlyKeys(review, ["status", "reviewer", "reviewed_at"]) &&
+        ["verified", "edited"].includes(String(review.status)) &&
+        typeof review.reviewer === "string" &&
+        review.reviewer.length > 0 &&
+        typeof review.reviewed_at === "string" &&
+        /(?:Z|[+-]\d{2}:\d{2})$/.test(review.reviewed_at) &&
+        Number.isFinite(Date.parse(review.reviewed_at));
+      if (!automatic && !manual) {
+        throw new Error(`${label} has malformed CPE provenance`);
+      }
     }
   } else {
     throw new Error(`${label} has unsupported identity kind/role`);
@@ -447,19 +478,19 @@ function decodeCommonEntry(
 function decodeIndexEntry(
   entry: Record<string, unknown>,
   name: string,
-  current: boolean,
+  identityContract: IdentityContract,
   label: string,
 ): void {
   requireOnlyKeys(entry, INDEX_ENTRY_KEYS, label);
   const expected = decodeCommonEntry(entry, name, label);
   stringValue(required(entry, "detail_path", label), `${label}.detail_path`, false);
-  decodeCurrentIdentities(entry, expected, current, label);
+  decodeCurrentIdentities(entry, expected, identityContract, label);
 }
 
 function decodeFullEntry(
   entry: Record<string, unknown>,
   name: string,
-  current: boolean,
+  identityContract: IdentityContract,
   label: string,
 ): void {
   requireOnlyKeys(entry, FULL_ENTRY_KEYS, label);
@@ -493,16 +524,18 @@ function decodeFullEntry(
   if (hasOwn(entry, "verification_sources") && entry.verification_sources !== null) {
     stringArray(entry.verification_sources, `${label}.verification_sources`);
   }
-  decodeCurrentIdentities(entry, expected, current, label);
+  decodeCurrentIdentities(entry, expected, identityContract, label);
 }
+
+type IdentityContract = "none" | "legacy" | "current";
 
 function decodeCurrentIdentities(
   entry: Record<string, unknown>,
   expected: IdentitySummary[],
-  current: boolean,
+  identityContract: IdentityContract,
   label: string,
 ): void {
-  if (!current) {
+  if (identityContract === "none") {
     if (hasOwn(entry, "identities")) {
       throw new Error(`${label}.identities is not supported by this schema`);
     }
@@ -514,7 +547,11 @@ function decodeCurrentIdentities(
   const seenValues = new Set<string>();
   const actual = entry.identities.map((identity, index) => {
     const identityLabel = `${label}.identities[${index}]`;
-    decodeIdentity(identity, identityLabel);
+    decodeIdentity(
+      identity,
+      identityLabel,
+      identityContract === "current" ? "available" : "unavailable",
+    );
     const decoded = record(identity, identityLabel);
     const value = decoded.value as string;
     if (seenValues.has(value)) {
@@ -571,13 +608,19 @@ function decodePackages(
   shape: PackageShape,
 ): void {
   const packages = record(payload.packages, `${label}.packages`);
-  const current = payload.schema_version === currentVersion;
+  const version = payload.schema_version as number;
+  const identityContract: IdentityContract =
+    version === currentVersion
+      ? "current"
+      : version === currentVersion - 1
+        ? "legacy"
+        : "none";
   for (const [name, rawEntry] of Object.entries(packages)) {
     if (name.length === 0) throw new Error(`${label} has an empty package name`);
     const entryLabel = `${label}.packages.${name}`;
     const entry = record(rawEntry, entryLabel);
-    if (shape === "index") decodeIndexEntry(entry, name, current, entryLabel);
-    else decodeFullEntry(entry, name, current, entryLabel);
+    if (shape === "index") decodeIndexEntry(entry, name, identityContract, entryLabel);
+    else decodeFullEntry(entry, name, identityContract, entryLabel);
   }
 }
 
@@ -611,7 +654,7 @@ export async function loadMappings(path = DEFAULT_PATH): Promise<MappingsPayload
     SUPPORTED_BUNDLE_SCHEMAS,
     true,
   );
-  decodePackages(payload, 2, "mapping bundle", "full");
+  decodePackages(payload, 3, "mapping bundle", "full");
   return payload as MappingsPayload;
 }
 
@@ -624,7 +667,7 @@ export async function loadMappingsIndex(
     SUPPORTED_INDEX_SCHEMAS,
     true,
   );
-  decodePackages(payload, 3, "mapping index", "index");
+  decodePackages(payload, 4, "mapping index", "index");
   const packages = record(payload.packages, "mapping index.packages");
   for (const [name, rawEntry] of Object.entries(packages)) {
     const entry = record(rawEntry, `mapping index.packages.${name}`);
@@ -671,8 +714,8 @@ export async function loadMappingPackageDetail(
     SUPPORTED_DETAIL_SCHEMAS,
     false,
   );
-  decodePackages(payload, 2, `mapping detail ${path}`, "full");
-  const expectedDetailVersion = decodedIndex.schemaVersion === 3 ? 2 : 1;
+  decodePackages(payload, 3, `mapping detail ${path}`, "full");
+  const expectedDetailVersion = decodedIndex.schemaVersion - 1;
   if (payload.schema_version !== expectedDetailVersion) {
     throw new Error(
       `mapping index/detail schema mismatch: index ${decodedIndex.schemaVersion} requires detail ${expectedDetailVersion}`,
@@ -682,7 +725,7 @@ export async function loadMappingPackageDetail(
   const detail = data.packages[decodedIndex.name];
   if (!detail) throw new Error(`Missing ${decodedIndex.name} in ${path}`);
   if (
-    decodedIndex.schemaVersion === 3 &&
+    decodedIndex.schemaVersion >= 3 &&
     normalizedIndexIdentityContract(
       detail as unknown as Record<string, unknown>,
       decodedIndex.includeAuto,
@@ -728,5 +771,5 @@ export const ECOSYSTEMS = [
   { id: "cran", label: "CRAN", color: "#1E63B5" },
   { id: "bioconductor", label: "Bioconductor", color: "#1A8744" },
   { id: "generic", label: "Generic", color: "#62656a" },
-  { id: "none", label: "Unmapped", color: "#b5b7ba" },
+  { id: "none", label: "No primary", color: "#b5b7ba" },
 ] as const;

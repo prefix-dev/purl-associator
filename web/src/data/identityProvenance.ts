@@ -89,9 +89,32 @@ export function describeIdentity(identity: PublishedIdentity): IdentityDisplay {
   } satisfies IdentityDisplay;
 
   if (identity.kind === "cpe") {
+    const provenance = identity.provenance;
+    if (provenance.availability === "unavailable") {
+      return {
+        ...base,
+        hint: "CPE prefix recorded without provenance in an older payload.",
+      };
+    }
+    if (provenance.source === "auto") {
+      return {
+        ...base,
+        source: provenance.source,
+        review: reviewDisplay(provenance.review.status, null, null),
+        hasProvenance: true,
+        hint: "CPE prefix recorded by the automatic mapping layer.",
+      };
+    }
     return {
       ...base,
-      hint: "CPE prefix recorded for downstream NVD matching. The payload publishes no provenance for CPEs.",
+      source: provenance.source,
+      review: reviewDisplay(
+        provenance.review.status,
+        provenance.review.reviewer,
+        dateOf(provenance.review.reviewed_at),
+      ),
+      hasProvenance: true,
+      hint: "CPE prefix set by a reviewer.",
     };
   }
 

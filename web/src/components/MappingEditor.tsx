@@ -1,4 +1,5 @@
 import { ReactNode, useState } from "react";
+import { effectiveMappingStatus } from "../data/identityCoverage";
 import { PURL_TYPES } from "../data/loader";
 import {
   alternativeMetas,
@@ -73,7 +74,7 @@ export function MappingEditor({
             No package selected
           </div>
           <div style={{ fontSize: 13, color: t.fg3 }}>
-            Pick a conda-forge package on the left to view identity metadata and edit its PURL mapping.
+            Pick a conda-forge package on the left to view and edit its identity metadata.
           </div>
         </div>
       </div>
@@ -108,14 +109,16 @@ export function MappingEditor({
     purl: edit?.purl ?? p.purl ?? auto.purl ?? "",
     alternative_purls: edit?.alternative_purls ?? currentAlternativePurls,
     cpes: edit?.cpes,
-    unmapped: edit?.unmapped ?? p.unmapped ?? p.purl === null,
+    unmapped: edit?.unmapped ?? p.unmapped ?? p.status === "unmapped",
     note: edit?.note ?? "",
   };
   const effCpes = eff.cpes ?? p.cpes ?? [];
 
   const isEdited = !!edit;
+  const displayStatus = effectiveMappingStatus(p, edit);
   const isVerified =
-    (p.status === "verified" || p.status === "auto-verified") && !isEdited;
+    (displayStatus === "verified" || displayStatus === "auto-verified") &&
+    !isEdited;
 
   function updatePart(patch: Partial<Edit>): void {
     const editsMapping =
@@ -238,13 +241,7 @@ export function MappingEditor({
                 v{p.version}
               </span>
               <StatusPill
-                status={
-                  isEdited
-                    ? "edited"
-                    : p.status === "unmapped" || p.purl === null
-                      ? "unmapped"
-                      : p.status
-                }
+                status={displayStatus}
                 theme={theme}
               />
             </div>
@@ -515,7 +512,7 @@ export function MappingEditor({
               <span
                 style={{ fontSize: 11.5, color: t.fg2, marginLeft: 6 }}
               >
-                (mark as intentionally unmapped — won't appear as missing)
+                (record a reviewed no-PURL decision)
               </span>
             </span>
           </label>

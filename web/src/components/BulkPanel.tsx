@@ -1,3 +1,4 @@
+import { effectiveMappingStatus } from "../data/identityCoverage";
 import type { Edit, MappingPackageIndex } from "../data/types";
 import { Btn, PurlChip, StatusPill, Theme } from "./Primitives";
 
@@ -170,11 +171,7 @@ export function BulkPanel({
           {selectedPackages.slice(0, 200).map((p) => {
             const e = edits[p.name];
             const purl = e?.purl ?? p.purl;
-            const status = e
-              ? "edited"
-              : p.status === "unmapped" || p.purl === null
-                ? "unmapped"
-                : p.status;
+            const status = effectiveMappingStatus(p, e);
             return (
               <div
                 key={p.name}

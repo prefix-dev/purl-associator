@@ -169,7 +169,7 @@ export function StatusPill({
       fg: theme.dark ? "#f5c542" : "#866400",
     },
     unmapped: {
-      label: "Unmapped",
+      label: "No PURL",
       bg: theme.dark ? "#2a1818" : "#ffe1d8",
       fg: theme.dark ? "#ff8e6a" : "#a8401b",
     },

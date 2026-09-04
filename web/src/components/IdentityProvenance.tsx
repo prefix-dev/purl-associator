@@ -25,8 +25,8 @@ type Props = {
   stale?: boolean;
 };
 
-/** Published per-identity provenance (schema v3 `identities`). Renders nothing
- *  for payloads that predate it. */
+/** Published per-identity provenance. Renders nothing for payloads that
+ *  predate the identity contract. */
 export function IdentityProvenance({
   theme,
   identities,
@@ -176,8 +176,7 @@ function IdentityRow({ row, theme }: { row: IdentityDisplay; theme: Theme }) {
       {row.review ? (
         <ReviewBadge review={row.review} theme={theme} />
       ) : (
-        !row.hasProvenance &&
-        row.kind === "purl" && (
+        !row.hasProvenance && (
           <span style={{ fontSize: 10.5, color: t.fg3, fontStyle: "italic" }}>
             no provenance recorded
           </span>

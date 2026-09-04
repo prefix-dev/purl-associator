@@ -10,7 +10,7 @@ let component;
 
 before(async () => {
   server = await createServer({
-    server: { middlewareMode: true },
+    server: { middlewareMode: true, hmr: false },
     appType: "custom",
     logLevel: "error",
   });
@@ -98,6 +98,21 @@ const cpeIdentity = {
   kind: "cpe",
   role: "associated",
   value: "cpe:2.3:a:example:demo",
+  provenance: {
+    availability: "available",
+    source: "manual",
+    review: {
+      status: "verified",
+      reviewer: "cpe-reviewer",
+      reviewed_at: "2026-02-04T05:06:07Z",
+    },
+  },
+};
+
+const legacyCpeIdentity = {
+  kind: "cpe",
+  role: "associated",
+  value: "cpe:2.3:a:example:legacy",
   provenance: { availability: "unavailable" },
 };
 
@@ -159,6 +174,20 @@ test("a recipe-source alternative shows provenance without a review state", () =
   assert.doesNotMatch(html, /Verified/);
 });
 
+test("a CPE shows its source and review attribution", () => {
+  const [row] = describe.describeIdentities([cpeIdentity]);
+  assert.equal(row.source, "manual");
+  assert.equal(row.review.status, "verified");
+  assert.equal(row.review.reviewer, "cpe-reviewer");
+  assert.equal(row.review.reviewedAt, "2026-02-04");
+  assert.equal(row.hasProvenance, true);
+
+  const html = render([cpeIdentity], "verified");
+  assert.match(html, /manual/);
+  assert.match(html, /@cpe-reviewer/);
+  assert.match(html, /Verified/);
+});
+
 test("a human-blessed mapping with an auto primary reports both facts", () => {
   const divergence = describe.primaryReviewDivergence("verified", [
     autoPrimary,
@@ -185,7 +214,7 @@ test("agreeing statuses and non-human mapping statuses raise no divergence", () 
 test("identities without provenance render as unrecorded rather than defaulted", () => {
   const [alternative, cpe] = describe.describeIdentities([
     bareAlternative,
-    cpeIdentity,
+    legacyCpeIdentity,
   ]);
   assert.equal(alternative.hasProvenance, false);
   assert.equal(alternative.source, null);
@@ -193,7 +222,7 @@ test("identities without provenance render as unrecorded rather than defaulted",
   assert.equal(cpe.hasProvenance, false);
   assert.equal(cpe.roleLabel, "cpe");
 
-  const html = render([bareAlternative, cpeIdentity], "verified");
+  const html = render([bareAlternative, legacyCpeIdentity], "verified");
   assert.match(html, /no provenance recorded/);
   assert.doesNotMatch(html, /confidence/);
 });

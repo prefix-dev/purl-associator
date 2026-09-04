@@ -137,7 +137,7 @@ class IdentityPayloadTest(unittest.TestCase):
         index = json.loads(index_path.read_text())
         reviewed = bundle["packages"]["reviewed"]
 
-        self.assertEqual((bundle["schema_version"], index["schema_version"]), (2, 3))
+        self.assertEqual((bundle["schema_version"], index["schema_version"]), (3, 4))
         self.assertEqual(reviewed["status"], "verified")
         self.assertEqual(reviewed["approved_by"], "current-reviewer")
         # Identity provenance remains with the primary-owning manual layer.
@@ -155,7 +155,23 @@ class IdentityPayloadTest(unittest.TestCase):
         )
         self.assertEqual(
             reviewed["identities"][2]["provenance"],
-            {"availability": "unavailable"},
+            {
+                "availability": "available",
+                "source": "manual",
+                "review": {
+                    "status": "verified",
+                    "reviewer": "current-reviewer",
+                    "reviewed_at": "2026-01-03T04:05:06Z",
+                },
+            },
+        )
+        self.assertEqual(
+            bundle["packages"]["auto-detailed"]["identities"][2]["provenance"],
+            {
+                "availability": "available",
+                "source": "auto",
+                "review": {"status": "auto-verified", "reviewer": None},
+            },
         )
         errors: list[str] = []
         validate.validate_mapping_alternatives(
@@ -252,6 +268,17 @@ class IdentityPayloadTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             merge_mappings._validate_source_payload(
                 manual_without_owner, "manual", kind="manual"
+            )
+
+        cpe_without_owner = {
+            "schema_version": 1,
+            "packages": {
+                "cpe-only": {"cpes": ["cpe:2.3:a:example:demo"]},
+            },
+        }
+        with self.assertRaises(ValueError):
+            merge_mappings._validate_source_payload(
+                cpe_without_owner, "manual CPE", kind="manual"
             )
 
         contribution = json.loads((self.contributions / "review.json").read_text())
@@ -368,9 +395,10 @@ class IdentityPayloadTest(unittest.TestCase):
                 mutate_primary(("identities", 1, "provenance", "confidence"), 0.1),
             ),
             (
-                "CPE unavailable only",
+                "CPE provenance required",
                 mutate_primary(
-                    ("identities", 2, "provenance"), {"availability": "available"}
+                    ("identities", 2, "provenance"),
+                    {"availability": "unavailable"},
                 ),
             ),
         ]
@@ -614,19 +642,25 @@ class IdentityPayloadTest(unittest.TestCase):
         bundle_path, index_path, detail_dir = self._generate(self.root / "legacy")
         bundle = json.loads(bundle_path.read_text())
         index = json.loads(index_path.read_text())
-        bundle["schema_version"] = 1
-        index["schema_version"] = 2
+        bundle["schema_version"] = 2
+        index["schema_version"] = 3
         for entry in bundle["packages"].values():
-            entry.pop("identities")
+            for identity in entry["identities"]:
+                if identity["kind"] == "cpe":
+                    identity["provenance"] = {"availability": "unavailable"}
         for entry in index["packages"].values():
-            entry.pop("identities")
+            for identity in entry["identities"]:
+                if identity["kind"] == "cpe":
+                    identity["provenance"] = {"availability": "unavailable"}
         self._write_json(bundle_path, bundle)
         self._write_json(index_path, index)
         for shard_path in detail_dir.glob("*.json"):
             shard = json.loads(shard_path.read_text())
-            shard["schema_version"] = 1
+            shard["schema_version"] = 2
             for entry in shard["packages"].values():
-                entry.pop("identities")
+                for identity in entry["identities"]:
+                    if identity["kind"] == "cpe":
+                        identity["provenance"] = {"availability": "unavailable"}
             self._write_json(shard_path, shard)
 
         errors: list[str] = []
@@ -652,12 +686,12 @@ class IdentityPayloadTest(unittest.TestCase):
         errors: list[str] = []
         self.assertEqual(
             validate._validate_schema_version(
-                {"schema_version": 1},
-                "legacy",
+                {"schema_version": 2},
+                "previous",
                 validate.SUPPORTED_BUNDLE_SCHEMAS,
                 errors,
             ),
-            1,
+            2,
         )
         self.assertEqual(errors, [])
         validate._validate_schema_version(
