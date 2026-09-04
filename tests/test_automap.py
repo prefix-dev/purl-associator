@@ -2,53 +2,41 @@ from __future__ import annotations
 
 import unittest
 
-from scripts.automap import _artifact_identity_pairs
-from scripts.parselmouth_lookup import ParselmouthMapping
+from scripts.parselmouth_identity import artifact_identity_pairs
 
 
 class ArtifactIdentityTest(unittest.TestCase):
     def test_vendored_dependencies_are_not_alternative_identities(self) -> None:
-        mapping = ParselmouthMapping(
-            pypi_normalized_names=[
-                "flask-rest-orm",
-                "flask-restful",
-                "sqlalchemy",
-            ],
-            versions={
-                "flask-rest-orm": "0.5.0",
-                "flask-restful": "0.3.6",
-                "sqlalchemy": "1.2.5",
-            },
-            conda_name="flask-rest-orm",
-        )
+        pairs = [
+            ("pkg:pypi/flask-rest-orm", "flask-rest-orm"),
+            ("pkg:pypi/flask-restful", "flask-restful"),
+            ("pkg:pypi/sqlalchemy", "sqlalchemy"),
+        ]
 
         self.assertEqual(
-            _artifact_identity_pairs(mapping, conda_name="flask-rest-orm"),
+            artifact_identity_pairs(pairs, normalized_conda_name="flask-rest-orm"),
             [("pkg:pypi/flask-rest-orm", "flask-rest-orm")],
         )
 
-    def test_same_version_does_not_make_a_contained_distribution_an_identity(
+    def test_multi_distribution_artifact_without_name_match_has_no_identity(
         self,
     ) -> None:
-        mapping = ParselmouthMapping(
-            pypi_normalized_names=["suite", "suite-cli", "dependency"],
-            versions={"suite": "2.0", "suite-cli": "2.0", "dependency": "1.4"},
-        )
+        pairs = [
+            ("pkg:pypi/suite-core", "suite-core"),
+            ("pkg:pypi/suite-cli", "suite-cli"),
+        ]
 
         self.assertEqual(
-            _artifact_identity_pairs(mapping, conda_name="suite"),
-            [("pkg:pypi/suite", "suite")],
+            artifact_identity_pairs(pairs, normalized_conda_name="suite"),
+            [],
         )
 
     def test_single_distribution_can_differ_from_conda_name(self) -> None:
-        mapping = ParselmouthMapping(
-            pypi_normalized_names=["upstream-name"],
-            versions={"upstream-name": "1.0"},
-        )
+        pairs = [("pkg:pypi/upstream-name", "upstream-name")]
 
         self.assertEqual(
-            _artifact_identity_pairs(mapping, conda_name="conda-name"),
-            [("pkg:pypi/upstream-name", "upstream-name")],
+            artifact_identity_pairs(pairs, normalized_conda_name="conda-name"),
+            pairs,
         )
 
 
