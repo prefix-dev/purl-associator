@@ -38,6 +38,7 @@ from rich.progress import (
     TimeElapsedColumn,
 )
 
+from scripts.parselmouth_identity import artifact_identity_pairs
 from scripts.parselmouth_lookup import fetch_mapping_by_hash
 from scripts.purl_inference import (
     PurlGuess,
@@ -393,12 +394,14 @@ async def _process_record(
         )
         candidates = [primary] + [c for c in candidates if c.purl != primary.purl]
 
-    # Surface Parselmouth-discovered PyPI names as alternatives when they do not
-    # duplicate the primary/URL-inferred candidates.
+    # Parselmouth describes package contents, not identity: old or broken
+    # artifacts can vendor their dependency tree. Only surface unambiguous or
+    # package-correlated distributions as alternative identities.
     seen_purls = {c.purl for c in candidates}
     if parselmouth:
-        for purl, pypi_name in zip(
-            parselmouth.pypi_purls, parselmouth.pypi_normalized_names
+        for purl, pypi_name in artifact_identity_pairs(
+            zip(parselmouth.pypi_purls, parselmouth.pypi_normalized_names),
+            normalized_conda_name=normalize_pypi_name(name),
         ):
             if purl in seen_purls:
                 continue
