@@ -11,7 +11,7 @@ const realFetch = globalThis.fetch;
 
 before(async () => {
   server = await createServer({
-    server: { middlewareMode: true },
+    server: { middlewareMode: true, hmr: false },
     appType: "custom",
     logLevel: "error",
   });
@@ -94,7 +94,11 @@ function fixture(name, detailPath) {
       kind: "cpe",
       role: "associated",
       value: "cpe:2.3:a:example:demo",
-      provenance: { availability: "unavailable" },
+      provenance: {
+        availability: "available",
+        source: "auto",
+        review: { status: "auto-verified", reviewer: null },
+      },
     },
   ];
   const common = {
@@ -149,8 +153,8 @@ async function loadCurrentCase(mutateDetail = () => {}) {
   const detailPath = `hostile-detail-${id}.json`;
   const { index, detail } = fixture(name, detailPath);
   mutateDetail(detail);
-  responses.set(indexPath, metadata(3, { [name]: index }));
-  responses.set(`./${detailPath}`, { schema_version: 2, packages: { [name]: detail } });
+  responses.set(indexPath, metadata(4, { [name]: index }));
+  responses.set(`./${detailPath}`, { schema_version: 3, packages: { [name]: detail } });
   const decodedIndex = await loader.loadMappingsIndex(indexPath);
   return loader.loadMappingPackageDetail(decodedIndex.packages[name]);
 }
@@ -183,6 +187,17 @@ test("hostile current shards cannot replace an internally valid index identity c
       detail.cpes[0] = "cpe:2.3:a:attacker:demo";
       detail.identities.at(-1).value = detail.cpes[0];
     },
+    "CPE provenance": (detail) => {
+      detail.identities.at(-1).provenance = {
+        availability: "available",
+        source: "manual",
+        review: {
+          status: "verified",
+          reviewer: "attacker",
+          reviewed_at: "2026-01-02T03:04:05Z",
+        },
+      };
+    },
     status: (detail) => {
       detail.status = "auto-unverified";
     },
@@ -210,6 +225,26 @@ test("hostile current shards cannot replace an internally valid index identity c
       await assert.rejects(loadCurrentCase(mutate), /identity contract mismatch/);
     });
   }
+});
+
+test("previous identity schema accepts explicitly unavailable CPE provenance", async () => {
+  const id = sequence++;
+  const name = `previous-${id}`;
+  const { detail } = fixture(name, "unused.json");
+  detail.identities.at(-1).provenance = { availability: "unavailable" };
+  const bundlePath = `./previous-${id}.json`;
+  responses.set(bundlePath, metadata(2, { [name]: detail }));
+  const decoded = await loader.loadMappings(bundlePath);
+  assert.equal(decoded.packages[name].identities.at(-1).provenance.availability, "unavailable");
+});
+
+test("current identity schema requires attributed CPE provenance", async () => {
+  await assert.rejects(
+    loadCurrentCase((detail) => {
+      detail.identities.at(-1).provenance = { availability: "unavailable" };
+    }),
+    /CPE provenance/,
+  );
 });
 
 function legacyBundle(id) {

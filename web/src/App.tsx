@@ -5,7 +5,10 @@ import { LoadingToast } from "./components/LoadingToast";
 import { LocalDraftBanner } from "./components/LocalDraftBanner";
 import { LoginModal } from "./components/LoginModal";
 import { MappingEditor } from "./components/MappingEditor";
-import { PackageTable } from "./components/PackageTable";
+import {
+  PackageTable,
+  type PackageTableFilters,
+} from "./components/PackageTable";
 import { PRDrawer } from "./components/PRDrawer";
 import { Btn, Glyph, useTheme } from "./components/Primitives";
 import { repoFullName } from "./config";
@@ -30,9 +33,9 @@ export function App() {
   const edits = usePurlEditStore((state) => state.edits);
   const setEdits = usePurlEditStore((state) => state.setEdits);
   const [q, setQ] = useState("");
-  const [filters, setFilters] = useState({
-    unmappedOnly: false,
-    unverifiedOnly: false,
+  const [filters, setFilters] = useState<PackageTableFilters>({
+    coverage: "all",
+    review: "all",
     ecosystem: "all",
   });
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -351,7 +354,7 @@ export function App() {
           }}
         >
           <Glyph name="edit" size={13} />
-          You can stage local PURL mapping changes without signing in. CPEs are shown as read-only identity metadata.
+          You can stage local PURL and CPE mapping changes without signing in.
           <button
             onClick={() => setLoginOpen(true)}
             style={{

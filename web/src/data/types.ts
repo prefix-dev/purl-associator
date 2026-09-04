@@ -82,11 +82,35 @@ export type DetailedAlternativeIdentity = {
   };
 };
 
-export type CpeIdentity = {
+export type LegacyCpeIdentity = {
   kind: "cpe";
   role: "associated";
   value: string;
   provenance: { availability: "unavailable" };
+};
+
+export type CpeIdentity = {
+  kind: "cpe";
+  role: "associated";
+  value: string;
+  provenance:
+    | {
+        availability: "available";
+        source: "auto";
+        review: {
+          status: "auto-unverified" | "auto-verified";
+          reviewer: null;
+        };
+      }
+    | {
+        availability: "available";
+        source: "manual";
+        review: {
+          status: "verified" | "edited";
+          reviewer: string;
+          reviewed_at: string;
+        };
+      };
 };
 
 export type PublishedIdentity =
@@ -94,6 +118,7 @@ export type PublishedIdentity =
   | ManualPrimaryIdentity
   | BareAlternativeIdentity
   | DetailedAlternativeIdentity
+  | LegacyCpeIdentity
   | CpeIdentity;
 
 export type ManualOverride = {
@@ -177,31 +202,51 @@ export type LegacyMappingsPayload = MappingPayloadMetadata & {
   packages: Record<string, PackageEntry>;
 };
 
-export type CurrentMappingsPayload = MappingPayloadMetadata & {
+export type PreviousMappingsPayload = MappingPayloadMetadata & {
   schema_version: 2;
   packages: Record<string, PackageEntry & { identities: PublishedIdentity[] }>;
 };
 
-export type MappingsPayload = LegacyMappingsPayload | CurrentMappingsPayload;
+export type CurrentMappingsPayload = MappingPayloadMetadata & {
+  schema_version: 3;
+  packages: Record<string, PackageEntry & { identities: PublishedIdentity[] }>;
+};
+
+export type MappingsPayload =
+  | LegacyMappingsPayload
+  | PreviousMappingsPayload
+  | CurrentMappingsPayload;
 
 export type LegacyMappingsIndexPayload = MappingPayloadMetadata & {
   schema_version: 2;
   packages: Record<string, MappingPackageIndex>;
 };
 
-export type CurrentMappingsIndexPayload = MappingPayloadMetadata & {
+export type PreviousMappingsIndexPayload = MappingPayloadMetadata & {
   schema_version: 3;
-  packages: Record<MappingPackageIndex["name"], MappingPackageIndex & { identities: PublishedIdentity[] }>;
+  packages: Record<
+    MappingPackageIndex["name"],
+    MappingPackageIndex & { identities: PublishedIdentity[] }
+  >;
+};
+
+export type CurrentMappingsIndexPayload = MappingPayloadMetadata & {
+  schema_version: 4;
+  packages: Record<
+    MappingPackageIndex["name"],
+    MappingPackageIndex & { identities: PublishedIdentity[] }
+  >;
 };
 
 export type MappingsIndexPayload =
   | LegacyMappingsIndexPayload
+  | PreviousMappingsIndexPayload
   | CurrentMappingsIndexPayload;
 
 export type MappingDetailPayload =
   | { schema_version: 1; packages: Record<string, PackageEntry> }
   | {
-      schema_version: 2;
+      schema_version: 2 | 3;
       packages: Record<string, PackageEntry & { identities: PublishedIdentity[] }>;
     };
 

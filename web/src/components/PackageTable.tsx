@@ -1,6 +1,13 @@
 import { useMemo, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import type { Edit, MappingPackageIndex, PackageEntry } from "../data/types";
+import type { Edit, MappingPackageIndex, ReviewStatus } from "../data/types";
+import {
+  effectiveCpes,
+  effectiveMappingStatus,
+  packageIdentityCoverage,
+  needsPurlDecision,
+  type IdentityCoverage,
+} from "../data/identityCoverage";
 import { ECOSYSTEMS } from "../data/loader";
 import { EcosystemChip, FilterChip, Glyph, StatusPill, Theme } from "./Primitives";
 
@@ -16,14 +23,15 @@ export type SortDir = "asc" | "desc";
 type EcosystemFilter = "all" | (string & {});
 type EditsByName = Record<string, Edit>;
 type TablePackage = MappingPackageIndex;
-type EffectiveStatus = PackageEntry["status"];
-type CountKey = "all" | "unmapped" | "unverified" | "verified" | "edited";
+type EffectiveStatus = ReviewStatus;
+type ReviewFilter = "all" | "no-purl-decision" | "unverified";
+type CountKey = "all" | IdentityCoverage | Exclude<ReviewFilter, "all">;
 type PackageCounts = Record<CountKey, number>;
 type PackagePredicate = (p: TablePackage, edits: EditsByName) => boolean;
 
-type Filters = {
-  unmappedOnly: boolean;
-  unverifiedOnly: boolean;
+export type PackageTableFilters = {
+  coverage: "all" | IdentityCoverage;
+  review: ReviewFilter;
   ecosystem: EcosystemFilter;
 };
 
@@ -37,15 +45,10 @@ type Props = {
   setFocusedId: (id: string | null) => void;
   q: string;
   setQ: (v: string) => void;
-  filters: Filters;
-  setFilters: (f: Filters) => void;
+  filters: PackageTableFilters;
+  setFilters: (f: PackageTableFilters) => void;
 };
 
-function effectiveStatus(p: TablePackage, edits: EditsByName): EffectiveStatus {
-  if (edits[p.name]) return "edited";
-  if (p.purl === null || p.status === "unmapped") return "unmapped";
-  return p.status;
-}
 
 function effectivePurl(p: TablePackage, edits: EditsByName): string {
   return edits[p.name]?.purl ?? p.purl ?? "";
@@ -63,27 +66,36 @@ function matchesEcosystem(
   return !ecosystem || ecosystem === "all" || effectiveType(p, edits) === ecosystem;
 }
 
-const isUnmapped: PackagePredicate = (p, edits) =>
-  p.status === "unmapped" || p.purl === null || Boolean(edits[p.name]?.unmapped);
-
-const isUnverified: PackagePredicate = (p) => p.status === "auto-unverified";
-
-const isVerified: PackagePredicate = (p) =>
-  p.status === "verified" || p.status === "auto-verified";
-
-const COUNT_BUCKETS = {
-  unmapped: isUnmapped,
-  unverified: isUnverified,
-  verified: isVerified,
-} satisfies Record<Exclude<CountKey, "all" | "edited">, PackagePredicate>;
+const isUnverified: PackagePredicate = (p, edits) =>
+  effectiveMappingStatus(p, edits[p.name]) === "auto-unverified";
 
 const EMPTY_COUNTS = {
   all: 0,
-  unmapped: 0,
+  none: 0,
+  purl: 0,
+  cpe: 0,
+  "purl+cpe": 0,
+  "no-purl-decision": 0,
   unverified: 0,
-  verified: 0,
-  edited: 0,
 } satisfies PackageCounts;
+
+const COVERAGE_FILTERS: Array<{
+  coverage: IdentityCoverage;
+  label: string;
+}> = [
+  { coverage: "none", label: "No identity" },
+  { coverage: "purl", label: "PURL only" },
+  { coverage: "cpe", label: "CPE only" },
+  { coverage: "purl+cpe", label: "PURL + CPE" },
+];
+
+const REVIEW_FILTERS: Array<{
+  review: Exclude<ReviewFilter, "all">;
+  label: string;
+}> = [
+  { review: "no-purl-decision", label: "No PURL decision" },
+  { review: "unverified", label: "Unverified" },
+];
 
 const STATUS_RANK: Record<EffectiveStatus, number> = {
   edited: 0,
@@ -114,13 +126,21 @@ export function PackageTable({
   const filtered = useMemo(() => {
     const ql = q.trim().toLowerCase();
     const out = packages.filter((p) => {
-      if (filters.unmappedOnly && !isUnmapped(p, edits)) return false;
-      if (filters.unverifiedOnly && isVerified(p, edits) && !edits[p.name])
+      if (
+        filters.coverage !== "all" &&
+        packageIdentityCoverage(p, edits[p.name]) !== filters.coverage
+      )
         return false;
+      if (
+        filters.review === "no-purl-decision" &&
+        !needsPurlDecision(p, edits[p.name])
+      )
+        return false;
+      if (filters.review === "unverified" && !isUnverified(p, edits)) return false;
       if (!matchesEcosystem(p, edits, filters.ecosystem)) return false;
       if (!ql) return true;
-      const purl = edits[p.name]?.purl ?? p.purl ?? "";
-      const cpes = (p.cpes ?? []).join(" ");
+      const purl = effectivePurl(p, edits);
+      const cpes = effectiveCpes(p, edits[p.name]).join(" ");
       return (
         p.name.toLowerCase().includes(ql) ||
         purl.toLowerCase().includes(ql) ||
@@ -151,8 +171,8 @@ export function PackageTable({
           break;
         case "status":
           cmp =
-            (STATUS_RANK[effectiveStatus(a, edits)] ?? 99) -
-            (STATUS_RANK[effectiveStatus(b, edits)] ?? 99);
+            (STATUS_RANK[effectiveMappingStatus(a, edits[a.name])] ?? 99) -
+            (STATUS_RANK[effectiveMappingStatus(b, edits[b.name])] ?? 99);
           break;
       }
       return cmp * dir;
@@ -166,12 +186,9 @@ export function PackageTable({
     );
     const c: PackageCounts = { ...EMPTY_COUNTS, all: scoped.length };
     for (const p of scoped) {
-      if (edits[p.name]) c.edited++;
-      for (const [key, matches] of Object.entries(COUNT_BUCKETS) as Array<
-        [Exclude<CountKey, "all" | "edited">, PackagePredicate]
-      >) {
-        if (matches(p, edits)) c[key]++;
-      }
+      c[packageIdentityCoverage(p, edits[p.name])]++;
+      if (isUnverified(p, edits)) c.unverified++;
+      if (needsPurlDecision(p, edits[p.name])) c["no-purl-decision"]++;
     }
     return c;
   }, [packages, edits, filters.ecosystem]);
@@ -368,51 +385,55 @@ export function PackageTable({
         <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
           <FilterChip
             theme={theme}
-            active={
-              !filters.unmappedOnly && !filters.unverifiedOnly
-            }
+            active={filters.coverage === "all" && filters.review === "all"}
             onClick={() =>
               setFilters({
                 ...filters,
-                unmappedOnly: false,
-                unverifiedOnly: false,
+                coverage: "all",
+                review: "all",
               })
             }
           >
             All <Count active={false} theme={theme}>{counts.all}</Count>
           </FilterChip>
-          <FilterChip
-            theme={theme}
-            active={filters.unmappedOnly}
-            onClick={() =>
-              setFilters({
-                ...filters,
-                unmappedOnly: !filters.unmappedOnly,
-                unverifiedOnly: false,
-              })
-            }
-          >
-            Unmapped{" "}
-            <Count active={filters.unmappedOnly} theme={theme}>
-              {counts.unmapped}
-            </Count>
-          </FilterChip>
-          <FilterChip
-            theme={theme}
-            active={filters.unverifiedOnly}
-            onClick={() =>
-              setFilters({
-                ...filters,
-                unverifiedOnly: !filters.unverifiedOnly,
-                unmappedOnly: false,
-              })
-            }
-          >
-            Unverified{" "}
-            <Count active={filters.unverifiedOnly} theme={theme}>
-              {counts.unverified}
-            </Count>
-          </FilterChip>
+          {COVERAGE_FILTERS.map(({ coverage, label }) => (
+            <FilterChip
+              key={coverage}
+              theme={theme}
+              active={filters.coverage === coverage}
+              onClick={() =>
+                setFilters({
+                  ...filters,
+                  coverage: filters.coverage === coverage ? "all" : coverage,
+                  review: "all",
+                })
+              }
+            >
+              {label}{" "}
+              <Count active={filters.coverage === coverage} theme={theme}>
+                {counts[coverage]}
+              </Count>
+            </FilterChip>
+          ))}
+          {REVIEW_FILTERS.map(({ review, label }) => (
+            <FilterChip
+              key={review}
+              theme={theme}
+              active={filters.review === review}
+              onClick={() =>
+                setFilters({
+                  ...filters,
+                  review: filters.review === review ? "all" : review,
+                  coverage: "all",
+                })
+              }
+            >
+              {label}{" "}
+              <Count active={filters.review === review} theme={theme}>
+                {counts[review]}
+              </Count>
+            </FilterChip>
+          ))}
 
           <select
             value={filters.ecosystem}
@@ -538,16 +559,16 @@ export function PackageTable({
             style={{
               height: virtualizer.getTotalSize(),
               position: "relative",
-              width: "100%",
             }}
           >
             {virtualizer.getVirtualItems().map((vi) => {
               const p = filtered[vi.index];
               const checked = selectedSet.has(p.name);
               const focused = focusedId === p.name;
-              const status = effectiveStatus(p, edits);
+              const status = effectiveMappingStatus(p, edits[p.name]);
               const purl = effectivePurl(p, edits);
               const eco = effectiveType(p, edits);
+              const cpes = effectiveCpes(p, edits[p.name]);
               return (
                 <div
                   key={p.name}
@@ -644,17 +665,17 @@ export function PackageTable({
                     )}
                   </code>
                   <code
-                    title={(p.cpes ?? []).join("\n")}
+                    title={cpes.join("\n")}
                     style={{
                       fontFamily: "JetBrains Mono, monospace",
                       fontSize: 10.5,
-                      color: p.cpes?.length ? t.fg2 : t.fg3,
+                      color: cpes.length ? t.fg2 : t.fg3,
                       overflow: "hidden",
                       textOverflow: "ellipsis",
                       whiteSpace: "nowrap",
                     }}
                   >
-                    {p.cpes?.length ? p.cpes.join(", ") : "—"}
+                    {cpes.length ? cpes.join(", ") : "—"}
                   </code>
                   <span style={{ overflow: "hidden" }}>
                     <StatusPill

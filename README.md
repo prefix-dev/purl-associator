@@ -51,7 +51,29 @@ The core object is a conda-forge package identity record:
       "kind": "cpe",
       "role": "associated",
       "value": "cpe:2.3:a:gnu:ncurses",
-      "provenance": { "availability": "unavailable" }
+      "provenance": {
+        "availability": "available",
+        "source": "manual",
+        "review": {
+          "status": "verified",
+          "reviewer": "nichmor",
+          "reviewed_at": "2026-05-25T00:00:00Z"
+        }
+      }
+    },
+    {
+      "kind": "cpe",
+      "role": "associated",
+      "value": "cpe:2.3:a:invisible-island:ncurses",
+      "provenance": {
+        "availability": "available",
+        "source": "manual",
+        "review": {
+          "status": "verified",
+          "reviewer": "nichmor",
+          "reviewed_at": "2026-05-25T00:00:00Z"
+        }
+      }
     }
   ]
 }
@@ -74,12 +96,17 @@ view for downstream consumers:
   alternatives retain their own `source` and `confidence`; bare string
   alternatives use `availability: "unavailable"`. They never inherit the
   primary PURL's review object.
-- `kind: "cpe", role: "associated"` identifies a CPE prefix. The current source
-  model does not retain CPE-level attribution, so its provenance is explicitly
-  `unavailable` and never inferred from primary review state.
+- `kind: "cpe", role: "associated"` identifies a CPE prefix. Its provenance
+  identifies the automatic or reviewed source layer that last replaced the
+  package's CPE list, including that layer's review state and attribution.
 
 Identity order is deterministic: primary PURL, alternatives in source order,
 then CPEs in source order. A missing primary PURL produces no primary identity.
+
+Coverage is identity-based. A package has no identity only when `identities` is
+empty; a missing primary PURL can still leave alternative PURLs or CPEs. The
+legacy `unmapped` field records an intentional no-PURL decision, not the absence
+of every identity.
 Every published confidence is a finite JSON number; `NaN` and infinities are
 rejected. Contribution precedence compares timezone-aware timestamps as UTC
 instants, with the on-disk filename as the deterministic tie-breaker.
@@ -99,15 +126,13 @@ instants, with the on-disk filename as the deterministic tie-breaker.
 
 ### Payload versions and compatibility
 
-PFX-1826 advances `mappings.json` from schema 1 to **2**,
-`mappings-index.json` from schema 2 to **3**, and mapping detail shards from
-schema 1 to **2**. These versions add `identities` without removing or changing
-legacy `purl`, `alternative_purls`, `cpes`, `status`, or attribution fields.
-This additive compatibility window lets existing clients continue reading the
-legacy fields while provenance-aware clients migrate to `identities`. New
-clients should reject unknown future schema versions rather than guessing.
-The validator accepts the immediately preceding schemas during this window but
-requires and validates the per-identity contract on current schemas.
+PFX-1826 introduced `identities` in bundle schema 2, index schema 3, and detail
+schema 2. CPE provenance advances those payloads to bundle schema **3**, index
+schema **4**, and detail schema **3**. Legacy `purl`, `alternative_purls`,
+`cpes`, `status`, and attribution fields remain unchanged. New clients should
+reject unknown future schema versions rather than guessing. The validator and
+web decoder accept the earlier payload generations but require attributed CPE
+provenance on current schemas.
 
 The payload deployed by the Pages workflow is canonical. The checked-in
 `mappings-index.json` and shard files are build inputs/cache for the app, not a
@@ -182,9 +207,9 @@ pixi run -e lite mappings:validate
 The GitHub Pages app is a PURL editing UI:
 
 - users can review, edit, approve, or mark PURL mappings as unmapped
-- staged PURL edits are saved locally until submitted
+- staged identity edits are saved locally until submitted
 - submitted edits open PRs containing one new file under `mappings/contributions/`
-- CPEs are displayed read-only as package identity metadata
+- CPEs can be reviewed and edited alongside PURL mappings
 - no CVE dashboard, OpenVEX review, AI CVE queue, or deep-inspection routes are
   served from this repository
 
