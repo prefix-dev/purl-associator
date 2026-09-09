@@ -167,6 +167,35 @@ pixi run -e lite mappings:validate
 pixi run purl:test
 ```
 
+### Primary-PURL coverage report
+
+Report effective primary-PURL coverage after automatic mappings, manual overrides,
+and contributions have been merged. The reporter requires the current full bundle
+schema; it does not accept the compact index or raw `auto.json`.
+
+To rebuild and report without changing the committed public payloads:
+
+```sh
+pixi run -e lite mappings:merge \
+  --out .tmp/coverage/mappings.json \
+  --index-out .tmp/coverage/mappings-index.json \
+  --detail-dir .tmp/coverage/mapping_packages
+pixi run -e lite python -m scripts.mappings_report \
+  --input .tmp/coverage/mappings.json > .tmp/coverage/report.json
+```
+
+The JSON report separates `primary_present`, `explicitly_unmapped`, and
+`unresolved`; these three counts sum to `total`. `primary_missing` is the sum of
+the latter two states. Alternative PURLs and CPEs do not count as primary PURLs.
+Each missing-primary package retains its recorded URLs, note, version, and download
+count for investigation. Missing evidence does not imply intentional exclusion,
+and notes can survive reviewed overrides. This initial report does not yet infer
+failure reasons or distinguish confirmed mapper bugs from unresolved cases.
+
+Reporting is offline and read-only. Package order is stable, and volatile bundle
+generation timestamps are omitted. Invalid contracts fail rather than producing
+apparently successful empty coverage.
+
 ## CPE flow
 
 CPE discovery is part of identity mapping, not CVE assignment. The retained CPE
