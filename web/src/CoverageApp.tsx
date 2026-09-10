@@ -4,7 +4,6 @@ import { LoadingToast } from "./components/LoadingToast";
 import { Glyph, useTheme } from "./components/Primitives";
 import {
   loadMappingsReport,
-  sourceHosts,
   UNRESOLVED_DIAGNOSTICS,
   type MissingPrimaryPackage,
   type MissingPrimaryState,
@@ -87,7 +86,7 @@ export function CoverageApp() {
     () =>
       (report?.missing_packages ?? []).map((pkg) => ({
         ...pkg,
-        hosts: sourceHosts(pkg),
+        hosts: pkg.source_hosts,
       })),
     [report],
   );

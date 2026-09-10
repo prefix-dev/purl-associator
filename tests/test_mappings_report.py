@@ -156,6 +156,12 @@ class MappingsReportTest(unittest.TestCase):
             sum(report["unresolved_by_diagnostic"].values()),
             report["counts"]["unresolved"],
         )
+        self.assertEqual(
+            report["unresolved_by_source_host"],
+            [{"host": "example.org", "package_count": 1}],
+        )
+        self.assertEqual(rows["error"]["source_hosts"], ["example.org"])
+        self.assertEqual(rows["no-evidence"]["source_hosts"], [])
 
     def test_diagnostic_precedence_is_conservative(self) -> None:
         payload = copy.deepcopy(self.payload)
@@ -190,6 +196,9 @@ class MappingsReportTest(unittest.TestCase):
                 "homepage": "https://gitlab.com:443/group/project",
             }
         )
+        # Explicit no-PURL decisions retain evidence but are excluded from the
+        # unresolved host aggregate.
+        payload["packages"]["rejected"]["homepage"] = "https://gitlab.com/rejected"
         report = mappings_report.build_report(payload)
         rows = {row["name"]: row for row in report["missing_packages"]}
         self.assertEqual(
@@ -205,6 +214,31 @@ class MappingsReportTest(unittest.TestCase):
                 "no_parseable_source_host": 1,
                 "no_primary_from_url_evidence": 1,
             },
+        )
+        self.assertEqual(rows["cpe-only"]["source_hosts"], ["gitlab.com"])
+        self.assertEqual(rows["rejected"]["source_hosts"], ["gitlab.com"])
+        self.assertEqual(
+            report["unresolved_by_source_host"],
+            [
+                {"host": "example.org", "package_count": 1},
+                {"host": "gitlab.com", "package_count": 1},
+            ],
+        )
+
+    def test_source_host_aggregate_sorts_by_count_then_hostname(self) -> None:
+        payload = copy.deepcopy(self.payload)
+        payload["packages"]["alternative-only"].update(
+            source_url="https://z.example/source", repo="https://a.example/repo"
+        )
+        payload["packages"]["cpe-only"]["homepage"] = "https://z.example/home"
+        report = mappings_report.build_report(payload)
+        self.assertEqual(
+            report["unresolved_by_source_host"],
+            [
+                {"host": "z.example", "package_count": 2},
+                {"host": "a.example", "package_count": 1},
+                {"host": "example.org", "package_count": 1},
+            ],
         )
 
     def test_relative_empty_and_malformed_urls_have_no_parseable_host(self) -> None:
@@ -242,6 +276,88 @@ class MappingsReportTest(unittest.TestCase):
         self.assertEqual(json.loads(a.stdout), first)
         self.assertEqual(self.bundle.read_bytes(), before_bytes)
 
+    def test_markdown_renders_current_counts_and_bounded_hosts(self) -> None:
+        report = mappings_report.build_report(self.payload)
+        rendered = mappings_report.render_markdown(report, top_hosts=1)
+        self.assertIn("## Primary-PURL coverage", rendered)
+        self.assertIn("| Primary PURL present | 3 |", rendered)
+        self.assertIn("Primary-PURL coverage: **37.50%**.", rendered)
+        self.assertIn("| Recorded processing error | 1 |", rendered)
+        self.assertIn("### Top unresolved source hosts (1)", rendered)
+        self.assertIn("| `example.org` | 1 |", rendered)
+        self.assertEqual(rendered, mappings_report.render_markdown(report, top_hosts=1))
+
+    def test_markdown_compares_coverage_and_diagnostic_deltas(self) -> None:
+        baseline = mappings_report.build_report(self.payload)
+        current = copy.deepcopy(baseline)
+        current["counts"].update(
+            primary_present=4,
+            unresolved=3,
+            primary_missing=4,
+        )
+        current["unresolved_by_diagnostic"]["no_parseable_source_host"] = 1
+        rendered = mappings_report.render_markdown(current, baseline=baseline)
+        self.assertIn("| Primary PURL present | 3 | 4 | +1 |", rendered)
+        self.assertIn("| Explicitly unmapped | 1 | 1 | 0 |", rendered)
+        self.assertIn("| Unresolved | 4 | 3 | -1 |", rendered)
+        self.assertIn("| No parseable source host | 2 | 1 | -1 |", rendered)
+
+    def test_markdown_rejects_invalid_or_incompatible_baselines(self) -> None:
+        report = mappings_report.build_report(self.payload)
+        for patch in (
+            {"schema_version": 2},
+            {"input_schema_version": report["input_schema_version"] + 1},
+            {"counts": {**report["counts"], "unresolved": 3}},
+            {
+                "unresolved_by_diagnostic": {
+                    **report["unresolved_by_diagnostic"],
+                    "no_parseable_source_host": 1,
+                }
+            },
+        ):
+            baseline = {**report, **patch}
+            with self.subTest(patch=patch), self.assertRaises(ValueError):
+                mappings_report.render_markdown(report, baseline=baseline)
+
+    def test_cli_renders_markdown_comparison(self) -> None:
+        baseline = self.root / "baseline.json"
+        baseline.write_text(json.dumps(mappings_report.build_report(self.payload)))
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "scripts.mappings_report",
+                "--input",
+                str(self.bundle),
+                "--format",
+                "markdown",
+                "--baseline-report",
+                str(baseline),
+            ],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("| Total packages | 8 | 8 | 0 |", result.stdout)
+
+        invalid = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "scripts.mappings_report",
+                "--input",
+                str(self.bundle),
+                "--baseline-report",
+                str(baseline),
+            ],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+        )
+        self.assertNotEqual(invalid.returncode, 0)
+        self.assertIn("requires --format markdown", invalid.stderr)
+
     def test_empty_bundle(self) -> None:
         self.payload.update(packages={}, package_count=0)
         report = mappings_report.build_report(self.payload)
@@ -249,6 +365,7 @@ class MappingsReportTest(unittest.TestCase):
         self.assertTrue(
             all(count == 0 for count in report["unresolved_by_diagnostic"].values())
         )
+        self.assertEqual(report["unresolved_by_source_host"], [])
         self.assertEqual(report["missing_packages"], [])
 
     def test_rejects_invalid_envelope(self) -> None:

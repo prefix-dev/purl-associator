@@ -15,6 +15,7 @@ export type MissingPrimaryPackage = {
   name: string;
   state: MissingPrimaryState;
   diagnostic_reason: UnresolvedDiagnostic | null;
+  source_hosts: string[];
   version: string | null;
   source_url: string | null;
   repo: string | null;
@@ -35,11 +36,11 @@ export type MappingsReport = {
     primary_missing: number;
   };
   unresolved_by_diagnostic: Record<UnresolvedDiagnostic, number>;
+  unresolved_by_source_host: Array<{ host: string; package_count: number }>;
   missing_packages: MissingPrimaryPackage[];
 };
 
 const DIAGNOSTIC_SET = new Set<string>(UNRESOLVED_DIAGNOSTICS);
-const URL_FIELDS = ["source_url", "repo", "homepage"] as const;
 
 function record(value: unknown, label: string): Record<string, unknown> {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
@@ -61,19 +62,22 @@ function nullableString(value: unknown, label: string): string | null {
   return value;
 }
 
-export function sourceHosts(pkg: MissingPrimaryPackage): string[] {
-  const hosts = new Set<string>();
-  for (const field of URL_FIELDS) {
-    const value = pkg[field];
-    if (!value?.trim()) continue;
-    try {
-      const hostname = new URL(value).hostname.toLowerCase().replace(/\.$/, "");
-      if (hostname) hosts.add(hostname);
-    } catch {
-      // The report intentionally keeps malformed evidence; it is not a host.
+function sourceHostArray(value: unknown, label: string): string[] {
+  if (!Array.isArray(value)) throw new Error(`${label} must be an array`);
+  let previous: string | null = null;
+  return value.map((item, index) => {
+    if (
+      typeof item !== "string" ||
+      !item ||
+      item !== item.toLowerCase() ||
+      item.endsWith(".") ||
+      (previous !== null && item <= previous)
+    ) {
+      throw new Error(`${label}[${index}] must be a normalized, unique, sorted host`);
     }
-  }
-  return [...hosts].sort();
+    previous = item;
+    return item;
+  });
 }
 
 export function decodeMappingsReport(value: unknown): MappingsReport {
@@ -142,6 +146,37 @@ export function decodeMappingsReport(value: unknown): MappingsReport {
     throw new Error("mappings report unresolved diagnostics do not reconcile");
   }
 
+  if (!Array.isArray(report.unresolved_by_source_host)) {
+    throw new Error("mappings report.unresolved_by_source_host must be an array");
+  }
+  const unresolvedBySourceHost = report.unresolved_by_source_host.map(
+    (raw, index) => {
+      const label = `mappings report.unresolved_by_source_host[${index}]`;
+      const item = record(raw, label);
+      if (typeof item.host !== "string" || !item.host) {
+        throw new Error(`${label}.host must be a non-empty string`);
+      }
+      return {
+        host: item.host,
+        package_count: integer(item.package_count, `${label}.package_count`),
+      };
+    },
+  );
+  for (let index = 0; index < unresolvedBySourceHost.length; index++) {
+    const current = unresolvedBySourceHost[index];
+    const previous = unresolvedBySourceHost[index - 1];
+    if (
+      current.host !== current.host.toLowerCase() ||
+      current.host.endsWith(".") ||
+      current.package_count === 0 ||
+      (previous &&
+        (current.package_count > previous.package_count ||
+          (current.package_count === previous.package_count && current.host <= previous.host)))
+    ) {
+      throw new Error("mappings report unresolved source hosts are not normalized and sorted");
+    }
+  }
+
   if (!Array.isArray(report.missing_packages)) {
     throw new Error("mappings report.missing_packages must be an array");
   }
@@ -149,6 +184,7 @@ export function decodeMappingsReport(value: unknown): MappingsReport {
   const observedDiagnostics = Object.fromEntries(
     UNRESOLVED_DIAGNOSTICS.map((diagnostic) => [diagnostic, 0]),
   ) as Record<UnresolvedDiagnostic, number>;
+  const observedSourceHosts = new Map<string, number>();
   let explicitlyUnmapped = 0;
   let unresolved = 0;
   const packages = report.missing_packages.map((raw, index): MissingPrimaryPackage => {
@@ -175,6 +211,12 @@ export function decodeMappingsReport(value: unknown): MappingsReport {
       }
       explicitlyUnmapped++;
     }
+    const sourceHosts = sourceHostArray(pkg.source_hosts, `${label}.source_hosts`);
+    if (pkg.state === "unresolved") {
+      for (const host of sourceHosts) {
+        observedSourceHosts.set(host, (observedSourceHosts.get(host) ?? 0) + 1);
+      }
+    }
     const downloads = pkg.download_count;
     if (downloads !== null && (typeof downloads !== "number" || !Number.isInteger(downloads) || downloads < 0)) {
       throw new Error(`${label}.download_count must be a non-negative integer or null`);
@@ -183,6 +225,7 @@ export function decodeMappingsReport(value: unknown): MappingsReport {
       name: pkg.name,
       state: pkg.state,
       diagnostic_reason: diagnostic,
+      source_hosts: sourceHosts,
       version: nullableString(pkg.version, `${label}.version`),
       source_url: nullableString(pkg.source_url, `${label}.source_url`),
       repo: nullableString(pkg.repo, `${label}.repo`),
@@ -197,6 +240,10 @@ export function decodeMappingsReport(value: unknown): MappingsReport {
     unresolved !== counts.unresolved ||
     UNRESOLVED_DIAGNOSTICS.some(
       (diagnostic) => observedDiagnostics[diagnostic] !== unresolvedByDiagnostic[diagnostic],
+    ) ||
+    unresolvedBySourceHost.length !== observedSourceHosts.size ||
+    unresolvedBySourceHost.some(
+      ({ host, package_count }) => observedSourceHosts.get(host) !== package_count,
     )
   ) {
     throw new Error("mappings report package rows do not reconcile with aggregate counts");
@@ -208,6 +255,7 @@ export function decodeMappingsReport(value: unknown): MappingsReport {
     channel: report.channel,
     counts,
     unresolved_by_diagnostic: unresolvedByDiagnostic,
+    unresolved_by_source_host: unresolvedBySourceHost,
     missing_packages: packages,
   };
 }

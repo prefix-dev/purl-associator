@@ -23,6 +23,7 @@ function missing(fields = {}) {
     name: "missing",
     state: "unresolved",
     diagnostic_reason: "no_parseable_source_host",
+    source_hosts: [],
     version: "1.0",
     source_url: null,
     repo: null,
@@ -51,6 +52,7 @@ function report() {
       no_parseable_source_host: 1,
       no_primary_from_url_evidence: 0,
     },
+    unresolved_by_source_host: [],
     missing_packages: [
       missing(),
       missing({
@@ -81,11 +83,32 @@ test("rejects inconsistent aggregate and package diagnostics", () => {
   assert.throws(() => reports.decodeMappingsReport(explicit), /must be null/);
 });
 
-test("normalizes and deduplicates source hosts", () => {
-  const pkg = missing({
+test("accepts canonical source hosts and reconciles their aggregate", () => {
+  const value = report();
+  value.unresolved_by_diagnostic.no_parseable_source_host = 0;
+  value.unresolved_by_diagnostic.no_primary_from_url_evidence = 1;
+  value.unresolved_by_source_host = [{ host: "gitlab.com", package_count: 1 }];
+  Object.assign(value.missing_packages[0], {
+    diagnostic_reason: "no_primary_from_url_evidence",
+    source_hosts: ["gitlab.com"],
     source_url: "https://GitLab.COM./group/project/archive.tar.gz",
-    repo: "https://gitlab.com:443/group/project",
-    homepage: "not an absolute URL",
   });
-  assert.deepEqual(reports.sourceHosts(pkg), ["gitlab.com"]);
+  assert.deepEqual(reports.decodeMappingsReport(value), value);
+});
+
+test("rejects noncanonical or inconsistent source hosts", () => {
+  for (const source_hosts of [
+    ["GitLab.com"],
+    ["gitlab.com."],
+    ["z.example", "a.example"],
+    ["gitlab.com", "gitlab.com"],
+  ]) {
+    const value = report();
+    value.missing_packages[0].source_hosts = source_hosts;
+    assert.throws(() => reports.decodeMappingsReport(value), /normalized, unique, sorted/);
+  }
+
+  const mismatch = report();
+  mismatch.missing_packages[0].source_hosts = ["gitlab.com"];
+  assert.throws(() => reports.decodeMappingsReport(mismatch), /package rows do not reconcile/);
 });

@@ -191,6 +191,21 @@ pixi run -e lite python -m scripts.mappings_report \
   --output .tmp/coverage/report.json
 ```
 
+Render a bounded Markdown summary, optionally compared with an earlier JSON
+report:
+
+```sh
+pixi run -e lite python -m scripts.mappings_report \
+  --input .tmp/coverage/mappings.json \
+  --format markdown \
+  --baseline-report /tmp/mappings-report-before.json
+```
+
+The scheduled automap workflow captures that baseline before refreshing mappings
+and appends the resulting coverage and diagnostic deltas to its PR body. The
+Markdown summary includes the top current unresolved source hosts but not the full
+missing-package list.
+
 The JSON report separates `primary_present`, `explicitly_unmapped`, and
 `unresolved`; these three counts sum to `total`. `primary_missing` is the sum of
 the latter two states. Alternative PURLs and CPEs do not count as primary PURLs.
@@ -211,6 +226,12 @@ Diagnostics describe recorded evidence, not authoritative root causes. Notes can
 survive reviewed overrides, and missing evidence does not imply intentional
 exclusion. Only `unmapped: true` establishes an explicit no-PURL decision. The
 diagnostic counts are mutually exclusive and sum to `unresolved`.
+
+Each missing-primary row includes normalized, sorted `source_hosts` derived from
+its persisted source, repository, and homepage URLs. `unresolved_by_source_host`
+counts each host at most once per unresolved package and is sorted by package
+count, then hostname. Host groups are non-exclusive because one package can cite
+multiple hosts, so their counts do not sum to `unresolved`.
 
 Reporting is offline and read-only. Package order is stable, and volatile bundle
 generation timestamps are omitted. Invalid contracts fail rather than producing

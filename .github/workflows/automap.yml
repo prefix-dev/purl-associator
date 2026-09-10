@@ -39,13 +39,15 @@ jobs:
           pixi-version: latest
           cache: true
 
-      - name: Snapshot baseline auto.json
+      - name: Snapshot baseline mappings and coverage
         # Capture HEAD's mappings before automap rewrites the file so the
-        # summary step can diff against it.
+        # package and coverage summaries describe this exact PR's delta.
         run: |
           mkdir -p /tmp/automap_baseline
           git show HEAD:mappings/auto.json > /tmp/automap_baseline/auto.json 2>/dev/null \
             || echo '{"packages":{}}' > /tmp/automap_baseline/auto.json
+          pixi run -e lite mappings:report
+          cp web/public/mappings-report.json /tmp/automap_baseline/mappings-report.json
 
       - name: Run automap
         run: |
@@ -56,8 +58,8 @@ jobs:
           if [ "${{ inputs.force }}" = "true" ]; then ARGS+=(--force); fi
           pixi run purl:automap "${ARGS[@]}"
 
-      - name: Merge mappings for the SPA
-        run: pixi run mappings:merge
+      - name: Merge mappings and refresh coverage report
+        run: pixi run -e lite mappings:report
 
       - name: Generate PR body
         run: |
@@ -65,6 +67,12 @@ jobs:
             --before /tmp/automap_baseline/auto.json \
             --after mappings/auto.json \
             > /tmp/automap_pr_body.md
+          printf '\n\n' >> /tmp/automap_pr_body.md
+          pixi run python -m scripts.mappings_report \
+            --input web/public/mappings.json \
+            --format markdown \
+            --baseline-report /tmp/automap_baseline/mappings-report.json \
+            >> /tmp/automap_pr_body.md
           echo "----- PR body preview -----"
           cat /tmp/automap_pr_body.md
 
