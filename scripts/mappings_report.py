@@ -178,13 +178,23 @@ def main() -> None:
         required=True,
         help="Freshly merged full mappings.json bundle",
     )
+    parser.add_argument(
+        "--output",
+        type=Path,
+        help="Write the report to this path instead of standard output",
+    )
     args = parser.parse_args()
     try:
         # The shared loader rejects duplicate keys and non-finite JSON numbers.
         report = build_report(merge_mappings._load_json(args.input))
+        rendered = json.dumps(report, indent=2, sort_keys=True, allow_nan=False) + "\n"
+        if args.output:
+            args.output.parent.mkdir(parents=True, exist_ok=True)
+            args.output.write_text(rendered)
+        else:
+            print(rendered, end="")
     except (OSError, ValueError) as exc:
         parser.exit(1, f"mappings report: {exc}\n")
-    print(json.dumps(report, indent=2, sort_keys=True, allow_nan=False))
 
 
 if __name__ == "__main__":

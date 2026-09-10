@@ -281,6 +281,29 @@ class MappingsReportTest(unittest.TestCase):
             with self.subTest(patch=patch), self.assertRaises(ValueError):
                 mappings_report.build_report(payload)
 
+    def test_cli_writes_an_explicit_output_file(self) -> None:
+        output = self.root / "reports" / "coverage.json"
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "scripts.mappings_report",
+                "--input",
+                str(self.bundle),
+                "--output",
+                str(output),
+            ],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout, "")
+        self.assertEqual(
+            json.loads(output.read_text()), mappings_report.build_report(self.payload)
+        )
+        self.assertTrue(output.read_text().endswith("\n"))
+
     def test_cli_rejects_missing_or_invalid_json_without_success_output(self) -> None:
         paths = [self.root / "missing.json"]
         for index, text in enumerate(

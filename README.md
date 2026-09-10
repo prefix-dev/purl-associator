@@ -173,7 +173,13 @@ Report effective primary-PURL coverage after automatic mappings, manual override
 and contributions have been merged. The reporter requires the current full bundle
 schema; it does not accept the compact index or raw `auto.json`.
 
-To rebuild and report without changing the committed public payloads:
+Generate the merged mappings and browser report used by the GitHub Pages app:
+
+```sh
+pixi run -e lite mappings:report
+```
+
+To rebuild and report without changing the generated public payloads:
 
 ```sh
 pixi run -e lite mappings:merge \
@@ -181,7 +187,8 @@ pixi run -e lite mappings:merge \
   --index-out .tmp/coverage/mappings-index.json \
   --detail-dir .tmp/coverage/mapping_packages
 pixi run -e lite python -m scripts.mappings_report \
-  --input .tmp/coverage/mappings.json > .tmp/coverage/report.json
+  --input .tmp/coverage/mappings.json \
+  --output .tmp/coverage/report.json
 ```
 
 The JSON report separates `primary_present`, `explicitly_unmapped`, and
@@ -246,14 +253,17 @@ pixi run -e lite mappings:validate
 
 ## Frontend behavior
 
-The GitHub Pages app is a PURL editing UI:
+The GitHub Pages app provides two identity-mapping views:
 
+- `index.html` is the PURL/CPE mapping editor;
+- `coverage.html` is a read-only inspector for missing primary PURLs, with state,
+  diagnostic, source-host, and text filters plus recorded evidence;
 - users can review, edit, approve, or mark PURL mappings as unmapped
 - staged identity edits are saved locally until submitted
 - submitted edits open PRs containing one new file under `mappings/contributions/`
 - CPEs can be reviewed and edited alongside PURL mappings
-- no CVE dashboard, OpenVEX review, AI CVE queue, or deep-inspection routes are
-  served from this repository
+- no CVE dashboard, OpenVEX review, AI CVE queue, or CVE deep-inspection routes
+  are served from this repository
 
 The Worker exposes only:
 

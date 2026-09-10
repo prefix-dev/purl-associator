@@ -219,16 +219,29 @@ export function App() {
               paddingLeft: 14,
             }}
           >
-            <span
+            <a
+              href="./index.html"
               style={{
                 color: t.fg1,
                 padding: "4px 8px",
                 borderRadius: 6,
                 background: t.inset,
+                textDecoration: "none",
               }}
             >
               Package Identity Mapper
-            </span>
+            </a>
+            <a
+              href="./coverage.html"
+              style={{
+                color: t.fg2,
+                padding: "4px 8px",
+                borderRadius: 6,
+                textDecoration: "none",
+              }}
+            >
+              PURL Coverage
+            </a>
           </nav>
           <div
             style={{
