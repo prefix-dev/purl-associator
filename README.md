@@ -167,6 +167,11 @@ pixi run -e lite mappings:validate
 pixi run purl:test
 ```
 
+Automap reuses successful cached entries while their package version and build are
+unchanged. Entries whose persisted note starts with `fetch error:` are retried on
+the next run even when those coordinates are unchanged, so transient processing
+failures cannot remain cached indefinitely.
+
 ### Primary-PURL coverage report
 
 Report effective primary-PURL coverage after automatic mappings, manual overrides,
