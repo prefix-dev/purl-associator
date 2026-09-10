@@ -15,6 +15,8 @@ export type RuntimeConfig = {
   mappingsUrl: string;
   /** Optional: where mappings-index.json lives relative to the site root. */
   mappingsIndexUrl: string;
+  /** Optional: where the generated primary-PURL coverage report lives. */
+  mappingsReportUrl: string;
   /** Cloudflare Worker URL handling GitHub OAuth code-exchange. */
   oauthWorkerUrl: string | null;
   /** OAuth app's public client_id. */
@@ -35,6 +37,7 @@ const fromEnv: Partial<RuntimeConfig> = {
   defaultBranch: env.VITE_REPO_BRANCH,
   mappingsUrl: env.VITE_MAPPINGS_URL,
   mappingsIndexUrl: env.VITE_MAPPINGS_INDEX_URL,
+  mappingsReportUrl: env.VITE_MAPPINGS_REPORT_URL,
   oauthWorkerUrl: env.VITE_OAUTH_WORKER_URL,
   githubClientId: env.VITE_GITHUB_CLIENT_ID,
 };
@@ -48,6 +51,8 @@ export const config: RuntimeConfig = {
   mappingsUrl: injected.mappingsUrl ?? fromEnv.mappingsUrl ?? "./mappings.json",
   mappingsIndexUrl:
     injected.mappingsIndexUrl ?? fromEnv.mappingsIndexUrl ?? "./mappings-index.json",
+  mappingsReportUrl:
+    injected.mappingsReportUrl ?? fromEnv.mappingsReportUrl ?? "./mappings-report.json",
   oauthWorkerUrl: injected.oauthWorkerUrl ?? fromEnv.oauthWorkerUrl ?? null,
   githubClientId: injected.githubClientId ?? fromEnv.githubClientId ?? null,
 };

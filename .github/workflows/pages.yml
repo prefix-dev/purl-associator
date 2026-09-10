@@ -7,6 +7,7 @@ on:
       - "web/**"
       - "mappings/**"
       - "scripts/merge_mappings.py"
+      - "scripts/mappings_report.py"
       - "scripts/validate.py"
       - "tests/**"
       - "pixi.toml"
@@ -41,8 +42,8 @@ jobs:
           cache: true
           environments: lite
 
-      - name: Refresh served identity mapping payload
-        run: pixi run -e lite mappings:merge
+      - name: Refresh served identity mappings and coverage report
+        run: pixi run -e lite mappings:report
 
       - name: Test identity mapping contract
         run: pixi run -e lite mappings:test

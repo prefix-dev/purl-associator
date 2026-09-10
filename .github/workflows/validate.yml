@@ -34,14 +34,27 @@ jobs:
           cache: true
           environments: lite
 
-      - name: Rebuild served identity mapping payload
-        run: pixi run -e lite mappings:merge
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: "npm"
+          cache-dependency-path: web/package-lock.json
+
+      - name: Rebuild served identity mappings and coverage report
+        run: pixi run -e lite mappings:report
 
       - name: Test identity mapping contract
         run: pixi run -e lite mappings:test
 
       - name: Validate identity mapping payload
         run: pixi run -e lite mappings:validate
+
+      - name: Test and build GitHub Pages frontend
+        working-directory: web
+        run: |
+          npm ci
+          npm test
+          npm run build
 
       - name: Guard against mass removals in auto.json
         # A pipeline bug or an upstream source returning empty shows up as a

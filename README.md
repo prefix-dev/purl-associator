@@ -167,6 +167,76 @@ pixi run -e lite mappings:validate
 pixi run purl:test
 ```
 
+### Primary-PURL coverage report
+
+Report effective primary-PURL coverage after automatic mappings, manual overrides,
+and contributions have been merged. The reporter requires the current full bundle
+schema; it does not accept the compact index or raw `auto.json`.
+
+Generate the merged mappings and browser report used by the GitHub Pages app:
+
+```sh
+pixi run -e lite mappings:report
+```
+
+To rebuild and report without changing the generated public payloads:
+
+```sh
+pixi run -e lite mappings:merge \
+  --out .tmp/coverage/mappings.json \
+  --index-out .tmp/coverage/mappings-index.json \
+  --detail-dir .tmp/coverage/mapping_packages
+pixi run -e lite python -m scripts.mappings_report \
+  --input .tmp/coverage/mappings.json \
+  --output .tmp/coverage/report.json
+```
+
+Render a bounded Markdown summary, optionally compared with an earlier JSON
+report:
+
+```sh
+pixi run -e lite python -m scripts.mappings_report \
+  --input .tmp/coverage/mappings.json \
+  --format markdown \
+  --baseline-report /tmp/mappings-report-before.json
+```
+
+The scheduled automap workflow captures that baseline before refreshing mappings
+and appends the resulting coverage and diagnostic deltas to its PR body. The
+Markdown summary includes the top current unresolved source hosts but not the full
+missing-package list.
+
+The JSON report separates `primary_present`, `explicitly_unmapped`, and
+`unresolved`; these three counts sum to `total`. `primary_missing` is the sum of
+the latter two states. Alternative PURLs and CPEs do not count as primary PURLs.
+Each missing-primary package retains its recorded URLs, note, version, and download
+count for investigation.
+
+Every unresolved package has one conservative `diagnostic_reason`, summarized in
+`unresolved_by_diagnostic`:
+
+- `recorded_processing_error` — the persisted note starts with `fetch error:`;
+- `alternative_only` — a canonical alternative PURL exists without a primary;
+- `no_parseable_source_host` — no hostname can be parsed from the persisted source,
+  repository, or homepage URLs;
+- `no_primary_from_url_evidence` — URL-host evidence exists but no primary PURL was
+  produced.
+
+Diagnostics describe recorded evidence, not authoritative root causes. Notes can
+survive reviewed overrides, and missing evidence does not imply intentional
+exclusion. Only `unmapped: true` establishes an explicit no-PURL decision. The
+diagnostic counts are mutually exclusive and sum to `unresolved`.
+
+Each missing-primary row includes normalized, sorted `source_hosts` derived from
+its persisted source, repository, and homepage URLs. `unresolved_by_source_host`
+counts each host at most once per unresolved package and is sorted by package
+count, then hostname. Host groups are non-exclusive because one package can cite
+multiple hosts, so their counts do not sum to `unresolved`.
+
+Reporting is offline and read-only. Package order is stable, and volatile bundle
+generation timestamps are omitted. Invalid contracts fail rather than producing
+apparently successful empty coverage.
+
 ## CPE flow
 
 CPE discovery is part of identity mapping, not CVE assignment. The retained CPE
@@ -204,14 +274,17 @@ pixi run -e lite mappings:validate
 
 ## Frontend behavior
 
-The GitHub Pages app is a PURL editing UI:
+The GitHub Pages app provides two identity-mapping views:
 
+- `index.html` is the PURL/CPE mapping editor;
+- `coverage.html` is a read-only inspector for missing primary PURLs, with state,
+  diagnostic, source-host, and text filters plus recorded evidence;
 - users can review, edit, approve, or mark PURL mappings as unmapped
 - staged identity edits are saved locally until submitted
 - submitted edits open PRs containing one new file under `mappings/contributions/`
 - CPEs can be reviewed and edited alongside PURL mappings
-- no CVE dashboard, OpenVEX review, AI CVE queue, or deep-inspection routes are
-  served from this repository
+- no CVE dashboard, OpenVEX review, AI CVE queue, or CVE deep-inspection routes
+  are served from this repository
 
 The Worker exposes only:
 
