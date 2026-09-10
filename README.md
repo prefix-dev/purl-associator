@@ -188,9 +188,22 @@ The JSON report separates `primary_present`, `explicitly_unmapped`, and
 `unresolved`; these three counts sum to `total`. `primary_missing` is the sum of
 the latter two states. Alternative PURLs and CPEs do not count as primary PURLs.
 Each missing-primary package retains its recorded URLs, note, version, and download
-count for investigation. Missing evidence does not imply intentional exclusion,
-and notes can survive reviewed overrides. This initial report does not yet infer
-failure reasons or distinguish confirmed mapper bugs from unresolved cases.
+count for investigation.
+
+Every unresolved package has one conservative `diagnostic_reason`, summarized in
+`unresolved_by_diagnostic`:
+
+- `recorded_processing_error` — the persisted note starts with `fetch error:`;
+- `alternative_only` — a canonical alternative PURL exists without a primary;
+- `no_parseable_source_host` — no hostname can be parsed from the persisted source,
+  repository, or homepage URLs;
+- `no_primary_from_url_evidence` — URL-host evidence exists but no primary PURL was
+  produced.
+
+Diagnostics describe recorded evidence, not authoritative root causes. Notes can
+survive reviewed overrides, and missing evidence does not imply intentional
+exclusion. Only `unmapped: true` establishes an explicit no-PURL decision. The
+diagnostic counts are mutually exclusive and sum to `unresolved`.
 
 Reporting is offline and read-only. Package order is stable, and volatile bundle
 generation timestamps are omitted. Invalid contracts fail rather than producing

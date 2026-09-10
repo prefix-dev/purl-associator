@@ -127,6 +127,94 @@ class MappingsReportTest(unittest.TestCase):
         )
         self.assertEqual(report["counts"]["primary_missing"], len(states))
 
+    def test_assigns_exclusive_unresolved_diagnostics(self) -> None:
+        report = mappings_report.build_report(self.payload)
+        self.assertEqual(
+            report["unresolved_by_diagnostic"],
+            {
+                "recorded_processing_error": 1,
+                "alternative_only": 1,
+                "no_parseable_source_host": 2,
+                "no_primary_from_url_evidence": 0,
+            },
+        )
+        rows = {row["name"]: row for row in report["missing_packages"]}
+        self.assertEqual(
+            rows["error"]["diagnostic_reason"], "recorded_processing_error"
+        )
+        self.assertEqual(
+            rows["alternative-only"]["diagnostic_reason"], "alternative_only"
+        )
+        self.assertEqual(
+            rows["cpe-only"]["diagnostic_reason"], "no_parseable_source_host"
+        )
+        self.assertEqual(
+            rows["no-evidence"]["diagnostic_reason"], "no_parseable_source_host"
+        )
+        self.assertIsNone(rows["rejected"]["diagnostic_reason"])
+        self.assertEqual(
+            sum(report["unresolved_by_diagnostic"].values()),
+            report["counts"]["unresolved"],
+        )
+
+    def test_diagnostic_precedence_is_conservative(self) -> None:
+        payload = copy.deepcopy(self.payload)
+        payload["packages"]["alternative-only"]["note"] = "  FETCH ERROR: stale"
+        payload["packages"]["rejected"]["note"] = "fetch error: stale"
+        report = mappings_report.build_report(payload)
+        rows = {row["name"]: row for row in report["missing_packages"]}
+        self.assertEqual(
+            rows["alternative-only"]["diagnostic_reason"],
+            "recorded_processing_error",
+        )
+        self.assertIsNone(rows["rejected"]["diagnostic_reason"])
+        self.assertEqual(
+            report["unresolved_by_diagnostic"],
+            {
+                "recorded_processing_error": 2,
+                "alternative_only": 0,
+                "no_parseable_source_host": 2,
+                "no_primary_from_url_evidence": 0,
+            },
+        )
+
+    def test_url_evidence_classification_normalizes_and_deduplicates_hosts(
+        self,
+    ) -> None:
+        payload = copy.deepcopy(self.payload)
+        entry = payload["packages"]["cpe-only"]
+        entry.update(
+            {
+                "source_url": "https://GitLab.COM./group/project/archive.tar.gz",
+                "repo": "HTTPS://gitlab.com/group/project",
+                "homepage": "https://gitlab.com:443/group/project",
+            }
+        )
+        report = mappings_report.build_report(payload)
+        rows = {row["name"]: row for row in report["missing_packages"]}
+        self.assertEqual(
+            rows["cpe-only"]["diagnostic_reason"],
+            "no_primary_from_url_evidence",
+        )
+        self.assertEqual(mappings_report._source_hosts(entry), ("gitlab.com",))
+        self.assertEqual(
+            report["unresolved_by_diagnostic"],
+            {
+                "recorded_processing_error": 1,
+                "alternative_only": 1,
+                "no_parseable_source_host": 1,
+                "no_primary_from_url_evidence": 1,
+            },
+        )
+
+    def test_relative_empty_and_malformed_urls_have_no_parseable_host(self) -> None:
+        entry = {
+            "source_url": "",
+            "repo": "group/project",
+            "homepage": "https://[invalid",
+        }
+        self.assertEqual(mappings_report._source_hosts(entry), ())
+
     def test_preserves_evidence_without_treating_notes_as_mapping_state(self) -> None:
         report = mappings_report.build_report(self.payload)
         rows = {row["name"]: row for row in report["missing_packages"]}
@@ -158,6 +246,9 @@ class MappingsReportTest(unittest.TestCase):
         self.payload.update(packages={}, package_count=0)
         report = mappings_report.build_report(self.payload)
         self.assertTrue(all(count == 0 for count in report["counts"].values()))
+        self.assertTrue(
+            all(count == 0 for count in report["unresolved_by_diagnostic"].values())
+        )
         self.assertEqual(report["missing_packages"], [])
 
     def test_rejects_invalid_envelope(self) -> None:
