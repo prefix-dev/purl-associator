@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from urllib.parse import urlparse
+from urllib.parse import unquote, urlparse
 
 from packageurl import PackageURL
 
@@ -40,6 +40,9 @@ _CARGO_HOSTS = {"crates.io", "static.crates.io"}
 _RUBY_HOSTS = {"rubygems.org"}
 _CRAN_HOSTS = {"cran.r-project.org", "cloud.r-project.org"}
 _BIOCONDUCTOR_HOSTS = {"bioconductor.org"}
+_GITLAB_HOSTS = {"gitlab.com"}
+_BITBUCKET_HOSTS = {"bitbucket.org"}
+_CPAN_HOSTS = {"cpan.org", "www.cpan.org", "cpan.metacpan.org", "metacpan.org"}
 
 
 def _strip_archive_suffix(name: str) -> str:
@@ -178,6 +181,144 @@ def guess_github(url: str) -> PurlGuess | None:
     )
 
 
+_GITLAB_ROUTE_MARKERS = {
+    "archive",
+    "blob",
+    "commits",
+    "issues",
+    "merge_requests",
+    "raw",
+    "releases",
+    "repository",
+    "tags",
+    "tree",
+}
+
+
+def _decoded_path_parts(url: str) -> list[str] | None:
+    """Return safe, decoded URL path components.
+
+    Encoded separators and dot segments make repository coordinates ambiguous,
+    so host-specific inference rejects them rather than guessing.
+    """
+    parts: list[str] = []
+    for encoded in urlparse(url).path.split("/"):
+        if not encoded:
+            continue
+        part = unquote(encoded)
+        if part in {".", ".."} or "/" in part or "\\" in part:
+            return None
+        parts.append(part)
+    return parts
+
+
+def guess_gitlab(url: str) -> PurlGuess | None:
+    """Infer a registered ``pkg:git`` identity for a gitlab.com repository."""
+    parsed = urlparse(url)
+    if (parsed.hostname or "").lower() not in _GITLAB_HOSTS:
+        return None
+    parts = _decoded_path_parts(url)
+    if not parts:
+        return None
+
+    # Modern GitLab routes put `-` between the repository path and the route.
+    if "-" in parts:
+        parts = parts[: parts.index("-")]
+    else:
+        # Older links use /owner/repo/tree/ref without the `-`. Only treat a
+        # marker as a route when it has a following component, so a repository
+        # whose name is literally "tree" remains valid.
+        route_index = next(
+            (
+                index
+                for index, part in enumerate(parts[2:-1], start=2)
+                if part.lower() in _GITLAB_ROUTE_MARKERS
+            ),
+            None,
+        )
+        if route_index is not None:
+            parts = parts[:route_index]
+
+    if len(parts) < 2:
+        return None
+    repo = parts[-1].removesuffix(".git")
+    namespace_parts = parts[:-1]
+    if not repo or any(not part for part in namespace_parts):
+        return None
+    namespace = "/".join(namespace_parts)
+    purl_namespace = f"gitlab.com/{namespace}"
+    return PurlGuess(
+        f"pkg:git/{purl_namespace}/{repo}",
+        "git",
+        purl_namespace,
+        repo,
+        0.85,
+        "recipe-source",
+    )
+
+
+def guess_bitbucket(url: str) -> PurlGuess | None:
+    parsed = urlparse(url)
+    if (parsed.hostname or "").lower() not in _BITBUCKET_HOSTS:
+        return None
+    parts = _decoded_path_parts(url)
+    if not parts or len(parts) < 2:
+        return None
+    owner = parts[0]
+    repo = parts[1].removesuffix(".git")
+    if not owner or not repo:
+        return None
+    return PurlGuess(
+        f"pkg:bitbucket/{owner}/{repo}",
+        "bitbucket",
+        owner.lower(),
+        repo.lower(),
+        0.85,
+        "recipe-source",
+    )
+
+
+def _cpan_guess(name: str, *, confidence: float) -> PurlGuess | None:
+    name = unquote(name).strip()
+    if not name or name in {".", ".."} or "::" in name or "/" in name or "\\" in name:
+        return None
+    return PurlGuess(
+        f"pkg:cpan/{name}",
+        "cpan",
+        None,
+        name,
+        confidence,
+        "recipe-source",
+    )
+
+
+def guess_cpan(url: str) -> PurlGuess | None:
+    parsed = urlparse(url)
+    if (parsed.hostname or "").lower() not in _CPAN_HOSTS:
+        return None
+    parts = _decoded_path_parts(url)
+    if not parts:
+        return None
+
+    if len(parts) == 2 and parts[0].lower() in {"dist", "release"}:
+        return _cpan_guess(parts[1], confidence=0.97)
+
+    lowered = [part.lower() for part in parts]
+    if len(parts) >= 3 and lowered[:2] == ["authors", "id"]:
+        leaf = parts[-1]
+        stem = _strip_archive_suffix(leaf)
+        if stem == leaf:
+            return None
+        name = _strip_version_tail(stem)
+        if name == stem:
+            return None
+        return _cpan_guess(name, confidence=0.95)
+
+    # A MetaCPAN /pod/Foo::Bar page names a module, not necessarily the CPAN
+    # distribution that ships it. It is deliberately insufficient evidence.
+    return None
+
+
 def guess_cargo(url: str) -> PurlGuess | None:
     parsed = urlparse(url)
     if parsed.netloc not in _CARGO_HOSTS:
@@ -266,6 +407,9 @@ def guess_bioconductor(url: str) -> PurlGuess | None:
 _GUESSERS = (
     guess_pypi,
     guess_github,
+    guess_gitlab,
+    guess_bitbucket,
+    guess_cpan,
     guess_cargo,
     guess_npm,
     guess_gem,
@@ -371,6 +515,47 @@ def recipe_context_hints(context: RecipeContext, primary_type: str | None) -> li
     return [template.format(name=context.inferred_name)]
 
 
+def _candidate_identity_key(candidate: PurlGuess) -> str:
+    # GitLab repository paths resolve case-insensitively even though the generic
+    # registered `git` PURL type is case-sensitive. Recipes frequently mix the
+    # canonical display case and lowercase archive paths for the same project.
+    if candidate.type == "git" and (candidate.namespace or "").lower().startswith(
+        "gitlab.com/"
+    ):
+        return candidate.purl.lower()
+    return candidate.purl
+
+
+def _prune_unrelated_repository_candidates(
+    candidates: list[PurlGuess], context: RecipeContext | None
+) -> list[PurlGuess]:
+    """Drop obvious dependency repositories when the package repo is present.
+
+    Rendered recipes can contain several source archives. If one repository
+    candidate's project name exactly matches the conda package name, other
+    repository candidates of that same PURL type are weaker evidence and often
+    build dependencies (for example graphviz-windows-dependencies).
+    """
+    if context is None:
+        return candidates
+    conda_name = normalize_pypi_name(context.conda_name)
+    repository_types = {"bitbucket", "git", "github"}
+    matching_types = {
+        candidate.type
+        for candidate in candidates
+        if candidate.type in repository_types
+        and normalize_pypi_name(candidate.pkg_name) == conda_name
+    }
+    if not matching_types:
+        return candidates
+    return [
+        candidate
+        for candidate in candidates
+        if candidate.type not in matching_types
+        or normalize_pypi_name(candidate.pkg_name) == conda_name
+    ]
+
+
 def infer_all(
     urls: list[str], *, context: RecipeContext | None = None
 ) -> list[PurlGuess]:
@@ -391,13 +576,15 @@ def infer_all(
             if guess is not None:
                 hits.append(guess)
 
-    # Dedupe by PURL string, keeping the highest-confidence entry.
+    # Dedupe semantically equivalent identities, keeping the highest-confidence
+    # entry and stable source order for ties.
     by_purl: dict[str, PurlGuess] = {}
     for h in hits:
-        prior = by_purl.get(h.purl)
+        key = _candidate_identity_key(h)
+        prior = by_purl.get(key)
         if prior is None or h.confidence > prior.confidence:
-            by_purl[h.purl] = h
-    deduped = list(by_purl.values())
+            by_purl[key] = h
+    deduped = _prune_unrelated_repository_candidates(list(by_purl.values()), context)
 
     # Tiered ranking: a recipe-context ecosystem hint forces that ecosystem
     # to be primary (because that's the ecosystem package advisory feeds index against).
