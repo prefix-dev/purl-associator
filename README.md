@@ -172,6 +172,14 @@ unchanged. Entries whose persisted note starts with `fetch error:` are retried o
 the next run even when those coordinates are unchanged, so transient processing
 failures cannot remain cached indefinitely.
 
+Source URL inference includes registered `pkg:bitbucket` repository identities and
+case-sensitive `pkg:cpan` distribution identities. Because `gitlab` is not a
+registered PURL type, `gitlab.com` repositories use the registered host-neutral
+`pkg:git/gitlab.com/<namespace>/<repository>` form. MetaCPAN module (`/pod/`)
+pages alone are intentionally insufficient evidence because module and
+distribution names can differ; canonical distribution and release/archive URLs
+are accepted.
+
 ### Primary-PURL coverage report
 
 Report effective primary-PURL coverage after automatic mappings, manual overrides,
