@@ -40,6 +40,20 @@ ALTERNATIVE_SOURCES = {
 }
 CPE23_RE = re.compile(r"^cpe:2\.3:[aho*\-]:[^:]+:[^:]+(?::[^:]*){0,10}$")
 PURL_RE = re.compile(r"^pkg:[a-z][a-z0-9.+-]*/[^\s?#]+(?:\?[^\s#]+)?(?:#[^\s]+)?$")
+UNMAPPED_REASON_CODES = frozenset(
+    {
+        "conda_cdt_repackage",
+        "dependency_only_metapackage",
+        "toolchain_selector",
+        "environment_mutex",
+        "pinning_metadata",
+        "compatibility_shim",
+    }
+)
+UNMAPPED_EVIDENCE_FIELDS = frozenset(
+    {"version", "build", "summary", "source_url", "repo", "homepage"}
+)
+UNMAPPED_RULE_RE = re.compile(r"^[a-z0-9]+(?:[._-][a-z0-9]+)*-v[1-9][0-9]*$")
 
 REVIEWED_MAPPING_FIELDS = (
     "purl",
@@ -49,6 +63,7 @@ REVIEWED_MAPPING_FIELDS = (
     "alternative_purls",
     "cpes",
     "unmapped",
+    "unmapped_reason",
     "note",
     "status",
 )
@@ -190,6 +205,30 @@ def _validate_alternatives(value: Any, label: str, primary: Any) -> None:
         seen.add(purl)
 
 
+def _validate_unmapped_reason(value: Any, label: str) -> None:
+    if not isinstance(value, dict):
+        raise ValueError(f"{label} must be an object")
+    expected = {"code", "explanation", "rule_id", "evidence"}
+    if set(value) != expected:
+        raise ValueError(f"{label} must contain exactly {sorted(expected)!r}")
+    if value["code"] not in UNMAPPED_REASON_CODES:
+        raise ValueError(f"{label}.code is unsupported: {value['code']!r}")
+    _require_string(value["explanation"], f"{label}.explanation")
+    _require_string(value["rule_id"], f"{label}.rule_id")
+    if not UNMAPPED_RULE_RE.fullmatch(value["rule_id"]):
+        raise ValueError(f"{label}.rule_id has an invalid stable-rule format")
+    evidence = value["evidence"]
+    if not isinstance(evidence, dict) or not evidence:
+        raise ValueError(f"{label}.evidence must be a non-empty object")
+    unknown = set(evidence) - UNMAPPED_EVIDENCE_FIELDS
+    if unknown:
+        raise ValueError(
+            f"{label}.evidence has unsupported fields: {sorted(unknown)!r}"
+        )
+    for key, item in evidence.items():
+        _require_string(item, f"{label}.evidence.{key}")
+
+
 def _validate_package_entry(entry: Any, label: str, *, auto: bool) -> None:
     if not isinstance(entry, dict):
         raise ValueError(f"{label} must be an object")
@@ -209,6 +248,12 @@ def _validate_package_entry(entry: Any, label: str, *, auto: bool) -> None:
         _validate_cpes(entry["cpes"], f"{label}.cpes")
     if "unmapped" in entry and not isinstance(entry["unmapped"], bool):
         raise ValueError(f"{label}.unmapped must be a boolean")
+    if "unmapped_reason" in entry:
+        if auto:
+            raise ValueError(f"{label}.unmapped_reason is reviewed-only")
+        if entry.get("unmapped") is not True:
+            raise ValueError(f"{label}.unmapped_reason requires unmapped: true")
+        _validate_unmapped_reason(entry["unmapped_reason"], f"{label}.unmapped_reason")
     if "status" in entry and entry["status"] not in REVIEW_STATUSES:
         raise ValueError(f"{label}.status is unsupported: {entry['status']!r}")
     if entry.get("status") == "unmapped" and entry.get("unmapped") is not True:
@@ -413,6 +458,7 @@ def _apply_reviewed_override(
             )
         else:
             result["unmapped"] = False
+            result.pop("unmapped_reason", None)
         result[_INTERNAL_PRIMARY] = {
             "availability": "available",
             "source": "manual",
@@ -523,7 +569,7 @@ def _index_package(name: str, entry: dict, detail_path: str) -> dict:
         "detail_path": detail_path,
         "identities": entry.get("identities", []),
     }
-    for key in ("alternative_purls", "unmapped", "cpes"):
+    for key in ("alternative_purls", "unmapped", "unmapped_reason", "cpes"):
         if key in entry and entry.get(key) is not None:
             out[key] = entry[key]
     return out
