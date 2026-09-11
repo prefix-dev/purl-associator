@@ -5,8 +5,8 @@ For each unique package name on conda-forge:
 2. Fetch ``info/recipe/rendered_recipe.yaml`` (rattler-build) or fall back to
    ``info/about.json`` for ``home`` / ``dev_url`` URLs.
 3. Run :mod:`scripts.purl_inference` heuristics over those URLs.
-4. Persist the result to ``mappings/auto.json`` (incremental: skip names
-   whose ``version+build`` is unchanged).
+4. Persist the result to ``mappings/auto.json`` (incremental: reuse successful
+   entries whose ``version+build`` is unchanged; retry recorded fetch errors).
 """
 
 from __future__ import annotations
@@ -38,6 +38,11 @@ from rich.progress import (
     TimeElapsedColumn,
 )
 
+from scripts.automap_cache import (
+    can_reuse_cached_entry,
+    has_recorded_fetch_error,
+    preserved_download_count,
+)
 from scripts.parselmouth_identity import artifact_identity_pairs
 from scripts.parselmouth_lookup import fetch_mapping_by_hash
 from scripts.purl_inference import (
@@ -653,19 +658,24 @@ async def _async_main(
 
     needs_fetch: list[RepoDataRecord] = []
     cache_hits: list[RepoDataRecord] = []
+    retrying_failures = 0
     for record in records:
         prior = existing.get(record.name.normalized)
-        if (
-            not force
-            and prior is not None
-            and prior.version == str(record.version)
-            and prior.build == record.build
+        if can_reuse_cached_entry(
+            prior,
+            version=str(record.version),
+            build=record.build,
+            force=force,
         ):
             cache_hits.append(record)
             continue
+        if prior is not None and has_recorded_fetch_error(prior):
+            retrying_failures += 1
         needs_fetch.append(record)
     console.log(
-        f"Cache hits: {len(cache_hits):,} • need fresh fetch: [bold]{len(needs_fetch):,}[/]"
+        f"Cache hits: {len(cache_hits):,} • retrying cached failures: "
+        f"[bold]{retrying_failures:,}[/] • need fresh fetch: "
+        f"[bold]{len(needs_fetch):,}[/]"
     )
 
     client = Client()
@@ -723,10 +733,9 @@ async def _async_main(
                 # Preserve prefix.dev download counts across re-runs — they're
                 # owned by scripts.hydrate_downloads, not the recipe fetch.
                 prior_entry = existing.get(entry.name)
-                if prior_entry is not None:
-                    entry.download_count = prior_entry.download_count
-                elif entry.name in existing_counts:
-                    entry.download_count = existing_counts[entry.name]
+                entry.download_count = preserved_download_count(
+                    prior_entry, name=entry.name, fallback=existing_counts
+                )
                 new_entries[entry.name] = entry
     finally:
         await parselmouth_client.aclose()
