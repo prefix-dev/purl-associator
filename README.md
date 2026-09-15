@@ -221,9 +221,11 @@ missing-package list.
 
 The JSON report separates `primary_present`, `explicitly_unmapped`, and
 `unresolved`; these three counts sum to `total`. `primary_missing` is the sum of
-the latter two states. Alternative PURLs and CPEs do not count as primary PURLs.
-Each missing-primary package retains its recorded URLs, note, version, and download
-count for investigation.
+the latter two states, while `actionable_missing` equals only `unresolved`.
+`classified_unmapped` and `legacy_unmapped` partition explicit decisions according
+to whether structured rationale was recorded. Alternative PURLs and CPEs do not
+count as primary PURLs. Each missing-primary package retains its recorded URLs,
+note, version, and download count for investigation.
 
 Every unresolved package has one conservative `diagnostic_reason`, summarized in
 `unresolved_by_diagnostic`:
@@ -239,6 +241,22 @@ Diagnostics describe recorded evidence, not authoritative root causes. Notes can
 survive reviewed overrides, and missing evidence does not imply intentional
 exclusion. Only `unmapped: true` establishes an explicit no-PURL decision. The
 diagnostic counts are mutually exclusive and sum to `unresolved`.
+
+Reviewed intentional no-PURL decisions may include an `unmapped_reason` with a
+stable code, rule ID, explanation, and copied evidence. Generate deterministic
+review candidates without changing source mappings:
+
+```sh
+pixi run -e lite mappings:classify-unmapped \
+  --input web/public/mappings.json \
+  --output .tmp/unmapped-candidates.json
+```
+
+Classification requires explicit review and promotion through a normal mapping
+contribution. Rules never write `mappings/auto.json`, never overwrite an existing
+primary or alternative PURL, and do not classify from a broad host, suffix, or the
+word “metapackage” alone. Historical reviewed no-PURL decisions without structured
+rationale remain labeled as legacy rather than receiving fabricated explanations.
 
 Each missing-primary row includes normalized, sorted `source_hosts` derived from
 its persisted source, repository, and homepage URLs. `unresolved_by_source_host`

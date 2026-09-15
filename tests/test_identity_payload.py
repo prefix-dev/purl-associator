@@ -101,7 +101,15 @@ class IdentityPayloadTest(unittest.TestCase):
                         "namespace": "example",
                         "pkg_name": "contributed",
                     },
-                    "reject-me": {"unmapped": True},
+                    "reject-me": {
+                        "unmapped": True,
+                        "unmapped_reason": {
+                            "code": "dependency_only_metapackage",
+                            "explanation": "Contains dependency metadata but no independent package payload.",
+                            "rule_id": "dependency-only-metapackage-v1",
+                            "evidence": {"summary": "A dependency-only metapackage"},
+                        },
+                    },
                 },
             },
         )
@@ -186,11 +194,72 @@ class IdentityPayloadTest(unittest.TestCase):
         self.assertTrue(rejected["unmapped"])
         self.assertEqual(rejected["status"], "unmapped")
         self.assertEqual(rejected["alternative_purls"], [])
+        self.assertEqual(
+            rejected["unmapped_reason"]["code"], "dependency_only_metapackage"
+        )
+        self.assertEqual(
+            rejected["unmapped_reason"]["rule_id"],
+            "dependency-only-metapackage-v1",
+        )
         for key in ("purl", "type", "namespace", "pkg_name"):
             self.assertIsNone(rejected[key])
         self.assertFalse(
             any(identity["kind"] == "purl" for identity in rejected["identities"])
         )
+
+    def test_later_mapping_clears_reviewed_unmapped_reason(self) -> None:
+        self._write_json(
+            self.contributions / "restore.json",
+            {
+                "schema_version": 1,
+                "author": "mapping-reviewer",
+                "timestamp": "2026-01-04T04:05:06Z",
+                "packages": {
+                    "reject-me": {
+                        "purl": "pkg:github/example/restored",
+                        "type": "github",
+                        "namespace": "example",
+                        "pkg_name": "restored",
+                    }
+                },
+            },
+        )
+        bundle_path, _, _ = self._generate(self.root / "restored")
+        restored = json.loads(bundle_path.read_text())["packages"]["reject-me"]
+        self.assertEqual(restored["purl"], "pkg:github/example/restored")
+        self.assertFalse(restored["unmapped"])
+        self.assertNotIn("unmapped_reason", restored)
+
+    def test_rejects_malformed_unmapped_reason_contracts(self) -> None:
+        contribution = json.loads((self.contributions / "review.json").read_text())
+        reason = contribution["packages"]["reject-me"]["unmapped_reason"]
+        mutations = {
+            "unsupported code": lambda value: value.update(code="unknown"),
+            "empty explanation": lambda value: value.update(explanation=""),
+            "unstable rule": lambda value: value.update(rule_id="latest"),
+            "empty evidence": lambda value: value.update(evidence={}),
+            "unknown evidence": lambda value: value.update(evidence={"url": "x"}),
+        }
+        for label, mutate in mutations.items():
+            with self.subTest(label=label):
+                broken = copy.deepcopy(contribution)
+                mutate(broken["packages"]["reject-me"]["unmapped_reason"])
+                with self.assertRaises(ValueError):
+                    merge_mappings._validate_source_payload(
+                        broken, label, kind="contribution"
+                    )
+
+        without_unmapped = copy.deepcopy(contribution)
+        without_unmapped["packages"]["reject-me"].pop("unmapped")
+        with self.assertRaisesRegex(ValueError, "requires unmapped: true"):
+            merge_mappings._validate_source_payload(
+                without_unmapped, "without-unmapped", kind="contribution"
+            )
+
+        auto = json.loads(self.auto.read_text())
+        auto["packages"]["reviewed"]["unmapped_reason"] = copy.deepcopy(reason)
+        with self.assertRaisesRegex(ValueError, "reviewed-only"):
+            merge_mappings._validate_source_payload(auto, "auto", kind="auto")
 
     def test_new_primary_uses_only_current_reviewer(self) -> None:
         self._write_json(

@@ -23,6 +23,7 @@ function missing(fields = {}) {
     name: "missing",
     state: "unresolved",
     diagnostic_reason: "no_parseable_source_host",
+    unmapped_reason: null,
     source_hosts: [],
     version: "1.0",
     source_url: null,
@@ -36,15 +37,26 @@ function missing(fields = {}) {
 
 function report() {
   return {
-    schema_version: 1,
+    schema_version: 2,
     input_schema_version: 3,
     channel: "conda-forge",
     counts: {
       total: 3,
       primary_present: 1,
       explicitly_unmapped: 1,
+      classified_unmapped: 1,
+      legacy_unmapped: 0,
       unresolved: 1,
+      actionable_missing: 1,
       primary_missing: 2,
+    },
+    classified_by_reason: {
+      conda_cdt_repackage: 0,
+      dependency_only_metapackage: 0,
+      toolchain_selector: 0,
+      environment_mutex: 1,
+      pinning_metadata: 0,
+      compatibility_shim: 0,
     },
     unresolved_by_diagnostic: {
       recorded_processing_error: 0,
@@ -59,6 +71,12 @@ function report() {
         name: "rejected",
         state: "explicitly_unmapped",
         diagnostic_reason: null,
+        unmapped_reason: {
+          code: "environment_mutex",
+          explanation: "A test mutex.",
+          rule_id: "environment-mutex-v1",
+          evidence: { summary: "A mutex package" },
+        },
         download_count: null,
       }),
     ],

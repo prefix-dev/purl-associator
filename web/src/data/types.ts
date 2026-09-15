@@ -121,6 +121,13 @@ export type PublishedIdentity =
   | LegacyCpeIdentity
   | CpeIdentity;
 
+export type UnmappedReason = {
+  code: "conda_cdt_repackage" | "dependency_only_metapackage" | "toolchain_selector" | "environment_mutex" | "pinning_metadata" | "compatibility_shim";
+  explanation: string;
+  rule_id: string;
+  evidence: Record<string, string>;
+};
+
 export type ManualOverride = {
   purl: string | null;
   type: string | null;
@@ -155,6 +162,7 @@ export type PackageEntry = {
   status: ReviewStatus;
   source: "auto" | "manual";
   unmapped?: boolean;
+  unmapped_reason?: UnmappedReason;
   approved_by?: string;
   approved_at?: string;
   alternative_purls?: (PurlAlternative | string)[] | null;
@@ -182,6 +190,7 @@ export type MappingPackageIndex = Pick<
   | "download_count"
   | "alternative_purls"
   | "unmapped"
+  | "unmapped_reason"
   | "cpes"
   | "identities"
   | "auto"

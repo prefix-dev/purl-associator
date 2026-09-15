@@ -119,6 +119,8 @@ export function CoverageApp() {
           row.name,
           row.version,
           row.note,
+          row.unmapped_reason?.code,
+          row.unmapped_reason?.explanation,
           row.source_url,
           row.repo,
           row.homepage,
@@ -214,7 +216,7 @@ export function CoverageApp() {
               <SummaryCard label="All packages" value={report.counts.total} theme={theme} />
               <SummaryCard label="Primary PURL" value={report.counts.primary_present} theme={theme} tone="good" />
               <SummaryCard label="Explicitly unmapped" value={report.counts.explicitly_unmapped} theme={theme} tone="warn" />
-              <SummaryCard label="Unresolved" value={report.counts.unresolved} theme={theme} tone="bad" />
+              <SummaryCard label="Actionable unresolved" value={report.counts.actionable_missing} theme={theme} tone="bad" />
             </section>
 
             <section className="coverage-workspace" style={{ background: t.surface, borderColor: t.border }}>
@@ -291,7 +293,9 @@ export function CoverageApp() {
                             {row.diagnostic_reason ? (
                               <DiagnosticPill diagnostic={row.diagnostic_reason} theme={theme} />
                             ) : (
-                              <span style={{ color: t.warn }}>Explicit no-PURL</span>
+                              <span style={{ color: t.warn }}>
+                                {row.unmapped_reason?.code.replaceAll("_", " ") ?? "Legacy no-PURL decision"}
+                              </span>
                             )}
                           </td>
                           <td className="mono" style={{ color: t.fg2 }}>{row.version || "—"}</td>
@@ -379,6 +383,16 @@ function PackageEvidence({ row, theme }: { row: CoverageRow; theme: ReturnType<t
         <div className="coverage-diagnostic-box" style={{ background: theme.t.surface, borderColor: theme.t.border }}>
           <DiagnosticPill diagnostic={row.diagnostic_reason} theme={theme} />
           <p style={{ color: theme.t.fg2 }}>{DIAGNOSTIC_META[row.diagnostic_reason].description}</p>
+        </div>
+      )}
+      {row.unmapped_reason && (
+        <div className="coverage-diagnostic-box" style={{ background: theme.t.surface, borderColor: theme.t.border }}>
+          <strong>{row.unmapped_reason.code.replaceAll("_", " ")}</strong>
+          <p style={{ color: theme.t.fg2 }}>{row.unmapped_reason.explanation}</p>
+          <p className="mono" style={{ color: theme.t.fg3 }}>{row.unmapped_reason.rule_id}</p>
+          {Object.entries(row.unmapped_reason.evidence).map(([key, value]) => (
+            <p key={key} style={{ color: theme.t.fg2 }}><strong>{key}:</strong> {value}</p>
+          ))}
         </div>
       )}
       <h3>Recorded URLs</h3>

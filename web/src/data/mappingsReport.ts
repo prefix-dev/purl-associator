@@ -8,13 +8,30 @@ export const UNRESOLVED_DIAGNOSTICS = [
   "no_primary_from_url_evidence",
 ] as const;
 
+export const UNMAPPED_REASON_CODES = [
+  "conda_cdt_repackage",
+  "dependency_only_metapackage",
+  "toolchain_selector",
+  "environment_mutex",
+  "pinning_metadata",
+  "compatibility_shim",
+] as const;
+
 export type UnresolvedDiagnostic = (typeof UNRESOLVED_DIAGNOSTICS)[number];
+export type UnmappedReasonCode = (typeof UNMAPPED_REASON_CODES)[number];
 export type MissingPrimaryState = "explicitly_unmapped" | "unresolved";
+export type UnmappedReason = {
+  code: UnmappedReasonCode;
+  explanation: string;
+  rule_id: string;
+  evidence: Record<string, string>;
+};
 
 export type MissingPrimaryPackage = {
   name: string;
   state: MissingPrimaryState;
   diagnostic_reason: UnresolvedDiagnostic | null;
+  unmapped_reason: UnmappedReason | null;
   source_hosts: string[];
   version: string | null;
   source_url: string | null;
@@ -25,22 +42,28 @@ export type MissingPrimaryPackage = {
 };
 
 export type MappingsReport = {
-  schema_version: 1;
+  schema_version: 2;
   input_schema_version: number;
   channel: string;
   counts: {
     total: number;
     primary_present: number;
     explicitly_unmapped: number;
+    classified_unmapped: number;
+    legacy_unmapped: number;
     unresolved: number;
+    actionable_missing: number;
     primary_missing: number;
   };
+  classified_by_reason: Record<UnmappedReasonCode, number>;
   unresolved_by_diagnostic: Record<UnresolvedDiagnostic, number>;
   unresolved_by_source_host: Array<{ host: string; package_count: number }>;
   missing_packages: MissingPrimaryPackage[];
 };
 
 const DIAGNOSTIC_SET = new Set<string>(UNRESOLVED_DIAGNOSTICS);
+const REASON_SET = new Set<string>(UNMAPPED_REASON_CODES);
+const EVIDENCE_FIELDS = new Set(["version", "build", "summary", "source_url", "repo", "homepage"]);
 
 function record(value: unknown, label: string): Record<string, unknown> {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
@@ -80,9 +103,28 @@ function sourceHostArray(value: unknown, label: string): string[] {
   });
 }
 
+function decodeUnmappedReason(value: unknown, label: string, state: unknown): UnmappedReason | null {
+  if (value === null) return null;
+  if (state !== "explicitly_unmapped") throw new Error(`${label} requires explicitly_unmapped state`);
+  const reason = record(value, label);
+  if (typeof reason.code !== "string" || !REASON_SET.has(reason.code)) throw new Error(`${label}.code is unsupported`);
+  if (typeof reason.explanation !== "string" || !reason.explanation) throw new Error(`${label}.explanation is required`);
+  if (typeof reason.rule_id !== "string" || !reason.rule_id) throw new Error(`${label}.rule_id is required`);
+  const evidence = record(reason.evidence, `${label}.evidence`);
+  if (Object.keys(evidence).length === 0 || Object.keys(evidence).some((key) => !EVIDENCE_FIELDS.has(key))) {
+    throw new Error(`${label}.evidence is empty or unsupported`);
+  }
+  const decodedEvidence: Record<string, string> = {};
+  for (const [key, item] of Object.entries(evidence)) {
+    if (typeof item !== "string" || !item) throw new Error(`${label}.evidence.${key} is required`);
+    decodedEvidence[key] = item;
+  }
+  return { code: reason.code as UnmappedReasonCode, explanation: reason.explanation, rule_id: reason.rule_id, evidence: decodedEvidence };
+}
+
 export function decodeMappingsReport(value: unknown): MappingsReport {
   const report = record(value, "mappings report");
-  if (report.schema_version !== 1) {
+  if (report.schema_version !== 2) {
     throw new Error(
       `mappings report has unsupported schema_version ${String(report.schema_version)}`,
     );
@@ -106,7 +148,10 @@ export function decodeMappingsReport(value: unknown): MappingsReport {
       rawCounts.explicitly_unmapped,
       "mappings report.counts.explicitly_unmapped",
     ),
+    classified_unmapped: integer(rawCounts.classified_unmapped, "mappings report.counts.classified_unmapped"),
+    legacy_unmapped: integer(rawCounts.legacy_unmapped, "mappings report.counts.legacy_unmapped"),
     unresolved: integer(rawCounts.unresolved, "mappings report.counts.unresolved"),
+    actionable_missing: integer(rawCounts.actionable_missing, "mappings report.counts.actionable_missing"),
     primary_missing: integer(
       rawCounts.primary_missing,
       "mappings report.counts.primary_missing",
@@ -115,9 +160,22 @@ export function decodeMappingsReport(value: unknown): MappingsReport {
   if (
     counts.primary_present + counts.explicitly_unmapped + counts.unresolved !==
       counts.total ||
-    counts.explicitly_unmapped + counts.unresolved !== counts.primary_missing
+    counts.explicitly_unmapped + counts.unresolved !== counts.primary_missing ||
+    counts.classified_unmapped + counts.legacy_unmapped !== counts.explicitly_unmapped ||
+    counts.actionable_missing !== counts.unresolved
   ) {
     throw new Error("mappings report coverage counts do not reconcile");
+  }
+
+  const rawClassifications = record(report.classified_by_reason, "mappings report.classified_by_reason");
+  if (Object.keys(rawClassifications).length !== UNMAPPED_REASON_CODES.length || Object.keys(rawClassifications).some((key) => !REASON_SET.has(key))) {
+    throw new Error("mappings report has unsupported classification reasons");
+  }
+  const classifiedByReason = Object.fromEntries(
+    UNMAPPED_REASON_CODES.map((code) => [code, integer(rawClassifications[code], `mappings report.classified_by_reason.${code}`)]),
+  ) as Record<UnmappedReasonCode, number>;
+  if (Object.values(classifiedByReason).reduce((sum, count) => sum + count, 0) !== counts.classified_unmapped) {
+    throw new Error("mappings report classification reasons do not reconcile");
   }
 
   const rawDiagnostics = record(
@@ -185,6 +243,7 @@ export function decodeMappingsReport(value: unknown): MappingsReport {
     UNRESOLVED_DIAGNOSTICS.map((diagnostic) => [diagnostic, 0]),
   ) as Record<UnresolvedDiagnostic, number>;
   const observedSourceHosts = new Map<string, number>();
+  const observedClassifications = Object.fromEntries(UNMAPPED_REASON_CODES.map((code) => [code, 0])) as Record<UnmappedReasonCode, number>;
   let explicitlyUnmapped = 0;
   let unresolved = 0;
   const packages = report.missing_packages.map((raw, index): MissingPrimaryPackage => {
@@ -211,6 +270,8 @@ export function decodeMappingsReport(value: unknown): MappingsReport {
       }
       explicitlyUnmapped++;
     }
+    const unmappedReason = decodeUnmappedReason(pkg.unmapped_reason, `${label}.unmapped_reason`, pkg.state);
+    if (unmappedReason) observedClassifications[unmappedReason.code]++;
     const sourceHosts = sourceHostArray(pkg.source_hosts, `${label}.source_hosts`);
     if (pkg.state === "unresolved") {
       for (const host of sourceHosts) {
@@ -225,6 +286,7 @@ export function decodeMappingsReport(value: unknown): MappingsReport {
       name: pkg.name,
       state: pkg.state,
       diagnostic_reason: diagnostic,
+      unmapped_reason: unmappedReason,
       source_hosts: sourceHosts,
       version: nullableString(pkg.version, `${label}.version`),
       source_url: nullableString(pkg.source_url, `${label}.source_url`),
@@ -238,6 +300,7 @@ export function decodeMappingsReport(value: unknown): MappingsReport {
     packages.length !== counts.primary_missing ||
     explicitlyUnmapped !== counts.explicitly_unmapped ||
     unresolved !== counts.unresolved ||
+    UNMAPPED_REASON_CODES.some((code) => observedClassifications[code] !== classifiedByReason[code]) ||
     UNRESOLVED_DIAGNOSTICS.some(
       (diagnostic) => observedDiagnostics[diagnostic] !== unresolvedByDiagnostic[diagnostic],
     ) ||
@@ -250,10 +313,11 @@ export function decodeMappingsReport(value: unknown): MappingsReport {
   }
 
   return {
-    schema_version: 1,
+    schema_version: 2,
     input_schema_version: inputSchemaVersion,
     channel: report.channel,
     counts,
+    classified_by_reason: classifiedByReason,
     unresolved_by_diagnostic: unresolvedByDiagnostic,
     unresolved_by_source_host: unresolvedBySourceHost,
     missing_packages: packages,

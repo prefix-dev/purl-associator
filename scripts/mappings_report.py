@@ -16,7 +16,7 @@ from urllib.parse import urlsplit
 
 from scripts import merge_mappings, validate
 
-REPORT_SCHEMA_VERSION = 1
+REPORT_SCHEMA_VERSION = 2
 URL_EVIDENCE_FIELDS = ("source_url", "repo", "homepage")
 EVIDENCE_FIELDS = ("version", *URL_EVIDENCE_FIELDS, "note")
 UNRESOLVED_DIAGNOSTICS = (
@@ -29,9 +29,20 @@ COVERAGE_LABELS = (
     ("total", "Total packages"),
     ("primary_present", "Primary PURL present"),
     ("explicitly_unmapped", "Explicitly unmapped"),
-    ("unresolved", "Unresolved"),
+    ("classified_unmapped", "Classified with reason"),
+    ("legacy_unmapped", "Legacy reasonless decisions"),
+    ("unresolved", "Actionable unresolved"),
+    ("actionable_missing", "Actionable missing"),
     ("primary_missing", "Primary PURL missing"),
 )
+CLASSIFICATION_LABELS = {
+    "conda_cdt_repackage": "Conda CDT/RPM repackage",
+    "dependency_only_metapackage": "Dependency-only metapackage",
+    "toolchain_selector": "Toolchain selector",
+    "environment_mutex": "Environment mutex",
+    "pinning_metadata": "Pinning metadata",
+    "compatibility_shim": "Compatibility shim",
+}
 DIAGNOSTIC_LABELS = {
     "recorded_processing_error": "Recorded processing error",
     "alternative_only": "Alternative PURL only",
@@ -110,6 +121,9 @@ def build_report(payload: dict[str, Any]) -> dict[str, Any]:
         raise ValueError("package names must be non-empty strings")
 
     counts = {"primary_present": 0, "explicitly_unmapped": 0, "unresolved": 0}
+    classified_by_reason = {
+        code: 0 for code in sorted(merge_mappings.UNMAPPED_REASON_CODES)
+    }
     unresolved_by_diagnostic = {diagnostic: 0 for diagnostic in UNRESOLVED_DIAGNOSTICS}
     unresolved_source_hosts: Counter[str] = Counter()
     missing: list[dict[str, Any]] = []
@@ -154,15 +168,19 @@ def build_report(payload: dict[str, Any]) -> dict[str, Any]:
         if not has_primary:
             source_hosts = _source_hosts(entry)
             diagnostic_reason = None
+            unmapped_reason = entry.get("unmapped_reason")
             if state == "unresolved":
                 diagnostic_reason = _diagnose_unresolved(entry, source_hosts)
                 unresolved_by_diagnostic[diagnostic_reason] += 1
                 unresolved_source_hosts.update(source_hosts)
+            elif unmapped_reason is not None:
+                classified_by_reason[unmapped_reason["code"]] += 1
             missing.append(
                 {
                     "name": name,
                     "state": state,
                     "diagnostic_reason": diagnostic_reason,
+                    "unmapped_reason": unmapped_reason,
                     "source_hosts": list(source_hosts),
                     **{field: entry.get(field) for field in EVIDENCE_FIELDS},
                     "download_count": downloads,
@@ -181,8 +199,13 @@ def build_report(payload: dict[str, Any]) -> dict[str, Any]:
         "counts": {
             "total": len(packages),
             **counts,
+            "classified_unmapped": sum(classified_by_reason.values()),
+            "legacy_unmapped": counts["explicitly_unmapped"]
+            - sum(classified_by_reason.values()),
+            "actionable_missing": counts["unresolved"],
             "primary_missing": counts["explicitly_unmapped"] + counts["unresolved"],
         },
+        "classified_by_reason": classified_by_reason,
         "unresolved_by_diagnostic": unresolved_by_diagnostic,
         "unresolved_by_source_host": [
             {"host": host, "package_count": package_count}
@@ -224,6 +247,9 @@ def _comparison_metrics(
         != counts["total"]
         or counts["explicitly_unmapped"] + counts["unresolved"]
         != counts["primary_missing"]
+        or counts["classified_unmapped"] + counts["legacy_unmapped"]
+        != counts["explicitly_unmapped"]
+        or counts["actionable_missing"] != counts["unresolved"]
     ):
         raise ValueError(f"{label}.counts do not reconcile")
 
@@ -241,6 +267,17 @@ def _comparison_metrics(
     }
     if sum(diagnostics.values()) != counts["unresolved"]:
         raise ValueError(f"{label}.unresolved_by_diagnostic does not reconcile")
+    raw_classifications = report.get("classified_by_reason")
+    if not isinstance(raw_classifications, dict) or set(raw_classifications) != set(
+        CLASSIFICATION_LABELS
+    ):
+        raise ValueError(f"{label}.classified_by_reason has an unsupported shape")
+    classification_total = sum(
+        _non_negative_int(value, f"{label}.classified_by_reason.{code}")
+        for code, value in raw_classifications.items()
+    )
+    if classification_total != counts["classified_unmapped"]:
+        raise ValueError(f"{label}.classified_by_reason does not reconcile")
     return counts, diagnostics
 
 
@@ -286,6 +323,26 @@ def render_markdown(
     )
     out.extend(["", f"Primary-PURL coverage: **{coverage:.2f}%**.", ""])
 
+    classifications = report["classified_by_reason"]
+    baseline_classifications = (
+        baseline["classified_by_reason"] if baseline is not None else None
+    )
+    out.extend(["### Reviewed no-PURL classifications", ""])
+    if baseline_classifications is None:
+        out.extend(["| Reason | Count |", "|---|---:|"])
+        out.extend(
+            f"| {CLASSIFICATION_LABELS[code]} | {classifications[code]:,} |"
+            for code in CLASSIFICATION_LABELS
+        )
+    else:
+        out.extend(["| Reason | Before | After | Delta |", "|---|---:|---:|---:|"])
+        out.extend(
+            f"| {CLASSIFICATION_LABELS[code]} | {baseline_classifications[code]:,} | "
+            f"{classifications[code]:,} | "
+            f"{_delta(classifications[code] - baseline_classifications[code])} |"
+            for code in CLASSIFICATION_LABELS
+        )
+    out.append("")
     out.extend(["### Unresolved diagnostics", ""])
     if baseline_diagnostics is None:
         out.extend(["| Diagnostic | Count |", "|---|---:|"])

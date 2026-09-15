@@ -70,7 +70,15 @@ class MappingsReportTest(unittest.TestCase):
                 "author": "contributor",
                 "timestamp": "2026-01-02T00:00:00Z",
                 "packages": {
-                    "rejected": {"unmapped": True},
+                    "rejected": {
+                        "unmapped": True,
+                        "unmapped_reason": {
+                            "code": "environment_mutex",
+                            "explanation": "A test-only environment mutex.",
+                            "rule_id": "environment-mutex-v1",
+                            "evidence": {"summary": "test mutex"},
+                        },
+                    },
                     "contributed": {"purl": "pkg:pypi/contributed"},
                 },
             },
@@ -110,7 +118,10 @@ class MappingsReportTest(unittest.TestCase):
                 "total": 8,
                 "primary_present": 3,
                 "explicitly_unmapped": 1,
+                "classified_unmapped": 1,
+                "legacy_unmapped": 0,
                 "unresolved": 4,
+                "actionable_missing": 4,
                 "primary_missing": 5,
             },
         )
@@ -162,6 +173,10 @@ class MappingsReportTest(unittest.TestCase):
         )
         self.assertEqual(rows["error"]["source_hosts"], ["example.org"])
         self.assertEqual(rows["no-evidence"]["source_hosts"], [])
+        self.assertEqual(
+            rows["rejected"]["unmapped_reason"]["code"], "environment_mutex"
+        )
+        self.assertEqual(report["classified_by_reason"]["environment_mutex"], 1)
 
     def test_diagnostic_precedence_is_conservative(self) -> None:
         payload = copy.deepcopy(self.payload)
@@ -293,19 +308,20 @@ class MappingsReportTest(unittest.TestCase):
         current["counts"].update(
             primary_present=4,
             unresolved=3,
+            actionable_missing=3,
             primary_missing=4,
         )
         current["unresolved_by_diagnostic"]["no_parseable_source_host"] = 1
         rendered = mappings_report.render_markdown(current, baseline=baseline)
         self.assertIn("| Primary PURL present | 3 | 4 | +1 |", rendered)
         self.assertIn("| Explicitly unmapped | 1 | 1 | 0 |", rendered)
-        self.assertIn("| Unresolved | 4 | 3 | -1 |", rendered)
+        self.assertIn("| Actionable unresolved | 4 | 3 | -1 |", rendered)
         self.assertIn("| No parseable source host | 2 | 1 | -1 |", rendered)
 
     def test_markdown_rejects_invalid_or_incompatible_baselines(self) -> None:
         report = mappings_report.build_report(self.payload)
         for patch in (
-            {"schema_version": 2},
+            {"schema_version": 1},
             {"input_schema_version": report["input_schema_version"] + 1},
             {"counts": {**report["counts"], "unresolved": 3}},
             {

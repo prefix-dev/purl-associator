@@ -50,6 +50,7 @@ const FULL_ENTRY_KEYS = [
   "status",
   "source",
   "unmapped",
+  "unmapped_reason",
   "approved_by",
   "approved_at",
   "alternative_purls",
@@ -71,6 +72,7 @@ const INDEX_ENTRY_KEYS = [
   "download_count",
   "alternative_purls",
   "unmapped",
+  "unmapped_reason",
   "cpes",
   "identities",
   "auto",
@@ -434,6 +436,17 @@ function decodeLegacyIdentityFields(
   const cpes = decodeCpes(entry.cpes, `${label}.cpes`);
   const unmapped = hasOwn(entry, "unmapped") ? entry.unmapped : false;
   if (typeof unmapped !== "boolean") throw new Error(`${label}.unmapped must be a boolean`);
+  if (hasOwn(entry, "unmapped_reason")) {
+    if (!unmapped) throw new Error(`${label}.unmapped_reason requires unmapped`);
+    const reason = record(entry.unmapped_reason, `${label}.unmapped_reason`);
+    requireOnlyKeys(reason, ["code", "explanation", "rule_id", "evidence"], `${label}.unmapped_reason`);
+    stringValue(required(reason, "code", `${label}.unmapped_reason`), `${label}.unmapped_reason.code`, false);
+    stringValue(required(reason, "explanation", `${label}.unmapped_reason`), `${label}.unmapped_reason.explanation`, false);
+    stringValue(required(reason, "rule_id", `${label}.unmapped_reason`), `${label}.unmapped_reason.rule_id`, false);
+    const evidence = record(required(reason, "evidence", `${label}.unmapped_reason`), `${label}.unmapped_reason.evidence`);
+    if (Object.keys(evidence).length === 0) throw new Error(`${label}.unmapped_reason.evidence must not be empty`);
+    for (const [key, value] of Object.entries(evidence)) stringValue(value, `${label}.unmapped_reason.evidence.${key}`, false);
+  }
   if (hasOwn(entry, "auto")) decodeAutoMapping(entry.auto, `${label}.auto`);
 
   const seenPurls = new Set<string>();

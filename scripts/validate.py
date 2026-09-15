@@ -407,6 +407,14 @@ def _validate_identity_contract(
         )
     if isinstance(purl, str) and purl in _purl_list(alternatives):
         errors.append(f"{label}: primary PURL must not appear as an alternative")
+    reason = entry.get("unmapped_reason")
+    if reason is not None:
+        if not unmapped:
+            errors.append(f"{label}: unmapped_reason requires unmapped")
+        try:
+            merge_mappings._validate_unmapped_reason(reason, f"{label}.unmapped_reason")
+        except ValueError as exc:
+            errors.append(str(exc))
     if unmapped:
         if entry.get("status") != "unmapped":
             errors.append(f"{label}: unmapped package status must be unmapped")
@@ -477,6 +485,7 @@ CANONICAL_MAPPING_FIELDS = (
     "alternative_purls",
     "cpes",
     "unmapped",
+    "unmapped_reason",
     "status",
     "source",
     "approved_by",
@@ -490,6 +499,7 @@ INDEX_CANONICAL_FIELDS = (
     "alternative_purls",
     "cpes",
     "unmapped",
+    "unmapped_reason",
     "status",
 )
 
