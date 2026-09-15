@@ -389,6 +389,9 @@ function PackageEvidence({ row, theme }: { row: CoverageRow; theme: ReturnType<t
         <div className="coverage-diagnostic-box" style={{ background: theme.t.surface, borderColor: theme.t.border }}>
           <strong>{row.unmapped_reason.code.replaceAll("_", " ")}</strong>
           <p style={{ color: theme.t.fg2 }}>{row.unmapped_reason.explanation}</p>
+          <p style={{ color: theme.t.fg2 }}>
+            Reviewed by <strong>{row.unmapped_reason.review.reviewer}</strong> · {row.unmapped_reason.review.reviewed_at}
+          </p>
           <p className="mono" style={{ color: theme.t.fg3 }}>{row.unmapped_reason.rule_id}</p>
           {Object.entries(row.unmapped_reason.evidence).map(([key, value]) => (
             <p key={key} style={{ color: theme.t.fg2 }}><strong>{key}:</strong> {value}</p>

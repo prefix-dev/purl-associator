@@ -20,12 +20,12 @@ DEFAULT_MAPPINGS_DETAIL_DIR = ROOT / "web" / "public" / "mapping_packages"
 
 CPE23_RE = merge_mappings.CPE23_RE
 PURL_RE = merge_mappings.PURL_RE
-SUPPORTED_BUNDLE_SCHEMAS = {1, 2, 3}
-SUPPORTED_INDEX_SCHEMAS = {2, 3, 4}
-SUPPORTED_DETAIL_SCHEMAS = {1, 2, 3}
-CURRENT_BUNDLE_SCHEMA = 3
-CURRENT_INDEX_SCHEMA = 4
-CURRENT_DETAIL_SCHEMA = 3
+SUPPORTED_BUNDLE_SCHEMAS = {1, 2, 3, 4}
+SUPPORTED_INDEX_SCHEMAS = {2, 3, 4, 5}
+SUPPORTED_DETAIL_SCHEMAS = {1, 2, 3, 4}
+CURRENT_BUNDLE_SCHEMA = 4
+CURRENT_INDEX_SCHEMA = 5
+CURRENT_DETAIL_SCHEMA = 4
 REVIEW_STATUSES = merge_mappings.REVIEW_STATUSES
 PRIMARY_SOURCES = merge_mappings.PRIMARY_SOURCES
 ALTERNATIVE_SOURCES = merge_mappings.ALTERNATIVE_SOURCES
@@ -412,7 +412,9 @@ def _validate_identity_contract(
         if not unmapped:
             errors.append(f"{label}: unmapped_reason requires unmapped")
         try:
-            merge_mappings._validate_unmapped_reason(reason, f"{label}.unmapped_reason")
+            merge_mappings._validate_unmapped_reason(
+                reason, f"{label}.unmapped_reason", published=True
+            )
         except ValueError as exc:
             errors.append(str(exc))
     if unmapped:
@@ -539,10 +541,11 @@ def _canonical_shape(
         if key in entry
         and not (
             index
-            and key in {"alternative_purls", "cpes", "unmapped"}
+            and key in {"alternative_purls", "cpes", "unmapped", "unmapped_reason"}
             and entry[key] is None
         )
         and not (not current and key == "unmapped" and entry[key] is False)
+        and not (not current and key == "unmapped_reason")
     }
     if current and "identities" in entry:
         shaped["identities"] = entry["identities"]

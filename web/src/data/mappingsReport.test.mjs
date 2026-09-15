@@ -38,7 +38,7 @@ function missing(fields = {}) {
 function report() {
   return {
     schema_version: 2,
-    input_schema_version: 3,
+    input_schema_version: 4,
     channel: "conda-forge",
     counts: {
       total: 3,
@@ -76,6 +76,11 @@ function report() {
           explanation: "A test mutex.",
           rule_id: "environment-mutex-v1",
           evidence: { summary: "A mutex package" },
+          review: {
+            status: "verified",
+            reviewer: "reviewer",
+            reviewed_at: "2026-09-15T00:00:00Z",
+          },
         },
         download_count: null,
       }),

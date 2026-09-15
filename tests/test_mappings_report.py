@@ -387,7 +387,7 @@ class MappingsReportTest(unittest.TestCase):
     def test_rejects_invalid_envelope(self) -> None:
         for patch in (
             {"schema_version": 1},
-            {"schema_version": 4},  # Compact index is not a full bundle.
+            {"schema_version": 5},  # Compact index is not a full bundle.
             {"schema_version": True},
             {"packages": []},
             {"package_count": 0},
