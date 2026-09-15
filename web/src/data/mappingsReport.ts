@@ -25,6 +25,7 @@ export type UnmappedReason = {
   explanation: string;
   rule_id: string;
   evidence: Record<string, string>;
+  review: { status: "verified"; reviewer: string; reviewed_at: string };
 };
 
 export type MissingPrimaryPackage = {
@@ -63,7 +64,7 @@ export type MappingsReport = {
 
 const DIAGNOSTIC_SET = new Set<string>(UNRESOLVED_DIAGNOSTICS);
 const REASON_SET = new Set<string>(UNMAPPED_REASON_CODES);
-const EVIDENCE_FIELDS = new Set(["version", "build", "summary", "source_url", "repo", "homepage"]);
+const EVIDENCE_FIELDS = new Set(["version", "build", "summary", "source_url", "repo", "homepage", "payload_file_count", "dependency_count", "constraint_count"]);
 
 function record(value: unknown, label: string): Record<string, unknown> {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
@@ -119,7 +120,11 @@ function decodeUnmappedReason(value: unknown, label: string, state: unknown): Un
     if (typeof item !== "string" || !item) throw new Error(`${label}.evidence.${key} is required`);
     decodedEvidence[key] = item;
   }
-  return { code: reason.code as UnmappedReasonCode, explanation: reason.explanation, rule_id: reason.rule_id, evidence: decodedEvidence };
+  const review = record(reason.review, `${label}.review`);
+  if (review.status !== "verified" || typeof review.reviewer !== "string" || !review.reviewer || typeof review.reviewed_at !== "string" || !review.reviewed_at) {
+    throw new Error(`${label}.review is malformed`);
+  }
+  return { code: reason.code as UnmappedReasonCode, explanation: reason.explanation, rule_id: reason.rule_id, evidence: decodedEvidence, review: { status: "verified", reviewer: review.reviewer, reviewed_at: review.reviewed_at } };
 }
 
 export function decodeMappingsReport(value: unknown): MappingsReport {

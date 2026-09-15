@@ -26,9 +26,9 @@ DEFAULT_OUT = ROOT / "web" / "public" / "mappings.json"
 DEFAULT_INDEX_OUT = ROOT / "web" / "public" / "mappings-index.json"
 DEFAULT_DETAIL_DIR = ROOT / "web" / "public" / "mapping_packages"
 
-BUNDLE_SCHEMA_VERSION = 3
-INDEX_SCHEMA_VERSION = 4
-DETAIL_SCHEMA_VERSION = 3
+BUNDLE_SCHEMA_VERSION = 4
+INDEX_SCHEMA_VERSION = 5
+DETAIL_SCHEMA_VERSION = 4
 SOURCE_SCHEMA_VERSION = 1
 REVIEW_STATUSES = {"auto-unverified", "auto-verified", "verified", "unmapped", "edited"}
 PRIMARY_SOURCES = {"auto", "manual"}
@@ -51,7 +51,17 @@ UNMAPPED_REASON_CODES = frozenset(
     }
 )
 UNMAPPED_EVIDENCE_FIELDS = frozenset(
-    {"version", "build", "summary", "source_url", "repo", "homepage"}
+    {
+        "version",
+        "build",
+        "summary",
+        "source_url",
+        "repo",
+        "homepage",
+        "payload_file_count",
+        "dependency_count",
+        "constraint_count",
+    }
 )
 UNMAPPED_RULE_RE = re.compile(r"^[a-z0-9]+(?:[._-][a-z0-9]+)*-v[1-9][0-9]*$")
 
@@ -205,10 +215,14 @@ def _validate_alternatives(value: Any, label: str, primary: Any) -> None:
         seen.add(purl)
 
 
-def _validate_unmapped_reason(value: Any, label: str) -> None:
+def _validate_unmapped_reason(
+    value: Any, label: str, *, published: bool = False
+) -> None:
     if not isinstance(value, dict):
         raise ValueError(f"{label} must be an object")
     expected = {"code", "explanation", "rule_id", "evidence"}
+    if published:
+        expected.add("review")
     if set(value) != expected:
         raise ValueError(f"{label} must contain exactly {sorted(expected)!r}")
     if value["code"] not in UNMAPPED_REASON_CODES:
@@ -227,6 +241,21 @@ def _validate_unmapped_reason(value: Any, label: str) -> None:
         )
     for key, item in evidence.items():
         _require_string(item, f"{label}.evidence.{key}")
+    if published:
+        review = value["review"]
+        if not isinstance(review, dict) or set(review) != {
+            "status",
+            "reviewer",
+            "reviewed_at",
+        }:
+            raise ValueError(f"{label}.review has an unsupported shape")
+        if review["status"] != "verified":
+            raise ValueError(f"{label}.review.status must be verified")
+        _require_string(review["reviewer"], f"{label}.review.reviewer")
+        if not _valid_timestamp(review["reviewed_at"]):
+            raise ValueError(
+                f"{label}.review.reviewed_at must be a valid ISO-8601 timestamp"
+            )
 
 
 def _validate_package_entry(entry: Any, label: str, *, auto: bool) -> None:
@@ -445,6 +474,16 @@ def _apply_reviewed_override(
         # attribution merely to make the additive identity view convenient.
         assert current_attribution is not None
         if override.get("unmapped") is True:
+            reason = override.get("unmapped_reason")
+            if reason is not None:
+                reason = {
+                    **reason,
+                    "review": {
+                        "status": "verified",
+                        "reviewer": current_attribution["approved_by"],
+                        "reviewed_at": current_attribution["approved_at"],
+                    },
+                }
             result.update(
                 {
                     "purl": None,
@@ -453,6 +492,7 @@ def _apply_reviewed_override(
                     "pkg_name": None,
                     "alternative_purls": [],
                     "unmapped": True,
+                    "unmapped_reason": reason,
                     "status": "unmapped",
                 }
             )

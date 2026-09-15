@@ -9,9 +9,9 @@ import type {
 
 const DEFAULT_PATH = "./mappings.json";
 const DEFAULT_INDEX_PATH = "./mappings-index.json";
-const SUPPORTED_BUNDLE_SCHEMAS = new Set([1, 2, 3]);
-const SUPPORTED_INDEX_SCHEMAS = new Set([2, 3, 4]);
-const SUPPORTED_DETAIL_SCHEMAS = new Set([1, 2, 3]);
+const SUPPORTED_BUNDLE_SCHEMAS = new Set([1, 2, 3, 4]);
+const SUPPORTED_INDEX_SCHEMAS = new Set([2, 3, 4, 5]);
+const SUPPORTED_DETAIL_SCHEMAS = new Set([1, 2, 3, 4]);
 const PURL_PATTERN = /^pkg:[a-z][a-z0-9.+-]*\/[^\s?#]+(?:\?[^\s#]+)?(?:#[^\s]+)?$/;
 const CPE_PATTERN = /^cpe:2\.3:[aho*\-]:[^:]+:[^:]+(?::[^:]*){0,10}$/;
 const REVIEW_STATUSES = new Set([
@@ -436,16 +436,21 @@ function decodeLegacyIdentityFields(
   const cpes = decodeCpes(entry.cpes, `${label}.cpes`);
   const unmapped = hasOwn(entry, "unmapped") ? entry.unmapped : false;
   if (typeof unmapped !== "boolean") throw new Error(`${label}.unmapped must be a boolean`);
-  if (hasOwn(entry, "unmapped_reason")) {
+  if (hasOwn(entry, "unmapped_reason") && entry.unmapped_reason !== null) {
     if (!unmapped) throw new Error(`${label}.unmapped_reason requires unmapped`);
     const reason = record(entry.unmapped_reason, `${label}.unmapped_reason`);
-    requireOnlyKeys(reason, ["code", "explanation", "rule_id", "evidence"], `${label}.unmapped_reason`);
+    requireOnlyKeys(reason, ["code", "explanation", "rule_id", "evidence", "review"], `${label}.unmapped_reason`);
     stringValue(required(reason, "code", `${label}.unmapped_reason`), `${label}.unmapped_reason.code`, false);
     stringValue(required(reason, "explanation", `${label}.unmapped_reason`), `${label}.unmapped_reason.explanation`, false);
     stringValue(required(reason, "rule_id", `${label}.unmapped_reason`), `${label}.unmapped_reason.rule_id`, false);
     const evidence = record(required(reason, "evidence", `${label}.unmapped_reason`), `${label}.unmapped_reason.evidence`);
     if (Object.keys(evidence).length === 0) throw new Error(`${label}.unmapped_reason.evidence must not be empty`);
     for (const [key, value] of Object.entries(evidence)) stringValue(value, `${label}.unmapped_reason.evidence.${key}`, false);
+    const review = record(required(reason, "review", `${label}.unmapped_reason`), `${label}.unmapped_reason.review`);
+    requireOnlyKeys(review, ["status", "reviewer", "reviewed_at"], `${label}.unmapped_reason.review`);
+    if (review.status !== "verified") throw new Error(`${label}.unmapped_reason.review.status must be verified`);
+    stringValue(required(review, "reviewer", `${label}.unmapped_reason.review`), `${label}.unmapped_reason.review.reviewer`, false);
+    stringValue(required(review, "reviewed_at", `${label}.unmapped_reason.review`), `${label}.unmapped_reason.review.reviewed_at`, false);
   }
   if (hasOwn(entry, "auto")) decodeAutoMapping(entry.auto, `${label}.auto`);
 
@@ -623,7 +628,7 @@ function decodePackages(
   const packages = record(payload.packages, `${label}.packages`);
   const version = payload.schema_version as number;
   const identityContract: IdentityContract =
-    version === currentVersion
+    version >= currentVersion
       ? "current"
       : version === currentVersion - 1
         ? "legacy"
@@ -651,6 +656,7 @@ function normalizedIndexIdentityContract(
     pkg_name: entry.pkg_name,
     status: entry.status,
     unmapped: entry.unmapped === true,
+    unmapped_reason: entry.unmapped_reason ?? null,
     alternative_purls: entry.alternative_purls ?? [],
     cpes: entry.cpes ?? [],
     identities: entry.identities,

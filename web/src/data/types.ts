@@ -126,6 +126,7 @@ export type UnmappedReason = {
   explanation: string;
   rule_id: string;
   evidence: Record<string, string>;
+  review: { status: "verified"; reviewer: string; reviewed_at: string };
 };
 
 export type ManualOverride = {
@@ -212,12 +213,12 @@ export type LegacyMappingsPayload = MappingPayloadMetadata & {
 };
 
 export type PreviousMappingsPayload = MappingPayloadMetadata & {
-  schema_version: 2;
+  schema_version: 2 | 3;
   packages: Record<string, PackageEntry & { identities: PublishedIdentity[] }>;
 };
 
 export type CurrentMappingsPayload = MappingPayloadMetadata & {
-  schema_version: 3;
+  schema_version: 4;
   packages: Record<string, PackageEntry & { identities: PublishedIdentity[] }>;
 };
 
@@ -232,7 +233,7 @@ export type LegacyMappingsIndexPayload = MappingPayloadMetadata & {
 };
 
 export type PreviousMappingsIndexPayload = MappingPayloadMetadata & {
-  schema_version: 3;
+  schema_version: 3 | 4;
   packages: Record<
     MappingPackageIndex["name"],
     MappingPackageIndex & { identities: PublishedIdentity[] }
@@ -240,7 +241,7 @@ export type PreviousMappingsIndexPayload = MappingPayloadMetadata & {
 };
 
 export type CurrentMappingsIndexPayload = MappingPayloadMetadata & {
-  schema_version: 4;
+  schema_version: 5;
   packages: Record<
     MappingPackageIndex["name"],
     MappingPackageIndex & { identities: PublishedIdentity[] }
@@ -255,7 +256,7 @@ export type MappingsIndexPayload =
 export type MappingDetailPayload =
   | { schema_version: 1; packages: Record<string, PackageEntry> }
   | {
-      schema_version: 2 | 3;
+      schema_version: 2 | 3 | 4;
       packages: Record<string, PackageEntry & { identities: PublishedIdentity[] }>;
     };
 

@@ -127,8 +127,9 @@ instants, with the on-disk filename as the deterministic tie-breaker.
 ### Payload versions and compatibility
 
 PFX-1826 introduced `identities` in bundle schema 2, index schema 3, and detail
-schema 2. CPE provenance advances those payloads to bundle schema **3**, index
-schema **4**, and detail schema **3**. Legacy `purl`, `alternative_purls`,
+schema 2. CPE provenance advances those payloads to bundle schema 3, index
+schema 4, and detail schema 3. Reviewed no-PURL reasons advance them to bundle
+schema **4**, index schema **5**, and detail schema **4**. Legacy `purl`, `alternative_purls`,
 `cpes`, `status`, and attribution fields remain unchanged. New clients should
 reject unknown future schema versions rather than guessing. The validator and
 web decoder accept the earlier payload generations but require attributed CPE
@@ -243,7 +244,8 @@ exclusion. Only `unmapped: true` establishes an explicit no-PURL decision. The
 diagnostic counts are mutually exclusive and sum to `unresolved`.
 
 Reviewed intentional no-PURL decisions may include an `unmapped_reason` with a
-stable code, rule ID, explanation, and copied evidence. Generate deterministic
+stable code, rule ID, explanation, copied evidence, and review attribution.
+Generate deterministic
 review candidates without changing source mappings:
 
 ```sh
@@ -257,6 +259,16 @@ contribution. Rules never write `mappings/auto.json`, never overwrite an existin
 primary or alternative PURL, and do not classify from a broad host, suffix, or the
 word “metapackage” alone. Historical reviewed no-PURL decisions without structured
 rationale remain labeled as legacy rather than receiving fabricated explanations.
+
+A CDT conda package is an architecture/toolchain wrapper assembled from a Linux
+distribution RPM, not a publication of that RPM in its native repository. A
+`pkg:rpm` identity would identify the source distribution artifact rather than
+the independently versioned conda wrapper, so the reviewed classification keeps
+the RPM URL as evidence without asserting it as the package's PURL. For reviewed
+metapackages/selectors, artifact evidence records payload-file, dependency, and
+constraint counts; zero payload is strong evidence for dependency-only packages,
+while conda-specific activation or pinning files do not create an independent
+upstream identity.
 
 Each missing-primary row includes normalized, sorted `source_hosts` derived from
 its persisted source, repository, and homepage URLs. `unresolved_by_source_host`

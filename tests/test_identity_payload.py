@@ -145,7 +145,7 @@ class IdentityPayloadTest(unittest.TestCase):
         index = json.loads(index_path.read_text())
         reviewed = bundle["packages"]["reviewed"]
 
-        self.assertEqual((bundle["schema_version"], index["schema_version"]), (3, 4))
+        self.assertEqual((bundle["schema_version"], index["schema_version"]), (4, 5))
         self.assertEqual(reviewed["status"], "verified")
         self.assertEqual(reviewed["approved_by"], "current-reviewer")
         # Identity provenance remains with the primary-owning manual layer.
@@ -200,6 +200,14 @@ class IdentityPayloadTest(unittest.TestCase):
         self.assertEqual(
             rejected["unmapped_reason"]["rule_id"],
             "dependency-only-metapackage-v1",
+        )
+        self.assertEqual(
+            rejected["unmapped_reason"]["review"],
+            {
+                "status": "verified",
+                "reviewer": "current-reviewer",
+                "reviewed_at": "2026-01-03T04:05:06Z",
+            },
         )
         for key in ("purl", "type", "namespace", "pkg_name"):
             self.assertIsNone(rejected[key])
@@ -711,25 +719,19 @@ class IdentityPayloadTest(unittest.TestCase):
         bundle_path, index_path, detail_dir = self._generate(self.root / "legacy")
         bundle = json.loads(bundle_path.read_text())
         index = json.loads(index_path.read_text())
-        bundle["schema_version"] = 2
-        index["schema_version"] = 3
+        bundle["schema_version"] = 3
+        index["schema_version"] = 4
         for entry in bundle["packages"].values():
-            for identity in entry["identities"]:
-                if identity["kind"] == "cpe":
-                    identity["provenance"] = {"availability": "unavailable"}
+            entry.pop("unmapped_reason", None)
         for entry in index["packages"].values():
-            for identity in entry["identities"]:
-                if identity["kind"] == "cpe":
-                    identity["provenance"] = {"availability": "unavailable"}
+            entry.pop("unmapped_reason", None)
         self._write_json(bundle_path, bundle)
         self._write_json(index_path, index)
         for shard_path in detail_dir.glob("*.json"):
             shard = json.loads(shard_path.read_text())
-            shard["schema_version"] = 2
+            shard["schema_version"] = 3
             for entry in shard["packages"].values():
-                for identity in entry["identities"]:
-                    if identity["kind"] == "cpe":
-                        identity["provenance"] = {"availability": "unavailable"}
+                entry.pop("unmapped_reason", None)
             self._write_json(shard_path, shard)
 
         errors: list[str] = []
