@@ -1,0 +1,54 @@
+name: Generate no-PURL review candidates
+
+# This workflow is deliberately read-only. It exposes deterministic candidates
+# and their evidence for human review, but never promotes them into mappings.
+on:
+  workflow_dispatch:
+  schedule:
+    # Weekly after the regular automap and download-count windows.
+    - cron: "17 7 * * 4"
+  push:
+    branches: [main]
+    paths:
+      - "mappings/**"
+      - "scripts/merge_mappings.py"
+      - "scripts/unmapped_classification.py"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: unmapped-candidates-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  candidates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: prefix-dev/setup-pixi@v0.9.5
+        with:
+          pixi-version: latest
+          cache: true
+          environments: lite
+
+      - name: Build the current published mapping bundle
+        run: pixi run -e lite mappings:merge
+
+      - name: Generate non-authoritative review candidates
+        run: |
+          pixi run -e lite mappings:classify-unmapped \
+            --input web/public/mappings.json \
+            --output "$RUNNER_TEMP/unmapped-candidates.json" \
+            --summary-output "$RUNNER_TEMP/unmapped-candidates.md"
+          cat "$RUNNER_TEMP/unmapped-candidates.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload candidate evidence for human review
+        uses: actions/upload-artifact@v6
+        with:
+          name: unmapped-review-candidates-${{ github.run_id }}
+          path: ${{ runner.temp }}/unmapped-candidates.json
+          if-no-files-found: error
+          retention-days: 30

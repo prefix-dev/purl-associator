@@ -260,6 +260,13 @@ primary or alternative PURL, and do not classify from a broad host, suffix, or t
 word “metapackage” alone. Historical reviewed no-PURL decisions without structured
 rationale remain labeled as legacy rather than receiving fabricated explanations.
 
+The read-only `Generate no-PURL review candidates` workflow runs after relevant
+changes on `main`, weekly, and on manual dispatch. Its job summary shows proposed
+reason counts and a bounded package preview; its 30-day artifact contains the full
+candidate evidence. The workflow never creates a contribution or changes a mapping,
+so downloading the artifact and promoting an exact reviewed list through a normal PR
+remain explicit human actions.
+
 A CDT conda package is an architecture/toolchain wrapper assembled from a Linux
 distribution RPM, not a publication of that RPM in its native repository. A
 `pkg:rpm` identity would identify the source distribution artifact rather than
