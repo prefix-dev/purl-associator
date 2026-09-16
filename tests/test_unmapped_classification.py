@@ -4,6 +4,7 @@ import copy
 import unittest
 
 from scripts.unmapped_classification import (
+    candidate_summary_markdown,
     classify_packages,
     contribution_from_candidates,
 )
@@ -170,6 +171,28 @@ class UnmappedClassificationTest(unittest.TestCase):
                 author_name="Package Reviewer",
                 timestamp="2026-09-11T00:00:00Z",
             )
+
+    def test_renders_non_authoritative_ci_summary(self) -> None:
+        report = classify_packages(
+            {
+                "packages": {
+                    "c-compiler": package(summary="Compiler metapackage"),
+                    "cuda-runtime": package(summary="Runtime metapackage"),
+                }
+            }
+        )
+        summary = candidate_summary_markdown(report, limit=1)
+        self.assertIn("**2 candidates** await explicit human review", summary)
+        self.assertIn("never changes authoritative mappings", summary)
+        self.assertIn("| `dependency_only_metapackage` | 1 |", summary)
+        self.assertIn("| `toolchain_selector` | 1 |", summary)
+        self.assertIn("| `c-compiler` | `toolchain_selector`", summary)
+        self.assertIn("1 more candidates", summary)
+
+    def test_renders_empty_ci_summary(self) -> None:
+        summary = candidate_summary_markdown(classify_packages({"packages": {}}))
+        self.assertIn("**0 candidates**", summary)
+        self.assertIn("_No candidates in the current mapping bundle._", summary)
 
     def test_rejects_invalid_bundle_shape(self) -> None:
         with self.assertRaisesRegex(ValueError, "packages must be an object"):

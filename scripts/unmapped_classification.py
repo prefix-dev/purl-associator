@@ -195,6 +195,61 @@ def classify_packages(payload: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def candidate_summary_markdown(report: dict[str, Any], *, limit: int = 50) -> str:
+    """Render a compact, non-authoritative review queue for CI summaries."""
+    candidates = report.get("candidates", [])
+    counts = report.get("counts_by_reason", {})
+    lines = [
+        "# Intentional no-PURL review candidates",
+        "",
+        f"**{len(candidates):,} candidates** await explicit human review and promotion.",
+        "This report never changes authoritative mappings.",
+        "",
+        "## Counts by proposed reason",
+        "",
+        "| reason | candidates |",
+        "| --- | ---: |",
+    ]
+    if counts:
+        lines.extend(
+            f"| `{code}` | {count:,} |" for code, count in sorted(counts.items())
+        )
+    else:
+        lines.append("| _none_ | 0 |")
+
+    lines.extend(["", f"## First {min(limit, len(candidates)):,} candidates", ""])
+    if candidates:
+        lines.extend(
+            [
+                "| package | proposed reason | rule |",
+                "| --- | --- | --- |",
+                *(
+                    f"| `{row['name']}` | `{row['unmapped_reason']['code']}` | "
+                    f"`{row['unmapped_reason']['rule_id']}` |"
+                    for row in candidates[:limit]
+                ),
+            ]
+        )
+        if len(candidates) > limit:
+            lines.extend(
+                [
+                    "",
+                    f"_{len(candidates) - limit:,} more candidates are available in the workflow artifact._",
+                ]
+            )
+    else:
+        lines.append("_No candidates in the current mapping bundle._")
+
+    lines.extend(
+        [
+            "",
+            "Download `unmapped-candidates.json` from the workflow artifact to review the copied evidence.",
+            "",
+        ]
+    )
+    return "\n".join(lines)
+
+
 def contribution_from_candidates(
     candidates: dict[str, Any],
     approved_names: set[str],
@@ -227,11 +282,19 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input", type=Path, default=DEFAULT_INPUT)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
+    parser.add_argument(
+        "--summary-output",
+        type=Path,
+        help="Optional Markdown summary for a CI job summary",
+    )
     args = parser.parse_args()
     payload = json.loads(args.input.read_text())
     report = classify_packages(payload)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2, allow_nan=False) + "\n")
+    if args.summary_output is not None:
+        args.summary_output.parent.mkdir(parents=True, exist_ok=True)
+        args.summary_output.write_text(candidate_summary_markdown(report))
     print(f"Wrote {report['candidate_count']:,} candidates to {args.output}")
 
 
