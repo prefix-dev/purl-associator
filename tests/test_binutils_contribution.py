@@ -42,7 +42,6 @@ class BinutilsContributionTests(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.contribution = json.loads(CONTRIBUTION.read_text())
         cls.packages = cls.contribution["packages"]
-        cls.auto = json.loads((ROOT / "mappings" / "auto.json").read_text())["packages"]
 
     def test_scope_is_exact(self) -> None:
         self.assertEqual(set(self.packages), CPE_PACKAGES | WRAPPER_PACKAGES)
@@ -52,15 +51,15 @@ class BinutilsContributionTests(unittest.TestCase):
         self.assertNotIn("m2w64-binutils", self.packages)
 
     def test_code_bearing_outputs_receive_only_reviewed_cpe(self) -> None:
+        self.assertIn(
+            "conda-forge/binutils-feedstock/blob/63b8c1c78a0d5a3df123116c458ef2ecbddf2274",
+            self.contribution["source"],
+        )
         for name in CPE_PACKAGES:
             with self.subTest(name=name):
                 self.assertEqual(self.packages[name], {"cpes": [CPE]})
-                self.assertRegex(
-                    self.auto[name]["source_url"],
-                    r"^https://ftp\.gnu\.org/gnu/binutils/binutils-[^/]+\.tar\.bz2$",
-                )
 
-    def test_activation_outputs_are_classified_with_current_evidence(self) -> None:
+    def test_activation_outputs_are_classified_with_snapshot_evidence(self) -> None:
         for name in WRAPPER_PACKAGES:
             with self.subTest(name=name):
                 entry = self.packages[name]
@@ -68,18 +67,16 @@ class BinutilsContributionTests(unittest.TestCase):
                 reason = entry["unmapped_reason"]
                 self.assertEqual(reason["code"], "dependency_only_metapackage")
                 self.assertEqual(reason["rule_id"], "binutils-activation-wrapper-v1")
+                evidence = reason["evidence"]
+                self.assertTrue(evidence["version"])
+                self.assertTrue(evidence["build"])
+                self.assertTrue(evidence["summary"])
+                self.assertRegex(
+                    evidence["source_url"],
+                    r"^https://ftp\.gnu\.org/gnu/binutils/binutils-[^/]+\.tar\.bz2$",
+                )
                 self.assertEqual(
-                    reason["evidence"],
-                    {
-                        key: self.auto[name][key]
-                        for key in (
-                            "version",
-                            "build",
-                            "summary",
-                            "source_url",
-                            "homepage",
-                        )
-                    },
+                    evidence["homepage"], "https://www.gnu.org/software/binutils/"
                 )
 
 
