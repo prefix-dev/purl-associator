@@ -68,6 +68,36 @@ class EffectiveCpeEvidenceTests(unittest.TestCase):
             cpe_discover._load_existing_cpes(self.manual, self.contributions),
         )
 
+    def test_later_contribution_replaces_effective_cpe_and_provenance(self) -> None:
+        write_json(
+            self.manual,
+            {
+                "packages": {
+                    "widget": {
+                        "cpes": ["cpe:2.3:a:old:widget"],
+                        "approved_by": "manual-reviewer",
+                        "approved_at": "2026-01-01T00:00:00Z",
+                    }
+                }
+            },
+        )
+        write_json(
+            self.contributions / "replacement.json",
+            {
+                "timestamp": "2026-01-02T00:00:00Z",
+                "author": "replacement-reviewer",
+                "packages": {"widget": {"cpes": ["cpe:2.3:a:new:widget"]}},
+            },
+        )
+
+        effective = cpe_discover._load_effective_cpes(self.manual, self.contributions)[
+            "widget"
+        ]
+
+        self.assertEqual(effective.cpes, ("cpe:2.3:a:new:widget",))
+        self.assertEqual(effective.source, "replacement.json")
+        self.assertEqual(effective.reviewer, "replacement-reviewer")
+
     def test_contribution_order_uses_utc_instant_then_filename(self) -> None:
         write_json(self.manual, {"packages": {}})
         write_json(
@@ -179,6 +209,7 @@ class SharedSourceEvidenceTests(unittest.TestCase):
         source_url: str | None = "https://example.test/project-1.0.tar.gz",
         purl_type: str | None = None,
         unmapped: bool = False,
+        alternative_purl_types: tuple[str, ...] = (),
     ) -> cpe_discover.AutoEntry:
         return cpe_discover.AutoEntry(
             purl=None,
@@ -190,6 +221,7 @@ class SharedSourceEvidenceTests(unittest.TestCase):
             version=version,
             source_url=source_url,
             unmapped=unmapped,
+            alternative_purl_types=alternative_purl_types,
         )
 
     @staticmethod
@@ -216,6 +248,25 @@ class SharedSourceEvidenceTests(unittest.TestCase):
         self.assertEqual(conflicts, {})
         self.assertEqual(evidence["cpes"], ["cpe:2.3:a:vendor:project"])
         self.assertTrue(evidence["requires_review"])
+
+    def test_reviewed_runtime_abi_outputs_are_surfaced_by_exact_evidence(self) -> None:
+        cases = (
+            ("libxml2", "libxml2-16", "cpe:2.3:a:xmlsoft:libxml2"),
+            ("freetype", "libfreetype6", "cpe:2.3:a:freetype:freetype"),
+            ("libwebp", "libwebp-base", "cpe:2.3:a:webmproject:libwebp"),
+        )
+        for anchor, target, cpe in cases:
+            with self.subTest(target=target):
+                source_url = f"https://example.test/{anchor}-1.0.tar.gz"
+                entries = {
+                    anchor: self.entry(source_url=source_url),
+                    target: self.entry(source_url=source_url),
+                }
+                reviews, conflicts = cpe_discover._shared_source_evidence(
+                    entries, {anchor: self.reviewed(cpe)}
+                )
+                self.assertEqual(reviews[target][0]["cpes"], [cpe])
+                self.assertEqual(conflicts, {})
 
     def test_different_source_or_version_does_not_match(self) -> None:
         anchor = self.entry()
@@ -292,6 +343,18 @@ class SharedSourceEvidenceTests(unittest.TestCase):
             cpe_discover._shared_source_evidence(entries_b, reviewed_b),
         )
 
+    def test_existing_cpe_target_is_not_reproposed(self) -> None:
+        entries = {"project": self.entry(), "project-runtime": self.entry()}
+        reviewed = {
+            "project": self.reviewed("cpe:2.3:a:vendor:project"),
+            "project-runtime": self.reviewed("cpe:2.3:a:vendor:project"),
+        }
+
+        reviews, conflicts = cpe_discover._shared_source_evidence(entries, reviewed)
+
+        self.assertNotIn("project-runtime", reviews)
+        self.assertNotIn("project-runtime", conflicts)
+
     def test_intentional_unmapped_and_osv_packages_remain_ineligible(self) -> None:
         self.assertFalse(
             cpe_discover._is_cpe_candidate("wrapper", self.entry(unmapped=True))
@@ -299,6 +362,12 @@ class SharedSourceEvidenceTests(unittest.TestCase):
         self.assertFalse(
             cpe_discover._is_cpe_candidate(
                 "registry-package", self.entry(purl_type="pypi")
+            )
+        )
+        self.assertFalse(
+            cpe_discover._is_cpe_candidate(
+                "registry-alternative",
+                self.entry(alternative_purl_types=("pypi",)),
             )
         )
 
@@ -396,6 +465,58 @@ class SummaryTests(unittest.TestCase):
         self.assertIn("**libegl**", rendered)
         self.assertIn("shared-source conflict", rendered)
         self.assertIn("**mysql-client**", rendered)
+
+    def test_summary_does_not_ship_a_held_confident_ai_verdict(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            candidates = Path(tmp) / "candidates.json"
+            vet = Path(tmp) / "vet.json"
+            write_json(
+                candidates,
+                {
+                    "schema_version": 2,
+                    "generated_at": "2026-01-01T00:00:00Z",
+                    "packages": [
+                        {
+                            "conda_name": "go-cgo",
+                            "accept": [],
+                            "shared_source_review": [{"cpes": ["cpe:2.3:a:golang:go"]}],
+                        }
+                    ],
+                },
+            )
+            write_json(
+                vet,
+                {
+                    "summary": {"confident_packages": 1},
+                    "verdicts": [
+                        {
+                            "conda_name": "go-cgo",
+                            "verdict": "confident",
+                            "selected_cpes": ["cpe:2.3:a:golang:go"],
+                        }
+                    ],
+                },
+            )
+            stdout = io.StringIO()
+            with (
+                mock.patch(
+                    "sys.argv",
+                    [
+                        "cpe_summary",
+                        "--candidates",
+                        str(candidates),
+                        "--vet",
+                        str(vet),
+                    ],
+                ),
+                redirect_stdout(stdout),
+            ):
+                cpe_summary.main()
+
+        rendered = stdout.getvalue()
+        self.assertIn("No new CPEs promoted", rendered)
+        self.assertIn("confident (shipped) | 0", rendered)
+        self.assertIn("confident but shared-source-held (not shipped) | 1", rendered)
 
 
 class AutomationIsolationTests(unittest.TestCase):
