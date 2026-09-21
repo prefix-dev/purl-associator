@@ -149,28 +149,86 @@ def _token_re(token: str) -> re.Pattern[str]:
 # ---------- inputs ----------
 
 
-def _load_existing_cpes(manual: Path, contrib_dir: Path) -> set[str]:
-    """Names that already carry a ``cpes`` list in any reviewed source.
-    These are skipped (we don't want to overwrite a curator's choice)."""
-    have: set[str] = set()
+@dataclass(frozen=True)
+class ReviewedCpeSet:
+    """The effective reviewed CPE replacement for one conda package."""
+
+    cpes: tuple[str, ...]
+    source: str
+    reviewer: str | None
+    reviewed_at: str | None
+
+
+def _timestamp_key(value: object, fallback: str) -> tuple[datetime, str]:
+    """Sort reviewed layers by UTC instant, then filename as merge_mappings does."""
+    if not isinstance(value, str):
+        return datetime.min.replace(tzinfo=UTC), fallback
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return datetime.min.replace(tzinfo=UTC), fallback
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=UTC)
+    return parsed.astimezone(UTC), fallback
+
+
+def _reviewed_layers(manual: Path, contrib_dir: Path) -> list[tuple[dict, str]]:
+    """Load reviewed layers in the same oldest-to-newest order as merge."""
+    layers: list[tuple[dict, str]] = []
     if manual.exists():
         try:
-            mdata = json.loads(manual.read_text())
+            data = json.loads(manual.read_text())
         except json.JSONDecodeError:
-            mdata = {}
-        for name, entry in (mdata.get("packages") or {}).items():
-            if isinstance(entry, dict) and entry.get("cpes"):
-                have.add(name)
+            data = {}
+        layers.append((data, manual.name))
+
+    contributions: list[tuple[tuple[datetime, str], dict, str]] = []
     if contrib_dir.exists():
-        for f in contrib_dir.glob("*.json"):
+        for path in sorted(contrib_dir.glob("*.json")):
             try:
-                cdata = json.loads(f.read_text())
+                data = json.loads(path.read_text())
             except json.JSONDecodeError:
                 continue
-            for name, entry in (cdata.get("packages") or {}).items():
-                if isinstance(entry, dict) and entry.get("cpes"):
-                    have.add(name)
-    return have
+            contributions.append(
+                (_timestamp_key(data.get("timestamp"), path.name), data, path.name)
+            )
+    contributions.sort(key=lambda item: item[0])
+    layers.extend((data, filename) for _key, data, filename in contributions)
+    return layers
+
+
+def _load_effective_cpes(manual: Path, contrib_dir: Path) -> dict[str, ReviewedCpeSet]:
+    """Load effective reviewed CPE replacements, including explicit clears."""
+    effective: dict[str, ReviewedCpeSet] = {}
+    for data, filename in _reviewed_layers(manual, contrib_dir):
+        is_manual = filename == manual.name
+        for name, entry in (data.get("packages") or {}).items():
+            if not isinstance(entry, dict) or "cpes" not in entry:
+                continue
+            raw_cpes = entry.get("cpes")
+            if not isinstance(raw_cpes, list):
+                continue
+            cpes = tuple(cpe for cpe in raw_cpes if isinstance(cpe, str))
+            reviewer = entry.get("approved_by") if is_manual else data.get("author")
+            reviewed_at = (
+                entry.get("approved_at") if is_manual else data.get("timestamp")
+            )
+            effective[name] = ReviewedCpeSet(
+                cpes=cpes,
+                source=filename,
+                reviewer=reviewer if isinstance(reviewer, str) else None,
+                reviewed_at=reviewed_at if isinstance(reviewed_at, str) else None,
+            )
+    return effective
+
+
+def _load_existing_cpes(manual: Path, contrib_dir: Path) -> set[str]:
+    """Names whose effective reviewed CPE replacement is non-empty."""
+    return {
+        name
+        for name, reviewed in _load_effective_cpes(manual, contrib_dir).items()
+        if reviewed.cpes
+    }
 
 
 @dataclass(frozen=True)
@@ -181,6 +239,9 @@ class AutoEntry:
     pkg_name: str | None
     summary: str | None
     download_count: int  # 0 when missing; used for top-N ranking
+    version: str | None = None
+    source_url: str | None = None
+    unmapped: bool = False
     # ``alternative_purls`` entries flattened to their ``type`` strings. Used
     # to detect packages that already have an OSV-mappable identity even when
     # their primary PURL is github/generic.
@@ -249,7 +310,7 @@ def _overlay_purl(base: AutoEntry, override: dict) -> AutoEntry:
     replaces the base; absent means inherit. An empty list explicitly
     clears the alternatives."""
     if (
-        not any(k in override for k in _PURL_FIELDS)
+        not any(k in override for k in (*_PURL_FIELDS, "unmapped", "status"))
         and "alternative_purls" not in override
     ):
         return base
@@ -262,8 +323,13 @@ def _overlay_purl(base: AutoEntry, override: dict) -> AutoEntry:
         purl_type=override.get("type", base.purl_type),
         namespace=override.get("namespace", base.namespace),
         pkg_name=override.get("pkg_name", base.pkg_name),
-        summary=base.summary,  # human reviews never change the conda summary
+        summary=base.summary,  # human reviews never change conda evidence
         download_count=base.download_count,
+        version=base.version,
+        source_url=base.source_url,
+        unmapped=override.get("unmapped") is True
+        if any(key in override for key in (*_PURL_FIELDS, "unmapped", "status"))
+        else base.unmapped,
         alternative_purl_types=alt_types,
     )
 
@@ -298,6 +364,9 @@ def _load_effective_mappings(
                 pkg_name=entry.get("pkg_name"),
                 summary=entry.get("summary"),
                 download_count=dc if isinstance(dc, int) else 0,
+                version=entry.get("version"),
+                source_url=entry.get("source_url"),
+                unmapped=entry.get("unmapped") is True,
                 alternative_purl_types=_extract_alt_types(entry),
             )
 
@@ -308,6 +377,9 @@ def _load_effective_mappings(
         pkg_name=None,
         summary=None,
         download_count=0,
+        version=None,
+        source_url=None,
+        unmapped=False,
         alternative_purl_types=(),
     )
 
