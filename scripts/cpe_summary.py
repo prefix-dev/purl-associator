@@ -170,17 +170,25 @@ def main() -> None:
         out.append("| bucket | count |")
         out.append("|---|---:|")
         out.append(f"| ✅ auto-accept | {hs.get('auto_accept_total', 0)} |")
+        review_groups = hs.get("shared_source_review_groups", 0)
         review_packages = hs.get("shared_source_review_packages", 0)
         review_cpes = hs.get("shared_source_review_cpes", 0)
+        review_downloads = hs.get("shared_source_review_downloads", 0)
         out.append(
-            f"| 👤 shared-source review required | {review_packages} "
+            f"| 👤 shared-source review required | {review_groups} "
+            f"group{'s' if review_groups != 1 else ''} / {review_packages} "
             f"package{'s' if review_packages != 1 else ''} / {review_cpes} "
-            f"CPE{'s' if review_cpes != 1 else ''} |"
+            f"CPE{'s' if review_cpes != 1 else ''} / "
+            f"{review_downloads:,} downloads |"
         )
+        conflict_groups = hs.get("shared_source_conflict_groups", 0)
         conflict_packages = hs.get("shared_source_conflict_packages", 0)
+        conflict_downloads = hs.get("shared_source_conflict_downloads", 0)
         out.append(
-            f"| ⚠️ shared-source conflicts | {conflict_packages} "
-            f"package{'s' if conflict_packages != 1 else ''} |"
+            f"| ⚠️ shared-source conflicts | {conflict_groups} "
+            f"group{'s' if conflict_groups != 1 else ''} / {conflict_packages} "
+            f"package{'s' if conflict_packages != 1 else ''} / "
+            f"{conflict_downloads:,} downloads |"
         )
         out.append(f"| ❓ ambiguous (→ AI vet) | {hs.get('ambiguous_total', 0)} |")
         out.append(f"| 🗑 drop | {hs.get('drop_total', 0)} |")

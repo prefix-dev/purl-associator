@@ -599,7 +599,10 @@ def main(
 
     results: list[dict] = []
     accept_total = ambiguous_total = drop_total = 0
-    shared_review_packages = shared_review_cpes = shared_conflict_packages = 0
+    shared_review_packages = shared_review_cpes = shared_review_downloads = 0
+    shared_conflict_packages = shared_conflict_downloads = 0
+    shared_review_groups: set[tuple[str, str]] = set()
+    shared_conflict_groups: set[tuple[str, str]] = set()
     no_match = 0
     for name, dc, entry in candidates:
         result = _process_candidate(
@@ -616,11 +619,21 @@ def main(
         drop_total += len(result["drop"])
         if result["shared_source_review"]:
             shared_review_packages += 1
+            shared_review_downloads += dc
             shared_review_cpes += sum(
                 len(evidence["cpes"]) for evidence in result["shared_source_review"]
             )
+            shared_review_groups.update(
+                (evidence["shared_source_url"], evidence["shared_version"])
+                for evidence in result["shared_source_review"]
+            )
         if result["shared_source_conflict"]:
             shared_conflict_packages += 1
+            shared_conflict_downloads += dc
+            conflict = result["shared_source_conflict"]
+            shared_conflict_groups.add(
+                (conflict["shared_source_url"], conflict["shared_version"])
+            )
         if result["matched_heads"] == 0:
             no_match += 1
 
@@ -652,9 +665,13 @@ def main(
             "ambiguous_total": ambiguous_total,
             "drop_total": drop_total,
             "no_nvd_match": no_match,
+            "shared_source_review_groups": len(shared_review_groups),
             "shared_source_review_packages": shared_review_packages,
             "shared_source_review_cpes": shared_review_cpes,
+            "shared_source_review_downloads": shared_review_downloads,
+            "shared_source_conflict_groups": len(shared_conflict_groups),
             "shared_source_conflict_packages": shared_conflict_packages,
+            "shared_source_conflict_downloads": shared_conflict_downloads,
         },
         "packages": results,
     }
@@ -677,9 +694,12 @@ def main(
         f"({accept_total} CPEs) · "
         f"[yellow]ambiguous[/]: {ambiguous_pkgs} packages "
         f"({ambiguous_total} CPEs) · "
-        f"[magenta]shared-source review[/]: {shared_review_packages} packages "
-        f"({shared_review_cpes} CPEs) · "
-        f"[magenta]conflicts[/]: {shared_conflict_packages} packages · "
+        f"[magenta]shared-source review[/]: {len(shared_review_groups)} groups / "
+        f"{shared_review_packages} packages / {shared_review_cpes} CPEs / "
+        f"{shared_review_downloads:,} downloads · "
+        f"[magenta]conflicts[/]: {len(shared_conflict_groups)} groups / "
+        f"{shared_conflict_packages} packages / "
+        f"{shared_conflict_downloads:,} downloads · "
         f"[red]no match[/]: {no_match} packages"
     )
     try:

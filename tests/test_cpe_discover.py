@@ -332,9 +332,13 @@ class SummaryTests(unittest.TestCase):
                     "top_considered": 0,
                     "candidates_processed": 2,
                     "heuristics_summary": {
+                        "shared_source_review_groups": 1,
                         "shared_source_review_packages": 1,
                         "shared_source_review_cpes": 1,
+                        "shared_source_review_downloads": 1234,
+                        "shared_source_conflict_groups": 1,
                         "shared_source_conflict_packages": 1,
+                        "shared_source_conflict_downloads": 5678,
                     },
                     "packages": [
                         {
@@ -379,7 +383,15 @@ class SummaryTests(unittest.TestCase):
 
         rendered = stdout.getvalue()
         self.assertIn("No new CPEs promoted", rendered)
-        self.assertIn("shared-source review required | 1 package / 1 CPE", rendered)
+        self.assertIn(
+            "shared-source review required | 1 group / 1 package / 1 CPE / "
+            "1,234 downloads",
+            rendered,
+        )
+        self.assertIn(
+            "shared-source conflicts | 1 group / 1 package / 5,678 downloads",
+            rendered,
+        )
         self.assertIn("human review required, not shipped", rendered)
         self.assertIn("**libegl**", rendered)
         self.assertIn("shared-source conflict", rendered)
