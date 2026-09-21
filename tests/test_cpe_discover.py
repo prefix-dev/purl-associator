@@ -4,6 +4,7 @@ import unittest
 from pathlib import Path
 
 from scripts import cpe_discover
+from scripts.nvd_fetch import NvdIndex
 
 
 def write_json(path: Path, payload: dict) -> None:
@@ -127,6 +128,157 @@ class EffectiveCpeEvidenceTests(unittest.TestCase):
             effective.source_url, "https://example.test/widget-1.2.3.tar.gz"
         )
         self.assertTrue(effective.unmapped)
+
+
+class SharedSourceEvidenceTests(unittest.TestCase):
+    @staticmethod
+    def entry(
+        *,
+        version: str | None = "1.0",
+        source_url: str | None = "https://example.test/project-1.0.tar.gz",
+        purl_type: str | None = None,
+        unmapped: bool = False,
+    ) -> cpe_discover.AutoEntry:
+        return cpe_discover.AutoEntry(
+            purl=None,
+            purl_type=purl_type,
+            namespace=None,
+            pkg_name=None,
+            summary="Project output",
+            download_count=1,
+            version=version,
+            source_url=source_url,
+            unmapped=unmapped,
+        )
+
+    @staticmethod
+    def reviewed(
+        *cpes: str, source: str = "review.json"
+    ) -> cpe_discover.ReviewedCpeSet:
+        return cpe_discover.ReviewedCpeSet(
+            cpes=cpes,
+            source=source,
+            reviewer="reviewer",
+            reviewed_at="2026-01-01T00:00:00Z",
+        )
+
+    def test_exact_source_and_version_emit_review_only_evidence(self) -> None:
+        entries = {
+            "project": self.entry(),
+            "project-runtime": self.entry(),
+        }
+        reviewed = {"project": self.reviewed("cpe:2.3:a:vendor:project")}
+
+        reviews, conflicts = cpe_discover._shared_source_evidence(entries, reviewed)
+        result = cpe_discover._process_candidate(
+            conda_name="project-runtime",
+            auto_entry=entries["project-runtime"],
+            download_count=1,
+            index=NvdIndex(feeds=[]),
+            shared_source_review=reviews["project-runtime"],
+        )
+
+        self.assertEqual(conflicts, {})
+        self.assertEqual(result["accept"], [])
+        self.assertEqual(result["ambiguous"], [])
+        self.assertEqual(
+            result["shared_source_review"][0]["cpes"],
+            ["cpe:2.3:a:vendor:project"],
+        )
+        self.assertTrue(result["shared_source_review"][0]["requires_review"])
+
+    def test_different_source_or_version_does_not_match(self) -> None:
+        anchor = self.entry()
+        reviewed = {"project": self.reviewed("cpe:2.3:a:vendor:project")}
+        cases = {
+            "version": self.entry(version="2.0"),
+            "scheme": self.entry(source_url="http://example.test/project-1.0.tar.gz"),
+            "mirror": self.entry(source_url="https://mirror.test/project-1.0.tar.gz"),
+            "missing-source": self.entry(source_url=None),
+            "missing-version": self.entry(version=None),
+        }
+        for label, target in cases.items():
+            with self.subTest(label=label):
+                reviews, conflicts = cpe_discover._shared_source_evidence(
+                    {"project": anchor, "target": target}, reviewed
+                )
+                self.assertNotIn("target", reviews)
+                self.assertNotIn("target", conflicts)
+
+    def test_agreement_ignores_cpe_order(self) -> None:
+        entries = {
+            "anchor-a": self.entry(),
+            "anchor-b": self.entry(),
+            "target": self.entry(),
+        }
+        reviewed = {
+            "anchor-a": self.reviewed("cpe:a", "cpe:b", source="a.json"),
+            "anchor-b": self.reviewed("cpe:b", "cpe:a", source="b.json"),
+        }
+
+        reviews, conflicts = cpe_discover._shared_source_evidence(entries, reviewed)
+
+        self.assertIn("target", reviews)
+        self.assertNotIn("target", conflicts)
+        self.assertEqual(
+            [a["package"] for a in reviews["target"][0]["anchors"]],
+            ["anchor-a", "anchor-b"],
+        )
+
+    def test_disagreeing_anchors_emit_conflict_without_proposal(self) -> None:
+        entries = {
+            "mysql": self.entry(),
+            "mysql-server": self.entry(),
+            "mysql-client": self.entry(),
+        }
+        reviewed = {
+            "mysql": self.reviewed("cpe:2.3:a:oracle:mysql"),
+            "mysql-server": self.reviewed("cpe:2.3:a:mysql:mysql_server"),
+        }
+
+        reviews, conflicts = cpe_discover._shared_source_evidence(entries, reviewed)
+
+        self.assertNotIn("mysql-client", reviews)
+        self.assertEqual(
+            [a["package"] for a in conflicts["mysql-client"]["anchors"]],
+            ["mysql", "mysql-server"],
+        )
+
+    def test_intentional_unmapped_and_osv_packages_remain_ineligible(self) -> None:
+        self.assertFalse(
+            cpe_discover._is_cpe_candidate("wrapper", self.entry(unmapped=True))
+        )
+        self.assertFalse(
+            cpe_discover._is_cpe_candidate(
+                "registry-package", self.entry(purl_type="pypi")
+            )
+        )
+
+    def test_libglvnd_component_evidence_stays_review_only(self) -> None:
+        entries = {
+            "libglx": self.entry(
+                source_url="https://gitlab.freedesktop.org/glvnd/libglvnd.tar.gz"
+            ),
+            "libegl": self.entry(
+                source_url="https://gitlab.freedesktop.org/glvnd/libglvnd.tar.gz"
+            ),
+        }
+        reviewed = {"libglx": self.reviewed("cpe:2.3:a:x:libglx")}
+        reviews, _conflicts = cpe_discover._shared_source_evidence(entries, reviewed)
+
+        result = cpe_discover._process_candidate(
+            conda_name="libegl",
+            auto_entry=entries["libegl"],
+            download_count=1,
+            index=NvdIndex(feeds=[]),
+            shared_source_review=reviews["libegl"],
+        )
+
+        self.assertEqual(result["accept"], [])
+        self.assertEqual(
+            result["shared_source_review"][0]["cpes"],
+            ["cpe:2.3:a:x:libglx"],
+        )
 
 
 if __name__ == "__main__":

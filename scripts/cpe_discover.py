@@ -422,6 +422,73 @@ def _load_effective_mappings(
 # ---------- candidate selection ----------
 
 
+def _anchor_dict(name: str, reviewed: ReviewedCpeSet) -> dict[str, Any]:
+    return {
+        "package": name,
+        "cpes": list(reviewed.cpes),
+        "source": reviewed.source,
+        "reviewer": reviewed.reviewer,
+        "reviewed_at": reviewed.reviewed_at,
+    }
+
+
+def _shared_source_evidence(
+    entries: dict[str, AutoEntry],
+    reviewed_cpes: dict[str, ReviewedCpeSet],
+) -> tuple[dict[str, list[dict[str, Any]]], dict[str, dict[str, Any]]]:
+    """Return review proposals and conflicts keyed by identity-less target name.
+
+    Source and version equality is deliberately literal: mirrors, scheme changes,
+    and inferred feedstock relationships are not silently treated as equivalent.
+    """
+    groups: dict[tuple[str, str], list[str]] = {}
+    for name, entry in entries.items():
+        if not entry.source_url or not entry.version:
+            continue
+        groups.setdefault((entry.source_url, entry.version), []).append(name)
+
+    reviews: dict[str, list[dict[str, Any]]] = {}
+    conflicts: dict[str, dict[str, Any]] = {}
+    for (source_url, version), names in groups.items():
+        anchors = [
+            (name, reviewed_cpes[name])
+            for name in sorted(names)
+            if name in reviewed_cpes and reviewed_cpes[name].cpes
+        ]
+        if not anchors:
+            continue
+        distinct_sets = {frozenset(reviewed.cpes) for _name, reviewed in anchors}
+        anchor_payload = [_anchor_dict(name, reviewed) for name, reviewed in anchors]
+        targets = [
+            name
+            for name in sorted(names)
+            if name not in reviewed_cpes or not reviewed_cpes[name].cpes
+        ]
+        if len(distinct_sets) != 1:
+            evidence = {
+                "reason": "reviewed_shared_source_conflict",
+                "shared_source_url": source_url,
+                "shared_version": version,
+                "anchors": anchor_payload,
+            }
+            for name in targets:
+                conflicts[name] = evidence
+            continue
+
+        consensus = anchors[0][1].cpes
+        evidence = {
+            "cpes": list(consensus),
+            "reason": "reviewed_shared_source",
+            "shared_source_url": source_url,
+            "shared_version": version,
+            "anchors": anchor_payload,
+            "requires_review": True,
+        }
+        for name in targets:
+            reviews[name] = [evidence]
+    return reviews, conflicts
+
+
 def _is_cpe_candidate(name: str, entry: AutoEntry | None) -> bool:
     """A package is a CPE candidate when no existing PURL identity is in an
     OSV-indexed package ecosystem.
@@ -437,6 +504,8 @@ def _is_cpe_candidate(name: str, entry: AutoEntry | None) -> bool:
         return False
     if entry is None:
         return True
+    if entry.unmapped:
+        return False
     if entry.purl_type in OSV_PURL_TYPES:
         return False
     # Even if the primary PURL is github/generic, an OSV-mappable alternative
@@ -734,6 +803,8 @@ def _process_candidate(
     auto_entry: AutoEntry | None,
     download_count: int,
     index: NvdIndex,
+    shared_source_review: list[dict[str, Any]] | None = None,
+    shared_source_conflict: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Score every NVD product-name match for one conda candidate and
     bucket the results."""
@@ -772,6 +843,12 @@ def _process_candidate(
         scored.append(s)
 
     accept, ambiguous, drop = _bucket_candidates(scored)
+    accepted_cpes = {candidate.cpe for candidate in accept}
+    review = [
+        evidence
+        for evidence in (shared_source_review or [])
+        if not set(evidence.get("cpes") or ()).issubset(accepted_cpes)
+    ]
 
     return {
         "conda_name": conda_name,
@@ -785,6 +862,8 @@ def _process_candidate(
         "product_guesses": guesses,
         "matched_heads": len(scored),
         "accept": [_candidate_to_dict(c) for c in accept],
+        "shared_source_review": review,
+        "shared_source_conflict": shared_source_conflict,
         "ambiguous": [_candidate_to_dict(c) for c in ambiguous],
         "drop": [_candidate_to_dict(c) for c in drop],
     }
@@ -816,7 +895,13 @@ def main(
 ) -> None:
     """Discover CPE candidates for top-downloaded conda-forge packages."""
     auto_data = _load_effective_mappings(auto, manual, contributions)
-    already_have_cpes = _load_existing_cpes(manual, contributions)
+    effective_cpes = _load_effective_cpes(manual, contributions)
+    already_have_cpes = {
+        name for name, reviewed in effective_cpes.items() if reviewed.cpes
+    }
+    shared_reviews, shared_conflicts = _shared_source_evidence(
+        auto_data, effective_cpes
+    )
 
     only_set = {n.strip() for n in only.split(",") if n.strip()} if only else None
 
@@ -880,29 +965,51 @@ def main(
 
     results: list[dict] = []
     accept_total = ambiguous_total = drop_total = 0
+    shared_review_packages = shared_review_cpes = shared_conflict_packages = 0
     no_match = 0
     for name, dc, entry in candidates:
         result = _process_candidate(
-            conda_name=name, auto_entry=entry, download_count=dc, index=index
+            conda_name=name,
+            auto_entry=entry,
+            download_count=dc,
+            index=index,
+            shared_source_review=shared_reviews.get(name),
+            shared_source_conflict=shared_conflicts.get(name),
         )
         results.append(result)
         accept_total += len(result["accept"])
         ambiguous_total += len(result["ambiguous"])
         drop_total += len(result["drop"])
+        if result["shared_source_review"]:
+            shared_review_packages += 1
+            shared_review_cpes += sum(
+                len(evidence["cpes"]) for evidence in result["shared_source_review"]
+            )
+        if result["shared_source_conflict"]:
+            shared_conflict_packages += 1
         if result["matched_heads"] == 0:
             no_match += 1
 
-    # Sort so the most actionable rows (any accept) bubble to the top.
+    # Sort automatic accepts first, then explicit human-review evidence,
+    # heuristic ambiguity, conflicts, and finally rows with no useful signal.
     results.sort(
         key=lambda r: (
-            0 if r["accept"] else 1 if r["ambiguous"] else 2,
+            0
+            if r["accept"]
+            else 1
+            if r["shared_source_review"]
+            else 2
+            if r["ambiguous"]
+            else 3
+            if r["shared_source_conflict"]
+            else 4,
             -r["download_count"],
         )
     )
 
     generated_at = datetime.now(UTC).isoformat(timespec="seconds")
     payload = {
-        "schema_version": 1,
+        "schema_version": 2,
         "generated_at": generated_at,
         "top_considered": top,
         "candidates_processed": len(candidates),
@@ -911,6 +1018,9 @@ def main(
             "ambiguous_total": ambiguous_total,
             "drop_total": drop_total,
             "no_nvd_match": no_match,
+            "shared_source_review_packages": shared_review_packages,
+            "shared_source_review_cpes": shared_review_cpes,
+            "shared_source_conflict_packages": shared_conflict_packages,
         },
         "packages": results,
     }
