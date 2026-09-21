@@ -76,7 +76,12 @@ class EffectiveCpeEvidenceTests(unittest.TestCase):
             {
                 "timestamp": "2026-01-01T01:00:00+01:00",
                 "author": "first",
-                "packages": {"widget": {"cpes": ["cpe:2.3:a:first:widget"]}},
+                "packages": {
+                    "widget": {
+                        "cpes": ["cpe:2.3:a:first:widget"],
+                        "purl": "pkg:github/first/widget",
+                    }
+                },
             },
         )
         write_json(
@@ -84,7 +89,12 @@ class EffectiveCpeEvidenceTests(unittest.TestCase):
             {
                 "timestamp": "2026-01-01T00:00:00Z",
                 "author": "second",
-                "packages": {"widget": {"cpes": ["cpe:2.3:a:second:widget"]}},
+                "packages": {
+                    "widget": {
+                        "cpes": ["cpe:2.3:a:second:widget"],
+                        "purl": "pkg:github/second/widget",
+                    }
+                },
             },
         )
 
@@ -92,6 +102,33 @@ class EffectiveCpeEvidenceTests(unittest.TestCase):
 
         self.assertEqual(effective["widget"].cpes, ("cpe:2.3:a:first:widget",))
         self.assertEqual(effective["widget"].source, "lexically-later.json")
+        write_json(self.auto, {"packages": {}})
+        mapping = cpe_discover._load_effective_mappings(
+            self.auto, self.manual, self.contributions
+        )["widget"]
+        self.assertEqual(mapping.purl, "pkg:github/first/widget")
+
+    def test_primary_overlay_matches_reviewed_unmapped_semantics(self) -> None:
+        base = cpe_discover.AutoEntry(
+            purl="pkg:github/example/widget",
+            purl_type="github",
+            namespace="example",
+            pkg_name="widget",
+            summary="Widget",
+            download_count=1,
+            alternative_purl_types=("pypi",),
+        )
+
+        null_only = cpe_discover._overlay_purl(base, {"purl": None})
+        cpe_only = cpe_discover._overlay_purl(base, {"cpes": ["cpe:widget"]})
+        unmapped = cpe_discover._overlay_purl(base, {"unmapped": True})
+
+        self.assertEqual(null_only, base)
+        self.assertEqual(cpe_only, base)
+        self.assertTrue(unmapped.unmapped)
+        self.assertIsNone(unmapped.purl)
+        self.assertIsNone(unmapped.purl_type)
+        self.assertEqual(unmapped.alternative_purl_types, ())
 
     def test_effective_mapping_retains_source_version_and_unmapped_state(self) -> None:
         write_json(

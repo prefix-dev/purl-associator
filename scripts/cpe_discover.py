@@ -174,15 +174,15 @@ def _timestamp_key(value: object, fallback: str) -> tuple[datetime, str]:
     return parsed.astimezone(UTC), fallback
 
 
-def _reviewed_layers(manual: Path, contrib_dir: Path) -> list[tuple[dict, str]]:
+def _reviewed_layers(manual: Path, contrib_dir: Path) -> list[tuple[dict, str, bool]]:
     """Load reviewed layers in the same oldest-to-newest order as merge."""
-    layers: list[tuple[dict, str]] = []
+    layers: list[tuple[dict, str, bool]] = []
     if manual.exists():
         try:
             data = json.loads(manual.read_text())
         except json.JSONDecodeError:
             data = {}
-        layers.append((data, manual.name))
+        layers.append((data, manual.name, True))
 
     contributions: list[tuple[tuple[datetime, str], dict, str]] = []
     if contrib_dir.exists():
@@ -195,15 +195,14 @@ def _reviewed_layers(manual: Path, contrib_dir: Path) -> list[tuple[dict, str]]:
                 (_timestamp_key(data.get("timestamp"), path.name), data, path.name)
             )
     contributions.sort(key=lambda item: item[0])
-    layers.extend((data, filename) for _key, data, filename in contributions)
+    layers.extend((data, filename, False) for _key, data, filename in contributions)
     return layers
 
 
 def _load_effective_cpes(manual: Path, contrib_dir: Path) -> dict[str, ReviewedCpeSet]:
     """Load effective reviewed CPE replacements, including explicit clears."""
     effective: dict[str, ReviewedCpeSet] = {}
-    for data, filename in _reviewed_layers(manual, contrib_dir):
-        is_manual = filename == manual.name
+    for data, filename, is_manual in _reviewed_layers(manual, contrib_dir):
         for name, entry in (data.get("packages") or {}).items():
             if not isinstance(entry, dict) or "cpes" not in entry:
                 continue
@@ -271,6 +270,13 @@ class AutoEntry:
 
 
 _PURL_FIELDS = ("purl", "type", "namespace", "pkg_name")
+_PRIMARY_REVIEW_FIELDS = (*_PURL_FIELDS, "unmapped", "status")
+
+
+def _reviews_primary(override: dict) -> bool:
+    return any(
+        key in override and override[key] is not None for key in _PRIMARY_REVIEW_FIELDS
+    )
 
 
 def _extract_alt_types(entry: dict) -> tuple[str, ...]:
@@ -311,27 +317,42 @@ def _overlay_purl(base: AutoEntry, override: dict) -> AutoEntry:
     contribution that explicitly provides an alternative_purls list
     replaces the base; absent means inherit. An empty list explicitly
     clears the alternatives."""
-    if (
-        not any(k in override for k in (*_PURL_FIELDS, "unmapped", "status"))
-        and "alternative_purls" not in override
-    ):
+    reviews_primary = _reviews_primary(override)
+    if not reviews_primary and "alternative_purls" not in override:
         return base
     if "alternative_purls" in override and override["alternative_purls"] is not None:
         alt_types = _extract_alt_types(override)
     else:
         alt_types = base.alternative_purl_types
+    unmapped = override.get("unmapped") is True if reviews_primary else base.unmapped
+    if unmapped:
+        purl = purl_type = namespace = pkg_name = None
+        alt_types = ()
+    else:
+        purl = override["purl"] if override.get("purl") is not None else base.purl
+        purl_type = (
+            override["type"] if override.get("type") is not None else base.purl_type
+        )
+        namespace = (
+            override["namespace"]
+            if override.get("namespace") is not None
+            else base.namespace
+        )
+        pkg_name = (
+            override["pkg_name"]
+            if override.get("pkg_name") is not None
+            else base.pkg_name
+        )
     return AutoEntry(
-        purl=override.get("purl", base.purl),
-        purl_type=override.get("type", base.purl_type),
-        namespace=override.get("namespace", base.namespace),
-        pkg_name=override.get("pkg_name", base.pkg_name),
+        purl=purl,
+        purl_type=purl_type,
+        namespace=namespace,
+        pkg_name=pkg_name,
         summary=base.summary,  # human reviews never change conda evidence
         download_count=base.download_count,
         version=base.version,
         source_url=base.source_url,
-        unmapped=override.get("unmapped") is True
-        if any(key in override for key in (*_PURL_FIELDS, "unmapped", "status"))
-        else base.unmapped,
+        unmapped=unmapped,
         alternative_purl_types=alt_types,
     )
 
@@ -385,38 +406,13 @@ def _load_effective_mappings(
         alternative_purl_types=(),
     )
 
-    # Layer 2: manual.json
-    if manual.exists():
-        try:
-            mdata = json.loads(manual.read_text())
-        except json.JSONDecodeError:
-            mdata = {}
-        for name, override in (mdata.get("packages") or {}).items():
+    # Layers 2 and 3: manual first, then contributions oldest → newest by
+    # timezone-aware UTC instant and filename, matching merge_mappings.
+    for reviewed, _filename, _is_manual in _reviewed_layers(manual, contrib_dir):
+        for name, override in (reviewed.get("packages") or {}).items():
             if not isinstance(override, dict):
                 continue
             out[name] = _overlay_purl(out.get(name, blank), override)
-
-    # Layer 3: contributions, oldest → newest (chronological), so the
-    # newest reviewed override is what we see.
-    if contrib_dir.exists():
-        contribs: list[tuple[str, str, dict]] = []
-        for f in sorted(contrib_dir.glob("*.json")):
-            try:
-                cdata = json.loads(f.read_text())
-            except json.JSONDecodeError:
-                continue
-            ts = (
-                cdata.get("timestamp")
-                if isinstance(cdata.get("timestamp"), str)
-                else f.stem
-            )
-            contribs.append((ts, f.name, cdata))
-        contribs.sort(key=lambda t: (t[0], t[1]))
-        for _ts, _fname, cdata in contribs:
-            for name, override in (cdata.get("packages") or {}).items():
-                if not isinstance(override, dict):
-                    continue
-                out[name] = _overlay_purl(out.get(name, blank), override)
 
     return out
 
