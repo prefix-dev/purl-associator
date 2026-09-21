@@ -294,6 +294,22 @@ pipeline proposes NVD vendor/product prefixes and promotes accepted mappings as
 normal contribution files. Those CPEs then flow through `scripts.merge_mappings`
 into the public mapping payload.
 
+Discovery also exposes a separate, human-only signal for split outputs: an
+identity-less package can be shown with reviewed CPE-backed siblings when all of
+them have the exact same stored `source_url` and `version`. Every reviewed anchor
+must agree on the complete CPE set, ignoring order. If anchors disagree, the
+audit emits a conflict and proposes nothing.
+
+Shared source is evidence, not identity equivalence. These candidates do not
+enter the heuristic `accept` or `ambiguous` buckets, are not sent to the AI
+vetter, and are ignored by automated promotion. There is intentionally no URL
+normalization, mirror equivalence, package-name suffix stripping, homepage
+inference, or repository inference. A human must inspect the output payload and
+submit a normal reviewed contribution. This boundary prevents one component
+from inheriting another component's identity merely because both are built from
+the same archive—for example, `libegl` must not automatically inherit a GLX CPE
+from another libglvnd output.
+
 CPE list behavior is intentionally unchanged: a contribution containing `cpes`
 replaces the prior list. Changing that to union semantics could make explicit
 UI/pipeline removals impossible, so PFX-1826 does not silently change it. A
@@ -308,8 +324,11 @@ flowchart TD
   D --> E[mappings/cpe_vet/*.json]
   C --> F[scripts.cpe_promote]
   E --> F
+  C --> I[shared-source review queue]
+  I --> J[human-reviewed contribution]
   F --> G[mappings/contributions/*--cpe-pipeline--*.json]
   G --> H[scripts.merge_mappings]
+  J --> H
 ```
 
 Useful commands:

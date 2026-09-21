@@ -30,11 +30,13 @@ Pipeline (heuristics-only; no AI step):
 
 6. Bucket each candidate as ``accept`` / ``ambiguous`` / ``drop`` based on
    how many heuristics fired and with what strength. The ``ambiguous``
-   bucket is what a future ``cpe_vet.py`` would hand to Claude Haiku for
-   tie-breaking.
-7. Write a single audit file ``mappings/cpe_candidates/<ISO>.json`` with
-   all three buckets plus per-heuristic scores, so a human can sanity
-   check what fired.
+   bucket is what ``cpe_vet.py`` hands to Claude Haiku for tie-breaking.
+7. Separately surface exact source-URL/version siblings of reviewed CPE-backed
+   packages as ``shared_source_review`` evidence. Agreeing anchors create a
+   human review candidate; disagreeing anchors create an auditable conflict.
+   Neither path changes heuristic scores or enters automated promotion.
+8. Write a single audit file ``mappings/cpe_candidates/latest.json`` with
+   all buckets, review evidence, and per-heuristic scores.
 
 Run it:
 
@@ -1043,6 +1045,9 @@ def main(
         f"({accept_total} CPEs) · "
         f"[yellow]ambiguous[/]: {ambiguous_pkgs} packages "
         f"({ambiguous_total} CPEs) · "
+        f"[magenta]shared-source review[/]: {shared_review_packages} packages "
+        f"({shared_review_cpes} CPEs) · "
+        f"[magenta]conflicts[/]: {shared_conflict_packages} packages · "
         f"[red]no match[/]: {no_match} packages"
     )
     try:

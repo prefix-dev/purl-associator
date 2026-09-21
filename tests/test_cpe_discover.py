@@ -1,11 +1,14 @@
+import io
 import json
 import tempfile
 import unittest
+from contextlib import redirect_stdout
 from pathlib import Path
+from unittest import mock
 
 import typer
 
-from scripts import cpe_discover, cpe_promote, cpe_vet
+from scripts import cpe_discover, cpe_promote, cpe_summary, cpe_vet
 from scripts.nvd_fetch import NvdIndex
 
 
@@ -246,6 +249,24 @@ class SharedSourceEvidenceTests(unittest.TestCase):
             ["mysql", "mysql-server"],
         )
 
+    def test_output_is_deterministic_across_input_order(self) -> None:
+        entries_a = {
+            "anchor-b": self.entry(),
+            "target": self.entry(),
+            "anchor-a": self.entry(),
+        }
+        entries_b = dict(reversed(list(entries_a.items())))
+        reviewed_a = {
+            "anchor-b": self.reviewed("cpe:b", "cpe:a", source="b.json"),
+            "anchor-a": self.reviewed("cpe:a", "cpe:b", source="a.json"),
+        }
+        reviewed_b = dict(reversed(list(reviewed_a.items())))
+
+        self.assertEqual(
+            cpe_discover._shared_source_evidence(entries_a, reviewed_a),
+            cpe_discover._shared_source_evidence(entries_b, reviewed_b),
+        )
+
     def test_intentional_unmapped_and_osv_packages_remain_ineligible(self) -> None:
         self.assertFalse(
             cpe_discover._is_cpe_candidate("wrapper", self.entry(unmapped=True))
@@ -281,6 +302,71 @@ class SharedSourceEvidenceTests(unittest.TestCase):
             result["shared_source_review"][0]["cpes"],
             ["cpe:2.3:a:x:libglx"],
         )
+
+
+class SummaryTests(unittest.TestCase):
+    def test_summary_labels_shared_source_evidence_as_not_shipped(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            candidates = Path(tmp) / "candidates.json"
+            write_json(
+                candidates,
+                {
+                    "schema_version": 2,
+                    "top_considered": 0,
+                    "candidates_processed": 2,
+                    "heuristics_summary": {
+                        "shared_source_review_packages": 1,
+                        "shared_source_review_cpes": 1,
+                        "shared_source_conflict_packages": 1,
+                    },
+                    "packages": [
+                        {
+                            "conda_name": "libegl",
+                            "accept": [],
+                            "shared_source_review": [
+                                {
+                                    "cpes": ["cpe:2.3:a:x:libglx"],
+                                    "shared_version": "1.7.0",
+                                    "anchors": [{"package": "libglx"}],
+                                }
+                            ],
+                        },
+                        {
+                            "conda_name": "mysql-client",
+                            "accept": [],
+                            "shared_source_conflict": {
+                                "anchors": [
+                                    {
+                                        "package": "mysql",
+                                        "cpes": ["cpe:2.3:a:oracle:mysql"],
+                                    },
+                                    {
+                                        "package": "mysql-server",
+                                        "cpes": ["cpe:2.3:a:mysql:mysql_server"],
+                                    },
+                                ]
+                            },
+                        },
+                    ],
+                },
+            )
+            stdout = io.StringIO()
+            with (
+                mock.patch(
+                    "sys.argv",
+                    ["cpe_summary", "--candidates", str(candidates)],
+                ),
+                redirect_stdout(stdout),
+            ):
+                cpe_summary.main()
+
+        rendered = stdout.getvalue()
+        self.assertIn("No new CPEs promoted", rendered)
+        self.assertIn("shared-source review required | 1 package / 1 CPE", rendered)
+        self.assertIn("human review required, not shipped", rendered)
+        self.assertIn("**libegl**", rendered)
+        self.assertIn("shared-source conflict", rendered)
+        self.assertIn("**mysql-client**", rendered)
 
 
 class AutomationIsolationTests(unittest.TestCase):
