@@ -56,6 +56,12 @@ import anthropic
 import typer
 from rich.console import Console
 
+from scripts.cpe_candidate_contract import (
+    UnsupportedCandidateSchema,
+    packages_in_bucket,
+    validate_candidates_schema,
+)
+
 app = typer.Typer(add_completion=False, help=__doc__)
 console = Console()
 
@@ -67,7 +73,6 @@ MODEL = "claude-haiku-4-5"
 DEFAULT_BATCH_SIZE = 15  # packages per AI request
 DEFAULT_CONCURRENCY = 4  # AI requests in flight
 SCHEMA_VERSION = 1
-SUPPORTED_CANDIDATE_SCHEMA_VERSIONS = frozenset({1, 2})
 
 
 SYSTEM_PROMPT = """You vet CPE coordinate candidates for conda-forge packages.
@@ -169,36 +174,24 @@ class AmbiguousPackage:
 
 
 def _validate_candidates_schema(payload: dict) -> None:
-    version = payload.get("schema_version", 1)
-    if version not in SUPPORTED_CANDIDATE_SCHEMA_VERSIONS:
-        raise typer.BadParameter(
-            f"Unsupported CPE candidates schema_version {version!r}; "
-            f"expected one of {sorted(SUPPORTED_CANDIDATE_SCHEMA_VERSIONS)}"
-        )
+    try:
+        validate_candidates_schema(payload)
+    except UnsupportedCandidateSchema as error:
+        raise typer.BadParameter(str(error)) from error
 
 
 def _load_ambiguous(payload: dict, only: set[str] | None) -> list[AmbiguousPackage]:
     """Load only heuristic ambiguity; shared-source reviews stay human-only."""
-    out: list[AmbiguousPackage] = []
-    for pkg in payload.get("packages") or []:
-        name = pkg.get("conda_name")
-        if not isinstance(name, str):
-            continue
-        if only is not None and name not in only:
-            continue
-        ambiguous = pkg.get("ambiguous") or []
-        if not ambiguous:
-            continue
-        out.append(
-            AmbiguousPackage(
-                conda_name=name,
-                conda_summary=pkg.get("conda_summary"),
-                current_purl=pkg.get("current_purl"),
-                github_owner_repo=pkg.get("github_owner_repo"),
-                candidates=ambiguous,
-            )
+    return [
+        AmbiguousPackage(
+            conda_name=package["conda_name"],
+            conda_summary=package.get("conda_summary"),
+            current_purl=package.get("current_purl"),
+            github_owner_repo=package.get("github_owner_repo"),
+            candidates=entries,
         )
-    return out
+        for package, entries in packages_in_bucket(payload, "ambiguous", only)
+    ]
 
 
 # ---------- prompt construction ----------

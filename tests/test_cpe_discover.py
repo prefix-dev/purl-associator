@@ -6,10 +6,9 @@ from contextlib import redirect_stdout
 from pathlib import Path
 from unittest import mock
 
-import typer
-
-from scripts import cpe_discover, cpe_promote, cpe_summary, cpe_vet
-from scripts.nvd_fetch import NvdIndex
+from scripts import cpe_candidate_contract as candidate_contract
+from scripts import cpe_evidence as cpe_discover
+from scripts import cpe_summary
 
 
 def write_json(path: Path, payload: dict) -> None:
@@ -212,22 +211,11 @@ class SharedSourceEvidenceTests(unittest.TestCase):
         reviewed = {"project": self.reviewed("cpe:2.3:a:vendor:project")}
 
         reviews, conflicts = cpe_discover._shared_source_evidence(entries, reviewed)
-        result = cpe_discover._process_candidate(
-            conda_name="project-runtime",
-            auto_entry=entries["project-runtime"],
-            download_count=1,
-            index=NvdIndex(feeds=[]),
-            shared_source_review=reviews["project-runtime"],
-        )
+        evidence = reviews["project-runtime"][0]
 
         self.assertEqual(conflicts, {})
-        self.assertEqual(result["accept"], [])
-        self.assertEqual(result["ambiguous"], [])
-        self.assertEqual(
-            result["shared_source_review"][0]["cpes"],
-            ["cpe:2.3:a:vendor:project"],
-        )
-        self.assertTrue(result["shared_source_review"][0]["requires_review"])
+        self.assertEqual(evidence["cpes"], ["cpe:2.3:a:vendor:project"])
+        self.assertTrue(evidence["requires_review"])
 
     def test_different_source_or_version_does_not_match(self) -> None:
         anchor = self.entry()
@@ -326,19 +314,11 @@ class SharedSourceEvidenceTests(unittest.TestCase):
         reviewed = {"libglx": self.reviewed("cpe:2.3:a:x:libglx")}
         reviews, _conflicts = cpe_discover._shared_source_evidence(entries, reviewed)
 
-        result = cpe_discover._process_candidate(
-            conda_name="libegl",
-            auto_entry=entries["libegl"],
-            download_count=1,
-            index=NvdIndex(feeds=[]),
-            shared_source_review=reviews["libegl"],
-        )
-
-        self.assertEqual(result["accept"], [])
         self.assertEqual(
-            result["shared_source_review"][0]["cpes"],
+            reviews["libegl"][0]["cpes"],
             ["cpe:2.3:a:x:libglx"],
         )
+        self.assertTrue(reviews["libegl"][0]["requires_review"])
 
 
 class SummaryTests(unittest.TestCase):
@@ -425,8 +405,10 @@ class AutomationIsolationTests(unittest.TestCase):
             ],
         }
 
-        self.assertEqual(cpe_vet._load_ambiguous(payload, None), [])
-        self.assertEqual(cpe_promote._collect_accepts(payload), {})
+        self.assertEqual(
+            candidate_contract.packages_in_bucket(payload, "ambiguous"), []
+        )
+        self.assertEqual(candidate_contract.collect_accepts(payload), {})
 
     def test_automation_reads_only_its_explicit_bucket(self) -> None:
         payload = {
@@ -441,11 +423,11 @@ class AutomationIsolationTests(unittest.TestCase):
             ],
         }
 
-        vetted = cpe_vet._load_ambiguous(payload, None)
-        promoted = cpe_promote._collect_accepts(payload)
+        vetted = candidate_contract.packages_in_bucket(payload, "ambiguous")
+        promoted = candidate_contract.collect_accepts(payload)
 
         self.assertEqual(
-            [candidate["cpe"] for candidate in vetted[0].candidates],
+            [candidate["cpe"] for candidate in vetted[0][1]],
             ["cpe:2.3:a:ambiguous:project"],
         )
         self.assertEqual(promoted, {"project": ["cpe:2.3:a:auto:project"]})
@@ -453,14 +435,11 @@ class AutomationIsolationTests(unittest.TestCase):
     def test_consumers_accept_candidate_schema_one_and_two_only(self) -> None:
         for version in (1, 2):
             with self.subTest(version=version):
-                cpe_vet._validate_candidates_schema({"schema_version": version})
-                cpe_promote._validate_candidates_schema({"schema_version": version})
-        for validate in (
-            cpe_vet._validate_candidates_schema,
-            cpe_promote._validate_candidates_schema,
-        ):
-            with self.assertRaises(typer.BadParameter):
-                validate({"schema_version": 3})
+                candidate_contract.validate_candidates_schema(
+                    {"schema_version": version}
+                )
+        with self.assertRaises(candidate_contract.UnsupportedCandidateSchema):
+            candidate_contract.validate_candidates_schema({"schema_version": 3})
 
 
 if __name__ == "__main__":

@@ -31,6 +31,14 @@ from pathlib import Path
 import typer
 from rich.console import Console
 
+from scripts.cpe_candidate_contract import (
+    UnsupportedCandidateSchema,
+    collect_accepts as _collect_accepts,
+    collect_vet_confident as _collect_vet_confident,
+    merge_accepts_with_vet as _merge_accepts_with_vet,
+    validate_candidates_schema,
+)
+
 app = typer.Typer(add_completion=False, help=__doc__)
 console = Console()
 
@@ -40,7 +48,6 @@ DEFAULT_VET_DIR = ROOT / "mappings" / "cpe_vet"
 DEFAULT_CONTRIB_DIR = ROOT / "mappings" / "contributions"
 DEFAULT_AUTHOR = "cpe-pipeline"
 DEFAULT_AUTHOR_NAME = "Automated CPE discovery pipeline"
-SUPPORTED_CANDIDATE_SCHEMA_VERSIONS = frozenset({1, 2})
 
 
 def _latest_candidates_file(directory: Path) -> Path | None:
@@ -62,79 +69,11 @@ def _latest_vet_file(directory: Path) -> Path | None:
     return files[-1] if files else None
 
 
-def _collect_vet_confident(payload: dict) -> dict[str, list[str]]:
-    """Return ``{conda_name: [cpe, ...]}`` for AI verdicts marked ``confident``.
-
-    ``uncertain`` and ``none`` verdicts are intentionally dropped here — the
-    promote step ships only what both the heuristic accept bucket OR a
-    confident AI verdict endorsed. Uncertain calls stay in the vet file
-    for a human to read and lift manually if desired."""
-    out: dict[str, list[str]] = {}
-    for v in payload.get("verdicts") or []:
-        if v.get("verdict") != "confident":
-            continue
-        name = v.get("conda_name")
-        cpes = v.get("selected_cpes") or []
-        if not isinstance(name, str) or not cpes:
-            continue
-        valid = [c for c in cpes if isinstance(c, str) and c.startswith("cpe:2.3:")]
-        if valid:
-            out[name] = valid
-    return out
-
-
 def _validate_candidates_schema(payload: dict) -> None:
-    version = payload.get("schema_version", 1)
-    if version not in SUPPORTED_CANDIDATE_SCHEMA_VERSIONS:
-        raise typer.BadParameter(
-            f"Unsupported CPE candidates schema_version {version!r}; "
-            f"expected one of {sorted(SUPPORTED_CANDIDATE_SCHEMA_VERSIONS)}"
-        )
-
-
-def _collect_accepts(payload: dict) -> dict[str, list[str]]:
-    """Return ``{conda_name: [cpe, ...]}`` from the ``accept`` bucket only.
-
-    Schema-2 ``shared_source_review`` evidence is intentionally ignored: it is
-    a human review queue, not an input to automated promotion.
-
-    Preserves CPE order as it appears in the candidates file (which is the
-    order cpe_discover wrote them in — by descending CVE count after the
-    bucketer's sort). Aliases like ``libssh2``'s three CPEs are kept
-    together intact."""
-    out: dict[str, list[str]] = {}
-    for pkg in payload.get("packages") or []:
-        name = pkg.get("conda_name")
-        if not isinstance(name, str):
-            continue
-        cpes = [
-            entry["cpe"]
-            for entry in (pkg.get("accept") or [])
-            if isinstance(entry, dict) and isinstance(entry.get("cpe"), str)
-        ]
-        if cpes:
-            out[name] = cpes
-    return out
-
-
-def _merge_accepts_with_vet(
-    accepts: dict[str, list[str]], vet_confident: dict[str, list[str]]
-) -> dict[str, list[str]]:
-    """Union the heuristic accept bucket with confident AI verdicts.
-
-    When the same conda name appears in both (rare — AI vetting only ships
-    candidates from the ambiguous bucket, which by definition didn't reach
-    accept), CPEs are unioned preserving order: heuristic accepts first,
-    then any AI-only additions."""
-    merged: dict[str, list[str]] = {name: list(cpes) for name, cpes in accepts.items()}
-    for name, cpes in vet_confident.items():
-        existing = merged.setdefault(name, [])
-        seen = set(existing)
-        for c in cpes:
-            if c not in seen:
-                existing.append(c)
-                seen.add(c)
-    return merged
+    try:
+        validate_candidates_schema(payload)
+    except UnsupportedCandidateSchema as error:
+        raise typer.BadParameter(str(error)) from error
 
 
 def _build_contribution(

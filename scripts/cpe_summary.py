@@ -36,10 +36,10 @@ from pathlib import Path
 
 # Reuse the promote step's bucket-collection logic verbatim so this summary
 # can never claim a different promoted set than the contribution file ships.
-from scripts.cpe_promote import (
-    _collect_accepts,
-    _collect_vet_confident,
-    _merge_accepts_with_vet,
+from scripts.cpe_candidate_contract import (
+    collect_accepts as _collect_accepts,
+    collect_vet_confident as _collect_vet_confident,
+    merge_accepts_with_vet as _merge_accepts_with_vet,
 )
 
 # Per-bucket cap on listed examples. Promoted sets are tiny in practice
