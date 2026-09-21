@@ -67,6 +67,7 @@ MODEL = "claude-haiku-4-5"
 DEFAULT_BATCH_SIZE = 15  # packages per AI request
 DEFAULT_CONCURRENCY = 4  # AI requests in flight
 SCHEMA_VERSION = 1
+SUPPORTED_CANDIDATE_SCHEMA_VERSIONS = frozenset({1, 2})
 
 
 SYSTEM_PROMPT = """You vet CPE coordinate candidates for conda-forge packages.
@@ -167,7 +168,17 @@ class AmbiguousPackage:
     candidates: list[dict]  # full candidate dicts from cpe_candidates.json
 
 
+def _validate_candidates_schema(payload: dict) -> None:
+    version = payload.get("schema_version", 1)
+    if version not in SUPPORTED_CANDIDATE_SCHEMA_VERSIONS:
+        raise typer.BadParameter(
+            f"Unsupported CPE candidates schema_version {version!r}; "
+            f"expected one of {sorted(SUPPORTED_CANDIDATE_SCHEMA_VERSIONS)}"
+        )
+
+
 def _load_ambiguous(payload: dict, only: set[str] | None) -> list[AmbiguousPackage]:
+    """Load only heuristic ambiguity; shared-source reviews stay human-only."""
     out: list[AmbiguousPackage] = []
     for pkg in payload.get("packages") or []:
         name = pkg.get("conda_name")
@@ -610,6 +621,7 @@ def main(
             "No candidates file found. Run `pixi run cpe:discover` first."
         )
     payload = json.loads(candidates_file.read_text())
+    _validate_candidates_schema(payload)
     # Stamp from the candidates file so cpe_promote can detect whether this
     # vet output is current with the latest discover run.
     candidates_generated_at = payload.get("generated_at")

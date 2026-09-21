@@ -3,7 +3,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from scripts import cpe_discover
+import typer
+
+from scripts import cpe_discover, cpe_promote, cpe_vet
 from scripts.nvd_fetch import NvdIndex
 
 
@@ -279,6 +281,63 @@ class SharedSourceEvidenceTests(unittest.TestCase):
             result["shared_source_review"][0]["cpes"],
             ["cpe:2.3:a:x:libglx"],
         )
+
+
+class AutomationIsolationTests(unittest.TestCase):
+    def test_review_only_candidate_is_not_vetted_or_promoted(self) -> None:
+        payload = {
+            "schema_version": 2,
+            "packages": [
+                {
+                    "conda_name": "libegl",
+                    "shared_source_review": [
+                        {
+                            "cpes": ["cpe:2.3:a:x:libglx"],
+                            "requires_review": True,
+                        }
+                    ],
+                    "accept": [],
+                    "ambiguous": [],
+                }
+            ],
+        }
+
+        self.assertEqual(cpe_vet._load_ambiguous(payload, None), [])
+        self.assertEqual(cpe_promote._collect_accepts(payload), {})
+
+    def test_automation_reads_only_its_explicit_bucket(self) -> None:
+        payload = {
+            "schema_version": 2,
+            "packages": [
+                {
+                    "conda_name": "project",
+                    "shared_source_review": [{"cpes": ["cpe:2.3:a:review:project"]}],
+                    "accept": [{"cpe": "cpe:2.3:a:auto:project"}],
+                    "ambiguous": [{"cpe": "cpe:2.3:a:ambiguous:project"}],
+                }
+            ],
+        }
+
+        vetted = cpe_vet._load_ambiguous(payload, None)
+        promoted = cpe_promote._collect_accepts(payload)
+
+        self.assertEqual(
+            [candidate["cpe"] for candidate in vetted[0].candidates],
+            ["cpe:2.3:a:ambiguous:project"],
+        )
+        self.assertEqual(promoted, {"project": ["cpe:2.3:a:auto:project"]})
+
+    def test_consumers_accept_candidate_schema_one_and_two_only(self) -> None:
+        for version in (1, 2):
+            with self.subTest(version=version):
+                cpe_vet._validate_candidates_schema({"schema_version": version})
+                cpe_promote._validate_candidates_schema({"schema_version": version})
+        for validate in (
+            cpe_vet._validate_candidates_schema,
+            cpe_promote._validate_candidates_schema,
+        ):
+            with self.assertRaises(typer.BadParameter):
+                validate({"schema_version": 3})
 
 
 if __name__ == "__main__":

@@ -40,6 +40,7 @@ DEFAULT_VET_DIR = ROOT / "mappings" / "cpe_vet"
 DEFAULT_CONTRIB_DIR = ROOT / "mappings" / "contributions"
 DEFAULT_AUTHOR = "cpe-pipeline"
 DEFAULT_AUTHOR_NAME = "Automated CPE discovery pipeline"
+SUPPORTED_CANDIDATE_SCHEMA_VERSIONS = frozenset({1, 2})
 
 
 def _latest_candidates_file(directory: Path) -> Path | None:
@@ -82,8 +83,20 @@ def _collect_vet_confident(payload: dict) -> dict[str, list[str]]:
     return out
 
 
+def _validate_candidates_schema(payload: dict) -> None:
+    version = payload.get("schema_version", 1)
+    if version not in SUPPORTED_CANDIDATE_SCHEMA_VERSIONS:
+        raise typer.BadParameter(
+            f"Unsupported CPE candidates schema_version {version!r}; "
+            f"expected one of {sorted(SUPPORTED_CANDIDATE_SCHEMA_VERSIONS)}"
+        )
+
+
 def _collect_accepts(payload: dict) -> dict[str, list[str]]:
     """Return ``{conda_name: [cpe, ...]}`` from the ``accept`` bucket only.
+
+    Schema-2 ``shared_source_review`` evidence is intentionally ignored: it is
+    a human review queue, not an input to automated promotion.
 
     Preserves CPE order as it appears in the candidates file (which is the
     order cpe_discover wrote them in — by descending CVE count after the
@@ -204,6 +217,7 @@ def main(
         )
 
     payload = json.loads(candidates_file.read_text())
+    _validate_candidates_schema(payload)
     accepts = _collect_accepts(payload)
     candidates_generated_at = payload.get("generated_at")
 
