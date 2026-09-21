@@ -40,6 +40,45 @@ def packages_in_bucket(
     return out
 
 
+def human_review_hold_names(payload: dict) -> set[str]:
+    """Packages whose sibling evidence requires a human decision.
+
+    Conflicting reviewed anchors are held as conservatively as agreeing review
+    proposals. Neither may reach AI-assisted promotion through an independent
+    name-based ambiguous candidate.
+    """
+    held: set[str] = set()
+    for package in payload.get("packages") or []:
+        if not isinstance(package, dict):
+            continue
+        name = package.get("conda_name")
+        if not isinstance(name, str):
+            continue
+        if package.get("shared_source_review") or package.get("shared_source_conflict"):
+            held.add(name)
+    return held
+
+
+def packages_for_ai_vet(
+    payload: dict, only: set[str] | None = None
+) -> list[tuple[dict[str, Any], list[dict[str, Any]]]]:
+    """Return ambiguous packages not held for shared-source human review."""
+    held = human_review_hold_names(payload)
+    return [
+        (package, entries)
+        for package, entries in packages_in_bucket(payload, "ambiguous", only)
+        if package["conda_name"] not in held
+    ]
+
+
+def filter_vet_confident_for_candidates(
+    candidates: dict, vet_confident: dict[str, list[str]]
+) -> dict[str, list[str]]:
+    """Defensively remove AI verdicts for packages now held for humans."""
+    held = human_review_hold_names(candidates)
+    return {name: cpes for name, cpes in vet_confident.items() if name not in held}
+
+
 def collect_accepts(payload: dict) -> dict[str, list[str]]:
     """Collect only heuristic accepts; schema-2 review evidence is ignored."""
     out: dict[str, list[str]] = {}

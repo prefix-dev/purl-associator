@@ -58,7 +58,7 @@ from rich.console import Console
 
 from scripts.cpe_candidate_contract import (
     UnsupportedCandidateSchema,
-    packages_in_bucket,
+    packages_for_ai_vet,
     validate_candidates_schema,
 )
 
@@ -190,7 +190,7 @@ def _load_ambiguous(payload: dict, only: set[str] | None) -> list[AmbiguousPacka
             github_owner_repo=package.get("github_owner_repo"),
             candidates=entries,
         )
-        for package, entries in packages_in_bucket(payload, "ambiguous", only)
+        for package, entries in packages_for_ai_vet(payload, only)
     ]
 
 

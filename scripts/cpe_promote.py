@@ -35,6 +35,7 @@ from scripts.cpe_candidate_contract import (
     UnsupportedCandidateSchema,
     collect_accepts as _collect_accepts,
     collect_vet_confident as _collect_vet_confident,
+    filter_vet_confident_for_candidates,
     merge_accepts_with_vet as _merge_accepts_with_vet,
     validate_candidates_schema,
 )
@@ -205,7 +206,16 @@ def main(
                         "candidates, but --vet-file was passed explicitly — "
                         "using it anyway.[/]"
                     )
-                vet_confident = _collect_vet_confident(vet_payload)
+                raw_vet_confident = _collect_vet_confident(vet_payload)
+                vet_confident = filter_vet_confident_for_candidates(
+                    payload, raw_vet_confident
+                )
+                held_count = len(raw_vet_confident) - len(vet_confident)
+                if held_count:
+                    console.log(
+                        f"[yellow]Ignoring {held_count} confident AI verdict(s) "
+                        "held for shared-source human review.[/]"
+                    )
                 if vet_confident:
                     console.log(
                         f"Merging {len(vet_confident)} confident AI verdict(s) "

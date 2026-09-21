@@ -39,6 +39,7 @@ from pathlib import Path
 from scripts.cpe_candidate_contract import (
     collect_accepts as _collect_accepts,
     collect_vet_confident as _collect_vet_confident,
+    filter_vet_confident_for_candidates,
     merge_accepts_with_vet as _merge_accepts_with_vet,
 )
 
@@ -116,7 +117,9 @@ def main() -> None:
     vet = _load(args.vet)
 
     accepts = _collect_accepts(candidates)
-    vet_confident = _collect_vet_confident(vet)
+    raw_vet_confident = _collect_vet_confident(vet)
+    vet_confident = filter_vet_confident_for_candidates(candidates, raw_vet_confident)
+    held_vet_confident = len(raw_vet_confident) - len(vet_confident)
     promoted = _merge_accepts_with_vet(accepts, vet_confident)
 
     pkg_count = len(promoted)
@@ -256,7 +259,12 @@ def main() -> None:
         out.append("")
         out.append("| verdict | packages |")
         out.append("|---|---:|")
-        out.append(f"| confident (shipped) | {vs.get('confident_packages', 0)} |")
+        out.append(f"| confident (shipped) | {len(vet_confident)} |")
+        if held_vet_confident:
+            out.append(
+                f"| confident but shared-source-held (not shipped) | "
+                f"{held_vet_confident} |"
+            )
         out.append(f"| uncertain (held) | {vs.get('uncertain_packages', 0)} |")
         out.append(f"| none (rejected) | {vs.get('none_packages', 0)} |")
         out.append("")

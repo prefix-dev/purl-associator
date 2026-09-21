@@ -405,9 +405,7 @@ class AutomationIsolationTests(unittest.TestCase):
             ],
         }
 
-        self.assertEqual(
-            candidate_contract.packages_in_bucket(payload, "ambiguous"), []
-        )
+        self.assertEqual(candidate_contract.packages_for_ai_vet(payload), [])
         self.assertEqual(candidate_contract.collect_accepts(payload), {})
 
     def test_automation_reads_only_its_explicit_bucket(self) -> None:
@@ -423,14 +421,49 @@ class AutomationIsolationTests(unittest.TestCase):
             ],
         }
 
-        vetted = candidate_contract.packages_in_bucket(payload, "ambiguous")
+        vetted = candidate_contract.packages_for_ai_vet(payload)
         promoted = candidate_contract.collect_accepts(payload)
-
-        self.assertEqual(
-            [candidate["cpe"] for candidate in vetted[0][1]],
-            ["cpe:2.3:a:ambiguous:project"],
+        filtered_vet = candidate_contract.filter_vet_confident_for_candidates(
+            payload,
+            {"project": ["cpe:2.3:a:ambiguous:project"]},
         )
+
+        self.assertEqual(vetted, [])
+        self.assertEqual(filtered_vet, {})
+        # Independent deterministic accepts retain their existing behavior.
         self.assertEqual(promoted, {"project": ["cpe:2.3:a:auto:project"]})
+
+    def test_conflicts_are_held_while_ordinary_ambiguity_still_reaches_ai(self) -> None:
+        payload = {
+            "schema_version": 2,
+            "packages": [
+                {
+                    "conda_name": "gcc-output",
+                    "shared_source_conflict": {"anchors": [{"package": "gcc"}]},
+                    "ambiguous": [{"cpe": "cpe:2.3:a:wrong:zlib"}],
+                },
+                {
+                    "conda_name": "ordinary",
+                    "shared_source_review": [],
+                    "shared_source_conflict": None,
+                    "ambiguous": [{"cpe": "cpe:2.3:a:vendor:ordinary"}],
+                },
+            ],
+        }
+
+        vetted = candidate_contract.packages_for_ai_vet(payload)
+
+        self.assertEqual([package["conda_name"] for package, _ in vetted], ["ordinary"])
+        self.assertEqual(
+            candidate_contract.filter_vet_confident_for_candidates(
+                payload,
+                {
+                    "gcc-output": ["cpe:2.3:a:wrong:zlib"],
+                    "ordinary": ["cpe:2.3:a:vendor:ordinary"],
+                },
+            ),
+            {"ordinary": ["cpe:2.3:a:vendor:ordinary"]},
+        )
 
     def test_consumers_accept_candidate_schema_one_and_two_only(self) -> None:
         for version in (1, 2):
