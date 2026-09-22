@@ -15,7 +15,8 @@ Sections emitted:
 
 * Headline — N packages / M CPEs promoted (or "nothing promoted, audit only").
 * ✅ Promoted CPEs — the package → CPE list that will appear after merge.
-* Discovery buckets — auto-accept / ambiguous / drop / no-NVD-match counts.
+* Discovery buckets — auto-accept / shared-source review / conflict /
+  ambiguous / drop / no-NVD-match counts.
 * 🤖 AI vet — confident / uncertain / none counts, plus the ``uncertain``
   verdicts surfaced for a human to lift manually if desired.
 * A static pipeline / files / idempotency footer for first-time reviewers.
@@ -35,10 +36,11 @@ from pathlib import Path
 
 # Reuse the promote step's bucket-collection logic verbatim so this summary
 # can never claim a different promoted set than the contribution file ships.
-from scripts.cpe_promote import (
-    _collect_accepts,
-    _collect_vet_confident,
-    _merge_accepts_with_vet,
+from scripts.cpe_candidate_contract import (
+    collect_accepts as _collect_accepts,
+    collect_vet_confident as _collect_vet_confident,
+    filter_vet_confident_for_candidates,
+    merge_accepts_with_vet as _merge_accepts_with_vet,
 )
 
 # Per-bucket cap on listed examples. Promoted sets are tiny in practice
@@ -52,11 +54,13 @@ STATIC_FOOTER = """\
 ## Pipeline
 
 1. `scripts.cpe_discover` — scores NVD index lookups against H1–H8
-   heuristics, buckets into accept / ambiguous / drop.
+   heuristics, buckets into accept / ambiguous / drop, and separately surfaces
+   exact source/version sibling evidence for human review.
 2. `scripts.cpe_vet` — Claude Haiku tiebreaker on the ambiguous
-   bucket (skipped when `skip_vet=true`).
+   bucket (skipped when `skip_vet=true`). Shared-source reviews are excluded.
 3. `scripts.cpe_promote` — writes one contribution file unioning
-   heuristic accepts + confident AI verdicts.
+   heuristic accepts + confident AI verdicts. Shared-source reviews are never
+   promoted automatically.
 
 ## Files in this PR
 
@@ -68,7 +72,8 @@ STATIC_FOOTER = """\
   ambiguous bucket (when AI vet ran).
 
 Review the contribution file first; the audit files exist for
-reference but don't directly change behaviour.
+reference but don't directly change behaviour. Shared-source candidates require
+a separate human-reviewed mapping contribution.
 
 Re-running discover is naturally idempotent — already-CPE'd packages
 are skipped by `_load_existing_cpes` before NVD is even queried, so
@@ -112,7 +117,9 @@ def main() -> None:
     vet = _load(args.vet)
 
     accepts = _collect_accepts(candidates)
-    vet_confident = _collect_vet_confident(vet)
+    raw_vet_confident = _collect_vet_confident(vet)
+    vet_confident = filter_vet_confident_for_candidates(candidates, raw_vet_confident)
+    held_vet_confident = len(raw_vet_confident) - len(vet_confident)
     promoted = _merge_accepts_with_vet(accepts, vet_confident)
 
     pkg_count = len(promoted)
@@ -153,18 +160,104 @@ def main() -> None:
     # ---- discovery buckets ----
     hs = candidates.get("heuristics_summary") or {}
     if candidates:
+        top_considered = candidates.get("top_considered", "?")
+        scope = "all packages" if top_considered == 0 else f"top {top_considered}"
         out.append(
-            f"### Discovery (top {candidates.get('top_considered', '?')}, "
-            f"{candidates.get('candidates_processed', '?')} with an NVD match)"
+            f"### Discovery ({scope}, "
+            f"{candidates.get('candidates_processed', '?')} candidates processed)"
         )
         out.append("")
-        out.append("| bucket | CPEs |")
+        out.append("| bucket | count |")
         out.append("|---|---:|")
         out.append(f"| ✅ auto-accept | {hs.get('auto_accept_total', 0)} |")
+        review_groups = hs.get("shared_source_review_groups", 0)
+        review_packages = hs.get("shared_source_review_packages", 0)
+        review_cpes = hs.get("shared_source_review_cpes", 0)
+        review_downloads = hs.get("shared_source_review_downloads", 0)
+        out.append(
+            f"| 👤 shared-source review required | {review_groups} "
+            f"group{'s' if review_groups != 1 else ''} / {review_packages} "
+            f"package{'s' if review_packages != 1 else ''} / {review_cpes} "
+            f"CPE{'s' if review_cpes != 1 else ''} / "
+            f"{review_downloads:,} downloads |"
+        )
+        conflict_groups = hs.get("shared_source_conflict_groups", 0)
+        conflict_packages = hs.get("shared_source_conflict_packages", 0)
+        conflict_downloads = hs.get("shared_source_conflict_downloads", 0)
+        out.append(
+            f"| ⚠️ shared-source conflicts | {conflict_groups} "
+            f"group{'s' if conflict_groups != 1 else ''} / {conflict_packages} "
+            f"package{'s' if conflict_packages != 1 else ''} / "
+            f"{conflict_downloads:,} downloads |"
+        )
         out.append(f"| ❓ ambiguous (→ AI vet) | {hs.get('ambiguous_total', 0)} |")
         out.append(f"| 🗑 drop | {hs.get('drop_total', 0)} |")
         out.append(f"| — no NVD match | {hs.get('no_nvd_match', 0)} |")
         out.append("")
+
+        review_rows = [
+            pkg
+            for pkg in (candidates.get("packages") or [])
+            if pkg.get("shared_source_review")
+        ]
+        if review_rows:
+            out.append(
+                f"<details><summary>{len(review_rows)} shared-source candidate"
+                f"{'s' if len(review_rows) != 1 else ''} — human review required, "
+                "not shipped</summary>"
+            )
+            out.append("")
+            for pkg in review_rows[:PER_BUCKET]:
+                for evidence in pkg.get("shared_source_review") or []:
+                    cpes = (
+                        ", ".join(f"`{cpe}`" for cpe in (evidence.get("cpes") or []))
+                        or "—"
+                    )
+                    anchors = (
+                        ", ".join(
+                            f"`{anchor.get('package', '?')}`"
+                            for anchor in (evidence.get("anchors") or [])
+                        )
+                        or "—"
+                    )
+                    out.append(f"- **{pkg.get('conda_name', '?')}** → {cpes}")
+                    out.append(
+                        f"  - anchors: {anchors}; exact source/version: "
+                        f"`{evidence.get('shared_version', '?')}`"
+                    )
+            extra = len(review_rows) - PER_BUCKET
+            if extra > 0:
+                out.append(f"- _… and {extra} more_")
+            out.append("")
+            out.append("</details>")
+            out.append("")
+
+        conflict_rows = [
+            pkg
+            for pkg in (candidates.get("packages") or [])
+            if pkg.get("shared_source_conflict")
+        ]
+        if conflict_rows:
+            out.append(
+                f"<details><summary>{len(conflict_rows)} shared-source conflict"
+                f"{'s' if len(conflict_rows) != 1 else ''} — no CPE proposed"
+                "</summary>"
+            )
+            out.append("")
+            for pkg in conflict_rows[:PER_BUCKET]:
+                conflict = pkg["shared_source_conflict"]
+                anchors = "; ".join(
+                    f"`{anchor.get('package', '?')}` → "
+                    + ", ".join(f"`{cpe}`" for cpe in anchor.get("cpes") or [])
+                    for anchor in (conflict.get("anchors") or [])
+                )
+                out.append(f"- **{pkg.get('conda_name', '?')}**: {anchors}")
+            extra = len(conflict_rows) - PER_BUCKET
+            if extra > 0:
+                out.append(f"- _… and {extra} more_")
+            out.append("")
+            out.append("</details>")
+            out.append("")
 
     # ---- AI vet ----
     if vet:
@@ -174,7 +267,12 @@ def main() -> None:
         out.append("")
         out.append("| verdict | packages |")
         out.append("|---|---:|")
-        out.append(f"| confident (shipped) | {vs.get('confident_packages', 0)} |")
+        out.append(f"| confident (shipped) | {len(vet_confident)} |")
+        if held_vet_confident:
+            out.append(
+                f"| confident but shared-source-held (not shipped) | "
+                f"{held_vet_confident} |"
+            )
         out.append(f"| uncertain (held) | {vs.get('uncertain_packages', 0)} |")
         out.append(f"| none (rejected) | {vs.get('none_packages', 0)} |")
         out.append("")

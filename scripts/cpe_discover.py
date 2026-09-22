@@ -30,11 +30,13 @@ Pipeline (heuristics-only; no AI step):
 
 6. Bucket each candidate as ``accept`` / ``ambiguous`` / ``drop`` based on
    how many heuristics fired and with what strength. The ``ambiguous``
-   bucket is what a future ``cpe_vet.py`` would hand to Claude Haiku for
-   tie-breaking.
-7. Write a single audit file ``mappings/cpe_candidates/<ISO>.json`` with
-   all three buckets plus per-heuristic scores, so a human can sanity
-   check what fired.
+   bucket is what ``cpe_vet.py`` hands to Claude Haiku for tie-breaking.
+7. Separately surface exact source-URL/version siblings of reviewed CPE-backed
+   packages as ``shared_source_review`` evidence. Agreeing anchors create a
+   human review candidate; disagreeing anchors create an auditable conflict.
+   Neither path changes heuristic scores or enters automated promotion.
+8. Write a single audit file ``mappings/cpe_candidates/latest.json`` with
+   all buckets, review evidence, and per-heuristic scores.
 
 Run it:
 
@@ -55,6 +57,13 @@ from typing import Any
 import typer
 from rich.console import Console
 
+from scripts.cpe_evidence import (
+    AutoEntry,
+    _is_cpe_candidate,
+    _load_effective_cpes,
+    _load_effective_mappings,
+    _shared_source_evidence,
+)
 from scripts.nvd_fetch import NvdIndex, fetch_index
 
 app = typer.Typer(add_completion=False, help=__doc__)
@@ -66,12 +75,6 @@ DEFAULT_MANUAL = ROOT / "mappings" / "manual.json"
 DEFAULT_CONTRIB_DIR = ROOT / "mappings" / "contributions"
 DEFAULT_OUT_DIR = ROOT / "mappings" / "cpe_candidates"
 DEFAULT_NVD_CACHE = ROOT / "nvd_cache"
-
-# PURL types that downstream tooling can usually match through OSV without
-# needing a CPE identity for NVD lookup.
-OSV_PURL_TYPES = frozenset(
-    {"pypi", "npm", "cargo", "gem", "maven", "golang", "cran", "bioconductor"}
-)
 
 # H5 — Vendors that are nearly always the authoritative upstream for the
 # product they ship. When a candidate (vendor, product) has ``vendor`` in
@@ -144,234 +147,6 @@ def _token_re(token: str) -> re.Pattern[str]:
             rf"(?<!\w){re.escape(token)}(?!\w)", re.IGNORECASE
         )
     return _TOKEN_RE_CACHE[token]
-
-
-# ---------- inputs ----------
-
-
-def _load_existing_cpes(manual: Path, contrib_dir: Path) -> set[str]:
-    """Names that already carry a ``cpes`` list in any reviewed source.
-    These are skipped (we don't want to overwrite a curator's choice)."""
-    have: set[str] = set()
-    if manual.exists():
-        try:
-            mdata = json.loads(manual.read_text())
-        except json.JSONDecodeError:
-            mdata = {}
-        for name, entry in (mdata.get("packages") or {}).items():
-            if isinstance(entry, dict) and entry.get("cpes"):
-                have.add(name)
-    if contrib_dir.exists():
-        for f in contrib_dir.glob("*.json"):
-            try:
-                cdata = json.loads(f.read_text())
-            except json.JSONDecodeError:
-                continue
-            for name, entry in (cdata.get("packages") or {}).items():
-                if isinstance(entry, dict) and entry.get("cpes"):
-                    have.add(name)
-    return have
-
-
-@dataclass(frozen=True)
-class AutoEntry:
-    purl: str | None
-    purl_type: str | None
-    namespace: str | None
-    pkg_name: str | None
-    summary: str | None
-    download_count: int  # 0 when missing; used for top-N ranking
-    # ``alternative_purls`` entries flattened to their ``type`` strings. Used
-    # to detect packages that already have an OSV-mappable identity even when
-    # their primary PURL is github/generic.
-    alternative_purl_types: tuple[str, ...] = ()
-
-    @property
-    def github_owner_repo(self) -> str | None:
-        """``owner/repo`` if the PURL is a ``pkg:github`` entry, else None."""
-        if (
-            self.purl_type == "github"
-            and isinstance(self.namespace, str)
-            and isinstance(self.pkg_name, str)
-        ):
-            return f"{self.namespace}/{self.pkg_name}"
-        return None
-
-    @property
-    def has_osv_alternative(self) -> bool:
-        """True if any alternative PURL is in an OSV-indexed ecosystem.
-
-        Such packages do not need CPE discovery here because downstream CVE
-        tooling can use the PURL identity first.
-        """
-        return any(t in OSV_PURL_TYPES for t in self.alternative_purl_types)
-
-
-_PURL_FIELDS = ("purl", "type", "namespace", "pkg_name")
-
-
-def _extract_alt_types(entry: dict) -> tuple[str, ...]:
-    """Pull the ``type`` field out of each entry in ``alternative_purls``.
-    Handles both the auto.json shape ([{purl, type, namespace, ...}, ...])
-    and the simpler review-side shape ([purl-string, ...]) by parsing the
-    type prefix when needed."""
-    out: list[str] = []
-    alts = entry.get("alternative_purls")
-    if not isinstance(alts, list):
-        return ()
-    for a in alts:
-        if isinstance(a, dict):
-            t = a.get("type")
-            if isinstance(t, str) and t:
-                out.append(t)
-                continue
-            # Fall through to parsing the purl string if type missing.
-            purl = a.get("purl")
-        elif isinstance(a, str):
-            purl = a
-        else:
-            continue
-        if isinstance(purl, str) and purl.startswith("pkg:"):
-            head, _, _ = purl[4:].partition("/")
-            if head:
-                out.append(head)
-    return tuple(out)
-
-
-def _overlay_purl(base: AutoEntry, override: dict) -> AutoEntry:
-    """Return a new AutoEntry with PURL-related fields replaced where the
-    override provides them. Mirrors ``merge_mappings``' replace-on-present
-    semantics for the PURL layer.
-
-    ``alternative_purls`` follows the same replace-on-present rule the
-    merge layer uses (see ``merge_mappings._reviewed_mapping_patch``): a
-    contribution that explicitly provides an alternative_purls list
-    replaces the base; absent means inherit. An empty list explicitly
-    clears the alternatives."""
-    if (
-        not any(k in override for k in _PURL_FIELDS)
-        and "alternative_purls" not in override
-    ):
-        return base
-    if "alternative_purls" in override and override["alternative_purls"] is not None:
-        alt_types = _extract_alt_types(override)
-    else:
-        alt_types = base.alternative_purl_types
-    return AutoEntry(
-        purl=override.get("purl", base.purl),
-        purl_type=override.get("type", base.purl_type),
-        namespace=override.get("namespace", base.namespace),
-        pkg_name=override.get("pkg_name", base.pkg_name),
-        summary=base.summary,  # human reviews never change the conda summary
-        download_count=base.download_count,
-        alternative_purl_types=alt_types,
-    )
-
-
-def _load_effective_mappings(
-    auto: Path, manual: Path, contrib_dir: Path
-) -> dict[str, AutoEntry]:
-    """Return the merged ``{name: AutoEntry}`` view that ``merge_mappings``
-    would produce for the PURL fields.
-
-    Layered, newest wins: ``auto.json`` → ``manual.json`` → ``contributions``
-    (sorted by ``timestamp`` then filename). We only need the PURL portion
-    here — the ``cpes`` overrides are handled separately by
-    :func:`_load_existing_cpes`."""
-    out: dict[str, AutoEntry] = {}
-
-    # Layer 1: auto.json — also carries the ``download_count`` we rank by
-    # and the ``alternative_purls`` we check for OSV-mappable fallbacks.
-    # Intentionally unwrapped: a corrupt auto.json is a hard failure because
-    # ranking depends entirely on it. Reviewed layers below tolerate broken
-    # JSON because losing one contribution shouldn't break a discovery run.
-    if auto.exists():
-        data = json.loads(auto.read_text())
-        for name, entry in (data.get("packages") or {}).items():
-            if not isinstance(entry, dict):
-                continue
-            dc = entry.get("download_count")
-            out[name] = AutoEntry(
-                purl=entry.get("purl"),
-                purl_type=entry.get("type"),
-                namespace=entry.get("namespace"),
-                pkg_name=entry.get("pkg_name"),
-                summary=entry.get("summary"),
-                download_count=dc if isinstance(dc, int) else 0,
-                alternative_purl_types=_extract_alt_types(entry),
-            )
-
-    blank = AutoEntry(
-        purl=None,
-        purl_type=None,
-        namespace=None,
-        pkg_name=None,
-        summary=None,
-        download_count=0,
-        alternative_purl_types=(),
-    )
-
-    # Layer 2: manual.json
-    if manual.exists():
-        try:
-            mdata = json.loads(manual.read_text())
-        except json.JSONDecodeError:
-            mdata = {}
-        for name, override in (mdata.get("packages") or {}).items():
-            if not isinstance(override, dict):
-                continue
-            out[name] = _overlay_purl(out.get(name, blank), override)
-
-    # Layer 3: contributions, oldest → newest (chronological), so the
-    # newest reviewed override is what we see.
-    if contrib_dir.exists():
-        contribs: list[tuple[str, str, dict]] = []
-        for f in sorted(contrib_dir.glob("*.json")):
-            try:
-                cdata = json.loads(f.read_text())
-            except json.JSONDecodeError:
-                continue
-            ts = (
-                cdata.get("timestamp")
-                if isinstance(cdata.get("timestamp"), str)
-                else f.stem
-            )
-            contribs.append((ts, f.name, cdata))
-        contribs.sort(key=lambda t: (t[0], t[1]))
-        for _ts, _fname, cdata in contribs:
-            for name, override in (cdata.get("packages") or {}).items():
-                if not isinstance(override, dict):
-                    continue
-                out[name] = _overlay_purl(out.get(name, blank), override)
-
-    return out
-
-
-# ---------- candidate selection ----------
-
-
-def _is_cpe_candidate(name: str, entry: AutoEntry | None) -> bool:
-    """A package is a CPE candidate when no existing PURL identity is in an
-    OSV-indexed package ecosystem.
-
-    Both the primary PURL and the ``alternative_purls`` list count. A package
-    qualifies only when:
-      * no primary PURL, or primary PURL is non-OSV (github, generic, …)
-      * AND no alternative_purls entry is OSV-mappable
-      * AND not a conda-build internal feedstock
-    """
-    # Skip conda-build internal feedstocks.
-    if name.startswith("_") or name.startswith("python_abi"):
-        return False
-    if entry is None:
-        return True
-    if entry.purl_type in OSV_PURL_TYPES:
-        return False
-    # Even if the primary PURL is github/generic, an OSV-mappable alternative
-    # means downstream tooling already has an ecosystem identity to try first.
-    if entry.has_osv_alternative:
-        return False
-    return True
 
 
 def _product_guesses(
@@ -662,6 +437,8 @@ def _process_candidate(
     auto_entry: AutoEntry | None,
     download_count: int,
     index: NvdIndex,
+    shared_source_review: list[dict[str, Any]] | None = None,
+    shared_source_conflict: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Score every NVD product-name match for one conda candidate and
     bucket the results."""
@@ -700,6 +477,12 @@ def _process_candidate(
         scored.append(s)
 
     accept, ambiguous, drop = _bucket_candidates(scored)
+    accepted_cpes = {candidate.cpe for candidate in accept}
+    review = [
+        evidence
+        for evidence in (shared_source_review or [])
+        if not set(evidence.get("cpes") or ()).issubset(accepted_cpes)
+    ]
 
     return {
         "conda_name": conda_name,
@@ -713,6 +496,8 @@ def _process_candidate(
         "product_guesses": guesses,
         "matched_heads": len(scored),
         "accept": [_candidate_to_dict(c) for c in accept],
+        "shared_source_review": review,
+        "shared_source_conflict": shared_source_conflict,
         "ambiguous": [_candidate_to_dict(c) for c in ambiguous],
         "drop": [_candidate_to_dict(c) for c in drop],
     }
@@ -744,7 +529,13 @@ def main(
 ) -> None:
     """Discover CPE candidates for top-downloaded conda-forge packages."""
     auto_data = _load_effective_mappings(auto, manual, contributions)
-    already_have_cpes = _load_existing_cpes(manual, contributions)
+    effective_cpes = _load_effective_cpes(manual, contributions)
+    already_have_cpes = {
+        name for name, reviewed in effective_cpes.items() if reviewed.cpes
+    }
+    shared_reviews, shared_conflicts = _shared_source_evidence(
+        auto_data, effective_cpes
+    )
 
     only_set = {n.strip() for n in only.split(",") if n.strip()} if only else None
 
@@ -808,29 +599,64 @@ def main(
 
     results: list[dict] = []
     accept_total = ambiguous_total = drop_total = 0
+    shared_review_packages = shared_review_cpes = shared_review_downloads = 0
+    shared_conflict_packages = shared_conflict_downloads = 0
+    shared_review_groups: set[tuple[str, str]] = set()
+    shared_conflict_groups: set[tuple[str, str]] = set()
     no_match = 0
     for name, dc, entry in candidates:
         result = _process_candidate(
-            conda_name=name, auto_entry=entry, download_count=dc, index=index
+            conda_name=name,
+            auto_entry=entry,
+            download_count=dc,
+            index=index,
+            shared_source_review=shared_reviews.get(name),
+            shared_source_conflict=shared_conflicts.get(name),
         )
         results.append(result)
         accept_total += len(result["accept"])
         ambiguous_total += len(result["ambiguous"])
         drop_total += len(result["drop"])
+        if result["shared_source_review"]:
+            shared_review_packages += 1
+            shared_review_downloads += dc
+            shared_review_cpes += sum(
+                len(evidence["cpes"]) for evidence in result["shared_source_review"]
+            )
+            shared_review_groups.update(
+                (evidence["shared_source_url"], evidence["shared_version"])
+                for evidence in result["shared_source_review"]
+            )
+        if result["shared_source_conflict"]:
+            shared_conflict_packages += 1
+            shared_conflict_downloads += dc
+            conflict = result["shared_source_conflict"]
+            shared_conflict_groups.add(
+                (conflict["shared_source_url"], conflict["shared_version"])
+            )
         if result["matched_heads"] == 0:
             no_match += 1
 
-    # Sort so the most actionable rows (any accept) bubble to the top.
+    # Sort automatic accepts first, then explicit human-review evidence,
+    # heuristic ambiguity, conflicts, and finally rows with no useful signal.
     results.sort(
         key=lambda r: (
-            0 if r["accept"] else 1 if r["ambiguous"] else 2,
+            0
+            if r["accept"]
+            else 1
+            if r["shared_source_review"]
+            else 2
+            if r["ambiguous"]
+            else 3
+            if r["shared_source_conflict"]
+            else 4,
             -r["download_count"],
         )
     )
 
     generated_at = datetime.now(UTC).isoformat(timespec="seconds")
     payload = {
-        "schema_version": 1,
+        "schema_version": 2,
         "generated_at": generated_at,
         "top_considered": top,
         "candidates_processed": len(candidates),
@@ -839,6 +665,13 @@ def main(
             "ambiguous_total": ambiguous_total,
             "drop_total": drop_total,
             "no_nvd_match": no_match,
+            "shared_source_review_groups": len(shared_review_groups),
+            "shared_source_review_packages": shared_review_packages,
+            "shared_source_review_cpes": shared_review_cpes,
+            "shared_source_review_downloads": shared_review_downloads,
+            "shared_source_conflict_groups": len(shared_conflict_groups),
+            "shared_source_conflict_packages": shared_conflict_packages,
+            "shared_source_conflict_downloads": shared_conflict_downloads,
         },
         "packages": results,
     }
@@ -861,6 +694,12 @@ def main(
         f"({accept_total} CPEs) · "
         f"[yellow]ambiguous[/]: {ambiguous_pkgs} packages "
         f"({ambiguous_total} CPEs) · "
+        f"[magenta]shared-source review[/]: {len(shared_review_groups)} groups / "
+        f"{shared_review_packages} packages / {shared_review_cpes} CPEs / "
+        f"{shared_review_downloads:,} downloads · "
+        f"[magenta]conflicts[/]: {len(shared_conflict_groups)} groups / "
+        f"{shared_conflict_packages} packages / "
+        f"{shared_conflict_downloads:,} downloads · "
         f"[red]no match[/]: {no_match} packages"
     )
     try:

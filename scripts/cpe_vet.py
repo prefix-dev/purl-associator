@@ -56,6 +56,12 @@ import anthropic
 import typer
 from rich.console import Console
 
+from scripts.cpe_candidate_contract import (
+    UnsupportedCandidateSchema,
+    packages_for_ai_vet,
+    validate_candidates_schema,
+)
+
 app = typer.Typer(add_completion=False, help=__doc__)
 console = Console()
 
@@ -167,27 +173,25 @@ class AmbiguousPackage:
     candidates: list[dict]  # full candidate dicts from cpe_candidates.json
 
 
+def _validate_candidates_schema(payload: dict) -> None:
+    try:
+        validate_candidates_schema(payload)
+    except UnsupportedCandidateSchema as error:
+        raise typer.BadParameter(str(error)) from error
+
+
 def _load_ambiguous(payload: dict, only: set[str] | None) -> list[AmbiguousPackage]:
-    out: list[AmbiguousPackage] = []
-    for pkg in payload.get("packages") or []:
-        name = pkg.get("conda_name")
-        if not isinstance(name, str):
-            continue
-        if only is not None and name not in only:
-            continue
-        ambiguous = pkg.get("ambiguous") or []
-        if not ambiguous:
-            continue
-        out.append(
-            AmbiguousPackage(
-                conda_name=name,
-                conda_summary=pkg.get("conda_summary"),
-                current_purl=pkg.get("current_purl"),
-                github_owner_repo=pkg.get("github_owner_repo"),
-                candidates=ambiguous,
-            )
+    """Load only heuristic ambiguity; shared-source reviews stay human-only."""
+    return [
+        AmbiguousPackage(
+            conda_name=package["conda_name"],
+            conda_summary=package.get("conda_summary"),
+            current_purl=package.get("current_purl"),
+            github_owner_repo=package.get("github_owner_repo"),
+            candidates=entries,
         )
-    return out
+        for package, entries in packages_for_ai_vet(payload, only)
+    ]
 
 
 # ---------- prompt construction ----------
@@ -610,6 +614,7 @@ def main(
             "No candidates file found. Run `pixi run cpe:discover` first."
         )
     payload = json.loads(candidates_file.read_text())
+    _validate_candidates_schema(payload)
     # Stamp from the candidates file so cpe_promote can detect whether this
     # vet output is current with the latest discover run.
     candidates_generated_at = payload.get("generated_at")
