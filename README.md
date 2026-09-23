@@ -224,7 +224,30 @@ The JSON report separates `primary_present`, `explicitly_unmapped`, and
 `unresolved`; these three counts sum to `total`. `primary_missing` is the sum of
 the latter two states, while `actionable_missing` equals only `unresolved`.
 `classified_unmapped` and `legacy_unmapped` partition explicit decisions according
-to whether structured rationale was recorded. Alternative PURLs and CPEs do not
+to whether structured rationale was recorded. These are storage/reporting states,
+not security-negative findings. The legacy `actionable_missing` name describes
+only the existing unresolved queue; it does not mean deferred/legacy decisions
+need no further work.
+
+Markdown reports and the inspector derive three review cohorts from the existing
+schema-2 report, without changing mapping decisions or the published wire format:
+
+- **Packaging-only decisions (recorded evidence):** the metapackage, selector,
+  mutex, pinning, and compatibility-shim reason codes. Evidence is scoped to
+  reviewed artifacts, not a guarantee about every version/platform.
+- **CDT: distro/component mapping deferred:** `conda_cdt_repackage`. These can
+  contain identifiable upstream libraries and executables. They are not resolved
+  security exclusions; distro backports and component/payload scope need review.
+- **Legacy decisions needing review:** reasonless explicit decisions. Do not
+  invent rationale or assume an empty payload.
+
+These cohorts sum to `explicitly_unmapped`. Each shows known download totals and
+packages with unknown download counts separately; downloads are not exposure.
+The inspector defaults to all missing-primary packages and provides individual
+cohort filters, keeping deferred and legacy work visible. Baseline reports remain
+compatible; no projected PR counts are added to the effective merged snapshot.
+
+Alternative PURLs and CPEs do not
 count as primary PURLs. Each missing-primary package retains its recorded URLs,
 note, version, and download count for investigation.
 
@@ -271,7 +294,12 @@ A CDT conda package is an architecture/toolchain wrapper assembled from a Linux
 distribution RPM, not a publication of that RPM in its native repository. A
 `pkg:rpm` identity would identify the source distribution artifact rather than
 the independently versioned conda wrapper, so the reviewed classification keeps
-the RPM URL as evidence without asserting it as the package's PURL. For reviewed
+the RPM URL as evidence without asserting it as the package's PURL. This policy
+does not establish absence of an upstream identity or vulnerability coverage.
+Source-component relationships and distribution version-release/backport semantics
+remain deferred; upstream CPE affected-version ranges cannot simply be applied
+to a distro-patched binary. This reporting change does not alter CPE discovery
+eligibility or authorize automated promotion of these packages. For reviewed
 metapackages/selectors, artifact evidence records payload-file, dependency, and
 constraint counts; zero payload is strong evidence for dependency-only packages,
 while conda-specific activation or pinning files do not create an independent

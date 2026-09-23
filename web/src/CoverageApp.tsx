@@ -6,12 +6,17 @@ import {
   loadMappingsReport,
   UNRESOLVED_DIAGNOSTICS,
   type MissingPrimaryPackage,
-  type MissingPrimaryState,
+  DISPOSITION_LABELS,
+  matchesCoverageFilter,
+  noPurlDisposition,
+  summarizeDispositions,
+  type CoverageFilter,
+  type NoPurlDisposition,
   type MappingsReport,
   type UnresolvedDiagnostic,
 } from "./data/mappingsReport";
 
-type StateFilter = "all" | MissingPrimaryState;
+type StateFilter = CoverageFilter;
 type DiagnosticFilter = "all" | UnresolvedDiagnostic;
 type CoverageRow = MissingPrimaryPackage & { hosts: string[] };
 
@@ -73,7 +78,7 @@ export function CoverageApp() {
   const [report, setReport] = useState<MappingsReport | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
-  const [state, setState] = useState<StateFilter>("unresolved");
+  const [state, setState] = useState<StateFilter>("all");
   const [diagnostic, setDiagnostic] = useState<DiagnosticFilter>("all");
   const [host, setHost] = useState("all");
   const [selectedName, setSelectedName] = useState<string | null>(null);
@@ -106,7 +111,7 @@ export function CoverageApp() {
   const filtered = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
     return rows
-      .filter((row) => state === "all" || row.state === state)
+      .filter((row) => matchesCoverageFilter(row, state))
       .filter(
         (row) =>
           diagnostic === "all" ||
@@ -194,7 +199,9 @@ export function CoverageApp() {
             <h1>Missing primary PURLs</h1>
             <p style={{ color: t.fg2 }}>
               Inspect packages without a primary PURL. Diagnostics describe recorded evidence,
-              not authoritative root causes.
+              not authoritative root causes. No-PURL decisions are not security-negative findings.
+              CDT packages can contain identifiable upstream code; their distro/component mapping is deferred.
+              Packaging-only decisions reflect recorded evidence, not every version/platform.
             </p>
           </div>
           {report && (
@@ -215,8 +222,21 @@ export function CoverageApp() {
             <section className="coverage-summary">
               <SummaryCard label="All packages" value={report.counts.total} theme={theme} />
               <SummaryCard label="Primary PURL" value={report.counts.primary_present} theme={theme} tone="good" />
-              <SummaryCard label="Explicitly unmapped" value={report.counts.explicitly_unmapped} theme={theme} tone="warn" />
-              <SummaryCard label="Actionable unresolved" value={report.counts.actionable_missing} theme={theme} tone="bad" />
+              <SummaryCard label="No-primary-PURL decisions" value={report.counts.explicitly_unmapped} theme={theme} tone="warn" />
+              <SummaryCard label="Unresolved (existing queue)" value={report.counts.actionable_missing} theme={theme} tone="bad" />
+            </section>
+
+            <section aria-label="No-PURL review cohorts">
+              <p style={{ color: t.fg2 }}>
+                The following groups partition explicit no-primary-PURL decisions, not vulnerability coverage.
+                Known downloads are snapshot totals, not vulnerability exposure.
+              </p>
+              {summarizeDispositions(report.missing_packages).map((group) => (
+                <p key={group.key} style={{ color: t.fg2 }}>
+                  <strong>{group.label}:</strong> {number(group.packages)} packages · {number(group.knownDownloads)} known downloads
+                  {" · "}{number(group.unknownDownloadPackages)} packages with unknown downloads
+                </p>
+              ))}
             </section>
 
             <section className="coverage-workspace" style={{ background: t.surface, borderColor: t.border }}>
@@ -235,19 +255,22 @@ export function CoverageApp() {
                   onChange={(event) => {
                     const nextState = event.target.value as StateFilter;
                     setState(nextState);
-                    if (nextState === "explicitly_unmapped") setDiagnostic("all");
+                    if (nextState !== "all" && nextState !== "unresolved") setDiagnostic("all");
                   }}
                   style={controlStyle}
                 >
                   <option value="all">All missing-primary states</option>
                   <option value="unresolved">Unresolved</option>
-                  <option value="explicitly_unmapped">Explicitly unmapped</option>
+                  <option value="explicitly_unmapped">All no-primary-PURL decisions</option>
+                  {Object.entries(DISPOSITION_LABELS).map(([key, label]) => (
+                    <option key={key} value={key}>{label}</option>
+                  ))}
                 </select>
                 <select
                   value={diagnostic}
                   onChange={(event) => setDiagnostic(event.target.value as DiagnosticFilter)}
-                  disabled={state === "explicitly_unmapped"}
-                  style={{ ...controlStyle, opacity: state === "explicitly_unmapped" ? 0.5 : 1 }}
+                  disabled={state !== "all" && state !== "unresolved"}
+                  style={{ ...controlStyle, opacity: state !== "all" && state !== "unresolved" ? 0.5 : 1 }}
                 >
                   <option value="all">All diagnostics</option>
                   {UNRESOLVED_DIAGNOSTICS.map((value) => (
@@ -294,7 +317,7 @@ export function CoverageApp() {
                               <DiagnosticPill diagnostic={row.diagnostic_reason} theme={theme} />
                             ) : (
                               <span style={{ color: t.warn }}>
-                                {row.unmapped_reason?.code.replaceAll("_", " ") ?? "Legacy no-PURL decision"}
+                                {DISPOSITION_LABELS[noPurlDisposition(row) as NoPurlDisposition]}
                               </span>
                             )}
                           </td>
@@ -373,7 +396,7 @@ function PackageEvidence({ row, theme }: { row: CoverageRow; theme: ReturnType<t
       <h2>{row.name}</h2>
       <dl className="coverage-facts">
         <dt style={{ color: theme.t.fg3 }}>State</dt>
-        <dd>{row.state === "unresolved" ? "Unresolved" : "Explicitly unmapped"}</dd>
+        <dd>{row.state === "unresolved" ? "Unresolved" : DISPOSITION_LABELS[noPurlDisposition(row) as NoPurlDisposition]}</dd>
         <dt style={{ color: theme.t.fg3 }}>Version</dt>
         <dd className="mono">{row.version || "—"}</dd>
         <dt style={{ color: theme.t.fg3 }}>Downloads</dt>

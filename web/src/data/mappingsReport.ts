@@ -62,6 +62,37 @@ export type MappingsReport = {
   missing_packages: MissingPrimaryPackage[];
 };
 
+export const DISPOSITION_LABELS = {
+  packaging_only: "Packaging-only decisions (recorded evidence)",
+  cdt_deferred: "CDT: distro/component mapping deferred",
+  legacy_review: "Legacy decisions needing review",
+} as const;
+export type NoPurlDisposition = keyof typeof DISPOSITION_LABELS;
+export type CoverageFilter = "all" | MissingPrimaryState | NoPurlDisposition;
+
+export function noPurlDisposition(pkg: MissingPrimaryPackage): NoPurlDisposition | null {
+  if (pkg.state !== "explicitly_unmapped") return null;
+  if (!pkg.unmapped_reason) return "legacy_review";
+  return pkg.unmapped_reason.code === "conda_cdt_repackage" ? "cdt_deferred" : "packaging_only";
+}
+
+export function matchesCoverageFilter(pkg: MissingPrimaryPackage, filter: CoverageFilter): boolean {
+  return filter === "all" || pkg.state === filter || noPurlDisposition(pkg) === filter;
+}
+
+export function summarizeDispositions(packages: MissingPrimaryPackage[]) {
+  return (Object.keys(DISPOSITION_LABELS) as NoPurlDisposition[]).map((key) => {
+    const rows = packages.filter((pkg) => noPurlDisposition(pkg) === key);
+    return {
+      key,
+      label: DISPOSITION_LABELS[key],
+      packages: rows.length,
+      knownDownloads: rows.reduce((sum, row) => sum + (row.download_count ?? 0), 0),
+      unknownDownloadPackages: rows.filter((row) => row.download_count === null).length,
+    };
+  });
+}
+
 const DIAGNOSTIC_SET = new Set<string>(UNRESOLVED_DIAGNOSTICS);
 const REASON_SET = new Set<string>(UNMAPPED_REASON_CODES);
 const EVIDENCE_FIELDS = new Set(["version", "build", "summary", "source_url", "repo", "homepage", "payload_file_count", "dependency_count", "constraint_count"]);

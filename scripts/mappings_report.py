@@ -28,15 +28,15 @@ UNRESOLVED_DIAGNOSTICS = (
 COVERAGE_LABELS = (
     ("total", "Total packages"),
     ("primary_present", "Primary PURL present"),
-    ("explicitly_unmapped", "Explicitly unmapped"),
+    ("explicitly_unmapped", "Explicit no-primary-PURL decisions"),
     ("classified_unmapped", "Classified with reason"),
-    ("legacy_unmapped", "Legacy reasonless decisions"),
-    ("unresolved", "Actionable unresolved"),
-    ("actionable_missing", "Actionable missing"),
+    ("legacy_unmapped", "Legacy decisions needing review"),
+    ("unresolved", "Unresolved (existing queue)"),
+    ("actionable_missing", "Existing queue (legacy actionable_missing)"),
     ("primary_missing", "Primary PURL missing"),
 )
 CLASSIFICATION_LABELS = {
-    "conda_cdt_repackage": "Conda CDT/RPM repackage",
+    "conda_cdt_repackage": "CDT/RPM: distro/component mapping deferred",
     "dependency_only_metapackage": "Dependency-only metapackage",
     "toolchain_selector": "Toolchain selector",
     "environment_mutex": "Environment mutex",
@@ -49,6 +49,45 @@ DIAGNOSTIC_LABELS = {
     "no_parseable_source_host": "No parseable source host",
     "no_primary_from_url_evidence": "URL evidence without primary PURL",
 }
+
+
+DISPOSITION_LABELS = {
+    "packaging_only": "Packaging-only decisions (recorded evidence)",
+    "cdt_deferred": "CDT: distro/component mapping deferred",
+    "legacy_review": "Legacy decisions needing review",
+}
+
+
+def summarize_dispositions(report: dict[str, Any]) -> dict[str, dict[str, int]]:
+    """Derive review cohorts without changing report schema or mapping state."""
+    groups = {
+        key: {"packages": 0, "known_downloads": 0, "unknown_download_packages": 0}
+        for key in DISPOSITION_LABELS
+    }
+    for row in report["missing_packages"]:
+        if row["state"] != "explicitly_unmapped":
+            continue
+        reason = row.get("unmapped_reason")
+        key = (
+            "legacy_review" if reason is None else
+            "cdt_deferred" if reason["code"] == "conda_cdt_repackage" else
+            "packaging_only"
+        )
+        group = groups[key]
+        group["packages"] += 1
+        if row["download_count"] is None:
+            group["unknown_download_packages"] += 1
+        else:
+            group["known_downloads"] += row["download_count"]
+    expected = {
+        "cdt_deferred": report["classified_by_reason"]["conda_cdt_repackage"],
+        "legacy_review": report["counts"]["legacy_unmapped"],
+        "packaging_only": report["counts"]["classified_unmapped"]
+        - report["classified_by_reason"]["conda_cdt_repackage"],
+    }
+    if any(groups[key]["packages"] != expected[key] for key in groups):
+        raise ValueError("no-PURL disposition rows do not reconcile")
+    return groups
 
 
 def _source_hosts(entry: dict[str, Any]) -> tuple[str, ...]:
@@ -322,6 +361,26 @@ def render_markdown(
         100 * counts["primary_present"] / counts["total"] if counts["total"] else 0
     )
     out.extend(["", f"Primary-PURL coverage: **{coverage:.2f}%**.", ""])
+
+    out.extend([
+        "No-primary-PURL decisions are not security-negative findings. CDT repackages can contain "
+        "identifiable upstream code; their distro/component mapping is deferred, not resolved. "
+        "Legacy decisions still need review. Packaging-only decisions reflect recorded evidence, "
+        "not certification of every version/platform. Identity counts are not vulnerability coverage.",
+        "",
+        "### Explicit no-PURL review cohorts",
+        "",
+        "Known downloads are snapshot totals, not vulnerability exposure; missing download counts are listed separately.",
+        "",
+        "| Cohort | Packages | Known downloads | Packages with unknown downloads |",
+        "|---|---:|---:|---:|",
+    ])
+    for key, group in summarize_dispositions(report).items():
+        out.append(
+            f"| {DISPOSITION_LABELS[key]} | {group['packages']:,} | "
+            f"{group['known_downloads']:,} | {group['unknown_download_packages']:,} |"
+        )
+    out.append("")
 
     classifications = report["classified_by_reason"]
     baseline_classifications = (
