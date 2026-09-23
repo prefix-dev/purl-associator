@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "author": "nichmor",
+  "timestamp": "2026-09-23T07:29:36Z",
+  "source": "PFX-1990 / PFX-1938: manually reviewed upstream product aliases for five code-bearing conda outputs. mpfr 4.2.2: https://github.com/conda-forge/mpfr-feedstock/blob/f0626e5b9fa91958eaf73226921b704b2160452b/recipe/meta.yaml builds the GNU MPFR source from ftp.gnu.org/gnu/mpfr; https://conda.anaconda.org/conda-forge/win-64/mpfr-4.2.2-hb393127_1.conda SHA256 8d2a8450dc7a45f712ae49e9ea4e97c8870314b22cda65a421c3553941148518 contains Library/bin/libmpfr-6.dll and Library/include/mpfr.h. NVD CPE 9D3AE01E-1D4B-45B6-8A1E-B80E4B1F58C7 links mpfr.org and https://nvd.nist.gov/vuln/detail/CVE-2014-9474 identifies GNU MPFR. lzo 2.10: https://github.com/conda-forge/lzo-feedstock/blob/d8595a3cb3261df0c3e777fd44b63ae9f9107e2d/recipe/recipe.yaml builds oberhumer.com/opensource/lzo/download/lzo-2.10.tar.gz; https://conda.anaconda.org/conda-forge/osx-arm64/lzo-2.10-h74c22ad_1003.conda SHA256 95d5f16bfa62ff50980a5e0329920bb2b5ec66d0e0d6c87954603713c3519ece contains lib/liblzo2.2.0.0.dylib and lib/liblzo2.a. NVD CPEs 39BD2F81-C206-4419-AB9C-291CB6712D54 and 10937F10-19E8-4B66-90A7-F6E9B82979D4 reference Oberhumer LZO; https://nvd.nist.gov/vuln/detail/CVE-2014-4607 explicitly names both liblzo2 and lzo-2. This is a product identity only: that advisory concerns versions before 2.07 on 32-bit platforms, not the inspected 2.10 arm64 artifact. nspr 4.40: https://github.com/conda-forge/nspr-feedstock/blob/cd185077f21ae9792918fa955fcb048b89bb3e70/recipe/meta.yaml builds the Mozilla NSPR release archive; https://conda.anaconda.org/conda-forge/linux-ppc64le/nspr-4.40-h2ba259b_0.conda SHA256 ffe667fdca4d74442b5b8871cd74cc74d94f57fa229137311e5400ee5e40a1c6 contains lib/libnspr4.so, lib/libplc4.so and lib/libplds4.so. NVD CPE BB0D4741-93A6-4B5B-8B7A-26E70A8B44F3 references Mozilla NSPR releases; https://nvd.nist.gov/vuln/detail/CVE-2016-1951 identifies the runtime itself, not Firefox or NSS. xerces-c 3.3.0: https://github.com/conda-forge/xerces-c-feedstock/blob/dd55be470b125a4c787f5ad1a1df3807730a4abb/recipe/meta.yaml builds archive.apache.org/dist/xerces/c/3/sources/xerces-c-3.3.0.tar.gz; https://conda.anaconda.org/conda-forge/osx-64/xerces-c-3.3.0-h32b985b_2.conda SHA256 4a55a2a141f830715c08592e6343de552c0e71450a4d40bef306d9cdffe599a5 contains lib/libxerces-c-3.3.dylib. NVD CPE A458D10E-8BFD-4D55-B645-0AFF86DC53E4 is the non-deprecated Xerces-C++ product and deprecates apache:xerces-c; preserve CPE escaping of both plus signs. https://nvd.nist.gov/vuln/detail/CVE-2024-23807 identifies the C++ library, not Xerces-J or Xerces2 Java. jbig 2.1: https://github.com/conda-forge/jbig-feedstock/blob/87d416d4a75919495c23a6b532dfac2072b21967/recipe/meta.yaml matches the artifact's source/version/build and JBIG-KIT source SHA256 de7106b6bfaf495d6865c7dd7ac6ca1381bd12e0d81405ea81e7f2167263d932; recipe/CMakeLists.txt at that revision compiles libjbig/jbig.c, jbig_ar.c and jbig85.c. https://conda.anaconda.org/conda-forge/win-64/jbig-2.1-h8d14728_2003.tar.bz2 SHA256 4c813113a533045c4904f772505bb3d984fd37f60b88c71d6e972afca6d0a634 contains Library/bin/jbig.dll and the three JBIG headers. NVD CPE B33C554C-D721-4BD1-901C-F04D48AB05FE links the same Cambridge JBIG-KIT CHANGES page, and https://nvd.nist.gov/vuln/detail/CVE-2013-6369 concerns libjbig/jbig.c, not JBIG2. Only these five outputs are reviewed; no sibling/CDT propagation or speculative PURL additions. Advisory versions, patches, architecture and other applicability constraints remain downstream responsibilities; these mappings do not assert a current affected version or new CVE coverage.",
+  "packages": {
+    "mpfr": {
+      "cpes": ["cpe:2.3:a:mpfr:gnu_mpfr"]
+    },
+    "lzo": {
+      "cpes": ["cpe:2.3:a:oberhumer:liblzo2", "cpe:2.3:a:oberhumer:lzo2"]
+    },
+    "nspr": {
+      "cpes": ["cpe:2.3:a:mozilla:netscape_portable_runtime"]
+    },
+    "xerces-c": {
+      "cpes": ["cpe:2.3:a:apache:xerces-c\\+\\+"]
+    },
+    "jbig": {
+      "cpes": ["cpe:2.3:a:cambridge_enterprise:jbig-kit"]
+    }
+  }
+}
