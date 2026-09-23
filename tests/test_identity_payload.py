@@ -841,7 +841,14 @@ class RealDataLegacyCompatibilityTest(unittest.TestCase):
                         "approved_at": missing,
                     },
                 )
-                state["status"] = override.get("status", "verified")
+                # Legacy attribution still follows every review, but a CPE-only
+                # edit must preserve the valid status of a no-PURL decision.
+                remains_unmapped = override.get("unmapped") is True or (
+                    set(override) == {"cpes"} and state["status"] == "unmapped"
+                )
+                state["status"] = (
+                    "unmapped" if remains_unmapped else override.get("status", "verified")
+                )
                 state["source"] = "manual"
                 for key, value in attribution.items():
                     if value is not None:

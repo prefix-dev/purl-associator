@@ -464,7 +464,11 @@ def _apply_reviewed_override(
     legacy_attribution = {
         key: value for key, value in attribution.items() if value is not None
     }
-    patch.setdefault("status", "verified")
+    # A CPE-only review must not make an intentional no-PURL record invalid.
+    # Primary reviews below still own transitions into/out of unmapped state.
+    patch.setdefault(
+        "status", "unmapped" if base.get("unmapped") and not reviews_primary else "verified"
+    )
     result = {**base, **patch, "source": "manual", **legacy_attribution}
 
     if reviews_primary:
