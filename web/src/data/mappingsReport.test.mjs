@@ -88,6 +88,31 @@ function report() {
   };
 }
 
+test("derives review cohorts without changing stored mapping states", () => {
+  const decoded = reports.decodeMappingsReport(report());
+  const packaging = decoded.missing_packages[1];
+  const cdt = { ...packaging, name: "cdt", download_count: 123, unmapped_reason: { ...packaging.unmapped_reason, code: "conda_cdt_repackage" } };
+  const legacy = { ...packaging, name: "legacy", unmapped_reason: null, download_count: 0 };
+  const rows = [...decoded.missing_packages, cdt, legacy];
+  const before = structuredClone(rows);
+  const groups = reports.summarizeDispositions(rows);
+  assert.deepEqual(groups.map(({ key, packages, knownDownloads, unknownDownloadPackages }) =>
+    [key, packages, knownDownloads, unknownDownloadPackages]), [
+    ["packaging_only", 1, 0, 1], ["cdt_deferred", 1, 123, 0], ["legacy_review", 1, 0, 0],
+  ]);
+  for (const [filter, names] of [
+    ["all", ["missing", "rejected", "cdt", "legacy"]],
+    ["unresolved", ["missing"]],
+    ["explicitly_unmapped", ["rejected", "cdt", "legacy"]],
+    ["packaging_only", ["rejected"]], ["cdt_deferred", ["cdt"]], ["legacy_review", ["legacy"]],
+  ]) {
+    assert.deepEqual(rows.filter((row) => reports.matchesCoverageFilter(row, filter)).map((row) => row.name), names);
+  }
+  assert.deepEqual(rows, before);
+  assert.equal(reports.noPurlDisposition(rows[0]), null);
+  assert.ok(reports.summarizeDispositions([]).every((g) => g.packages === 0 && g.knownDownloads === 0 && g.unknownDownloadPackages === 0));
+});
+
 test("decodes a reconciled coverage report", () => {
   assert.deepEqual(reports.decodeMappingsReport(report()), report());
 });

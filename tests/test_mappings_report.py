@@ -178,6 +178,40 @@ class MappingsReportTest(unittest.TestCase):
         )
         self.assertEqual(report["classified_by_reason"]["environment_mutex"], 1)
 
+    def test_disposition_cohorts_reconcile_without_changing_schema(self) -> None:
+        payload = copy.deepcopy(self.payload)
+        packaging = payload["packages"]["rejected"]
+        cdt = copy.deepcopy(packaging)
+        cdt["unmapped_reason"]["code"] = "conda_cdt_repackage"
+        cdt["download_count"] = 123
+        legacy = copy.deepcopy(packaging)
+        legacy.pop("unmapped_reason")
+        legacy["download_count"] = 0
+        payload["packages"].update({"cdt": cdt, "legacy": legacy})
+        payload["package_count"] += 2
+        report = mappings_report.build_report(payload)
+        unchanged = copy.deepcopy(report)
+        groups = mappings_report.summarize_dispositions(report)
+        self.assertEqual(groups, {
+            "packaging_only": {"packages": 1, "known_downloads": 0, "unknown_download_packages": 1},
+            "cdt_deferred": {"packages": 1, "known_downloads": 123, "unknown_download_packages": 0},
+            "legacy_review": {"packages": 1, "known_downloads": 0, "unknown_download_packages": 0},
+        })
+        self.assertEqual(sum(g["packages"] for g in groups.values()), report["counts"]["explicitly_unmapped"])
+        rendered = mappings_report.render_markdown(report, baseline=report)
+        self.assertIn("| CDT: distro/component mapping deferred | 1 | 123 | 0 |", rendered)
+        self.assertIn("not security-negative findings", rendered)
+        self.assertEqual(report, unchanged)
+        self.assertEqual(report["schema_version"], 2)
+        report["missing_packages"] = []
+        with self.assertRaisesRegex(ValueError, "disposition rows do not reconcile"):
+            mappings_report.summarize_dispositions(report)
+
+    def test_empty_disposition_cohorts(self) -> None:
+        payload = {**self.payload, "packages": {}, "package_count": 0}
+        groups = mappings_report.summarize_dispositions(mappings_report.build_report(payload))
+        self.assertTrue(all(all(value == 0 for value in group.values()) for group in groups.values()))
+
     def test_diagnostic_precedence_is_conservative(self) -> None:
         payload = copy.deepcopy(self.payload)
         payload["packages"]["alternative-only"]["note"] = "  FETCH ERROR: stale"
@@ -314,8 +348,8 @@ class MappingsReportTest(unittest.TestCase):
         current["unresolved_by_diagnostic"]["no_parseable_source_host"] = 1
         rendered = mappings_report.render_markdown(current, baseline=baseline)
         self.assertIn("| Primary PURL present | 3 | 4 | +1 |", rendered)
-        self.assertIn("| Explicitly unmapped | 1 | 1 | 0 |", rendered)
-        self.assertIn("| Actionable unresolved | 4 | 3 | -1 |", rendered)
+        self.assertIn("| Explicit no-primary-PURL decisions | 1 | 1 | 0 |", rendered)
+        self.assertIn("| Unresolved (existing queue) | 4 | 3 | -1 |", rendered)
         self.assertIn("| No parseable source host | 2 | 1 | -1 |", rendered)
 
     def test_markdown_rejects_invalid_or_incompatible_baselines(self) -> None:
