@@ -315,6 +315,36 @@ Reporting is offline and read-only. Package order is stable, and volatile bundle
 generation timestamps are omitted. Invalid contracts fail rather than producing
 apparently successful empty coverage.
 
+## Bounded CDT automapper (review drafts only)
+
+Generate exact conda → CentOS RPM relationship candidates for multiple packages,
+without manually assembling PURLs, checksums or payload manifests:
+
+```sh
+pixi run -e cdt cdt:automap \
+  --only libxml2-cos7-x86_64,expat-cos7-x86_64,libxau-cos7-x86_64 \
+  --output /tmp/cdt-review
+```
+
+Or use `--limit 25` instead of `--only` to investigate the highest-download CDT
+hints in the current mapper snapshot. Each package still requires its own exact
+artifact proof. The output directory must be new; cached downloads can be reused.
+
+The tool resolves the exact conda archive checksum, reads its embedded recipe,
+fetches its single pinned CentOS RPM, and verifies complete payload path/kind/byte
+and symlink-target equality after sysroot prefix relocation. It emits generated
+**candidates needing human review**, or explicit deferrals/errors. No CPEs,
+upstream project equivalence, review approval or CVE verdicts are guessed.
+
+The first supported scope is `.tar.bz2` conda packages derived from a single
+CentOS 6/7 vault RPM. `.conda`, mixed sources, partial payloads, rewritten links,
+missing checksums and unsupported transformations are deferred. No active mapping,
+public payload, readiness metric or Basilisk behavior changes. This standalone
+workflow can land before the broader relationship contract in PR #320.
+
+See [the automapper guide](docs/cdt-automapper.md) for offline replay, pinned sample
+inputs, observed results, safety limits and review requirements.
+
 ## CPE flow
 
 CPE discovery is part of identity mapping, not CVE assignment. The retained CPE
