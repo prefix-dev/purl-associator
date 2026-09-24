@@ -75,7 +75,21 @@ class CdtWorkflowTests(unittest.TestCase):
     def test_trigger_permissions_and_failure_preservation(self):
         self.assertIn("schedule", self.workflow["on"])
         self.assertIn("workflow_dispatch", self.workflow["on"])
-        self.assertEqual(self.workflow["permissions"], {"contents": "read"})
+        self.assertEqual(
+            self.workflow["permissions"],
+            {"contents": "write", "pull-requests": "write"},
+        )
+        for prefix in ("Stage validated", "Mint pipeline", "Open or update"):
+            self.assertIn("github.ref == 'refs/heads/main'", self.step(prefix)["if"])
+            self.assertNotIn("always()", self.step(prefix)["if"])
+        pr = self.step("Open or update")
+        self.assertEqual(pr["with"]["base"], "main")
+        self.assertEqual(
+            pr["with"]["add-paths"].split(),
+            ["mappings/cdt_contributions/**", "mappings/cdt_evidence/**"],
+        )
+        self.assertNotIn("gh pr merge", str(self.steps))
+        self.assertIn("PIPELINE_PAT", pr["with"]["token"])
         self.assertEqual(self.workflow["jobs"]["drafts"]["timeout-minutes"], "45")
         self.assertEqual(self.step("Summarize")["if"], "always()")
         self.assertEqual(self.step("Upload")["if"], "always()")

@@ -1,6 +1,6 @@
 name: Generate CDT review drafts
 
-# Read-only authoring: no commits, PR creation, promotion or publication.
+# Propose dormant review contributions; human approval/merge only, never publish.
 on:
   workflow_dispatch:
     inputs:
@@ -20,7 +20,8 @@ on:
     - cron: "37 8 * * 4"
 
 permissions:
-  contents: read
+  contents: write
+  pull-requests: write
 
 concurrency:
   group: cdt-drafts-${{ github.ref }}
@@ -126,7 +127,7 @@ jobs:
                       shutil.copyfile(cached, bundle / "metadata" / (key + ".json"))
           else:
               lines.append("**No complete batch report was produced. Inspect failed steps; any available files are incomplete review material.**")
-          lines += ["", "Artifacts retain the selected input, source revision, drafts, report and referenced API responses. Downloaded conda/RPM archives are not included.", "", "These drafts are not accepted by the existing mapping editor or contribution pipeline."]
+          lines += ["", "Artifacts retain the selected input, source revision, drafts, report and referenced API responses. Downloaded conda/RPM archives are not included.", "", "Successful main-branch runs propose dormant CDT contributions in a review PR. No auto-merge or active identity publication occurs."]
           summary = "\n".join(lines) + "\n"
           with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a") as stream:
               stream.write(summary)
@@ -142,3 +143,56 @@ jobs:
           path: ${{ runner.temp }}/cdt-review/
           if-no-files-found: warn
           retention-days: 30
+
+      - name: Stage validated CDT review contributions
+        id: submit
+        if: github.ref == 'refs/heads/main'
+        run: |
+          pixi run --locked -e cdt cdt:submit-reviews \
+            --bundle "$BUNDLE" --body "$BUNDLE/PR.md"
+          pixi run --locked -e cdt cdt:validate-reviews
+          printf '\nWorkflow run: %s/%s/actions/runs/%s\n' \
+            "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" >> "$BUNDLE/PR.md"
+
+      - name: Mint pipeline bot token
+        if: github.ref == 'refs/heads/main' && vars.PIPELINE_APP_ID
+        uses: actions/create-github-app-token@v3
+        id: app-token
+        with:
+          app-id: ${{ vars.PIPELINE_APP_ID }}
+          private-key: ${{ secrets.PIPELINE_APP_PRIVATE_KEY }}
+
+      - name: Open or update human-review PR
+        id: review-pr
+        if: github.ref == 'refs/heads/main'
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ steps.app-token.outputs.token || secrets.PIPELINE_PAT || github.token }}
+          add-paths: |
+            mappings/cdt_contributions/**
+            mappings/cdt_evidence/**
+          branch: ${{ steps.submit.outputs.branch }}
+          base: main
+          title: "cdt: review exact-artifact RPM relationships"
+          body-path: ${{ runner.temp }}/cdt-review/PR.md
+          commit-message: "cdt: propose exact-artifact review contributions"
+          delete-branch: true
+          # Deliberately no auto-merge or approval step. A successful no-change
+          # rerun lets create-pull-request close a stale proposal for this selector.
+
+      - name: Link review PR from the run summary
+        if: github.ref == 'refs/heads/main'
+        env:
+          REVIEW_PR_URL: ${{ steps.review-pr.outputs.pull-request-url }}
+          REVIEW_OPERATION: ${{ steps.review-pr.outputs.pull-request-operation }}
+          REVIEW_ADDED: ${{ steps.submit.outputs.added }}
+          REVIEW_UNCHANGED: ${{ steps.submit.outputs.unchanged }}
+        run: |
+          printf '\n## Review submission\n\nStaged: %s new; %s already recorded.\n' \
+            "$REVIEW_ADDED" "$REVIEW_UNCHANGED" >> "$GITHUB_STEP_SUMMARY"
+          if [ -n "$REVIEW_PR_URL" ]; then
+            printf '\n[Review PR](%s) — operation: %s. Human approval/merge required.\n' \
+              "$REVIEW_PR_URL" "$REVIEW_OPERATION" >> "$GITHUB_STEP_SUMMARY"
+          else
+            printf '\nNo new review PR was created.\n' >> "$GITHUB_STEP_SUMMARY"
+          fi

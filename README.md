@@ -345,7 +345,10 @@ workflow can land before the broader relationship contract in PR #320.
 The **Generate CDT review drafts** GitHub Actions workflow runs weekly (Thursday,
 08:37 UTC; top 10 by default) and supports manual runs with `limit` or `only`.
 It uploads drafts, reports, selected inputs and referenced API evidence for review,
-retained for 30 days. It never commits, approves or publishes mappings.
+retained for 30 days. Successful `main` runs also open/update a PR with validated
+review contributions under `mappings/cdt_contributions/` and `mappings/cdt_evidence/`.
+Reviewers approve and merge that PR manually—no JSON assembly or auto-merge. These
+records remain separate from active mappings and publication.
 
 See [the automapper guide](docs/cdt-automapper.md) for workflow operation, offline
 replay, pinned sample inputs, observed results, safety limits and review requirements.

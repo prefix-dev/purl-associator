@@ -47,7 +47,10 @@ jobs:
         run: pixi run -e lite mappings:test
 
       - name: Test bounded CDT automapper (offline fixtures only)
-        run: pixi run --locked -e cdt python -m unittest tests.test_cdt_automap tests.test_cdt_workflow -v
+        run: pixi run --locked -e cdt python -m unittest tests.test_cdt_automap tests.test_cdt_workflow tests.test_cdt_submit -v
+
+      - name: Validate dormant CDT review contributions
+        run: pixi run --locked -e cdt cdt:validate-reviews
 
       - name: Validate identity mapping payload
         run: pixi run -e lite mappings:validate

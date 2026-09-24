@@ -53,9 +53,17 @@ gh workflow run cdt_automap.yml --ref main \
   -f only=libxml2-cos7-x86_64,expat-cos7-x86_64
 ```
 
-Both modes retain the 100-package cap. Jobs have a 45-minute timeout and read-only
-repository permissions; they do not commit files, create PRs, promote candidates,
-or run the normal mapping publisher. No bot token or additional secret is needed.
+Both modes retain the 100-package cap and 45-minute timeout. Successful runs on
+`main` stage dormant review contributions and open/update a **human-review PR**.
+Manual runs on other branches collect artifacts only; they do not mint a bot token
+or submit a PR. No run automatically approves, merges or publishes identities.
+
+PR creation follows the existing pipeline authentication convention: configured
+`PIPELINE_APP_ID` + `PIPELINE_APP_PRIVATE_KEY`, then `PIPELINE_PAT`, then the default
+GitHub token. The App/PAT is preferred so the resulting PR triggers validation;
+GitHub suppresses new workflow runs for PRs opened with its default token, which
+can leave required checks waiting for manual action. Repository Actions settings
+must permit PR creation when using that fallback.
 
 Each run uploads a **`cdt-review-<run-id>-<attempt>`** artifact, retained for 30 days:
 
@@ -71,9 +79,53 @@ marked incomplete, never presented as a successful empty batch.
 
 Each run uses a fresh temporary data cache so API metadata is not silently carried
 across scheduled runs. Only Pixi dependencies are cached between runs. Downloaded
-conda/RPM archives are **not** uploaded. These artifacts are review material, not
-accepted contributions for the current mapping editor. Review/promotion and public
-relationship distribution remain separate integration work.
+conda/RPM archives are **not** uploaded. The bundle remains available for inspection
+alongside the generated review PR. The normal mapping editor is not used for this
+exact-artifact workflow; public relationship distribution is still separate.
+
+### Approve the generated review PR
+
+1. Open the bot PR titled **`cdt: review exact-artifact RPM relationships`**.
+2. Review the new JSON files under `mappings/cdt_contributions/`, the referenced
+   content-addressed API responses under `mappings/cdt_evidence/`, and the checklist
+   and deferrals in the PR body. No manual JSON reconstruction is necessary.
+3. Wait for required CI, inspect the evidence, then **approve and merge manually**.
+
+The generated records retain `candidate-needs-review` as their generation status;
+the GitHub review/merge history records human acceptance, not a fabricated reviewer
+field. Merging retains these identity reviews in the repository. It does **not**
+change active primary/alternative/CPE mappings, public payloads, readiness metrics
+or Basilisk matching. These dedicated source directories are deliberately excluded
+from the current publisher; the later relationship-publication contract will consume
+accepted reviews separately.
+
+`cdt:validate-reviews` runs in required PR CI and checks record structure, exact
+subject/index/recipe bindings, native RPM PURLs, manifest consistency and retained
+API response checksums. It is offline validation, **not** an independent repeat of
+archive byte comparison; reviewers can rerun the generator for that stronger check.
+
+PR branches are stable per selector (`--limit N` or the sorted explicit name set).
+Successful reruns update that selector's proposal; a no-change successful run lets
+the PR action close an obsolete pending proposal. Failed/incomplete runs never
+refresh a PR: previously proposed evidence remains tied to its previous run.
+Previously merged records are never removed just because a later run defers them.
+If no new candidates exist, no new PR is created.
+
+Contributions are immutable by exact conda PURL plus checksum. Existing identical
+claims are skipped, including API-counter-only metadata changes, so weekly reruns
+do not keep proposing accepted records. Conflicting evidence for the same artifact
+fails and requires an explicit reviewed correction rather than silently overwriting
+it. No rejected-pair policy or automated corrections/removals are introduced here.
+
+For a workflow-shaped bundle, staging can also be reproduced locally:
+
+```sh
+pixi run -e cdt cdt:submit-reviews --bundle /path/to/cdt-review --body /tmp/cdt-pr.md
+pixi run -e cdt cdt:validate-reviews
+```
+
+This writes review contribution/evidence files in the checkout, not active mappings.
+It does not create a PR by itself; the workflow's PR action handles that step.
 
 ### Offline replay
 
@@ -151,8 +203,9 @@ proof. Evidence is currently inline to make drafts convenient to inspect; its
 reviewed/public representation belongs to the subsequent contract/publication work.
 
 A reviewer must inspect the provenance, scope and any unresolved limitations.
-The tool does **not** invent reviewer attribution, automatically approve drafts,
-create contributions, infer a `contains` upstream project/CPE, or assign CVEs.
+The generator does **not** invent reviewer attribution, automatically approve drafts,
+infer a `contains` upstream project/CPE, or assign CVEs. The submission stage packages
+validated candidates into dedicated review contributions and a human-review PR.
 Do not paste its RPM PURL into a package-wide primary/alternative mapping field.
 There is no exporter into #320's reviewed contract yet: its shape should follow
 these multi-package results rather than require manual reconstruction first.
