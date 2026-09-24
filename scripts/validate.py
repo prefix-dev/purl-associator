@@ -794,7 +794,10 @@ def validate_split_mappings(
 
 
 def main() -> None:
+    from scripts.component_reviews import DEFAULT_REVIEWS, validate_directory
+
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--component-reviews", type=Path, default=DEFAULT_REVIEWS)
     parser.add_argument("--auto-mappings", type=Path, default=DEFAULT_AUTO_MAPPINGS)
     parser.add_argument("--manual-mappings", type=Path, default=DEFAULT_MANUAL_MAPPINGS)
     parser.add_argument(
@@ -807,6 +810,10 @@ def main() -> None:
     )
     args = parser.parse_args()
     errors: list[str] = []
+    try:
+        validate_directory(args.component_reviews)
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        errors.append(f"component reviews: {exc}")
     validate_source_payloads(
         args.auto_mappings, args.manual_mappings, args.mapping_contributions, errors
     )

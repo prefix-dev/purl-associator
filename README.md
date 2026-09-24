@@ -315,6 +315,65 @@ Reporting is offline and read-only. Package order is stable, and volatile bundle
 generation timestamps are omitted. Invalid contracts fail rather than producing
 apparently successful empty coverage.
 
+## Exact-artifact component review pilot
+
+`mappings/component_reviews/*.json` is a **review-only identity relationship
+pilot**, separate from `mappings/contributions/`. It is not a new public mapping
+schema and is not consumed by the editor, merge/discovery/promotion pipeline,
+coverage report, or Basilisk. Do not copy its RPM/component PURLs into primary or
+alternative mapping fields: those fields assert different relationships.
+
+The first record covers exactly
+`libxml2-cos7-x86_64-2.9.1-ha675448_1106.tar.bz2`:
+
+- **Subject:** `pkg:conda/conda-forge/libxml2-cos7-x86_64@2.9.1?build=ha675448_1106&subdir=noarch`
+- **Derived from:** `pkg:rpm/centos/libxml2@2.9.1-6.el7.5?arch=x86_64&distro=centos-7.9.2009`
+- **Contains upstream project:** `pkg:git/gitlab.gnome.org/GNOME/libxml2`, with
+  product CPE `cpe:2.3:a:xmlsoft:libxml2`. These identify the contained project,
+  not an unpatched upstream 2.9.1 build or a verified source commit.
+
+The conda artifact is packaged as `noarch`, but its copied RPM payload targets
+`x86_64`; preserve both facts. The RPM header lacks an epoch tag, recorded as
+`null` rather than inventing `epoch=0`. RPM version-release, architecture, source
+RPM filename, exact archive hashes, embedded recipe hashes, and all 12 payload
+entries are retained. Eleven regular files and one symlink target were compared
+byte-for-byte with the RPM after sysroot-prefix relocation. The immutable
+cdt-builds recipe reference matches the source; it is not an attested build commit.
+
+The deliberately narrow schema-1 pilot permits only one RPM, one contained
+project and a complete prefix-relocation manifest. Other transformations require
+an explicit contract extension, not guessed relationships. Validation cannot
+prove review claims or upstream applicability from JSON alone. The optional
+artifact verifier checks local archive hashes, RPM header/conda index, embedded
+recipe hashes and full payload equality without extracting or executing files.
+
+Offline structural checks (also part of `mappings:validate` and CI tests):
+
+```sh
+pixi run -e lite mappings:validate-components
+```
+
+To reproduce the byte-level review, download the exact two `artifact.url` values
+in the JSON into local files, then run from the repository root:
+
+```sh
+uv run --no-project --with rpmfile==2.2.1 --with packageurl-python==0.17.6 \
+  python -m scripts.component_reviews \
+  --verify mappings/component_reviews/libxml2-cos7-x86_64-2.9.1-ha675448_1106.json \
+  --conda-artifact /path/to/libxml2-conda.tar.bz2 \
+  --rpm-artifact /path/to/libxml2.rpm
+```
+
+The verifier makes no network requests; `uv` installs its isolated verification
+dependencies. Normal lite validation does not require rpmfile. JSON-only
+validation explicitly reports that artifact bytes were not checked.
+
+**Rollout gate:** the active no-primary-PURL decision and readiness counts remain
+unchanged. Downstream needs an explicit relationship consumer plus distro-aware
+version/backport/applicability evaluation before this record can count as usable
+vulnerability coverage. No affected-version or CVE verdict is stored here, and
+no other version, build, architecture, sibling or dependency inherits this review.
+
 ## CPE flow
 
 CPE discovery is part of identity mapping, not CVE assignment. The retained CPE
