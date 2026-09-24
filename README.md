@@ -342,8 +342,13 @@ missing checksums and unsupported transformations are deferred. No active mappin
 public payload, readiness metric or Basilisk behavior changes. This standalone
 workflow can land before the broader relationship contract in PR #320.
 
-See [the automapper guide](docs/cdt-automapper.md) for offline replay, pinned sample
-inputs, observed results, safety limits and review requirements.
+The **Generate CDT review drafts** GitHub Actions workflow runs weekly (Thursday,
+08:37 UTC; top 10 by default) and supports manual runs with `limit` or `only`.
+It uploads drafts, reports, selected inputs and referenced API evidence for review,
+retained for 30 days. It never commits, approves or publishes mappings.
+
+See [the automapper guide](docs/cdt-automapper.md) for workflow operation, offline
+replay, pinned sample inputs, observed results, safety limits and review requirements.
 
 ## CPE flow
 

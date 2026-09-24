@@ -36,6 +36,45 @@ pixi run -e cdt cdt:automap --limit 25 --output /tmp/cdt-top25
 - Candidate/cache paths inside this checkout's `mappings/` or `web/public/` are
   rejected. Nothing invokes the active mapping merge or promotion pipelines.
 
+### Scheduled and manual GitHub Actions runs
+
+`.github/workflows/cdt_automap.yml` runs weekly on Thursday at **08:37 UTC**, with
+10 highest-download CDT hints by default. This is after the usual mapper refresh
+window, **not a dependency on that run or its PR merging**: it uses only the
+committed `mappings/auto.json` snapshot at checkout. The schedule activates after
+the workflow lands on the default branch.
+
+Use **Actions → Generate CDT review drafts → Run workflow**, or:
+
+```sh
+gh workflow run cdt_automap.yml --ref main -f limit=10
+# Explicit names override limit; no shell expressions are evaluated.
+gh workflow run cdt_automap.yml --ref main \
+  -f only=libxml2-cos7-x86_64,expat-cos7-x86_64
+```
+
+Both modes retain the 100-package cap. Jobs have a 45-minute timeout and read-only
+repository permissions; they do not commit files, create PRs, promote candidates,
+or run the normal mapping publisher. No bot token or additional secret is needed.
+
+Each run uploads a **`cdt-review-<run-id>-<attempt>`** artifact, retained for 30 days:
+
+- Exact selected input snapshot, source revision and source-file hash.
+- Generated drafts and the batch report, including deferrals/errors.
+- Captured API response bytes referenced by successful candidates.
+- A readable summary, also shown in the Actions run summary.
+
+Unexpected package errors still fail the job. Summary/upload steps use `always()`
+so available partial/error material is retained when those steps can run. A hard
+runner termination or timeout can prevent uploading; missing reports are explicitly
+marked incomplete, never presented as a successful empty batch.
+
+Each run uses a fresh temporary data cache so API metadata is not silently carried
+across scheduled runs. Only Pixi dependencies are cached between runs. Downloaded
+conda/RPM archives are **not** uploaded. These artifacts are review material, not
+accepted contributions for the current mapping editor. Review/promotion and public
+relationship distribution remain separate integration work.
+
 ### Offline replay
 
 ```sh

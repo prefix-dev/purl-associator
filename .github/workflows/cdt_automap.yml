@@ -1,0 +1,144 @@
+name: Generate CDT review drafts
+
+# Read-only authoring: no commits, PR creation, promotion or publication.
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: "Highest-download CDT hints to inspect (1-100; ignored when only is set)"
+        required: false
+        default: "10"
+        type: string
+      only:
+        description: "Optional comma-separated package names (maximum 100)"
+        required: false
+        default: ""
+        type: string
+  schedule:
+    # Weekly, after the usual automap/download-count windows. Uses only the
+    # committed snapshot at checkout, not an unmerged automap refresh PR.
+    - cron: "37 8 * * 4"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cdt-drafts-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  drafts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      # Pass dispatch values as data, never interpolate them into shell code.
+      INPUT_LIMIT: ${{ inputs.limit || '10' }}
+      INPUT_ONLY: ${{ inputs.only || '' }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Set temporary review paths
+        run: |
+          printf 'BUNDLE=%s/cdt-review\nCDT_CACHE=%s/cdt-cache\n' \
+            "$RUNNER_TEMP" "$RUNNER_TEMP" >> "$GITHUB_ENV"
+
+      - uses: prefix-dev/setup-pixi@v0.9.5
+        with:
+          pixi-version: latest
+          cache: true
+          environments: cdt
+
+      - name: Capture exact selected input and source revision
+        run: |
+          set -euo pipefail
+          pixi run --locked -e cdt python - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          from scripts.cdt_automap import load_json, select_entries
+
+          raw = Path("mappings/auto.json").read_bytes()
+          only = os.environ["INPUT_ONLY"] or None
+          limit = None if only else int(os.environ["INPUT_LIMIT"])
+          selected = select_entries(load_json(raw)["packages"], only, limit)
+          if not selected:
+              raise SystemExit("No CDT hints selected; no review batch was generated")
+          bundle = Path(os.environ["BUNDLE"])
+          bundle.mkdir()
+          snapshot = {"packages": {p["name"]: p for p in selected}}
+          (bundle / "input-snapshot.json").write_text(json.dumps(snapshot, indent=2) + "\n")
+          provenance = {
+              "source_revision": os.environ["GITHUB_SHA"],
+              "source_file": "mappings/auto.json",
+              "source_sha256": hashlib.sha256(raw).hexdigest(),
+              "event": os.environ["GITHUB_EVENT_NAME"],
+              "run_id": os.environ["GITHUB_RUN_ID"],
+              "run_attempt": os.environ["GITHUB_RUN_ATTEMPT"],
+              "selected_packages": [p["name"] for p in selected],
+              "limit": limit,
+              "only": only,
+              "status": "review-material-only",
+          }
+          (bundle / "run.json").write_text(json.dumps(provenance, indent=2) + "\n")
+          PY
+
+      - name: Generate bounded review drafts
+        run: |
+          set -euo pipefail
+          ARGS=(--limit "$INPUT_LIMIT")
+          if [ -n "$INPUT_ONLY" ]; then
+            ARGS=(--only "$INPUT_ONLY")
+          fi
+          pixi run --locked -e cdt cdt:automap \
+            --input "$BUNDLE/input-snapshot.json" \
+            "${ARGS[@]}" --cache "$CDT_CACHE" --output "$BUNDLE/drafts"
+
+      - name: Summarize results and retain referenced API evidence
+        if: always()
+        run: |
+          set -euo pipefail
+          pixi run --locked -e cdt python - <<'PY'
+          import hashlib
+          import json
+          import os
+          import shutil
+          from pathlib import Path
+
+          bundle = Path(os.environ["BUNDLE"])
+          report_path = bundle / "drafts/report.json"
+          lines = ["## CDT review drafts", "", "Generated candidates only: no approval, publication or vulnerability evaluation.", ""]
+          if report_path.is_file():
+              report = json.loads(report_path.read_text())
+              lines += ["```json", json.dumps(report["counts"], sort_keys=True), "```", ""]
+              for row in report["results"]:
+                  lines.append(f"- `{row['name']}`: {row['status']}" + (f" ({row['reason']})" if "reason" in row else ""))
+                  if "draft" in row:
+                      draft = json.loads((report_path.parent / row["draft"]).read_text())
+                      ref = draft["evidence"]["conda_release_metadata"]
+                      key = hashlib.sha256(ref["url"].encode()).hexdigest()
+                      cached = Path(os.environ["CDT_CACHE"]) / key
+                      if hashlib.sha256(cached.read_bytes()).hexdigest() != ref["sha256"]:
+                          raise SystemExit("Referenced API evidence checksum mismatch")
+                      (bundle / "metadata").mkdir(exist_ok=True)
+                      shutil.copyfile(cached, bundle / "metadata" / (key + ".json"))
+          else:
+              lines.append("**No complete batch report was produced. Inspect failed steps; any available files are incomplete review material.**")
+          lines += ["", "Artifacts retain the selected input, source revision, drafts, report and referenced API responses. Downloaded conda/RPM archives are not included.", "", "These drafts are not accepted by the existing mapping editor or contribution pipeline."]
+          summary = "\n".join(lines) + "\n"
+          with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a") as stream:
+              stream.write(summary)
+          if bundle.is_dir():
+              (bundle / "SUMMARY.md").write_text(summary)
+          PY
+
+      - name: Upload review material, including partial/error results
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: cdt-review-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/cdt-review/
+          if-no-files-found: warn
+          retention-days: 30
