@@ -32,9 +32,22 @@ packageurl-python = ">=0.17.6, <0.18"
 "mappings:test" = "python -m unittest discover -s tests -v"
 "mappings:classify-unmapped" = "python -m scripts.unmapped_classification"
 
+# Optional, isolated environment for read-only CDT candidate generation.
+[feature.cdt.dependencies]
+pyyaml = ">=6.0,<7"
+
+[feature.cdt.pypi-dependencies]
+rpmfile = "==2.2.1"
+
+[feature.cdt.tasks]
+"cdt:automap" = "python -m scripts.cdt_automap"
+"cdt:submit-reviews" = "python -m scripts.cdt_submit"
+"cdt:validate-reviews" = "python -m scripts.cdt_submit --validate"
+
 [environments]
 default = ["lite"]
 lite = { features = ["lite"], no-default-feature = true }
+cdt = { features = ["lite", "cdt"], no-default-feature = true }
 
 [tasks]
 "purl:automap" = "python -m scripts.automap"
