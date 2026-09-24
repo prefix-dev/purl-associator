@@ -9,19 +9,23 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from scripts import component_reviews as reviews
+from scripts import rpm_component_evidence as reviews
+from scripts.artifact_relationships import load_relationships
 from scripts.merge_mappings import _build_published_packages, _load_contributions
 
 ROOT = Path(__file__).resolve().parents[1]
-PILOT = ROOT / "mappings/component_reviews/libxml2-cos7-x86_64-2.9.1-ha675448_1106.json"
+PILOT = (
+    ROOT / "mappings/relationship_evidence/libxml2-cos7-x86_64-2.9.1-ha675448_1106.json"
+)
 
 
-class ComponentReviewTests(unittest.TestCase):
+class RpmComponentEvidenceTests(unittest.TestCase):
     def setUp(self):
-        self.data = json.loads(PILOT.read_text())
+        self.data = json.loads(PILOT.read_text())["details"]
 
-    def test_all_committed_reviews_validate(self):
-        self.assertGreaterEqual(reviews.validate_directory(), 1)
+    def test_committed_rpm_evidence_validates(self):
+        self.assertGreaterEqual(len(load_relationships()), 1)
+        reviews.validate_evidence_details(self.data)
         self.assertEqual(
             self.data["subject"]["purl"],
             "pkg:conda/conda-forge/libxml2-cos7-x86_64@2.9.1?build=ha675448_1106&subdir=noarch",
@@ -74,17 +78,7 @@ class ComponentReviewTests(unittest.TestCase):
                 data = copy.deepcopy(self.data)
                 mutate(data)
                 with self.assertRaises(ValueError):
-                    reviews.validate_review(data)
-
-    def test_duplicate_subjects_and_missing_directory_fail(self):
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            for name in ("a", "b"):
-                (root / f"{name}.json").write_text(json.dumps(self.data))
-            with self.assertRaisesRegex(ValueError, "duplicate exact-artifact"):
-                reviews.validate_directory(root)
-            with self.assertRaisesRegex(ValueError, "missing component"):
-                reviews.validate_directory(root / "missing")
+                    reviews.validate_evidence_details(data)
 
     def test_pilot_does_not_enter_active_identity_payload(self):
         mappings = ROOT / "mappings"

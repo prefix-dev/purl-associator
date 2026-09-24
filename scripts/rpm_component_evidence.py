@@ -1,9 +1,8 @@
-"""Validate dormant, exact-artifact component reviews; never emit active mappings.
+"""RPM-specific evidence adapter for the generic artifact relationship contract.
 
-The v1 pilot supports one RPM copied under a sysroot prefix, with one contained
-upstream component. It does not support arbitrary transformations or infer that
-all recipe inputs occur in every output. Artifact verification is opt-in, local,
-and read-only; rpmfile is only required for that operation.
+Supports a single RPM copied under a sysroot prefix, not arbitrary transforms.
+Never infers relationships, downloads, extracts files onto disk, or enables
+matching. Local byte verification requires the optional rpmfile dependency.
 """
 
 from __future__ import annotations
@@ -18,10 +17,7 @@ from urllib.parse import urlsplit
 
 from packageurl import PackageURL
 
-from scripts.merge_mappings import _load_json, _parse_timestamp
-
-ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_REVIEWS = ROOT / "mappings" / "component_reviews"
+from scripts.merge_mappings import _load_json
 
 
 def require(condition: bool, message: str) -> None:
@@ -85,24 +81,12 @@ def purl(value: object, expected_type: str) -> PackageURL:
     return parsed
 
 
-def validate_review(data: dict) -> None:
+def validate_evidence_details(data: dict) -> None:
     fields(
         data,
-        "schema_version status review subject derived_from contains transformation evidence evaluation_policy",
-        "review document",
+        "subject derived_from contains transformation evidence",
+        "RPM evidence details",
     )
-    require(
-        type(data["schema_version"]) is int and data["schema_version"] == 1,
-        "unsupported schema_version",
-    )
-    require(
-        data["status"] == "review-only"
-        and data["evaluation_policy"] == "requires-distro-aware-review",
-        "component review cannot enable matching",
-    )
-    review = fields(data["review"], "reviewer reviewed_at", "attribution")
-    text(review["reviewer"], "reviewer")
-    _parse_timestamp(review["reviewed_at"], "reviewed_at")
     subject = fields(data["subject"], "purl artifact", "subject")
     conda = purl(subject["purl"], "conda")
     require(
@@ -256,25 +240,13 @@ def validate_review(data: dict) -> None:
     )
 
 
-def validate_directory(directory: Path = DEFAULT_REVIEWS) -> int:
-    require(directory.is_dir(), f"missing component review directory: {directory}")
-    seen = set()
-    for path in sorted(directory.glob("*.json")):
-        data = _load_json(path)
-        validate_review(data)
-        key = data["subject"]["purl"]
-        require(key not in seen, f"duplicate exact-artifact review: {key}")
-        seen.add(key)
-    return len(seen)
-
-
 def verify_artifacts(data: dict, conda_path: Path, rpm_path: Path) -> None:
     """Verify local bytes, headers, embedded recipe and complete payload equality.
 
     Never extract paths onto disk or execute package scripts. Checksums are
     verified before parsing the locally supplied archives.
     """
-    validate_review(data)
+    validate_evidence_details(data)
     for path, expected in (
         (conda_path, data["subject"]),
         (rpm_path, data["derived_from"]),
@@ -368,35 +340,24 @@ def verify_artifacts(data: dict, conda_path: Path, rpm_path: Path) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--directory", type=Path, default=DEFAULT_REVIEWS)
     parser.add_argument(
-        "--verify", type=Path, help="Review JSON to verify against local artifacts"
+        "--verify", type=Path, required=True, help="Typed RPM evidence JSON"
     )
-    parser.add_argument("--conda-artifact", type=Path)
-    parser.add_argument("--rpm-artifact", type=Path)
+    parser.add_argument("--conda-artifact", type=Path, required=True)
+    parser.add_argument("--rpm-artifact", type=Path, required=True)
     args = parser.parse_args()
-    if bool(args.verify) != bool(args.conda_artifact) or bool(args.verify) != bool(
-        args.rpm_artifact
-    ):
-        parser.error(
-            "--verify, --conda-artifact and --rpm-artifact must be supplied together"
-        )
     try:
-        count = validate_directory(args.directory)
-        if args.verify:
-            verify_artifacts(
-                _load_json(args.verify), args.conda_artifact, args.rpm_artifact
-            )
+        from scripts.artifact_relationships import validate_evidence
+
+        evidence = _load_json(args.verify)
+        validate_evidence(evidence)
+        require(evidence["kind"] == "rpm-payload-comparison", "not RPM evidence")
+        verify_artifacts(evidence["details"], args.conda_artifact, args.rpm_artifact)
         print(
-            f"Validated {count} review-only component record(s)"
-            + (
-                "; local artifact bytes verified"
-                if args.verify
-                else " (artifact bytes not checked)"
-            )
+            "RPM/conda artifact bytes verified; no mappings published or matching enabled"
         )
     except (OSError, ValueError, KeyError, TypeError, tarfile.TarError) as exc:
-        parser.exit(1, f"component reviews: {exc}\n")
+        parser.exit(1, f"RPM evidence: {exc}\n")
 
 
 if __name__ == "__main__":

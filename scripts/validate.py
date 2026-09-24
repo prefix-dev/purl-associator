@@ -794,10 +794,17 @@ def validate_split_mappings(
 
 
 def main() -> None:
-    from scripts.component_reviews import DEFAULT_REVIEWS, validate_directory
+    from scripts.artifact_relationships import (
+        DEFAULT_EVIDENCE,
+        DEFAULT_RELATIONSHIPS,
+        load_relationships,
+    )
 
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--component-reviews", type=Path, default=DEFAULT_REVIEWS)
+    parser.add_argument(
+        "--artifact-relationships", type=Path, default=DEFAULT_RELATIONSHIPS
+    )
+    parser.add_argument("--relationship-evidence", type=Path, default=DEFAULT_EVIDENCE)
     parser.add_argument("--auto-mappings", type=Path, default=DEFAULT_AUTO_MAPPINGS)
     parser.add_argument("--manual-mappings", type=Path, default=DEFAULT_MANUAL_MAPPINGS)
     parser.add_argument(
@@ -811,9 +818,9 @@ def main() -> None:
     args = parser.parse_args()
     errors: list[str] = []
     try:
-        validate_directory(args.component_reviews)
+        load_relationships(args.artifact_relationships, args.relationship_evidence)
     except (OSError, ValueError, KeyError, TypeError) as exc:
-        errors.append(f"component reviews: {exc}")
+        errors.append(f"artifact relationships: {exc}")
     validate_source_payloads(
         args.auto_mappings, args.manual_mappings, args.mapping_contributions, errors
     )
