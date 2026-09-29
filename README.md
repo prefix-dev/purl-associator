@@ -315,6 +315,39 @@ Reporting is offline and read-only. Package order is stable, and volatile bundle
 generation timestamps are omitted. Invalid contracts fail rather than producing
 apparently successful empty coverage.
 
+## Generic artifact relationship contract (review-only)
+
+`mappings/artifact_relationships/*.json` records exact conda artifact relationships
+with upstream PURLs of any ecosystem. It is an append-only review log, separate
+from active `mappings/contributions/`. Typed evidence lives under
+`mappings/relationship_evidence/`, referenced by relative path and SHA256.
+
+The generic envelope supports multiple `derived_from` and `contains` relationships,
+full replacement and explicit removal. It requires exact conda version/build/subdir
+and artifact digest; it never propagates decisions to siblings or later builds.
+RPM headers and byte-comparison details are confined to the RPM evidence adapter,
+not required by the relationship envelope. Generic reviewed-provenance evidence
+also supports PyPI, Debian, npm, cargo and other PURL types without an RPM dependency.
+
+The first real record is the libxml2 CDT pilot: exact conda artifact → exact CentOS
+RPM, plus the contained libxml2 project. All twelve payload entries were verified
+against the RPM after sysroot relocation. This is not unpatched-version equivalence.
+
+See [the full contract](docs/artifact-relationships.md) for field definitions,
+replacement/removal/conflict rules, evidence adapters and artifact verification.
+
+```sh
+pixi run -e lite mappings:validate-relationships
+```
+
+Structural/evidence-digest checks also run in `mappings:validate`. Artifact bytes
+are checked only by the optional local verifier documented in the contract.
+
+**PR boundary:** no public mapping schema, publication, editor, discovery, promotion,
+readiness reporting or Basilisk ingestion changes. Existing primary PURLs,
+alternatives and CPEs stay unchanged. Generic storage does not make an ecosystem
+matchable. Publication, ingestion and ecosystem-aware evaluation are separate PRs.
+
 ## CPE flow
 
 CPE discovery is part of identity mapping, not CVE assignment. The retained CPE
