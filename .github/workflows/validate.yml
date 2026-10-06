@@ -2,9 +2,9 @@ name: Validate mappings
 
 # PR-time gate for the scheduled data pipelines (automap, download-counts,
 # cpe-discover) and user contributions alike: rebuilds the served payload and
-# validates it before anything lands on main. The `validate` job is a
-# required status check on main (repo ruleset), which is what lets the
-# pipeline PRs auto-merge without a human rubber stamp.
+# validates it before anything lands on main. The `validate` job remains a
+# required status check on main. A separate job merges trusted pipeline PRs
+# with the app's approval bypass; user contributions still require review.
 #
 # No `paths:` filter on purpose — a required check that a path filter skips
 # never reports a status, which would leave unrelated PRs stuck on
@@ -89,3 +89,34 @@ jobs:
                   "(>20% drop) — refusing to validate."
               )
           PY
+
+  merge-pipeline:
+    needs: validate
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.user.login == 'purl-associator-app[bot]' &&
+      github.event.sender.login == 'purl-associator-app[bot]' &&
+      contains(fromJSON('["automap/refresh", "download-counts/refresh", "cpe-pipeline/refresh"]'), github.head_ref)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mint pipeline bot token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ vars.PIPELINE_APP_ID }}
+          private-key: ${{ secrets.PIPELINE_APP_PRIVATE_KEY }}
+
+      - name: Merge validated pipeline PR
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          # Native auto-merge ignores approval bypasses. A direct app merge
+          # uses that bypass while the separate required-check rule still applies.
+          # Pin the validated head so a concurrent update cannot slip through.
+          gh api --method PUT "repos/$GH_REPO/pulls/$PR/merge" \
+            -f merge_method=squash -f sha="$HEAD_SHA" \
+            --jq 'if .merged then .message else error(.message) end'
