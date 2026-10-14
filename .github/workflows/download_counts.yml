@@ -141,19 +141,3 @@ jobs:
           body-path: /tmp/download_counts_pr_body.md
           commit-message: "download-counts: refresh prefix.dev totals"
           delete-branch: true
-
-      - name: Enable auto-merge
-        if: steps.pr.outputs.pull-request-number
-        env:
-          # Same token as above: a merge performed by auto-merge enabled with
-          # GITHUB_TOKEN would not trigger the pages deploy on main.
-          GH_TOKEN: ${{ steps.app-token.outputs.token || secrets.PIPELINE_PAT || github.token }}
-          PR: ${{ steps.pr.outputs.pull-request-number }}
-        run: |
-          set -euo pipefail
-          # Idempotent: when create-pull-request updates an existing PR the
-          # earlier auto-merge request is still active, and enabling it twice
-          # errors.
-          if [ -z "$(gh pr view "$PR" --json autoMergeRequest --jq '.autoMergeRequest // empty')" ]; then
-            gh pr merge --auto --squash "$PR"
-          fi

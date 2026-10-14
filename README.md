@@ -181,6 +181,20 @@ pages alone are intentionally insufficient evidence because module and
 distribution names can differ; canonical distribution and release/archive URLs
 are accepted.
 
+### Scheduled pipeline merges
+
+The `validate` workflow merges scheduled PRs only after its required `validate`
+job succeeds. Eligible PRs must come from this repository, be opened and updated
+by `purl-associator-app[bot]`, and use `automap/refresh`, `download-counts/refresh`,
+or `cpe-pipeline/refresh`. The merge is pinned to the validated head commit.
+Website contributions and human updates to pipeline PRs still require review.
+
+Configure `PIPELINE_APP_ID` and `PIPELINE_APP_PRIVATE_KEY` for the pipeline app.
+In the `require-pr-approval` ruleset, give that app a **For pull requests only**
+bypass. Keep `validate` required in a separate ruleset without an app bypass.
+The app calls the merge API directly: GitHub's native auto-merge does not use
+approval bypasses. App-authenticated merges also trigger the Pages deployment.
+
 ### Primary-PURL coverage report
 
 Report effective primary-PURL coverage after automatic mappings, manual overrides,
