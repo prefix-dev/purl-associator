@@ -1,0 +1,84 @@
+{
+  "draft_schema_version": 1,
+  "generator": "cdt-automap-v1",
+  "status": "candidate-needs-review",
+  "subject": {
+    "purl": "pkg:conda/conda-forge/pixman-cos7-aarch64@0.34.0?build=ha675448_1106&subdir=noarch",
+    "artifact": {
+      "url": "https://conda.anaconda.org/conda-forge/noarch/pixman-cos7-aarch64-0.34.0-ha675448_1106.tar.bz2",
+      "sha256": "e2f7168002fd08a061ad3a1106f2e655469c70ba3c427918487a4c8be5dc3f0d"
+    }
+  },
+  "relationships": [
+    {
+      "relationship": "derived_from",
+      "upstream": {
+        "purl": "pkg:rpm/centos/pixman@0.34.0-1.el7?arch=aarch64&distro=centos-7.9.2009",
+        "artifact": {
+          "url": "https://vault.centos.org/altarch/7.9.2009/os/aarch64/Packages/pixman-0.34.0-1.el7.aarch64.rpm",
+          "sha256": "2270e54db1c1cd17657eaca24c05c016bb923b6651ae06958775d7834dbd20a7"
+        }
+      }
+    }
+  ],
+  "evidence": {
+    "conda_release_metadata": {
+      "url": "https://api.anaconda.org/release/conda-forge/pixman-cos7-aarch64/0.34.0",
+      "sha256": "c3f515f42a96a4d5af308df2cdf790afb8c3b3e12f54990d3970ee0657b06f9f",
+      "basename": "noarch/pixman-cos7-aarch64-0.34.0-ha675448_1106.tar.bz2"
+    },
+    "recipe_source_url": "https://vault.centos.org/altarch/7.9.2009/os/aarch64/Packages/pixman-0.34.0-1.el7.aarch64.rpm",
+    "rpm_header": {
+      "name": "pixman",
+      "version": "0.34.0",
+      "release": "1.el7",
+      "epoch": null,
+      "arch": "aarch64",
+      "vendor": "CentOS",
+      "sourcerpm": "pixman-0.34.0-1.el7.src.rpm"
+    },
+    "embedded_files": [
+      {
+        "path": "info/index.json",
+        "sha256": "9aae31eb9ea476502170d34a6bd5747d61ccb8e2d7cbadcdc5f1995e3f4c101e",
+        "text": "{\n  \"arch\": null,\n  \"build\": \"ha675448_1106\",\n  \"build_number\": 1106,\n  \"depends\": [\n    \"sysroot_linux-aarch64 2.17.*\"\n  ],\n  \"license\": \"MIT\",\n  \"license_family\": \"MIT\",\n  \"name\": \"pixman-cos7-aarch64\",\n  \"noarch\": \"generic\",\n  \"platform\": null,\n  \"subdir\": \"noarch\",\n  \"timestamp\": 1726572662070,\n  \"version\": \"0.34.0\"\n}"
+      },
+      {
+        "path": "info/recipe/build.sh",
+        "sha256": "c1bdb43b03840a18e7cae5527ede6d373dffc2a8439c920ce18a0e66c69c7469",
+        "text": "#!/bin/bash\n\nset -o errexit -o pipefail\n\nSYSROOT_DIR=\"${PREFIX}\"/aarch64-conda-linux-gnu/sysroot\n\nmkdir -p \"${SYSROOT_DIR}\"\nif [[ -d usr/lib ]]; then\n  if [[ ! -d lib ]]; then\n    ln -s usr/lib lib\n  fi\nfi\nif [[ -d usr/lib64 ]]; then\n  if [[ ! -d lib64 ]]; then\n    ln -s usr/lib64 lib64\n  fi\nfi\npushd ${SRC_DIR}/binary > /dev/null 2>&1\nrsync -K -a . \"${SYSROOT_DIR}\"\npopd > /dev/null 2>&1\n\n# START OF INSERTED BUILD APPENDS\n\n# END OF INSERTED BUILD APPENDS\n\n# this code makes sure that any symlinks are relative and their targets exist\n# the CDT would fail at test time, but doing it here produces useful error\n# messages for fixing things\nerror_code=0\nfor blnk in $(find ./binary -type l); do\n  # loop is over symlinks in the RPM, so get the path in the sysroot\n  lnk=${SYSROOT_DIR}${blnk#\"./binary\"}\n\n  # if it is not a link in the sysroot, move on\n  if [[ ! -L ${lnk} ]]; then\n    continue\n  fi\n\n  # get the link dir and the destination of the link\n  lnk_dir=$(dirname ${lnk})\n  lnk_dst_nm=$(readlink ${lnk})\n  if [[ ${lnk_dst_nm:0:1} == \"/\" ]]; then\n    lnk_dst=${lnk_dst_nm}\n  else\n    lnk_dst=\"${lnk_dir}/${lnk_dst_nm}\"\n  fi\n\n  # now test if it is absolute and relative to the system and not the PREFIX\n  # also test if the dest file exists\n  if [[ ${lnk_dst_nm:0:1} == \"/\" ]] && [[ ! ${lnk_dst_nm} == ${SYSROOT_DIR}* ]]; then\n    echo \"***WARNING ABSOLUTE SYMLINK***: ${lnk} -> ${lnk_dst}\"\n    error_code=1\n  elif [[ ! -e \"${lnk_dst}\" ]]; then\n     echo \"***WARNING SYMLINK W/O DESTINATION: ${lnk} -> ${lnk_dst}\"\n     error_code=1\n  fi\ndone\n\nexit ${error_code}\n"
+      },
+      {
+        "path": "info/recipe/meta.yaml",
+        "sha256": "ad5af9e76e45621b16a45a258e27313966d01555a0b8112977be693e6054aa90",
+        "text": "# This file created by conda-build 24.7.1\n# meta.yaml template originally from:\n# /home/vsts/work/1/s/cdts/pixman-cos7-aarch64, last modified Tue Sep 17 11:00:11 2024\n# ------------------------------------------------\n\npackage:\n  name: pixman-cos7-aarch64\n  version: 0.34.0\nsource:\n  - folder: binary\n    no_hoist: true\n    sha256: 2270e54db1c1cd17657eaca24c05c016bb923b6651ae06958775d7834dbd20a7\n    url: https://vault.centos.org/altarch/7.9.2009/os/aarch64/Packages/pixman-0.34.0-1.el7.aarch64.rpm\nbuild:\n  binary_relocation: false\n  detect_binary_files_with_prefix: false\n  missing_dso_whitelist:\n    - '*'\n  noarch: generic\n  number: '1106'\n  string: ha675448_1106\nrequirements:\n  host:\n    - _sysroot_linux-aarch64_curr_repodata_hack 4 h57d6b7b_16\n    - kernel-headers_linux-aarch64 4.18.0 h5b4a56d_16\n    - sysroot_linux-aarch64 2.17 h5b4a56d_16\n    - tzdata 2024a h8827d51_1\n  run:\n    - sysroot_linux-aarch64 2.17.*\ntest:\n  commands:\n    - echo \"it installs!\"\nabout:\n  description: 'Pixman is a pixel manipulation library for X and cairo.\n\n    '\n  home: http://cgit.freedesktop.org/pixman/\n  license: MIT\n  license_family: MIT\n  license_file: pixman-license\n  summary: (CDT) Pixel manipulation library\nextra:\n  copy_test_source_files: true\n  final: true\n  recipe-maintainers:\n    - conda-forge/help-cdts\n"
+      }
+    ],
+    "transformation": {
+      "kind": "sysroot-prefix-relocation",
+      "prefix": "aarch64-conda-linux-gnu/sysroot/",
+      "payload": [
+        {
+          "conda_path": "aarch64-conda-linux-gnu/sysroot/usr/lib64/libpixman-1.so.0",
+          "rpm_path": "usr/lib64/libpixman-1.so.0",
+          "kind": "symlink",
+          "sha256": "a195978c7b863903a47dd3847c68e73bb4559dd70cfdd04350a5c223306b7336",
+          "size": 21,
+          "target": "libpixman-1.so.0.34.0"
+        },
+        {
+          "conda_path": "aarch64-conda-linux-gnu/sysroot/usr/lib64/libpixman-1.so.0.34.0",
+          "rpm_path": "usr/lib64/libpixman-1.so.0.34.0",
+          "kind": "file",
+          "sha256": "95df1b0a16876630211727b4bac451ef51a286c1325fb7eaa1a51fc0fe940bd0",
+          "size": 467952
+        }
+      ]
+    }
+  },
+  "limitations": [
+    "Not approved or published; no reviewer attribution is inferred.",
+    "Complete path/kind/content comparison, not installed filesystem metadata equivalence.",
+    "No upstream project/CPE, source commit, distro advisory equivalence, or vulnerability verdict inferred."
+  ]
+}
