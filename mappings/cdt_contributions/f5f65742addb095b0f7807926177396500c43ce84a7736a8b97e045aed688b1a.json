@@ -1,0 +1,99 @@
+{
+  "draft_schema_version": 1,
+  "generator": "cdt-automap-v1",
+  "status": "candidate-needs-review",
+  "subject": {
+    "purl": "pkg:conda/conda-forge/libx11-cos7-aarch64@1.6.7?build=ha675448_1106&subdir=noarch",
+    "artifact": {
+      "url": "https://conda.anaconda.org/conda-forge/noarch/libx11-cos7-aarch64-1.6.7-ha675448_1106.tar.bz2",
+      "sha256": "ba0d700a3aed99e3898172855af399e1356b44cb7b146a7f43bdc97098801da6"
+    }
+  },
+  "relationships": [
+    {
+      "relationship": "derived_from",
+      "upstream": {
+        "purl": "pkg:rpm/centos/libX11@1.6.7-2.el7?arch=aarch64&distro=centos-7.9.2009",
+        "artifact": {
+          "url": "https://vault.centos.org/altarch/7.9.2009/os/aarch64/Packages/libX11-1.6.7-2.el7.aarch64.rpm",
+          "sha256": "9ece55780a6f2b0682832ac25bf89cb51e550a27f0dbf15b8c3454363be3c8f7"
+        }
+      }
+    }
+  ],
+  "evidence": {
+    "conda_release_metadata": {
+      "url": "https://api.anaconda.org/release/conda-forge/libx11-cos7-aarch64/1.6.7",
+      "sha256": "022c512b05d18db36544fba488c243d5c9efa213e6c7eea62c2d0234876aef6e",
+      "basename": "noarch/libx11-cos7-aarch64-1.6.7-ha675448_1106.tar.bz2"
+    },
+    "recipe_source_url": "https://vault.centos.org/altarch/7.9.2009/os/aarch64/Packages/libX11-1.6.7-2.el7.aarch64.rpm",
+    "rpm_header": {
+      "name": "libX11",
+      "version": "1.6.7",
+      "release": "2.el7",
+      "epoch": null,
+      "arch": "aarch64",
+      "vendor": "CentOS",
+      "sourcerpm": "libX11-1.6.7-2.el7.src.rpm"
+    },
+    "embedded_files": [
+      {
+        "path": "info/index.json",
+        "sha256": "4c396cff0701b340e7adc952a1d7581ec4867ef8d296a2d618e5325806b5c8a1",
+        "text": "{\n  \"arch\": null,\n  \"build\": \"ha675448_1106\",\n  \"build_number\": 1106,\n  \"depends\": [\n    \"libx11-common-cos7-aarch64 >=1.6.7 *_1106\",\n    \"sysroot_linux-aarch64 2.17.*\"\n  ],\n  \"license\": \"MIT\",\n  \"license_family\": \"MIT\",\n  \"name\": \"libx11-cos7-aarch64\",\n  \"noarch\": \"generic\",\n  \"platform\": null,\n  \"subdir\": \"noarch\",\n  \"timestamp\": 1726583073033,\n  \"version\": \"1.6.7\"\n}"
+      },
+      {
+        "path": "info/recipe/build.sh",
+        "sha256": "c1bdb43b03840a18e7cae5527ede6d373dffc2a8439c920ce18a0e66c69c7469",
+        "text": "#!/bin/bash\n\nset -o errexit -o pipefail\n\nSYSROOT_DIR=\"${PREFIX}\"/aarch64-conda-linux-gnu/sysroot\n\nmkdir -p \"${SYSROOT_DIR}\"\nif [[ -d usr/lib ]]; then\n  if [[ ! -d lib ]]; then\n    ln -s usr/lib lib\n  fi\nfi\nif [[ -d usr/lib64 ]]; then\n  if [[ ! -d lib64 ]]; then\n    ln -s usr/lib64 lib64\n  fi\nfi\npushd ${SRC_DIR}/binary > /dev/null 2>&1\nrsync -K -a . \"${SYSROOT_DIR}\"\npopd > /dev/null 2>&1\n\n# START OF INSERTED BUILD APPENDS\n\n# END OF INSERTED BUILD APPENDS\n\n# this code makes sure that any symlinks are relative and their targets exist\n# the CDT would fail at test time, but doing it here produces useful error\n# messages for fixing things\nerror_code=0\nfor blnk in $(find ./binary -type l); do\n  # loop is over symlinks in the RPM, so get the path in the sysroot\n  lnk=${SYSROOT_DIR}${blnk#\"./binary\"}\n\n  # if it is not a link in the sysroot, move on\n  if [[ ! -L ${lnk} ]]; then\n    continue\n  fi\n\n  # get the link dir and the destination of the link\n  lnk_dir=$(dirname ${lnk})\n  lnk_dst_nm=$(readlink ${lnk})\n  if [[ ${lnk_dst_nm:0:1} == \"/\" ]]; then\n    lnk_dst=${lnk_dst_nm}\n  else\n    lnk_dst=\"${lnk_dir}/${lnk_dst_nm}\"\n  fi\n\n  # now test if it is absolute and relative to the system and not the PREFIX\n  # also test if the dest file exists\n  if [[ ${lnk_dst_nm:0:1} == \"/\" ]] && [[ ! ${lnk_dst_nm} == ${SYSROOT_DIR}* ]]; then\n    echo \"***WARNING ABSOLUTE SYMLINK***: ${lnk} -> ${lnk_dst}\"\n    error_code=1\n  elif [[ ! -e \"${lnk_dst}\" ]]; then\n     echo \"***WARNING SYMLINK W/O DESTINATION: ${lnk} -> ${lnk_dst}\"\n     error_code=1\n  fi\ndone\n\nexit ${error_code}\n"
+      },
+      {
+        "path": "info/recipe/meta.yaml",
+        "sha256": "bc8cb33f90f0179f1b050e6a9f441a1ffd933ffc0765ed7417ecfe49cb44486e",
+        "text": "# This file created by conda-build 24.7.1\n# meta.yaml template originally from:\n# /home/vsts/work/1/s/cdts/libx11-cos7-aarch64, last modified Tue Sep 17 11:00:11 2024\n# ------------------------------------------------\n\npackage:\n  name: libx11-cos7-aarch64\n  version: 1.6.7\nsource:\n  - folder: binary\n    no_hoist: true\n    sha256: 9ece55780a6f2b0682832ac25bf89cb51e550a27f0dbf15b8c3454363be3c8f7\n    url: https://vault.centos.org/altarch/7.9.2009/os/aarch64/Packages/libX11-1.6.7-2.el7.aarch64.rpm\nbuild:\n  binary_relocation: false\n  detect_binary_files_with_prefix: false\n  missing_dso_whitelist:\n    - '*'\n  noarch: generic\n  number: '1106'\n  string: ha675448_1106\nrequirements:\n  build:\n    - _sysroot_linux-aarch64_curr_repodata_hack 4 h57d6b7b_16\n    - kernel-headers_linux-aarch64 4.18.0 h5b4a56d_16\n    - libx11-common-cos7-aarch64 1.6.7 ha675448_1106\n    - sysroot_linux-aarch64 2.17 h5b4a56d_16\n    - tzdata 2024a h8827d51_1\n  host:\n    - _sysroot_linux-aarch64_curr_repodata_hack 4 h57d6b7b_16\n    - kernel-headers_linux-aarch64 4.18.0 h5b4a56d_16\n    - libx11-common-cos7-aarch64 1.6.7 ha675448_1106\n    - sysroot_linux-aarch64 2.17 h5b4a56d_16\n    - tzdata 2024a h8827d51_1\n  run:\n    - libx11-common-cos7-aarch64 >=1.6.7 *_1106\n    - sysroot_linux-aarch64 2.17.*\ntest:\n  commands:\n    - echo \"it installs!\"\nabout:\n  description: 'Core X11 protocol client library.\n\n    '\n  home: http://www.x.org\n  license: MIT\n  license_family: MIT\n  license_file: x11-license\n  summary: (CDT) Core X11 protocol client library\nextra:\n  copy_test_source_files: true\n  final: true\n  recipe-maintainers:\n    - conda-forge/help-cdts\n"
+      }
+    ],
+    "transformation": {
+      "kind": "sysroot-prefix-relocation",
+      "prefix": "aarch64-conda-linux-gnu/sysroot/",
+      "payload": [
+        {
+          "conda_path": "aarch64-conda-linux-gnu/sysroot/usr/lib64/libX11-xcb.so.1",
+          "rpm_path": "usr/lib64/libX11-xcb.so.1",
+          "kind": "symlink",
+          "sha256": "67b0006d932558c870d835afb5bbfb00e7f6cfadc08229138cc064e1d72bad1f",
+          "size": 19,
+          "target": "libX11-xcb.so.1.0.0"
+        },
+        {
+          "conda_path": "aarch64-conda-linux-gnu/sysroot/usr/lib64/libX11-xcb.so.1.0.0",
+          "rpm_path": "usr/lib64/libX11-xcb.so.1.0.0",
+          "kind": "file",
+          "sha256": "36712e568f124fa3fe772a24b31d1108f407aeaa2568781b45d055096ba80285",
+          "size": 68304
+        },
+        {
+          "conda_path": "aarch64-conda-linux-gnu/sysroot/usr/lib64/libX11.so.6",
+          "rpm_path": "usr/lib64/libX11.so.6",
+          "kind": "symlink",
+          "sha256": "c92b3e3920b605cb943091de3b70945885224977e128d2623d4a7c574d8bf91f",
+          "size": 15,
+          "target": "libX11.so.6.3.0"
+        },
+        {
+          "conda_path": "aarch64-conda-linux-gnu/sysroot/usr/lib64/libX11.so.6.3.0",
+          "rpm_path": "usr/lib64/libX11.so.6.3.0",
+          "kind": "file",
+          "sha256": "e91975c14cee731605779148498f4ed7280b06bad05073311674b111b1fb1ed2",
+          "size": 1346448
+        }
+      ]
+    }
+  },
+  "limitations": [
+    "Not approved or published; no reviewer attribution is inferred.",
+    "Complete path/kind/content comparison, not installed filesystem metadata equivalence.",
+    "No upstream project/CPE, source commit, distro advisory equivalence, or vulnerability verdict inferred."
+  ]
+}
