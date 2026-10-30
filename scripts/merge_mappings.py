@@ -17,6 +17,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from packageurl import PackageURL, ValidationSeverity
+
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_AUTO = ROOT / "mappings" / "auto.json"
 DEFAULT_MANUAL = ROOT / "mappings" / "manual.json"
@@ -156,6 +158,28 @@ def _validate_purl(value: Any, label: str) -> None:
     _require_string(value, label)
     if not PURL_RE.fullmatch(value):
         raise ValueError(f"{label} is not a valid package URL: {value!r}")
+    try:
+        parsed = PackageURL.from_string(value, normalize_purl=False)
+        # shortcut: 0.17.x lacks git and has old CPAN rules; remove when the library catches up.
+        # https://github.com/package-url/purl-spec/tree/fe12e6d572dcdd50178273692c8bc9d2f68119b0/types
+        if parsed.type == "git":
+            if not parsed.namespace:
+                raise ValueError("git PURLs require a host namespace")
+        elif parsed.type == "cpan":
+            if "::" in parsed.name:
+                raise ValueError("CPAN names must identify distributions, not modules")
+            if parsed.namespace and parsed.namespace != parsed.namespace.upper():
+                raise ValueError("CPAN author namespaces must be uppercase")
+        else:
+            errors = [
+                message.message
+                for message in parsed.validate(strict=True)
+                if message.severity == ValidationSeverity.ERROR
+            ]
+            if errors:
+                raise ValueError("; ".join(errors))
+    except ValueError as exc:
+        raise ValueError(f"{label} is not a valid package URL {value!r}: {exc}") from exc
 
 
 def _validate_cpes(value: Any, label: str) -> None:

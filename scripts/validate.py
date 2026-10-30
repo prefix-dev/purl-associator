@@ -19,7 +19,6 @@ DEFAULT_MAPPINGS_INDEX = ROOT / "web" / "public" / "mappings-index.json"
 DEFAULT_MAPPINGS_DETAIL_DIR = ROOT / "web" / "public" / "mapping_packages"
 
 CPE23_RE = merge_mappings.CPE23_RE
-PURL_RE = merge_mappings.PURL_RE
 SUPPORTED_BUNDLE_SCHEMAS = {1, 2, 3, 4}
 SUPPORTED_INDEX_SCHEMAS = {2, 3, 4, 5}
 SUPPORTED_DETAIL_SCHEMAS = {1, 2, 3, 4}
@@ -183,8 +182,11 @@ def _validate_identity_contract(
         _error_extra_fields(identity, allowed_identity, identity_label, errors)
         if not isinstance(value, str) or not value:
             errors.append(f"{identity_label}: value must be a non-empty string")
-        elif kind == "purl" and not PURL_RE.fullmatch(value):
-            errors.append(f"{identity_label}: value is not a valid PURL")
+        elif kind == "purl":
+            try:
+                merge_mappings._validate_purl(value, identity_label)
+            except ValueError as exc:
+                errors.append(str(exc))
         elif kind == "cpe" and not CPE23_RE.fullmatch(value):
             errors.append(f"{identity_label}: value is not a valid CPE")
         if isinstance(value, str):
