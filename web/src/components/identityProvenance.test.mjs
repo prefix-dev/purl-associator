@@ -127,6 +127,36 @@ function render(identities, mappingStatus, stale = false) {
   );
 }
 
+test("the editor does not restore an old auto namespace for a reviewed PyPI mapping", async () => {
+  const { MappingEditor } = await server.ssrLoadModule("/src/components/MappingEditor.tsx");
+  const html = renderToStaticMarkup(createElement(MappingEditor, {
+    theme,
+    pkg: {
+      name: "demo",
+      purl: "pkg:pypi/demo",
+      type: "pypi",
+      namespace: null,
+      pkg_name: "demo",
+      status: "verified",
+      identities: [manualPrimary],
+      sources: [],
+      auto: {
+        purl: "pkg:github/old-owner/demo",
+        type: "github",
+        namespace: "old-owner",
+        pkg_name: "demo",
+        sources: [],
+      },
+    },
+    onEdit: () => {},
+    onApprove: () => {},
+    onResetAuto: () => {},
+  }));
+  const namespaceInput = html.match(/<input\b[^>]*placeholder="\(none\)"[^>]*>/)?.[0];
+  assert.ok(namespaceInput);
+  assert.match(namespaceInput, /value=""/);
+});
+
 test("a manual verified primary names its reviewer", () => {
   const [row] = describe.describeIdentities([manualPrimary]);
   assert.equal(row.source, "manual");

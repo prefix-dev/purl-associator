@@ -452,6 +452,9 @@ def _apply_reviewed_override(
         for key in REVIEWED_MAPPING_FIELDS
         if key in override and override[key] is not None
     }
+    # A primary PURL review can explicitly remove the previous repository owner.
+    if override.get("purl") is not None and "namespace" in override:
+        patch["namespace"] = override["namespace"]
     current_attribution = (
         _effective_attribution(override, attribution, label)
         if reviews_primary or reviews_cpes

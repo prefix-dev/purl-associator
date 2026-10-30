@@ -104,7 +104,8 @@ export function MappingEditor({
   const sourceAlternativeMeta = alternativeMetas(sourceAlternatives);
   const eff: Edit = {
     type: edit?.type ?? p.type ?? auto.type ?? "pypi",
-    namespace: edit?.namespace ?? p.namespace ?? auto.namespace ?? "",
+    namespace: edit?.namespace ??
+      (p.namespace !== undefined ? p.namespace ?? "" : auto.namespace ?? ""),
     pkgName: edit?.pkgName ?? p.pkg_name ?? auto.pkg_name ?? p.name,
     purl: edit?.purl ?? p.purl ?? auto.purl ?? "",
     alternative_purls: edit?.alternative_purls ?? currentAlternativePurls,
