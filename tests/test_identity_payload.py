@@ -188,6 +188,43 @@ class IdentityPayloadTest(unittest.TestCase):
         validate.validate_split_mappings(index_path, detail_dir, errors, bundle_path)
         self.assertEqual(errors, [])
 
+    def test_primary_review_clears_namespace_in_all_published_payloads(self) -> None:
+        self._write_json(
+            self.contributions / "pypi.json",
+            {
+                "schema_version": 1,
+                "author": "reviewer",
+                "timestamp": "2026-01-04T00:00:00Z",
+                "packages": {
+                    "reviewed": {
+                        "purl": "pkg:pypi/project",
+                        "type": "pypi",
+                        "namespace": None,
+                        "pkg_name": "project",
+                    }
+                },
+            },
+        )
+        bundle_path, index_path, detail_dir = self._generate(self.root / "pypi")
+        bundle = json.loads(bundle_path.read_text())["packages"]["reviewed"]
+        index = json.loads(index_path.read_text())["packages"]["reviewed"]
+        detail = json.loads(
+            (detail_dir.parent / index["detail_path"]).read_text()
+        )["packages"]["reviewed"]
+        for entry in (bundle, index, detail):
+            self.assertEqual(entry["purl"], "pkg:pypi/project")
+            self.assertEqual(entry["type"], "pypi")
+            self.assertIsNone(entry["namespace"])
+            self.assertEqual(entry["pkg_name"], "project")
+
+    def test_null_namespace_without_primary_purl_keeps_existing_namespace(self) -> None:
+        contribution = json.loads((self.contributions / "review.json").read_text())
+        contribution["packages"]["reviewed"]["namespace"] = None
+        self._write_json(self.contributions / "review.json", contribution)
+        bundle_path, _, _ = self._generate(self.root / "cpe-only")
+        entry = json.loads(bundle_path.read_text())["packages"]["reviewed"]
+        self.assertEqual(entry["namespace"], "reviewer")
+
     def test_auto_to_unmapped_clears_rejected_identity(self) -> None:
         bundle_path, _, _ = self._generate(self.root / "unmapped")
         rejected = json.loads(bundle_path.read_text())["packages"]["reject-me"]

@@ -154,6 +154,18 @@ class EffectiveCpeEvidenceTests(unittest.TestCase):
 
         self.assertEqual(null_only, base)
         self.assertEqual(cpe_only, base)
+        self.assertEqual(cpe_discover._overlay_purl(base, {"namespace": None}), base)
+        pypi = cpe_discover._overlay_purl(
+            base,
+            {
+                "purl": "pkg:pypi/widget",
+                "type": "pypi",
+                "namespace": None,
+                "pkg_name": "widget",
+            },
+        )
+        self.assertEqual(pypi.purl, "pkg:pypi/widget")
+        self.assertIsNone(pypi.namespace)
         self.assertTrue(unmapped.unmapped)
         self.assertIsNone(unmapped.purl)
         self.assertIsNone(unmapped.purl_type)

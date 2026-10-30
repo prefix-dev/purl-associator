@@ -203,7 +203,8 @@ def _overlay_purl(base: AutoEntry, override: dict) -> AutoEntry:
         )
         namespace = (
             override["namespace"]
-            if override.get("namespace") is not None
+            if "namespace" in override
+            and (override["namespace"] is not None or override.get("purl") is not None)
             else base.namespace
         )
         pkg_name = (
