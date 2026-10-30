@@ -181,6 +181,15 @@ pages alone are intentionally insufficient evidence because module and
 distribution names can differ; canonical distribution and release/archive URLs
 are accepted.
 
+PURL validation runs in the required PR `validate` check and locally via
+`pixi run -e lite mappings:validate` (after `mappings:merge`). It uses the pinned
+`packageurl-python` parser and type validators for primary and alternative PURLs,
+including published identities. Unsupported types such as `gitlab` and forbidden
+namespaces such as `pkg:pypi/owner/project` fail validation. Explicit checks cover
+registered `git` PURLs and current CPAN distribution rules, which the pinned
+library does not yet support. Validation is offline: it does not verify that a
+repository exists or that it identifies the correct conda package.
+
 ### Scheduled pipeline merges
 
 The `validate` workflow merges scheduled PRs only after its required `validate`

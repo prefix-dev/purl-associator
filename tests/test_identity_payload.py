@@ -335,6 +335,43 @@ class IdentityPayloadTest(unittest.TestCase):
             },
         )
 
+    def test_purl_type_validation(self) -> None:
+        for purl in (
+            "pkg:github/package-url/purl-spec",
+            "pkg:bitbucket/fenics-project/dolfin",
+            "pkg:git/gitlab.com/drti/basic-tools",
+            "pkg:git/gitlab.gnome.org/GNOME/gtk",
+            "pkg:git/git.ligo.org/cds/software/dtt@abc123#src",
+            "pkg:cpan/Algorithm-Diff",
+            "pkg:cpan/GDT/URI-PackageURL",
+            "pkg:pypi/demo",
+        ):
+            with self.subTest(valid=purl):
+                merge_mappings._validate_purl(purl, "test.purl")
+        for purl in (
+            "pkg:gitlab/drti/basic-tools",
+            "pkg:unknown/demo",
+            "pkg:github/project",
+            "pkg:git/project",
+            "pkg:pypi/owner/demo",
+            "pkg:cargo/owner/demo",
+            "pkg:cpan/Foo::Bar",
+            "pkg:cpan/author/Foo-Bar",
+            "pkg:pypi/demo?broken",
+        ):
+            with self.subTest(invalid=purl):
+                with self.assertRaisesRegex(ValueError, "test.purl"):
+                    merge_mappings._validate_purl(purl, "test.purl")
+
+    def test_published_identity_rejects_unregistered_purl_type(self) -> None:
+        bundle_path, _, _ = self._generate(self.root / "invalid-type")
+        entry = json.loads(bundle_path.read_text())["packages"]["auto-detailed"]
+        entry["purl"] = "pkg:gitlab/owner/project"
+        entry["identities"][0]["value"] = entry["purl"]
+        errors: list[str] = []
+        validate._validate_identity_contract(entry, "published", errors)
+        self.assertTrue(any("Unexpected purl type" in error for error in errors), errors)
+
     def test_source_schema_negative_mutations(self) -> None:
         base = json.loads(self.auto.read_text())
         mutations = {
@@ -346,6 +383,15 @@ class IdentityPayloadTest(unittest.TestCase):
             "malformed primary PURL": lambda value: value["packages"][
                 "reviewed"
             ].update(purl="not-a-purl"),
+            "unregistered primary type": lambda value: value["packages"][
+                "reviewed"
+            ].update(purl="pkg:gitlab/owner/project"),
+            "unregistered alternative type": lambda value: value["packages"][
+                "reviewed"
+            ].update(alternative_purls=["pkg:gitlab/owner/project"]),
+            "namespaced PyPI alternative": lambda value: value["packages"][
+                "auto-detailed"
+            ]["alternative_purls"][0].update(purl="pkg:pypi/owner/project"),
             "string alternatives": lambda value: value["packages"]["reviewed"].update(
                 alternative_purls="pkg:pypi/nope"
             ),
