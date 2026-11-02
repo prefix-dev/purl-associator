@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "title": "Add the argoproj Argo CD CPE alias to argocd-cli",
+  "author": "nichmor",
+  "timestamp": "2026-11-02T14:18:23Z",
+  "source": "Fixes https://github.com/prefix-dev/purl-associator/issues/407. NVD names Argo CD under two vendors: cpe:2.3:a:argoproj:argo_cd for older advisories such as CVE-2022-31035 and CVE-2022-31036, and cpe:2.3:a:linuxfoundation:argo-cd for newer ones. Both prefixes exist in the NVD CPE dictionary (https://nvd.nist.gov/products/cpe/search/results?keyword=argo_cd and https://nvd.nist.gov/products/cpe/search/results?keyword=argo-cd). With only the linuxfoundation prefix, the bounded NVD configurations of the 2022 advisories never join the package, and the fallback evaluation of the NVD patch-reference commits (which live on the release-2.4 branch only) marks every conda-forge version affected. Keep the existing CPE and add the argoproj alias; retain all PURL fields.",
+  "packages": {
+    "argocd-cli": {
+      "cpes": [
+        "cpe:2.3:a:linuxfoundation:argo-cd",
+        "cpe:2.3:a:argoproj:argo_cd"
+      ]
+    }
+  }
+}
