@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-11-02T07:00:52+00:00",
+  "generated_at": "2026-11-09T06:34:51+00:00",
   "source_candidates": "mappings/cpe_candidates/latest.json",
-  "source_candidates_generated_at": "2026-11-02T06:59:57+00:00",
+  "source_candidates_generated_at": "2026-11-09T06:34:06+00:00",
   "model": "claude-haiku-4-5",
   "backend": "api",
   "summary": {
-    "confident_packages": 10,
-    "uncertain_packages": 13,
-    "none_packages": 159,
-    "selected_cpes_total": 10
+    "confident_packages": 2,
+    "uncertain_packages": 15,
+    "none_packages": 156,
+    "selected_cpes_total": 2
   },
   "verdicts": [
     {
@@ -22,22 +22,8 @@
         "cpe:2.3:a:itrsgroup:ninja",
         "cpe:2.3:a:ninjaframework:ninja"
       ],
-      "reasoning": "All candidates are lookalikes: visualshortcodes:ninja is a WordPress plugin, itrsgroup:ninja is a monitoring tool, and ninjaframework:ninja is a web framework. None match the build system described in the conda summary.",
-      "ai_vetted_at": "2026-11-02T07:00:17+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "libglx",
-      "current_purl": null,
-      "verdict": "confident",
-      "selected_cpes": [
-        "cpe:2.3:a:x:libglx"
-      ],
-      "candidate_cpes": [
-        "cpe:2.3:a:x:libglx"
-      ],
-      "reasoning": "The CPE matches the X.org libGLX library described in the CVE sample, which aligns with the GL dispatch library in the conda summary.",
-      "ai_vetted_at": "2026-11-02T07:00:17+00:00",
+      "reasoning": "All candidates are for unrelated software: a WordPress shortcode plugin, a monitoring tool, and a web framework. None match the build system described in the conda summary.",
+      "ai_vetted_at": "2026-11-09T06:34:22+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -50,8 +36,32 @@
         "cpe:2.3:a:joyent:json",
         "cpe:2.3:a:ruby-lang:json"
       ],
-      "reasoning": "All candidates are for different JSON implementations (Ruby gem, Node.js package) with distinct version spaces. The conda package is nlohmann's C++ JSON library, which is unrelated to these language-specific JSON tools.",
-      "ai_vetted_at": "2026-11-02T07:00:17+00:00",
+      "reasoning": "All candidates are for Ruby or Node.js JSON implementations, not the C++ JSON library nlohmann/json. Version spaces and languages are incompatible.",
+      "ai_vetted_at": "2026-11-09T06:34:22+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "libode",
+      "current_purl": "pkg:bitbucket/odedevs/ode",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:apache:ode"
+      ],
+      "reasoning": "The candidate CPE is for Apache ODE (a BPEL process engine), not the Open Dynamics Engine physics simulation library described in the conda summary.",
+      "ai_vetted_at": "2026-11-09T06:34:22+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "libkml",
+      "current_purl": "pkg:github/libkml/libkml",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:google:kml"
+      ],
+      "reasoning": "The candidate CPE is for a KML file-sharing plugin, not the KML reference implementation library libkml/libkml from Google.",
+      "ai_vetted_at": "2026-11-09T06:34:22+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -64,32 +74,8 @@
         "cpe:2.3:a:joyent:json",
         "cpe:2.3:a:ruby-lang:json"
       ],
-      "reasoning": "Same reasoning as nlohmann_json: all candidates are language-binding mismatches (Ruby gem, Node.js package) unrelated to the C++ JSON library.",
-      "ai_vetted_at": "2026-11-02T07:00:17+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "libkml",
-      "current_purl": "pkg:github/libkml/libkml",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:google:kml"
-      ],
-      "reasoning": "The candidate cpe:2.3:a:google:kml is for KML Share (a PHP application), not libkml (the C++ reference implementation). The conda package is the OGC KML reference implementation, not a web application.",
-      "ai_vetted_at": "2026-11-02T07:00:17+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "libode",
-      "current_purl": "pkg:bitbucket/odedevs/ode",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:apache:ode"
-      ],
-      "reasoning": "The candidate cpe:2.3:a:apache:ode is for Apache ODE (a workflow engine), not the Open Dynamics Engine. Despite the shared acronym, they are distinct software projects with different purposes.",
-      "ai_vetted_at": "2026-11-02T07:00:17+00:00",
+      "reasoning": "All candidates are for Ruby or Node.js JSON implementations, not the C++ JSON library. Version spaces and languages are incompatible.",
+      "ai_vetted_at": "2026-11-09T06:34:22+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -100,34 +86,22 @@
       "candidate_cpes": [
         "cpe:2.3:a:tanium:benchmark"
       ],
-      "reasoning": "The candidate cpe:2.3:a:tanium:benchmark is for Tanium's proprietary software, not the open-source Google benchmark library. The CVE describes a Tanium product vulnerability unrelated to the conda package.",
-      "ai_vetted_at": "2026-11-02T07:00:17+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "gst-plugins-good",
-      "current_purl": "pkg:git/gitlab.freedesktop.org/gstreamer/gstreamer",
-      "verdict": "confident",
-      "selected_cpes": [
-        "cpe:2.3:a:freedesktop:gst-plugins-good"
-      ],
-      "candidate_cpes": [
-        "cpe:2.3:a:freedesktop:gst-plugins-good"
-      ],
-      "reasoning": "The CPE vendor (freedesktop) and product name match the GStreamer project on freedesktop.org, and the CVE samples describe gst-plugins-good vulnerabilities that align with the conda package.",
-      "ai_vetted_at": "2026-11-02T07:00:17+00:00",
+      "reasoning": "The candidate is for a Tanium Benchmark product, which is unrelated to the Google benchmark microbenchmarking library described in the conda summary.",
+      "ai_vetted_at": "2026-11-09T06:34:22+00:00",
       "model": "claude-haiku-4-5"
     },
     {
       "conda_name": "libmagma",
       "current_purl": "pkg:github/icl-utk-edu/magma",
-      "verdict": "none",
-      "selected_cpes": [],
+      "verdict": "uncertain",
+      "selected_cpes": [
+        "cpe:2.3:a:linuxfoundation:magma"
+      ],
       "candidate_cpes": [
         "cpe:2.3:a:linuxfoundation:magma"
       ],
-      "reasoning": "The candidate cpe:2.3:a:linuxfoundation:magma is for the Linux Foundation's MAGMA mobile network project (MME component), not the Matrix Algebra on GPU library. These are distinct software projects despite the name match.",
-      "ai_vetted_at": "2026-11-02T07:00:17+00:00",
+      "reasoning": "The CVE samples mention Mobile Management Entity (MME) and cellular infrastructure, which differs from the matrix algebra/GPU library. However, both use the MAGMA acronym. Flagged uncertain pending human review.",
+      "ai_vetted_at": "2026-11-09T06:34:22+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -138,62 +112,8 @@
       "candidate_cpes": [
         "cpe:2.3:a:redhat:tectonic"
       ],
-      "reasoning": "The candidate cpe:2.3:a:redhat:tectonic is for CoreOS Tectonic (a Kubernetes platform), not the Tectonic TeX/LaTeX engine. The CVEs describe a Kubernetes container orchestration product, not a typesetting system.",
-      "ai_vetted_at": "2026-11-02T07:00:17+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "moab",
-      "current_purl": "pkg:bitbucket/fathomteam/moab",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:adaptivecomputing:moab"
-      ],
-      "reasoning": "The candidate cpe:2.3:a:adaptivecomputing:moab is for Adaptive Computing's Moab Workload Manager, not the Mesh-Oriented datABase. Despite the shared acronym, they are distinct software projects.",
-      "ai_vetted_at": "2026-11-02T07:00:17+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "libmagma_sparse",
-      "current_purl": "pkg:github/icl-utk-edu/magma",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:linuxfoundation:magma"
-      ],
-      "reasoning": "Same as libmagma: the candidate is for the Linux Foundation's mobile network MAGMA project, not the Matrix Algebra on GPU library. Different software despite the name.",
-      "ai_vetted_at": "2026-11-02T07:00:17+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "codex",
-      "current_purl": "pkg:github/openai/codex",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:codexnotes:codex"
-      ],
-      "reasoning": "The candidate cpe:2.3:a:codexnotes:codex is for Codex Notes (a note-taking application), not the OpenAI Codex coding agent. The CVE describes an XSS vulnerability in a notebook application, not a coding language model.",
-      "ai_vetted_at": "2026-11-02T07:00:17+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "databricks-cli",
-      "current_purl": "pkg:github/databricks/cli",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:areca:cli",
-        "cpe:2.3:a:cisco:cli",
-        "cpe:2.3:a:cli_project:cli",
-        "cpe:2.3:a:snyk:cli",
-        "cpe:2.3:a:github:cli",
-        "cpe:2.3:a:nhost:cli",
-        "cpe:2.3:a:bitwarden:cli"
-      ],
-      "reasoning": "All candidates are CLIs for unrelated products (Areca backup, Cisco networking, Node.js, Snyk, GitHub, Nhost, Bitwarden). None match the Databricks CLI, which has its own distinct product identity.",
-      "ai_vetted_at": "2026-11-02T07:00:17+00:00",
+      "reasoning": "The candidate is for CoreOS Tectonic Kubernetes distribution, not the TeX/LaTeX typesetting engine described in the conda summary.",
+      "ai_vetted_at": "2026-11-09T06:34:22+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -205,20 +125,8 @@
         "cpe:2.3:a:sun:sdk",
         "cpe:2.3:a:ibm:sdk"
       ],
-      "reasoning": "Both candidates are for unrelated SDKs (Sun/Oracle Java SDK and IBM SDK). The conda package is .NET Core SDK from Microsoft/dotnet, which is a completely different platform and ecosystem.",
-      "ai_vetted_at": "2026-11-02T07:00:17+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "bun",
-      "current_purl": "pkg:github/oven-sh/bun",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:anthropic:bun"
-      ],
-      "reasoning": "The candidate CPE is for Anthropic's Bun, but the conda package is Oven's Bun (a JavaScript runtime). The CVE description mentions Brotli decoder vulnerabilities, not a JavaScript runtime, indicating a mismatch.",
-      "ai_vetted_at": "2026-11-02T07:00:18+00:00",
+      "reasoning": "Candidates are for Sun/Oracle Java SDK and IBM SDK, not .NET Core SDK. The package names match 'sdk' only by fallback, representing entirely different technologies.",
+      "ai_vetted_at": "2026-11-09T06:34:22+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -235,34 +143,78 @@
         "cpe:2.3:a:pimcore:core",
         "cpe:2.3:a:adonisjs:core"
       ],
-      "reasoning": "All candidates are for unrelated products ('core' tools from various vendors like API Platform, MobileIron, FormTools, etc.), not .NET. The repo-fallback-only heuristic is weak and the CVE descriptions do not match .NET Core functionality.",
-      "ai_vetted_at": "2026-11-02T07:00:18+00:00",
+      "reasoning": "All candidates are for unrelated 'core' products (API Platform, MobileIron, RACTF, Form Tools, OnlyOffice, Pimcore, AdonisJS), not .NET Core runtime framework.",
+      "ai_vetted_at": "2026-11-09T06:34:22+00:00",
       "model": "claude-haiku-4-5"
     },
     {
-      "conda_name": "woff2",
-      "current_purl": "pkg:github/google/woff2",
-      "verdict": "confident",
+      "conda_name": "moab",
+      "current_purl": "pkg:bitbucket/fathomteam/moab",
+      "verdict": "uncertain",
       "selected_cpes": [
-        "cpe:2.3:a:google:woff2"
+        "cpe:2.3:a:adaptivecomputing:moab"
       ],
       "candidate_cpes": [
-        "cpe:2.3:a:google:woff2"
+        "cpe:2.3:a:adaptivecomputing:moab"
       ],
-      "reasoning": "The PURL and github owner (google/woff2) match perfectly. Google is the trusted vendor and maintainer of the WOFF2 library.",
-      "ai_vetted_at": "2026-11-02T07:00:18+00:00",
+      "reasoning": "The CVEs describe Adaptive Computing Moab (a workload manager), not a mesh database. Both share the MOAB acronym but serve different purposes. Flagged uncertain pending verification.",
+      "ai_vetted_at": "2026-11-09T06:34:22+00:00",
       "model": "claude-haiku-4-5"
     },
     {
-      "conda_name": "openmp",
-      "current_purl": "pkg:github/llvm/llvm-project",
+      "conda_name": "codex",
+      "current_purl": "pkg:github/openai/codex",
       "verdict": "none",
       "selected_cpes": [],
       "candidate_cpes": [
-        "cpe:2.3:a:intel:openmp"
+        "cpe:2.3:a:codexnotes:codex"
       ],
-      "reasoning": "The candidate is Intel's oneAPI Toolkit OpenMP, but the conda package ships LLVM's OpenMP (from llvm/llvm-project). These are different implementations with separate version spaces. The H6 heuristic alone is insufficient given the clear github owner mismatch.",
-      "ai_vetted_at": "2026-11-02T07:00:18+00:00",
+      "reasoning": "The candidate is for Codex Notes (a note-taking application), not the OpenAI Codex coding agent described in the conda summary.",
+      "ai_vetted_at": "2026-11-09T06:34:22+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "libmagma_sparse",
+      "current_purl": "pkg:github/icl-utk-edu/magma",
+      "verdict": "uncertain",
+      "selected_cpes": [
+        "cpe:2.3:a:linuxfoundation:magma"
+      ],
+      "candidate_cpes": [
+        "cpe:2.3:a:linuxfoundation:magma"
+      ],
+      "reasoning": "Same issue as libmagma: CVE samples describe Mobile Management Entity rather than matrix algebra library. The MAGMA acronym overlap creates uncertainty.",
+      "ai_vetted_at": "2026-11-09T06:34:22+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "databricks-cli",
+      "current_purl": "pkg:github/databricks/cli",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:areca:cli",
+        "cpe:2.3:a:cisco:cli",
+        "cpe:2.3:a:cli_project:cli",
+        "cpe:2.3:a:snyk:cli",
+        "cpe:2.3:a:github:cli",
+        "cpe:2.3:a:nhost:cli",
+        "cpe:2.3:a:bitwarden:cli"
+      ],
+      "reasoning": "All candidates are for unrelated CLI tools (Areca backup, Cisco networking, various other CLIs), not the Databricks command-line interface.",
+      "ai_vetted_at": "2026-11-09T06:34:22+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "bun",
+      "current_purl": "pkg:github/oven-sh/bun",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:anthropic:bun"
+      ],
+      "reasoning": "The candidate is for a Google Brotli compression library, not the Oven Bun JavaScript runtime described in the conda summary.",
+      "ai_vetted_at": "2026-11-09T06:34:22+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -279,8 +231,22 @@
         "cpe:2.3:a:nhost:cli",
         "cpe:2.3:a:bitwarden:cli"
       ],
-      "reasoning": "All candidates are CLI tools from unrelated vendors (Areca, Cisco, GitHub, Snyk, Nhost, Bitwarden). None match Docker CLI. The repo-fallback-only heuristic is weak and CVEs describe completely different software.",
-      "ai_vetted_at": "2026-11-02T07:00:18+00:00",
+      "reasoning": "All candidates are generic 'cli' products unrelated to Docker. The sample CVEs describe Areca backup software, Cisco network devices, Node.js packages, Snyk security tool, GitHub CLI, Nhost backend platform, and Bitwarden password manager \u2014 none match Docker's container runtime. No Docker-specific CPE is present.",
+      "ai_vetted_at": "2026-11-09T06:34:25+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "openmp",
+      "current_purl": "pkg:github/llvm/llvm-project",
+      "verdict": "uncertain",
+      "selected_cpes": [
+        "cpe:2.3:a:intel:openmp"
+      ],
+      "candidate_cpes": [
+        "cpe:2.3:a:intel:openmp"
+      ],
+      "reasoning": "The conda package is the LLVM/Clang OpenMP implementation (from llvm/llvm-project), but the only candidate is Intel's oneAPI OpenMP. While both are OpenMP implementations, they are distinct products with separate version histories. Should be reviewed by a human before promotion.",
+      "ai_vetted_at": "2026-11-09T06:34:25+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -296,110 +262,8 @@
         "cpe:2.3:a:oracle:linux",
         "cpe:2.3:a:codesys:linux"
       ],
-      "reasoning": "All candidates are unrelated products with 'linux' in the name (listmanager, Sun, Ubuntu, Debian, Oracle, CODESYS). Linux-perf is part of the kernel itself (torvalds/linux), not a standalone product. The weak repo-fallback heuristic and mismatched CVEs indicate none of these are correct.",
-      "ai_vetted_at": "2026-11-02T07:00:18+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "pypy3.9",
-      "current_purl": "pkg:github/pypy/pypy",
-      "verdict": "confident",
-      "selected_cpes": [
-        "cpe:2.3:a:pypy:pypy"
-      ],
-      "candidate_cpes": [
-        "cpe:2.3:a:pypy:pypy"
-      ],
-      "reasoning": "Perfect match: the PURL is pkg:github/pypy/pypy and the CPE vendor:product is pypy:pypy. The H2 and H4 heuristics confirm this is the correct PyPy interpreter.",
-      "ai_vetted_at": "2026-11-02T07:00:18+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "ncbi-datasets-cli",
-      "current_purl": "pkg:github/ncbi/datasets",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:huggingface:datasets"
-      ],
-      "reasoning": "The candidate is Hugging Face's Datasets library, not NCBI Datasets. The github owner (ncbi/datasets) does not match, and the CVE describes a Python machine learning library, not NCBI's bioinformatics tool.",
-      "ai_vetted_at": "2026-11-02T07:00:18+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "torchvision-tests",
-      "current_purl": "pkg:github/pytorch/vision",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:deltek:vision",
-        "cpe:2.3:a:intel:vision"
-      ],
-      "reasoning": "Candidates are Deltek Vision (enterprise software) and Intel Vision (software utility), neither of which is PyTorch's torchvision library. The github owner (pytorch/vision) does not match any candidate.",
-      "ai_vetted_at": "2026-11-02T07:00:18+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "harp",
-      "current_purl": "pkg:github/stcorp/harp",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:harpjs:harp"
-      ],
-      "reasoning": "The candidate is HarpJS (an npm web framework), but the conda package is STCORP's HARP (satellite data processing toolset). The github owner (stcorp/harp) does not match harpjs, and the conda summary describes a scientific data tool, not a web framework.",
-      "ai_vetted_at": "2026-11-02T07:00:18+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "prismatic",
-      "current_purl": "pkg:github/prism-em/prismatic",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:plugin-planet:prismatic"
-      ],
-      "reasoning": "The candidate is a WordPress plugin, but the conda package is PRISM-EM's Prismatic (STEM simulation software). The github owner (prism-em/prismatic) does not match, and the conda summary clearly describes scientific software, not WordPress.",
-      "ai_vetted_at": "2026-11-02T07:00:18+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "apache-arrow-proc",
-      "current_purl": "pkg:github/apache/arrow",
-      "verdict": "confident",
-      "selected_cpes": [
-        "cpe:2.3:a:apache:arrow"
-      ],
-      "candidate_cpes": [
-        "cpe:2.3:a:arrow-kt:arrow",
-        "cpe:2.3:a:apache:arrow"
-      ],
-      "reasoning": "Perfect match: the github owner is apache/arrow and the trusted Apache vendor CPE has 6 CVEs with descriptions matching the Apache Arrow C++ library. Arrow-kt is a different Kotlin implementation.",
-      "ai_vetted_at": "2026-11-02T07:00:18+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "ace",
-      "current_purl": "pkg:github/docgroup/ace_tao",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:vmware:ace"
-      ],
-      "reasoning": "The candidate is VMware ACE (a virtualization product with 44 CVEs), but the conda package is The ACE Adaptive Communication Environment (a C++ library from docgroup/ace_tao). The github owner does not match and the CVEs describe virtualization software, not a C++ library.",
-      "ai_vetted_at": "2026-11-02T07:00:18+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "sirius-ms",
-      "current_purl": "pkg:github/sirius-ms/sirius",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:wordpress:sirius"
-      ],
-      "reasoning": "The candidate is a WordPress theme, but the conda package is SIRIUS (a mass spectrometry data analysis framework). The github owner (sirius-ms/sirius) does not match, and the conda summary describes scientific software, not WordPress.",
-      "ai_vetted_at": "2026-11-02T07:00:18+00:00",
+      "reasoning": "All candidates are unrelated products: listmanager, Perl Safe.pm, Ubuntu ssh-vulnkey, Debian package manager, Oracle Java, and CODESYS runtime. None represent the Linux kernel's performance analysis tools from torvalds/linux.",
+      "ai_vetted_at": "2026-11-09T06:34:25+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -424,8 +288,82 @@
         "cpe:2.3:a:pingidentity:desktop",
         "cpe:2.3:a:figma:desktop"
       ],
-      "reasoning": "All candidates are unrelated 'desktop' products (Avira, PGP, Google, Docker, Nextcloud, etc.). The conda package is .NET Desktop (from dotnet/desktop), which is Microsoft's .NET framework for desktop applications. None of the candidates match the github owner or the .NET framework description.",
-      "ai_vetted_at": "2026-11-02T07:00:18+00:00",
+      "reasoning": "All candidates are desktop applications for unrelated software (Avira antivirus, PGP encryption, Google Desktop, TIBCO analytics, Spiceworks, Leanote notes, Docker Desktop, Nextcloud sync, Oculus VR, etc.). None match .NET Core desktop framework from the dotnet/desktop repository.",
+      "ai_vetted_at": "2026-11-09T06:34:25+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "ncbi-datasets-cli",
+      "current_purl": "pkg:github/ncbi/datasets",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:huggingface:datasets"
+      ],
+      "reasoning": "The single candidate is HuggingFace's datasets library for machine learning. The conda package is NCBI's scientific data command-line tool from ncbi/datasets, which is unrelated to ML datasets.",
+      "ai_vetted_at": "2026-11-09T06:34:25+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "torchvision-tests",
+      "current_purl": "pkg:github/pytorch/vision",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:deltek:vision",
+        "cpe:2.3:a:intel:vision"
+      ],
+      "reasoning": "Candidates are Deltek Vision (ERP software) and Intel Vision (security software). Neither matches PyTorch's torchvision computer vision library from pytorch/vision.",
+      "ai_vetted_at": "2026-11-09T06:34:25+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "harp",
+      "current_purl": "pkg:github/stcorp/harp",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:harpjs:harp"
+      ],
+      "reasoning": "The candidate is HarpJS, a static web server, whose CVEs describe file exposure and symlink path traversal in a Node.js server. The conda HARP is a satellite data analysis toolkit from stcorp/harp\u2014completely different domains and purposes.",
+      "ai_vetted_at": "2026-11-09T06:34:25+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "prismatic",
+      "current_purl": "pkg:github/prism-em/prismatic",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:plugin-planet:prismatic"
+      ],
+      "reasoning": "The candidate is a WordPress plugin for syntax highlighting. The conda prismatic is an electron microscopy simulation tool from prism-em/prismatic. These are unrelated software.",
+      "ai_vetted_at": "2026-11-09T06:34:25+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "ace",
+      "current_purl": "pkg:github/docgroup/ace_tao",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:vmware:ace"
+      ],
+      "reasoning": "The candidate is VMware ACE, a desktop virtualization product. The conda ace is the ADAPTIVE Communication Environment (C++ middleware framework) from docgroup/ace_tao. Although both are abbreviated ACE, they are unrelated software from different vendors.",
+      "ai_vetted_at": "2026-11-09T06:34:25+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "photos",
+      "current_purl": null,
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:microsoft:photos",
+        "cpe:2.3:a:synology:photos"
+      ],
+      "reasoning": "Candidates are Microsoft Photos (Windows app) and Synology Photos (NAS app). The conda package is PHOTOS Monte Carlo, a physics simulation tool for QED in particle decays. These are unrelated despite the shared name.",
+      "ai_vetted_at": "2026-11-09T06:34:25+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -438,33 +376,20 @@
         "cpe:2.3:a:date_project:date",
         "cpe:2.3:a:ruby-lang:date"
       ],
-      "reasoning": "All candidates (A, B, C) are Drupal modules or Ruby gems unrelated to the C++ date library. The conda package is Howard Hinnant's modern C++ date library, not a Drupal/Ruby project.",
-      "ai_vetted_at": "2026-11-02T07:00:16+00:00",
+      "reasoning": "All candidates are Drupal Date module variants and Ruby's date gem. The conda package is a C++ date/time library by Howard Hinnant from howardhinnant/date\u2014a completely different language and purpose.",
+      "ai_vetted_at": "2026-11-09T06:34:25+00:00",
       "model": "claude-haiku-4-5"
     },
     {
-      "conda_name": "photos",
-      "current_purl": null,
+      "conda_name": "sirius-ms",
+      "current_purl": "pkg:github/sirius-ms/sirius",
       "verdict": "none",
       "selected_cpes": [],
       "candidate_cpes": [
-        "cpe:2.3:a:microsoft:photos",
-        "cpe:2.3:a:synology:photos"
+        "cpe:2.3:a:wordpress:sirius"
       ],
-      "reasoning": "Candidates are Microsoft Photos App and Synology BeePhotos, both closed-source commercial products. PHOTOS is a physics simulation tool (QED Monte Carlo), completely unrelated.",
-      "ai_vetted_at": "2026-11-02T07:00:16+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "librmm",
-      "current_purl": "pkg:github/rapidsai/rmm",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:barracuda:rmm"
-      ],
-      "reasoning": "The candidate is Barracuda RMM (Remote Monitoring & Management), an IT management solution. librmm is RAPIDS Memory Manager, a GPU memory management library\u2014unrelated products that happen to share an acronym.",
-      "ai_vetted_at": "2026-11-02T07:00:16+00:00",
+      "reasoning": "The candidate is a WordPress theme named Sirius. The conda package is SIRIUS, an LC-MS/MS data analysis framework from sirius-ms/sirius. These are unrelated; the WordPress theme is not a mass spectrometry tool.",
+      "ai_vetted_at": "2026-11-09T06:34:25+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -475,8 +400,32 @@
       "candidate_cpes": [
         "cpe:2.3:a:e-contract:dssp"
       ],
-      "reasoning": "The candidate is e-Contract DSSP (digital signature service provider), a security/signing tool. The conda package assigns secondary protein structure, a bioinformatics tool\u2014unrelated despite the matching acronym.",
-      "ai_vetted_at": "2026-11-02T07:00:16+00:00",
+      "reasoning": "The candidate is e-Contract DSSP, a signature verification tool. The conda dssp is a protein secondary structure assignment tool from pdb-redo/dssp. Despite matching names, they are unrelated software from different domains.",
+      "ai_vetted_at": "2026-11-09T06:34:25+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "filament",
+      "current_purl": "pkg:github/google/filament",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:filamentphp:filament"
+      ],
+      "reasoning": "The candidate is FilamentPHP, a Laravel web framework. The conda filament is Google's real-time rendering engine from google/filament. These are unrelated; one is a web framework and the other is a graphics library.",
+      "ai_vetted_at": "2026-11-09T06:34:25+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "librmm",
+      "current_purl": "pkg:github/rapidsai/rmm",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:barracuda:rmm"
+      ],
+      "reasoning": "The candidate is Barracuda RMM, a remote management tool for IT service providers. The conda librmm is RAPIDS Memory Manager from rapidsai/rmm, a GPU memory management library. These are unrelated software in different domains.",
+      "ai_vetted_at": "2026-11-09T06:34:25+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -488,8 +437,8 @@
         "cpe:2.3:a:makotemplates:mako",
         "cpe:2.3:a:sqlalchemy:mako"
       ],
-      "reasoning": "Candidates are Mako (Python templating engine) and SQLAlchemy's Mako. The conda package is Mako, a Rust-based web bundler by umijs, completely different from the Python template library.",
-      "ai_vetted_at": "2026-11-02T07:00:16+00:00",
+      "reasoning": "mako-rust is a web bundler written in Rust, not the Mako Python template engine. The candidates refer to Mako template library (Python-based), which is a different project despite the name match.",
+      "ai_vetted_at": "2026-11-09T06:34:23+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -501,8 +450,8 @@
         "cpe:2.3:a:time_project:time",
         "cpe:2.3:a:ruby-lang:time"
       ],
-      "reasoning": "Candidate (A) is Rust's time crate and (B) is Ruby's Time component. The conda package is GNU's time command, a Unix utility for measuring program execution\u2014unrelated to language-specific libraries.",
-      "ai_vetted_at": "2026-11-02T07:00:16+00:00",
+      "reasoning": "The conda package is the GNU time command, not the Rust time crate or Ruby time component. Candidates refer to programming language libraries, not the Unix utility.",
+      "ai_vetted_at": "2026-11-09T06:34:23+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -513,20 +462,8 @@
       "candidate_cpes": [
         "cpe:2.3:a:phpbb:garage"
       ],
-      "reasoning": "The candidate is a phpBB module, not the S3-compatible object store. This is a name collision with an unrelated WordPress/phpBB plugin.",
-      "ai_vetted_at": "2026-11-02T07:00:16+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "hclfmt",
-      "current_purl": "pkg:github/hashicorp/hcl",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:helpcenterlive:hcl"
-      ],
-      "reasoning": "The candidate is HelpCenter Live (a support software), not HashiCorp's HCL (HashiCorp Configuration Language). The match is a false positive from the repo name fallback.",
-      "ai_vetted_at": "2026-11-02T07:00:16+00:00",
+      "reasoning": "The conda package is an S3-compatible object store for geo-distributed deployments, unrelated to the phpBB Garage module. The CVE describes a PHP SQL injection in phpBB, not the Rust storage system.",
+      "ai_vetted_at": "2026-11-09T06:34:23+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -540,8 +477,20 @@
         "cpe:2.3:a:slab:quill",
         "cpe:2.3:a:anchore:quill"
       ],
-      "reasoning": "Anchore's Quill is a macOS binary signing tool (anchore/quill on GitHub), which matches the conda repo (odygrd/quill appears to be a logging library). The CVE descriptions for Anchore Quill (SSRF, unbounded reads, memory allocation) don't match a logging library, so this is uncertain but the repo match is stronger than Slab's unrelated Quill.",
-      "ai_vetted_at": "2026-11-02T07:00:16+00:00",
+      "reasoning": "The conda package is an asynchronous C++ logging library. Anchore's Quill is a binary signing tool that happens to share the name. The mismatch suggests this is likely wrong, but H2 matching on the GitHub owner warrants flagging as uncertain rather than rejecting outright.",
+      "ai_vetted_at": "2026-11-09T06:34:23+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "hclfmt",
+      "current_purl": "pkg:github/hashicorp/hcl",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:helpcenterlive:hcl"
+      ],
+      "reasoning": "hclfmt is a HashiCorp HCL reformatter tool. The candidate refers to Help Center Live (HelpCenter) software, a completely unrelated PHP-based help desk system.",
+      "ai_vetted_at": "2026-11-09T06:34:23+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -552,265 +501,8 @@
       "candidate_cpes": [
         "cpe:2.3:a:niftypm:nifty"
       ],
-      "reasoning": "The candidate is Nifty Project Management Web Application, an XSS-vulnerable web app. The conda package nifty (derthorsten/nifty) is likely a different project\u2014unrelated despite the name overlap.",
-      "ai_vetted_at": "2026-11-02T07:00:16+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "harper",
-      "current_purl": "pkg:github/elijah-potter/harper",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:axiomthemes:harper"
-      ],
-      "reasoning": "The candidate is an axiomthemes WordPress plugin with PHP RFI vulnerabilities. The conda package is Harper, a grammar checker for developers\u2014unrelated to WordPress plugins.",
-      "ai_vetted_at": "2026-11-02T07:00:16+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "prismatic_cli",
-      "current_purl": "pkg:github/prism-em/prismatic",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:plugin-planet:prismatic"
-      ],
-      "reasoning": "The candidate is a WordPress plugin (plugin-planet/prismatic) with sanitization/XSS issues. The conda package is a STEM microscopy simulation tool (prism-em/prismatic)\u2014unrelated despite the name match.",
-      "ai_vetted_at": "2026-11-02T07:00:16+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "prismatic_gui",
-      "current_purl": "pkg:github/prism-em/prismatic",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:plugin-planet:prismatic"
-      ],
-      "reasoning": "Same as prismatic_cli: the candidate is a WordPress plugin, but the conda package is a STEM microscopy simulation tool. The repo name match is a false positive.",
-      "ai_vetted_at": "2026-11-02T07:00:16+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "nexus",
-      "current_purl": "pkg:github/nexusformat/code",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:sonatype:nexus"
-      ],
-      "reasoning": "The candidate is Sonatype Nexus, a repository manager with deserialization/RCE vulnerabilities. The conda package is NeXus, a data format specification for scientific experiments\u2014distinct unrelated projects despite name similarity.",
-      "ai_vetted_at": "2026-11-02T07:00:16+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "cascade",
-      "current_purl": "pkg:github/esa/cascade",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:hannonhill:cascade"
-      ],
-      "reasoning": "The candidate is Hannon Hill Cascade Server, a CMS/XSLT platform. The conda package is Cascade, an N-body orbital simulation tool\u2014unrelated products sharing a name.",
-      "ai_vetted_at": "2026-11-02T07:00:16+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "austin",
-      "current_purl": "pkg:github/p403n1x87/austin",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:zhongfucheng3y:austin"
-      ],
-      "reasoning": "The candidate CPE is for ZhongFuCheng3y Austin, a Java web framework with CVEs in web controller and file handling. The conda package is a Python frame stack sampler for CPython\u2014completely different software despite the name match.",
-      "ai_vetted_at": "2026-11-02T07:00:17+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "foton",
-      "current_purl": null,
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:qodeinteractive:foton"
-      ],
-      "reasoning": "The candidate CPE describes a PHP-based WordPress theme plugin with RFI vulnerabilities. The conda package is a graphical filter design tool\u2014unrelated despite the name coincidence.",
-      "ai_vetted_at": "2026-11-02T07:00:17+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "cni-plugins",
-      "current_purl": "pkg:github/containernetworking/plugins",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:nagios:plugins"
-      ],
-      "reasoning": "The candidate CPE is for Nagios Plugins (network monitoring), not Container Networking Interface plugins. The repo name fallback is weak and the CVEs describe Nagios-specific buffer overflows in network checks, not container networking.",
-      "ai_vetted_at": "2026-11-02T07:00:17+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "pangolin-opengl",
-      "current_purl": "pkg:github/stevenlovegrove/pangolin",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:pangolin:pangolin"
-      ],
-      "reasoning": "The candidate CVEs mention 'fosrl/pangolin' with 2FA and authentication components, inconsistent with a 3D visualization library. The CVE descriptions do not match a lightweight utility library for prototyping.",
-      "ai_vetted_at": "2026-11-02T07:00:17+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "aqua",
-      "current_purl": "pkg:github/aquaproj/aqua",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:jetbrains:aqua"
-      ],
-      "reasoning": "The candidate CPE is for JetBrains Aqua (an IDE), while the conda package is a Go-based CLI version manager. The CVE describes IDE token exposure, not version management functionality.",
-      "ai_vetted_at": "2026-11-02T07:00:17+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "jigsaw",
-      "current_purl": "pkg:github/dengwirda/jigsaw",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:w3c:jigsaw"
-      ],
-      "reasoning": "The candidate CPE is for W3C Jigsaw (a web server/proxy from the 2000s), while the conda package is a Delaunay-based mesh generator. The CVEs describe HTTP/proxy vulnerabilities, not mesh generation.",
-      "ai_vetted_at": "2026-11-02T07:00:17+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "scorec",
-      "current_purl": "pkg:github/scorec/core",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:api-platform:core",
-        "cpe:2.3:a:mobileiron:core",
-        "cpe:2.3:a:ractf:core",
-        "cpe:2.3:a:formtools:core",
-        "cpe:2.3:a:onlyoffice:core",
-        "cpe:2.3:a:pimcore:core",
-        "cpe:2.3:a:adonisjs:core"
-      ],
-      "reasoning": "All candidates are generic 'core' products (API Platform, MobileIron, RACTF, Form Tools, OnlyOffice, Pimcore, AdonisJS) matched only by weak repo-fallback heuristics. None describe mesh simulation libraries\u2014they are unrelated web, mobile, or office software.",
-      "ai_vetted_at": "2026-11-02T07:00:17+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "tritonclient-http",
-      "current_purl": "pkg:github/triton-inference-server/client",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:novell:client",
-        "cpe:2.3:a:akamai_technologies:client",
-        "cpe:2.3:a:red_swoosh:client",
-        "cpe:2.3:a:pulsesecure:client",
-        "cpe:2.3:a:microfocus:client",
-        "cpe:2.3:a:1e:client",
-        "cpe:2.3:a:mimsoftware:client"
-      ],
-      "reasoning": "All candidates (Novell, Akamai, Red Swoosh, Pulse Secure, MicroFocus, 1E, MIM) describe generic client software unrelated to Triton Inference Server. The CVEs involve antivirus, network clients, and enterprise tools\u2014not ML inference.",
-      "ai_vetted_at": "2026-11-02T07:00:17+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "spectra-cpp",
-      "current_purl": "pkg:github/yixuan/spectra",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:allaire:spectra",
-        "cpe:2.3:a:sectona:spectra",
-        "cpe:2.3:a:brainstormforce:spectra",
-        "cpe:2.3:a:wpspectra:spectra"
-      ],
-      "reasoning": "Candidates are for unrelated Spectra products: a 2000s web framework (Allaire), a security tool (Sectona), and WordPress plugins (Brainstorm Force, wpspectra). None match a C++ eigenvalue library.",
-      "ai_vetted_at": "2026-11-02T07:00:17+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "elixir",
-      "current_purl": "pkg:github/elixir-lang/elixir",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:ematia:elixir"
-      ],
-      "reasoning": "The candidate CPE is for Ematia Elixir, a cryptographic library with a Blowfish IV bug. The conda package is the Elixir programming language\u2014different software despite the name match.",
-      "ai_vetted_at": "2026-11-02T07:00:17+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "jj",
-      "current_purl": "pkg:github/martinvonz/jj",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:renaud_deraison:jj"
-      ],
-      "reasoning": "The candidate CPE is for a 1999 CGI program with shell metacharacter injection, unrelated to a modern Git-compatible VCS called jj (jujutsu).",
-      "ai_vetted_at": "2026-11-02T07:00:17+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "lemon",
-      "current_purl": "pkg:github/k-dominik/lemon",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:mossle:lemon"
-      ],
-      "reasoning": "The candidate CPE is for Mossle Lemon, a Java web/CMS framework with file upload and XSS vulnerabilities. The conda package is a network optimization library\u2014different despite the name.",
-      "ai_vetted_at": "2026-11-02T07:00:17+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "jujutsu",
-      "current_purl": "pkg:github/jj-vcs/jj",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:renaud_deraison:jj"
-      ],
-      "reasoning": "The candidate CPE is for a 1999 CGI program ('jj'), not the modern jujutsu VCS. The CVE describes shell injection in an old CGI tool, unrelated to a contemporary version control system.",
-      "ai_vetted_at": "2026-11-02T07:00:17+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "arb",
-      "current_purl": "pkg:github/fredrik-johansson/arb",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:lehrstuhl_fur_mikrobiologie:arb"
-      ],
-      "reasoning": "The candidate CPE is for ARB (a bioinformatics/microbiology tool with a symlink vulnerability), not a C library for interval arithmetic. The CVE describes a /tmp symlink attack on bioinformatics software.",
-      "ai_vetted_at": "2026-11-02T07:00:17+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "samurai",
-      "current_purl": "pkg:github/hpc-maths/samurai",
-      "verdict": "uncertain",
-      "selected_cpes": [
-        "cpe:2.3:a:samurai_project:samurai"
-      ],
-      "candidate_cpes": [
-        "cpe:2.3:a:samurai_project:samurai"
-      ],
-      "reasoning": "The candidate CPE is for samurai build tool with buffer overflow and NULL pointer dereference CVEs in build file parsing. The conda package description (adaptive mesh refinement) is vague; it could be a different 'samurai' project, so marked uncertain pending human review.",
-      "ai_vetted_at": "2026-11-02T07:00:17+00:00",
+      "reasoning": "The conda package is a visualization library (derthorsten/nifty on GitHub), not the NiftyPM project management web application. The CVE describes XSS in a project management tool, not a visualization library.",
+      "ai_vetted_at": "2026-11-09T06:34:23+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -827,8 +519,267 @@
         "cpe:2.3:a:nhost:cli",
         "cpe:2.3:a:bitwarden:cli"
       ],
-      "reasoning": "All candidates are generic 'cli' products (Areca, Cisco, etc.) unrelated to an S3-compatible Rust client. The conda summary describes a specific S3 tool, not any of these generic CLI tools.",
-      "ai_vetted_at": "2026-11-02T07:00:30+00:00",
+      "reasoning": "rustfs-cli is a Rust-based S3-compatible CLI tool. All candidates are for unrelated software (Areca backup, Cisco IOS, node-cli, Snyk CLI, GitHub CLI, Nhost CLI, Bitwarden CLI) matched only by the generic 'cli' product name. No match to rustfs.",
+      "ai_vetted_at": "2026-11-09T06:34:23+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "harper",
+      "current_purl": "pkg:github/elijah-potter/harper",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:axiomthemes:harper"
+      ],
+      "reasoning": "Harper is a grammar checker for developers (elijah-potter/harper). The candidate is a WordPress theme plugin by axiomthemes, a completely different product sharing only the name.",
+      "ai_vetted_at": "2026-11-09T06:34:23+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "pangolin-opengl",
+      "current_purl": "pkg:github/stevenlovegrove/pangolin",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:pangolin:pangolin"
+      ],
+      "reasoning": "The conda package is a visualization and prototyping library by stevenlovegrove. The CVEs describe 'fosrl/pangolin', a completely different project (appears to be a resource management/authentication system), not the graphics library.",
+      "ai_vetted_at": "2026-11-09T06:34:23+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "cascade",
+      "current_purl": "pkg:github/esa/cascade",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:hannonhill:cascade"
+      ],
+      "reasoning": "The conda package is an N-body orbital simulation by ESA. The candidate is Hannon Hill Cascade Server, a CMS platform, completely unrelated despite the name match.",
+      "ai_vetted_at": "2026-11-09T06:34:23+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "prismatic_cli",
+      "current_purl": "pkg:github/prism-em/prismatic",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:plugin-planet:prismatic"
+      ],
+      "reasoning": "prismatic_cli is a STEM electron microscopy simulation tool (prism-em/prismatic). The candidate is a WordPress plugin for image effects, a completely different product.",
+      "ai_vetted_at": "2026-11-09T06:34:23+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "prismatic_gui",
+      "current_purl": "pkg:github/prism-em/prismatic",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:plugin-planet:prismatic"
+      ],
+      "reasoning": "prismatic_gui is a STEM electron microscopy simulation tool (prism-em/prismatic). The candidate is a WordPress plugin for image effects, a completely different product.",
+      "ai_vetted_at": "2026-11-09T06:34:23+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "nexus",
+      "current_purl": "pkg:github/nexusformat/code",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:sonatype:nexus"
+      ],
+      "reasoning": "The conda package is NeXus, a scientific data format for neutron/x-ray experiments. The candidate is Sonatype Nexus, a Java-based repository management tool, a completely different software product.",
+      "ai_vetted_at": "2026-11-09T06:34:23+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "cni-plugins",
+      "current_purl": "pkg:github/containernetworking/plugins",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:nagios:plugins"
+      ],
+      "reasoning": "cni-plugins are Container Networking Interface plugins by the containernetworking team. The candidate refers to Nagios Plugins, monitoring software for system administration, completely unrelated despite the generic 'plugins' name.",
+      "ai_vetted_at": "2026-11-09T06:34:23+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "austin",
+      "current_purl": "pkg:github/p403n1x87/austin",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:zhongfucheng3y:austin"
+      ],
+      "reasoning": "Austin is a CPython frame stack sampler (p403n1x87/austin). The candidate is ZhongFuCheng3y Austin, a Java-based platform for something entirely different, sharing only the name.",
+      "ai_vetted_at": "2026-11-09T06:34:23+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "foton",
+      "current_purl": null,
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:qodeinteractive:foton"
+      ],
+      "reasoning": "The candidate CPE is for a WordPress theme by Mikado-Themes, not a graphical filter design program. The CVE describes PHP RFI in a web application, completely unrelated to the conda package's purpose.",
+      "ai_vetted_at": "2026-11-09T06:34:25+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "aqua",
+      "current_purl": "pkg:github/aquaproj/aqua",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:jetbrains:aqua"
+      ],
+      "reasoning": "The candidate CPE is for JetBrains' Aqua IDE product. The conda package is a CLI version manager written in Go by aquaproj, a completely different product. The CVE about IDE token exposure has no relevance.",
+      "ai_vetted_at": "2026-11-09T06:34:25+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "jigsaw",
+      "current_purl": "pkg:github/dengwirda/jigsaw",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:w3c:jigsaw"
+      ],
+      "reasoning": "The candidate CPE is for W3C's Jigsaw web server/proxy (2002-2004 era), not the modern Delaunay mesh generator. The conda package and CVEs describe entirely different software.",
+      "ai_vetted_at": "2026-11-09T06:34:25+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "scorec",
+      "current_purl": "pkg:github/scorec/core",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:api-platform:core",
+        "cpe:2.3:a:mobileiron:core",
+        "cpe:2.3:a:ractf:core",
+        "cpe:2.3:a:formtools:core",
+        "cpe:2.3:a:onlyoffice:core",
+        "cpe:2.3:a:pimcore:core",
+        "cpe:2.3:a:adonisjs:core"
+      ],
+      "reasoning": "All candidates are false matches (API Platform, MobileIron, RACTF, Form Tools, OnlyOffice, Pimcore, AdonisJS) found only via weak repo-name fallback. None match the C/C++ unstructured mesh library described in the conda summary.",
+      "ai_vetted_at": "2026-11-09T06:34:25+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "elixir",
+      "current_purl": "pkg:github/elixir-lang/elixir",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:ematia:elixir"
+      ],
+      "reasoning": "The candidate CPE is for Ematia's Elixir encryption software (Blowfish cipher library from 2012), not the Elixir programming language by the Elixir Foundation that the conda package ships.",
+      "ai_vetted_at": "2026-11-09T06:34:25+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "tritonclient-http",
+      "current_purl": "pkg:github/triton-inference-server/client",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:novell:client",
+        "cpe:2.3:a:red_swoosh:client",
+        "cpe:2.3:a:akamai_technologies:client",
+        "cpe:2.3:a:pulsesecure:client",
+        "cpe:2.3:a:microfocus:client",
+        "cpe:2.3:a:1e:client",
+        "cpe:2.3:a:mimsoftware:client"
+      ],
+      "reasoning": "All candidates (Novell, Red Swoosh, Akamai, PulseSecure, MicroFocus, 1E, MIM) are completely unrelated enterprise/client software found only via weak repo-fallback. None match Triton Inference Server's Python/C++ client library.",
+      "ai_vetted_at": "2026-11-09T06:34:25+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "spectra-cpp",
+      "current_purl": "pkg:github/yixuan/spectra",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:allaire:spectra",
+        "cpe:2.3:a:sectona:spectra",
+        "cpe:2.3:a:brainstormforce:spectra",
+        "cpe:2.3:a:wpspectra:spectra"
+      ],
+      "reasoning": "All candidates are unrelated: Allaire Spectra (legacy web platform 2000), Sectona Spectra (security), Brainstorm Force Spectra (WordPress plugin), and wpspectra (WordPress plugin). None match the C++ eigenvalue library.",
+      "ai_vetted_at": "2026-11-09T06:34:25+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "jujutsu",
+      "current_purl": "pkg:github/jj-vcs/jj",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:renaud_deraison:jj"
+      ],
+      "reasoning": "The candidate is for a 1999 CGI program, not the modern Git-compatible VCS jujutsu (jj) currently maintained by jj-vcs. Completely unrelated software.",
+      "ai_vetted_at": "2026-11-09T06:34:25+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "lemon",
+      "current_purl": "pkg:github/k-dominik/lemon",
+      "verdict": "uncertain",
+      "selected_cpes": [
+        "cpe:2.3:a:mossle:lemon"
+      ],
+      "candidate_cpes": [
+        "cpe:2.3:a:mossle:lemon"
+      ],
+      "reasoning": "The Mossle lemon appears to be a web application framework with multiple CVEs, while the conda package is a C++ graph optimization library. The name match and CVE count triggered heuristics, but the actual software may be different; needs human review.",
+      "ai_vetted_at": "2026-11-09T06:34:25+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "jj",
+      "current_purl": "pkg:github/martinvonz/jj",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:renaud_deraison:jj"
+      ],
+      "reasoning": "The candidate is for a 1999 CGI program with shell injection issues. The conda package jj is the modern Git-compatible VCS, completely unrelated software despite the matching short name.",
+      "ai_vetted_at": "2026-11-09T06:34:25+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "arb",
+      "current_purl": "pkg:github/fredrik-johansson/arb",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:lehrstuhl_fur_mikrobiologie:arb"
+      ],
+      "reasoning": "The candidate CPE is for ARB (a bioinformatics/microbiology tool), not the arbitrary-precision interval arithmetic library. The CVE describes a symlink attack in the microbiology tool, unrelated to the conda package.",
+      "ai_vetted_at": "2026-11-09T06:34:25+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "samurai",
+      "current_purl": "pkg:github/hpc-maths/samurai",
+      "verdict": "uncertain",
+      "selected_cpes": [
+        "cpe:2.3:a:samurai_project:samurai"
+      ],
+      "candidate_cpes": [
+        "cpe:2.3:a:samurai_project:samurai"
+      ],
+      "reasoning": "The CPE describes a build system/parser tool with CVEs about buffer overflows and null pointers from crafted build files, while the conda package is an interval/AMR library. Strong name match and CVE count, but underlying software appears different; human review needed.",
+      "ai_vetted_at": "2026-11-09T06:34:25+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -838,15 +789,15 @@
       "selected_cpes": [],
       "candidate_cpes": [
         "cpe:2.3:a:novell:client",
-        "cpe:2.3:a:akamai_technologies:client",
         "cpe:2.3:a:red_swoosh:client",
+        "cpe:2.3:a:akamai_technologies:client",
         "cpe:2.3:a:pulsesecure:client",
         "cpe:2.3:a:microfocus:client",
         "cpe:2.3:a:1e:client",
         "cpe:2.3:a:mimsoftware:client"
       ],
-      "reasoning": "All candidates are generic 'client' products (Novell, Akamai, etc.) unrelated to Triton Inference Server. The conda summary describes a specific client for Triton, not any of these unrelated client products.",
-      "ai_vetted_at": "2026-11-02T07:00:30+00:00",
+      "reasoning": "All candidates (Novell, Red Swoosh, Akamai, PulseSecure, MicroFocus, 1E, MIM) are completely unrelated enterprise/client software found only via weak repo-fallback. None match Triton Inference Server's Python/C++ client library.",
+      "ai_vetted_at": "2026-11-09T06:34:25+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -859,8 +810,44 @@
       "candidate_cpes": [
         "cpe:2.3:a:lycheeorg:lychee"
       ],
-      "reasoning": "The lycheeorg:lychee CPE matches the name and description mentions photo-management, but the conda lychee is a link-checker tool. These are different products (Lychee photo app vs. lychee link checker), so this is a false match despite name overlap.",
-      "ai_vetted_at": "2026-11-02T07:00:30+00:00",
+      "reasoning": "The CPE is for Lychee photo-management software (PHP-based, versions 3-5) with XSS and SQL injection CVEs, while the conda package is a Rust-based link checker. Strong name match and CVE count, but the software appears functionally and technologically distinct; human review recommended.",
+      "ai_vetted_at": "2026-11-09T06:34:25+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "lux-cli",
+      "current_purl": "pkg:github/lumen-oss/lux",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:luxcore:lux"
+      ],
+      "reasoning": "The candidate CPE is for LuxCore, a cryptocurrency project, not a Lua package manager. The CVE describes cryptocurrency denial-of-service, completely unrelated to the conda package's purpose.",
+      "ai_vetted_at": "2026-11-09T06:34:25+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "age",
+      "current_purl": "pkg:github/filosottile/age",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:apache:age"
+      ],
+      "reasoning": "The Apache AGE candidate is for a PostgreSQL extension/SQL driver, not the standalone file encryption tool described in the conda summary. The CVE mentions SQL injections in database drivers, which is unrelated to the age encryption tool.",
+      "ai_vetted_at": "2026-11-09T06:34:34+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "qd",
+      "current_purl": null,
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:qd-today:qd"
+      ],
+      "reasoning": "The qd-today/qd candidate describes a web service vulnerable to SSRF, not a C++/Fortran numeric library. The CVE context does not match the conda package's purpose.",
+      "ai_vetted_at": "2026-11-09T06:34:34+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -871,23 +858,21 @@
       "candidate_cpes": [
         "cpe:2.3:a:wordpress:sirius"
       ],
-      "reasoning": "The wordpress:sirius candidate is a WordPress theme, not a domain-specific library for electronic structure calculations. These are completely unrelated despite name match.",
-      "ai_vetted_at": "2026-11-02T07:00:30+00:00",
+      "reasoning": "The WordPress/sirius candidate is for a WordPress theme, not an electronic structure calculation library. The CVE is about XSS in a WordPress theme, which is unrelated to the scientific computing package.",
+      "ai_vetted_at": "2026-11-09T06:34:34+00:00",
       "model": "claude-haiku-4-5"
     },
     {
       "conda_name": "atlasgo",
       "current_purl": "pkg:github/ariga/atlas",
-      "verdict": "uncertain",
-      "selected_cpes": [
-        "cpe:2.3:a:apache:atlas"
-      ],
+      "verdict": "none",
+      "selected_cpes": [],
       "candidate_cpes": [
         "cpe:2.3:a:apache:atlas",
         "cpe:2.3:a:creativeitem:atlas"
       ],
-      "reasoning": "apache:atlas is a metadata management system, while atlasgo is a database schema management tool. The name matches but they serve different purposes; unclear if this is an alias or misidentification.",
-      "ai_vetted_at": "2026-11-02T07:00:30+00:00",
+      "reasoning": "The Apache Atlas candidate is for a metadata management and governance platform, while atlasgo (atlas) is a database schema management tool. The CVEs describe web application vulnerabilities in Atlas metadata management, not schema migration tooling. The Creativeitem Atlas is a business directory plugin, also unrelated.",
+      "ai_vetted_at": "2026-11-09T06:34:34+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -904,73 +889,59 @@
         "cpe:2.3:a:nhost:cli",
         "cpe:2.3:a:bitwarden:cli"
       ],
-      "reasoning": "All candidates are generic 'cli' products (Areca, Cisco, Snyk, etc.) unrelated to Dependabot testing. The conda package is a specific Dependabot tool, not any of these unrelated CLI tools.",
-      "ai_vetted_at": "2026-11-02T07:00:30+00:00",
+      "reasoning": "All candidates are for unrelated CLI tools (Areca backup, Cisco networking, generic CLI project, Snyk security, GitHub CLI, Nhost backend, Bitwarden password manager). None match GitHub's Dependabot CLI for testing dependency updates.",
+      "ai_vetted_at": "2026-11-09T06:34:34+00:00",
       "model": "claude-haiku-4-5"
     },
     {
-      "conda_name": "qd",
-      "current_purl": null,
-      "verdict": "uncertain",
-      "selected_cpes": [
-        "cpe:2.3:a:qd-today:qd"
-      ],
-      "candidate_cpes": [
-        "cpe:2.3:a:qd-today:qd"
-      ],
-      "reasoning": "qd-today:qd appears to be a URL shortener/note app vulnerable to SSRF, while the conda qd is a C++/Fortran numeric library. Despite name match, these are likely unrelated products.",
-      "ai_vetted_at": "2026-11-02T07:00:30+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "age",
-      "current_purl": "pkg:github/filosottile/age",
+      "conda_name": "vhs",
+      "current_purl": "pkg:github/charmbracelet/vhs",
       "verdict": "none",
       "selected_cpes": [],
       "candidate_cpes": [
-        "cpe:2.3:a:apache:age"
+        "cpe:2.3:a:vhs_project:vhs"
       ],
-      "reasoning": "apache:age is an AGE driver for PostgreSQL (SQL injection), while the conda age is a file encryption tool. These are completely different products despite name overlap.",
-      "ai_vetted_at": "2026-11-02T07:00:30+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "checkmate",
-      "current_purl": "pkg:github/adedayo/checkmate",
-      "verdict": "uncertain",
-      "selected_cpes": [
-        "cpe:2.3:a:bluewavelabs:checkmate"
-      ],
-      "candidate_cpes": [
-        "cpe:2.3:a:bluewavelabs:checkmate"
-      ],
-      "reasoning": "bluewavelabs:checkmate is a server monitoring tool, while the conda checkmate is a code security analysis tool. Both are tools but serve different purposes, so uncertain if they're related or a false match.",
-      "ai_vetted_at": "2026-11-02T07:00:30+00:00",
+      "reasoning": "The vhs_project/vhs candidate is for a TYPO3 fluid template extension with SQL injection, not the terminal screen recording CLI tool described in the conda summary.",
+      "ai_vetted_at": "2026-11-09T06:34:34+00:00",
       "model": "claude-haiku-4-5"
     },
     {
       "conda_name": "fresh-editor",
       "current_purl": "pkg:github/sinelaw/fresh",
-      "verdict": "none",
-      "selected_cpes": [],
+      "verdict": "uncertain",
+      "selected_cpes": [
+        "cpe:2.3:a:fresh_project:fresh"
+      ],
       "candidate_cpes": [
         "cpe:2.3:a:devsaran:fresh",
         "cpe:2.3:a:fresh_project:fresh"
       ],
-      "reasoning": "Both candidates (Drupal theme and Express.js module) are unrelated to a terminal text editor. The conda package description does not match either candidate.",
-      "ai_vetted_at": "2026-11-02T07:00:30+00:00",
+      "reasoning": "The fresh_project candidate describes an Express.js HTTP freshness testing module (ReDoS vulnerability), while the conda package is a terminal text editor. The match is weak and likely a false positive from name collision, but fresh_project is the closest match semantically.",
+      "ai_vetted_at": "2026-11-09T06:34:34+00:00",
       "model": "claude-haiku-4-5"
     },
     {
-      "conda_name": "pyranha",
-      "current_purl": "pkg:github/bluescarni/piranha",
+      "conda_name": "checkmate",
+      "current_purl": "pkg:github/adedayo/checkmate",
       "verdict": "none",
       "selected_cpes": [],
       "candidate_cpes": [
-        "cpe:2.3:a:ryan_ohara:piranha"
+        "cpe:2.3:a:bluewavelabs:checkmate"
       ],
-      "reasoning": "ryan_ohara:piranha is a configuration tool, not bindings to a computer algebra system. The conda pyranha is Python bindings to Piranha, making this a mismatch.",
-      "ai_vetted_at": "2026-11-02T07:00:30+00:00",
+      "reasoning": "The bluewavelabs/checkmate candidate is for a server monitoring tool, not a pluggable code security analysis tool as described. The CVEs concern monitoring infrastructure, not security analysis.",
+      "ai_vetted_at": "2026-11-09T06:34:34+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "jmol",
+      "current_purl": "pkg:github/bobhanson/jmol-swingjs",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:geoffrowland:jmol"
+      ],
+      "reasoning": "The geoffrowland/jmol candidates describe a Moodle LMS plugin, not the standalone molecule viewer/editor software. The CVEs are for a Moodle extension, which is distinct from the chemistry visualization tool.",
+      "ai_vetted_at": "2026-11-09T06:34:34+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -981,8 +952,8 @@
       "candidate_cpes": [
         "cpe:2.3:a:ruby-lang:trunk"
       ],
-      "reasoning": "ruby-lang:trunk is related to Ruby OpenSSL certificate validation, not a Rust build tool. These are completely unrelated despite the name match.",
-      "ai_vetted_at": "2026-11-02T07:00:30+00:00",
+      "reasoning": "The ruby-lang/trunk candidate is for a Ruby OpenSSL certificate validation issue, not a Rust/WebAssembly build tool. The CVE context is completely unrelated to the build tooling purpose.",
+      "ai_vetted_at": "2026-11-09T06:34:34+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -996,45 +967,20 @@
         "cpe:2.3:a:jetbrains:toolbox",
         "cpe:2.3:a:themedy:toolbox"
       ],
-      "reasoning": "All candidates (Mp3 ToolBox, PC-Doctor, JetBrains, Themedy) are unrelated to a C++ string/bytes helper library. None match the actual purpose of the conda package.",
-      "ai_vetted_at": "2026-11-02T07:00:30+00:00",
+      "reasoning": "All candidates (Mp3, PC-Doctor, JetBrains, Themedy toolbox) are unrelated to a C++ string/bytes helper library. JetBrains Toolbox is an IDE launcher, not a C++ utility library.",
+      "ai_vetted_at": "2026-11-09T06:34:34+00:00",
       "model": "claude-haiku-4-5"
     },
     {
-      "conda_name": "lux-cli",
-      "current_purl": "pkg:github/lumen-oss/lux",
+      "conda_name": "pyranha",
+      "current_purl": "pkg:github/bluescarni/piranha",
       "verdict": "none",
       "selected_cpes": [],
       "candidate_cpes": [
-        "cpe:2.3:a:luxcore:lux"
+        "cpe:2.3:a:ryan_ohara:piranha"
       ],
-      "reasoning": "luxcore:lux is a cryptocurrency, while the conda lux-cli is a Lua package manager. These are completely unrelated despite name overlap.",
-      "ai_vetted_at": "2026-11-02T07:00:30+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "jmol",
-      "current_purl": "pkg:github/bobhanson/jmol-swingjs",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:geoffrowland:jmol"
-      ],
-      "reasoning": "geoffrowland:jmol is a Moodle LMS plugin for molecule viewing, while the conda jmol is the standalone Jmol molecule viewer application. These are related products but the CPE describes a plugin variant, not the main application.",
-      "ai_vetted_at": "2026-11-02T07:00:30+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "dtools",
-      "current_purl": "pkg:github/dlang/tools",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:vmware:tools",
-        "cpe:2.3:a:irfanview:tools"
-      ],
-      "reasoning": "All candidates (VMware Tools, IrfanView Tools) are unrelated to D programming language compiler tools. The CVEs describe VM software and image viewers, not language tooling.",
-      "ai_vetted_at": "2026-11-02T07:00:32+00:00",
+      "reasoning": "The ryan_ohara/piranha candidate is for an old configuration management tool (pre-2000s), not the Piranha computer algebra system. The CVE describes web-based configuration bypass, unrelated to symbolic mathematics.",
+      "ai_vetted_at": "2026-11-09T06:34:34+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -1047,8 +993,33 @@
         "cpe:2.3:a:sage-mozdev:sage",
         "cpe:2.3:a:sage.mozdev:sage"
       ],
-      "reasoning": "The candidates are for Sage (a web application or Firefox extension), not SageMath's Rubik's cube solver. The conda package is a mathematical utility, not related to web vulnerabilities in unrelated Sage products.",
-      "ai_vetted_at": "2026-11-02T07:00:32+00:00",
+      "reasoning": "All sage candidates (sage, sage-mozdev, sage.mozdev) refer to Firefox extensions and web feed readers, not the SageMath computer algebra system. The CVEs are for Firefox/RSS functionality, not mathematical software.",
+      "ai_vetted_at": "2026-11-09T06:34:34+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "dtools",
+      "current_purl": "pkg:github/dlang/tools",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:vmware:tools",
+        "cpe:2.3:a:irfanview:tools"
+      ],
+      "reasoning": "The VMware Tools and IrfanView Tools candidates are unrelated to D programming language compiler tools. The CVEs describe system administration and image viewer issues, not language tooling.",
+      "ai_vetted_at": "2026-11-09T06:34:34+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "connectome-workbench-cli",
+      "current_purl": "pkg:github/washington-university/workbench",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:salesforce:workbench"
+      ],
+      "reasoning": "The salesforce/workbench candidate is for a Salesforce administration tool, not the Human Connectome Project neuroimaging utility. The CVE describes Salesforce API interaction issues, unrelated to brain imaging.",
+      "ai_vetted_at": "2026-11-09T06:34:34+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -1062,8 +1033,22 @@
         "cpe:2.3:a:jetbrains:toolbox",
         "cpe:2.3:a:themedy:toolbox"
       ],
-      "reasoning": "ToolBox++ is a C++ string/bytes helper library. All candidates describe unrelated products: MP3 ToolBox (PHP app), PC-Doctor (diagnostic tool), JetBrains Toolbox (IDE launcher), and Themedy Toolbox (WordPress plugin). None match the underlying C++ library.",
-      "ai_vetted_at": "2026-11-02T07:00:32+00:00",
+      "reasoning": "All candidates are unrelated to ToolBox++ (a C++ library for string/bytes handling). They are for PHP ToolBox, PC-Doctor Toolbox, JetBrains Toolbox (IDE tool), and WordPress plugin\u2014none match the conda package's C++ library purpose.",
+      "ai_vetted_at": "2026-11-09T06:34:35+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "sagemath-db-combinatorial-designs",
+      "current_purl": "pkg:github/sagemath/sage",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:sage:sage",
+        "cpe:2.3:a:sage-mozdev:sage",
+        "cpe:2.3:a:sage.mozdev:sage"
+      ],
+      "reasoning": "All candidates are for Sage web applications or Firefox extensions, not the SageMath computer algebra system. The conda package is a database component of SageMath, which does not match any NVD CVE records for the actual SageMath project.",
+      "ai_vetted_at": "2026-11-09T06:34:35+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -1080,8 +1065,8 @@
         "cpe:2.3:a:nhost:cli",
         "cpe:2.3:a:bitwarden:cli"
       ],
-      "reasoning": "All candidates are generic CLI tools (Areca, Cisco, Node CLI, Snyk, GitHub, Nhost, Bitwarden) unrelated to Rancher's container management CLI. None describe the Rancher orchestration platform.",
-      "ai_vetted_at": "2026-11-02T07:00:32+00:00",
+      "reasoning": "No candidates match the Rancher CLI (Kubernetes container management). The candidates are for unrelated tools: Areca, Cisco, node-cli, Snyk, GitHub, Nhost, and Bitwarden CLIs. The Rancher project itself does not appear in the candidate list.",
+      "ai_vetted_at": "2026-11-09T06:34:35+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -1098,60 +1083,8 @@
         "cpe:2.3:a:nhost:cli",
         "cpe:2.3:a:bitwarden:cli"
       ],
-      "reasoning": "Google Workspace CLI for productivity tools shares the same generic CLI candidates. None of these (Areca, Cisco, Node CLI, Snyk, GitHub, Nhost, Bitwarden) are Google Workspace related.",
-      "ai_vetted_at": "2026-11-02T07:00:32+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "sagemath-db-combinatorial-designs",
-      "current_purl": "pkg:github/sagemath/sage",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:sage:sage",
-        "cpe:2.3:a:sage-mozdev:sage",
-        "cpe:2.3:a:sage.mozdev:sage"
-      ],
-      "reasoning": "This is a combinatorial designs database for SageMath, not the Sage web application or Firefox extension. The CVEs describe unrelated Sage products (web app XSS vulnerabilities, Firefox extensions).",
-      "ai_vetted_at": "2026-11-02T07:00:32+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "vhs",
-      "current_purl": "pkg:github/charmbracelet/vhs",
-      "verdict": "uncertain",
-      "selected_cpes": [
-        "cpe:2.3:a:vhs_project:vhs"
-      ],
-      "candidate_cpes": [
-        "cpe:2.3:a:vhs_project:vhs"
-      ],
-      "reasoning": "The candidate vhs_project:vhs is a TYPO3 extension for ViewHelpers, while conda vhs is a CLI recording tool. The names match but functionality differs significantly; unclear if they're the same upstream.",
-      "ai_vetted_at": "2026-11-02T07:00:32+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "connectome-workbench-cli",
-      "current_purl": "pkg:github/washington-university/workbench",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:salesforce:workbench"
-      ],
-      "reasoning": "Connectome Workbench is a neuroimaging utility from Washington University; the candidate Salesforce Workbench is an unrelated admin/developer tool for Salesforce APIs.",
-      "ai_vetted_at": "2026-11-02T07:00:32+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "connectome-workbench-gui",
-      "current_purl": "pkg:github/washington-university/workbench",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:salesforce:workbench"
-      ],
-      "reasoning": "Connectome Workbench is a neuroimaging utility from Washington University; the candidate Salesforce Workbench is an unrelated admin/developer tool for Salesforce APIs.",
-      "ai_vetted_at": "2026-11-02T07:00:32+00:00",
+      "reasoning": "Google Workspace CLI does not match any candidate. The candidates are for various unrelated CLI tools (Areca, Cisco, node-cli, Snyk, GitHub, Nhost, Bitwarden), not Google Workspace software.",
+      "ai_vetted_at": "2026-11-09T06:34:35+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -1163,22 +1096,61 @@
         "cpe:2.3:a:blitzjs:blitz",
         "cpe:2.3:a:returnfi:blitz"
       ],
-      "reasoning": "Blitz++ is a C++ scientific computing library. Candidates are BlitzJS (JavaScript framework) and ReturnFi's Blitz Panel (login vulnerability), both unrelated to the C++ numerical library.",
-      "ai_vetted_at": "2026-11-02T07:00:32+00:00",
+      "reasoning": "Neither candidate matches the Blitz++ C++ scientific computing library. The candidates are for BlitzJS (JavaScript framework) and Blitz Panel (login vulnerability), which are unrelated products.",
+      "ai_vetted_at": "2026-11-09T06:34:35+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "connectome-workbench-gui",
+      "current_purl": "pkg:github/washington-university/workbench",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:salesforce:workbench"
+      ],
+      "reasoning": "The single candidate is Salesforce Workbench, a cloud administration tool unrelated to the Connectome Workbench neuroimaging utility from Washington University.",
+      "ai_vetted_at": "2026-11-09T06:34:35+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "appstream",
+      "current_purl": "pkg:github/ximion/appstream",
+      "verdict": "uncertain",
+      "selected_cpes": [
+        "cpe:2.3:a:symantec:appstream"
+      ],
+      "candidate_cpes": [
+        "cpe:2.3:a:symantec:appstream"
+      ],
+      "reasoning": "The candidate CPE is for Symantec AppStream (a workspace streaming product), while the conda package is AppStream metadata tools for Linux. Both share the name but serve different purposes. This should be manually reviewed as the match is weak despite the name alignment.",
+      "ai_vetted_at": "2026-11-09T06:34:35+00:00",
       "model": "claude-haiku-4-5"
     },
     {
       "conda_name": "piranha",
       "current_purl": "pkg:github/bluescarni/piranha",
-      "verdict": "uncertain",
-      "selected_cpes": [
-        "cpe:2.3:a:ryan_ohara:piranha"
-      ],
+      "verdict": "none",
+      "selected_cpes": [],
       "candidate_cpes": [
         "cpe:2.3:a:ryan_ohara:piranha"
       ],
-      "reasoning": "The candidate references Piranha Configuration Tool from 2013, while conda piranha is a modern computer algebra system. Name match but unclear if they are the same project or different versions.",
-      "ai_vetted_at": "2026-11-02T07:00:32+00:00",
+      "reasoning": "The candidate is for Piranha Configuration Tool (a Linux HA tool), not the Piranha computer algebra system mentioned in the conda package description. These are unrelated software products.",
+      "ai_vetted_at": "2026-11-09T06:34:35+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "runner",
+      "current_purl": "pkg:git/gitlab.com/runner-suite/runner2",
+      "verdict": "uncertain",
+      "selected_cpes": [
+        "cpe:2.3:a:gitlab:runner"
+      ],
+      "candidate_cpes": [
+        "cpe:2.3:a:gitlab:runner",
+        "cpe:2.3:a:github:runner"
+      ],
+      "reasoning": "The conda package is a Neural Network simulator, while GitLab Runner is CI/CD software. The CVE descriptions match GitLab Runner, and the name overlap could be coincidental. Manual review recommended to confirm this is not a false positive.",
+      "ai_vetted_at": "2026-11-09T06:34:35+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -1189,70 +1161,8 @@
       "candidate_cpes": [
         "cpe:2.3:a:numark:cue"
       ],
-      "reasoning": "CUE language is a configuration/validation tool; the candidate Numark CUE is a DJ/audio software from 2008. These are completely unrelated products despite the name match.",
-      "ai_vetted_at": "2026-11-02T07:00:32+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "appstream",
-      "current_purl": "pkg:github/ximion/appstream",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:symantec:appstream"
-      ],
-      "reasoning": "AppStream is an open metadata standard; the candidate Symantec AppStream is an unrelated enterprise streaming/workspace product from Symantec.",
-      "ai_vetted_at": "2026-11-02T07:00:32+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "runner",
-      "current_purl": "pkg:git/gitlab.com/runner-suite/runner2",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:gitlab:runner",
-        "cpe:2.3:a:github:runner"
-      ],
-      "reasoning": "RuNNer is a neural network system for high-dimensional problems. Candidates are GitLab Runner (CI/CD) and GitHub Runner (Actions), both unrelated to neural network simulation.",
-      "ai_vetted_at": "2026-11-02T07:00:32+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "cpp-tabulate",
-      "current_purl": "pkg:github/p-ranav/tabulate",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:samwilson:tabulate"
-      ],
-      "reasoning": "cpp-tabulate is a C++ header-only library for table formatting. The candidate samwilson:tabulate is a WordPress plugin, completely unrelated to the C++ library.",
-      "ai_vetted_at": "2026-11-02T07:00:32+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "slim",
-      "current_purl": "pkg:github/messerlab/slim",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:berlios:slim",
-        "cpe:2.3:a:slimframework:slim"
-      ],
-      "reasoning": "The conda package is SLiM, a population genetics simulator by messerlab. The candidates are unrelated: berlios:slim is a C library with cryptography bugs, and slimframework:slim is a PHP web framework. Neither matches the population genetics tool.",
-      "ai_vetted_at": "2026-11-02T07:00:32+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "dcap",
-      "current_purl": "pkg:github/dcache/dcap",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:makves:dcap"
-      ],
-      "reasoning": "The conda package is the dCache dccp client from dcache/dcap. The candidate makves:dcap is a completely different product (a Makves device/product with web API vulnerabilities). No match.",
-      "ai_vetted_at": "2026-11-02T07:00:32+00:00",
+      "reasoning": "The candidate is for Numark CUE (audio software), not the CUE language configuration tool. These are completely unrelated products sharing only a name.",
+      "ai_vetted_at": "2026-11-09T06:34:35+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -1265,8 +1175,72 @@
         "cpe:2.3:a:drupal:commons",
         "cpe:2.3:a:xwiki:commons"
       ],
-      "reasoning": "The conda package is ISCD Commons, a library from iscdtoolbox. The candidates are Drupal modules and XWiki libraries, all unrelated to a scientific computing commons library.",
-      "ai_vetted_at": "2026-11-02T07:00:32+00:00",
+      "reasoning": "The conda package is ISCD Commons library, but all candidates are for Drupal Commons and XWiki Commons, which are Drupal/wiki modules unrelated to the ISCD toolkit commons library.",
+      "ai_vetted_at": "2026-11-09T06:34:35+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "dcap",
+      "current_purl": "pkg:github/dcache/dcap",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:makves:dcap"
+      ],
+      "reasoning": "The dCache dccp client does not match the Makves DCAP candidate, which is a completely different access control product. The name overlap is coincidental.",
+      "ai_vetted_at": "2026-11-09T06:34:35+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "cpp-tabulate",
+      "current_purl": "pkg:github/p-ranav/tabulate",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:samwilson:tabulate"
+      ],
+      "reasoning": "The candidate is for a WordPress Tabulate plugin, not the C++ tabulate header-only library for formatting tables. These are unrelated software products.",
+      "ai_vetted_at": "2026-11-09T06:34:35+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "slim",
+      "current_purl": "pkg:github/messerlab/slim",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:berlios:slim",
+        "cpe:2.3:a:slimframework:slim"
+      ],
+      "reasoning": "Neither candidate matches the SLiM population genetics simulator. The candidates are for berlios slim (an unrelated tool with a crash) and Slim PHP framework, both unrelated to population genetics software.",
+      "ai_vetted_at": "2026-11-09T06:34:35+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "loop",
+      "current_purl": "pkg:github/adrianliechti/loop",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:microsoft:loop"
+      ],
+      "reasoning": "The candidate Microsoft Loop is for AI/M365 Copilot collaboration, not the Loop Kubernetes development tool. These are unrelated products despite the shared name.",
+      "ai_vetted_at": "2026-11-09T06:34:35+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "flash",
+      "current_purl": null,
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:oliver_debon:flash",
+        "cpe:2.3:a:macromedia:flash",
+        "cpe:2.3:a:adobe:flash",
+        "cpe:2.3:a:amcharts:flash"
+      ],
+      "reasoning": "The conda package is a bioinformatics tool for merging sequencing reads, unrelated to any Flash media player or plugin. All candidates (Oliver Debon, Macromedia, Adobe, amCharts) refer to Flash media/graphics software with completely different purposes.",
+      "ai_vetted_at": "2026-11-09T06:34:36+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -1283,59 +1257,20 @@
         "cpe:2.3:a:nhost:cli",
         "cpe:2.3:a:bitwarden:cli"
       ],
-      "reasoning": "The conda package is the Temporal Server CLI from temporalio/cli. All candidates are unrelated CLI tools (Areca backup, Cisco IOS, Node CLI, Snyk, GitHub, Nhost, Bitwarden) with no connection to Temporal Server.",
-      "ai_vetted_at": "2026-11-02T07:00:32+00:00",
+      "reasoning": "The conda package is Temporal's official CLI for managing Temporal Server. The candidates are all generic 'cli' products (Areca, Cisco, GitHub, etc.) with weak heuristic matches; none correspond to the Temporal project or its CLI tool.",
+      "ai_vetted_at": "2026-11-09T06:34:36+00:00",
       "model": "claude-haiku-4-5"
     },
     {
-      "conda_name": "loop",
-      "current_purl": "pkg:github/adrianliechti/loop",
+      "conda_name": "asciinema-agg",
+      "current_purl": "pkg:github/asciinema/agg",
       "verdict": "none",
       "selected_cpes": [],
       "candidate_cpes": [
-        "cpe:2.3:a:microsoft:loop"
+        "cpe:2.3:a:antigrain:agg"
       ],
-      "reasoning": "The conda package is Loop, a Kubernetes development tool from adrianliechti/loop. The candidate microsoft:loop relates to M365 Copilot, a completely different product. No match.",
-      "ai_vetted_at": "2026-11-02T07:00:32+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "flash",
-      "current_purl": null,
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:oliver_debon:flash",
-        "cpe:2.3:a:macromedia:flash",
-        "cpe:2.3:a:adobe:flash",
-        "cpe:2.3:a:amcharts:flash"
-      ],
-      "reasoning": "The conda package is Flash, a bioinformatics tool for merging paired-end sequencing reads. All candidates are Adobe/Macromedia Flash player or related Flash technologies, unrelated to sequencing assembly.",
-      "ai_vetted_at": "2026-11-02T07:00:32+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "graph",
-      "current_purl": "pkg:github/bjoern-andres/graph",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:microsoft:graph"
-      ],
-      "reasoning": "The conda package is a C++ graph algorithms library from bjoern-andres/graph. The candidate microsoft:graph relates to Microsoft Graph PHP SDK and API, unrelated to a C++ graph library.",
-      "ai_vetted_at": "2026-11-02T07:00:32+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "connectome-workbench",
-      "current_purl": "pkg:github/washington-university/workbench",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:salesforce:workbench"
-      ],
-      "reasoning": "The conda package is Connectome Workbench, a neuroimaging tool from washington-university/workbench. The candidate salesforce:workbench is a Salesforce admin tool, completely unrelated.",
-      "ai_vetted_at": "2026-11-02T07:00:32+00:00",
+      "reasoning": "The conda package is a terminal recording to animated GIF converter by asciinema. The only candidate is Anti-Grain Geometry (AGG), a graphics rendering library, which is unrelated despite the name match.",
+      "ai_vetted_at": "2026-11-09T06:34:36+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -1352,20 +1287,20 @@
         "cpe:2.3:a:nhost:cli",
         "cpe:2.3:a:bitwarden:cli"
       ],
-      "reasoning": "The conda package is Doppler CLI for secrets management from dopplerhq/cli. All candidates are unrelated CLI tools (Areca, Cisco, Node, Snyk, GitHub, Nhost, Bitwarden) with no connection to Doppler.",
-      "ai_vetted_at": "2026-11-02T07:00:32+00:00",
+      "reasoning": "The conda package is Doppler's secrets management CLI. The candidates are generic 'cli' products with only weak repo-name-fallback heuristic matches; none correspond to Doppler.",
+      "ai_vetted_at": "2026-11-09T06:34:36+00:00",
       "model": "claude-haiku-4-5"
     },
     {
-      "conda_name": "asciinema-agg",
-      "current_purl": "pkg:github/asciinema/agg",
+      "conda_name": "graph",
+      "current_purl": "pkg:github/bjoern-andres/graph",
       "verdict": "none",
       "selected_cpes": [],
       "candidate_cpes": [
-        "cpe:2.3:a:antigrain:agg"
+        "cpe:2.3:a:microsoft:graph"
       ],
-      "reasoning": "The conda package is agg, an animated GIF generator for terminal recordings from asciinema/agg. The candidate antigrain:agg is Anti-Grain Geometry, a graphics rendering library, not related to terminal animation generation.",
-      "ai_vetted_at": "2026-11-02T07:00:32+00:00",
+      "reasoning": "The conda package is a C++ graph algorithms library by bjoern-andres. The candidate is Microsoft Graph (PHP SDK), which is a completely different product for accessing Microsoft cloud services.",
+      "ai_vetted_at": "2026-11-09T06:34:36+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -1377,8 +1312,20 @@
         "cpe:2.3:a:sun:sdk",
         "cpe:2.3:a:ibm:sdk"
       ],
-      "reasoning": "The conda package is Dart SDK from dart-lang/sdk. The candidates are Sun JDK (Java) and IBM SDK, both Java/JRE products, not Dart.",
-      "ai_vetted_at": "2026-11-02T07:00:32+00:00",
+      "reasoning": "The conda package is Google's Dart programming language SDK. The candidates are Sun's Java SDK and IBM's Java/Node.js SDK, which are unrelated products despite generic 'SDK' name matches.",
+      "ai_vetted_at": "2026-11-09T06:34:36+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "connectome-workbench",
+      "current_purl": "pkg:github/washington-university/workbench",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:salesforce:workbench"
+      ],
+      "reasoning": "The conda package is a neuroimaging utility for the Human Connectome Project. The candidate is Salesforce Workbench, an admin tool for Salesforce, which is unrelated despite the generic name.",
+      "ai_vetted_at": "2026-11-09T06:34:36+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -1391,22 +1338,46 @@
         "cpe:2.3:a:itrsgroup:ninja",
         "cpe:2.3:a:ninjaframework:ninja"
       ],
-      "reasoning": "The conda package is Ninja, a physics tool for one-loop amplitude calculations from peraro/ninja. The candidates are WordPress plugins, ITRS monitoring software, and the Ninja web framework\u2014none match a physics calculation tool.",
-      "ai_vetted_at": "2026-11-02T07:00:32+00:00",
+      "reasoning": "The conda package is a high-energy physics computation tool for one-loop amplitudes. The candidates are a WordPress plugin, ITRS Group monitoring software, and Ninja Framework\u2014all unrelated to physics computation.",
+      "ai_vetted_at": "2026-11-09T06:34:36+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "octo-sts",
+      "current_purl": "pkg:github/octo-sts/app",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:app_project:app",
+        "cpe:2.3:a:klapp:app",
+        "cpe:2.3:a:octokit:app"
+      ],
+      "reasoning": "The conda package is a GitHub App security token service. The candidates are generic 'app' products (Ethereum token, Klapp, octokit webhook) with only weak heuristic matches and no clear connection to a GitHub STS app.",
+      "ai_vetted_at": "2026-11-09T06:34:36+00:00",
       "model": "claude-haiku-4-5"
     },
     {
       "conda_name": "cm",
       "current_purl": null,
-      "verdict": "uncertain",
-      "selected_cpes": [
-        "cpe:2.3:a:cm_project:cm"
-      ],
+      "verdict": "none",
+      "selected_cpes": [],
       "candidate_cpes": [
         "cpe:2.3:a:cm_project:cm"
       ],
-      "reasoning": "The conda package is a multitask communication package with no PURL. The candidate cm_project:cm is an Ethereum smart contract token called CM. The connection is weak and uncertain\u2014both are called 'cm' but purposes differ significantly.",
-      "ai_vetted_at": "2026-11-02T07:00:32+00:00",
+      "reasoning": "The conda package is described as a multitask communication package. The only candidate is a smart contract for an Ethereum CM token, unrelated to communication software.",
+      "ai_vetted_at": "2026-11-09T06:34:36+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "filament-filagui-static",
+      "current_purl": "pkg:github/google/filament",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:filamentphp:filament"
+      ],
+      "reasoning": "The conda package is Google's Filament, a real-time 3D rendering engine. The candidate is Filament PHP, a Laravel development framework\u2014completely different software despite the name match.",
+      "ai_vetted_at": "2026-11-09T06:34:36+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -1423,8 +1394,20 @@
         "cpe:2.3:a:pimcore:core",
         "cpe:2.3:a:adonisjs:core"
       ],
-      "reasoning": "The conda package is SCINE Core from qcscine/core, a quantum chemistry module coupler. The candidates are API Platform, MobileIron, RACTF, Form Tools, OnlyOffice, Pimcore, and AdonisJS\u2014all unrelated web/enterprise products.",
-      "ai_vetted_at": "2026-11-02T07:00:32+00:00",
+      "reasoning": "The conda package is a SCINE module coupler from LANL's quantum chemistry suite. All candidates (API Platform, MobileIron, RACTF, Form Tools, OnlyOffice, Pimcore, AdonisJS) are unrelated to quantum chemistry or the SCINE project.",
+      "ai_vetted_at": "2026-11-09T06:34:36+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "superfile",
+      "current_purl": "pkg:github/yorukot/superfile",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:lenovo:superfile"
+      ],
+      "reasoning": "The conda package is a terminal file manager by yorukot. The candidate is Lenovo Super File, a file management application, which is a different product despite the name overlap.",
+      "ai_vetted_at": "2026-11-09T06:34:36+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -1435,8 +1418,8 @@
       "candidate_cpes": [
         "cpe:2.3:a:nette:latte"
       ],
-      "reasoning": "The conda package is LATTE, a density functional tight binding molecular dynamics simulator from lanl/latte. The candidate nette:latte is a PHP template engine, unrelated to molecular dynamics simulation.",
-      "ai_vetted_at": "2026-11-02T07:00:32+00:00",
+      "reasoning": "The conda package is a molecular dynamics tool from LANL. The candidate is Nette Latte, a PHP template engine, which is unrelated despite the name match.",
+      "ai_vetted_at": "2026-11-09T06:34:36+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -1447,8 +1430,8 @@
       "candidate_cpes": [
         "cpe:2.3:a:clustering_project:clustering"
       ],
-      "reasoning": "The candidate CPE for 'clustering_project:clustering' appears to be a generic directory traversal vulnerability unrelated to molecular dynamics trajectory clustering. The heuristics note it as a weak 'repo-fallback-only' match derived solely from the PURL repo name.",
-      "ai_vetted_at": "2026-11-02T07:00:36+00:00",
+      "reasoning": "The conda package is a molecular dynamics trajectory clustering tool. The candidate is a generic 'clustering' project with only a weak repo-name-fallback heuristic match and no clear connection to molecular dynamics analysis.",
+      "ai_vetted_at": "2026-11-09T06:34:36+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -1461,32 +1444,8 @@
         "cpe:2.3:a:itrsgroup:ninja",
         "cpe:2.3:a:ninjaframework:ninja"
       ],
-      "reasoning": "All three candidates (visualshortcodes, itrsgroup, ninjaframework) are unrelated software: a WordPress plugin, monitoring tool, and web framework. None match the conda package which is a physics/computation tool for one-loop amplitudes (High Energy Physics).",
-      "ai_vetted_at": "2026-11-02T07:00:36+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "superfile",
-      "current_purl": "pkg:github/yorukot/superfile",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:lenovo:superfile"
-      ],
-      "reasoning": "The Lenovo SuperFile is a file manager for Windows with DLL hijacking vulnerabilities, unrelated to the conda package which is a modern terminal file manager written in Go/Rust. These are distinct products despite the name overlap.",
-      "ai_vetted_at": "2026-11-02T07:00:36+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "filament",
-      "current_purl": "pkg:github/google/filament",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:filamentphp:filament"
-      ],
-      "reasoning": "The candidate CPE is for Filament, a Laravel web framework, while the conda package is Google's real-time 3D rendering engine. These are completely different software despite sharing a name.",
-      "ai_vetted_at": "2026-11-02T07:00:36+00:00",
+      "reasoning": "The conda package is a physics calculation library for one-loop amplitudes (HEP), entirely unrelated to the candidate CPEs which are for WordPress plugins, monitoring software, and web frameworks. None of the candidates match the physics domain.",
+      "ai_vetted_at": "2026-11-09T06:34:38+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -1497,21 +1456,8 @@
       "candidate_cpes": [
         "cpe:2.3:a:foxitsoftware:u3d"
       ],
-      "reasoning": "The Foxit u3d plugin CVEs are for a PDF viewer plugin, not the Universal 3D sample software in the conda package. The CVE descriptions mention FoxitReader and PDF viewing, which do not match the conda package purpose.",
-      "ai_vetted_at": "2026-11-02T07:00:36+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "unicorn",
-      "current_purl": "pkg:github/unicorn-engine/unicorn",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:django-unicorn:unicorn",
-        "cpe:2.3:a:w3:unicorn"
-      ],
-      "reasoning": "The candidates are Django-Unicorn (a web framework component with XSS issues) and W3C Unicorn (a validator), neither matching the CPU emulator framework. The conda summary clearly describes an emulation tool for ARM/AArch64/etc., incompatible with web framework or validator vulnerabilities.",
-      "ai_vetted_at": "2026-11-02T07:00:36+00:00",
+      "reasoning": "The conda package is the Universal 3D sample software from clinicalgraphics/u3d, a 3D format specification. The Foxit Software CPE is for a PDF reader plugin, which is a different software product despite sharing the u3d name.",
+      "ai_vetted_at": "2026-11-09T06:34:38+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -1528,22 +1474,69 @@
         "cpe:2.3:a:nhost:cli",
         "cpe:2.3:a:bitwarden:cli"
       ],
-      "reasoning": "The candidates (areca, cisco, cli_project, snyk, github, nhost, bitwarden) are all unrelated CLI tools or components. None are Akamai's API toolkit. These appear to be false matches from generic 'cli' product name collisions.",
-      "ai_vetted_at": "2026-11-02T07:00:36+00:00",
+      "reasoning": "The conda package is Akamai's official CLI toolkit for their APIs. All candidates are unrelated CLI tools (Areca, Cisco, Snyk, GitHub, Nhost, Bitwarden) with no connection to Akamai's infrastructure services.",
+      "ai_vetted_at": "2026-11-09T06:34:38+00:00",
       "model": "claude-haiku-4-5"
     },
     {
-      "conda_name": "octo-sts",
-      "current_purl": "pkg:github/octo-sts/app",
+      "conda_name": "unicorn",
+      "current_purl": "pkg:github/unicorn-engine/unicorn",
       "verdict": "none",
       "selected_cpes": [],
       "candidate_cpes": [
-        "cpe:2.3:a:app_project:app",
-        "cpe:2.3:a:klapp:app",
-        "cpe:2.3:a:octokit:app"
+        "cpe:2.3:a:django-unicorn:unicorn",
+        "cpe:2.3:a:w3:unicorn"
       ],
-      "reasoning": "The candidates (app_project, klapp, octokit) do not match the GitHub App STS. While octokit sounds related to GitHub, the CVE describes webhook vulnerabilities, not a Security Token Service. All matches appear to be repo-name fallbacks.",
-      "ai_vetted_at": "2026-11-02T07:00:36+00:00",
+      "reasoning": "The conda package is the Unicorn CPU emulator engine for multiple architectures. The candidates are the Django-Unicorn web framework and W3C Unicorn validator\u2014neither matches the CPU emulation purpose.",
+      "ai_vetted_at": "2026-11-09T06:34:38+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "communique",
+      "current_purl": "pkg:github/jdx/communique",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:day:communique"
+      ],
+      "reasoning": "The conda package is an AI-powered release notes tool by jdx. The candidate CPE is for Day Communique, a 2005 web product with XSS issues, which is unrelated software with a similar name.",
+      "ai_vetted_at": "2026-11-09T06:34:38+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "entire",
+      "current_purl": "pkg:github/entireio/cli",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:areca:cli",
+        "cpe:2.3:a:cisco:cli",
+        "cpe:2.3:a:cli_project:cli",
+        "cpe:2.3:a:snyk:cli",
+        "cpe:2.3:a:github:cli",
+        "cpe:2.3:a:nhost:cli",
+        "cpe:2.3:a:bitwarden:cli"
+      ],
+      "reasoning": "The conda package is Entire.io's CLI for capturing AI agent sessions with git commits. All candidates are unrelated CLI tools (Areca, Cisco, Snyk, GitHub, Nhost, Bitwarden) with no connection to Entire's AI agent tracking purpose.",
+      "ai_vetted_at": "2026-11-09T06:34:38+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "exoscale-cli",
+      "current_purl": "pkg:github/exoscale/cli",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:areca:cli",
+        "cpe:2.3:a:cisco:cli",
+        "cpe:2.3:a:cli_project:cli",
+        "cpe:2.3:a:snyk:cli",
+        "cpe:2.3:a:github:cli",
+        "cpe:2.3:a:nhost:cli",
+        "cpe:2.3:a:bitwarden:cli"
+      ],
+      "reasoning": "The conda package is Exoscale's cloud platform CLI. All candidates are unrelated CLI tools (Areca, Cisco, Snyk, GitHub, Nhost, Bitwarden) with no connection to Exoscale's cloud services.",
+      "ai_vetted_at": "2026-11-09T06:34:38+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -1557,8 +1550,8 @@
         "cpe:2.3:a:brainstormforce:spectra",
         "cpe:2.3:a:wpspectra:spectra"
       ],
-      "reasoning": "The candidate CPEs are for unrelated products: Allaire Spectra (legacy web platform from 2000), Sectona Spectra (asset management), Brainstorm Force Spectra (WordPress plugin), and WP Spectra. None match a C++ eigenvalue library. All mismatches stem from name-only collisions.",
-      "ai_vetted_at": "2026-11-02T07:00:36+00:00",
+      "reasoning": "The conda package is a C++ header-only library for eigenvalue problems. The candidates are: legacy Allaire Spectra web product, Sectona security software, Brainstorm Force WordPress plugin, and WP Spectra plugin\u2014none match the numerical C++ library purpose.",
+      "ai_vetted_at": "2026-11-09T06:34:38+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -1569,8 +1562,22 @@
       "candidate_cpes": [
         "cpe:2.3:a:redhat:clair"
       ],
-      "reasoning": "The Red Hat Clair candidate is a container image vulnerability scanner with directory traversal CVEs, unrelated to the conda package which provides C++ to Python bindings via Clang introspection. The conda package is a binding generator, not a security scanner.",
-      "ai_vetted_at": "2026-11-02T07:00:36+00:00",
+      "reasoning": "The conda package is a Clang introspection tool for C++-to-Python bindings. The RedHat Clair CPE is for container vulnerability scanning, entirely unrelated to C++ reflection.",
+      "ai_vetted_at": "2026-11-09T06:34:38+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "pacman",
+      "current_purl": "pkg:git/gitlab.com/drti/pacman",
+      "verdict": "confident",
+      "selected_cpes": [
+        "cpe:2.3:a:pacman_project:pacman"
+      ],
+      "candidate_cpes": [
+        "cpe:2.3:a:pacman_project:pacman"
+      ],
+      "reasoning": "The conda package is the portable algorithms library (PACMAN) for coupling and interpolation. However, the CPE candidate is for the Arch Linux package manager (pacman), which is a different software despite the name match. But given the heuristics fired and lack of better candidates, this appears to be a weak match warranting rejection.",
+      "ai_vetted_at": "2026-11-09T06:34:38+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -1588,8 +1595,8 @@
         "cpe:2.3:a:xata:agent",
         "cpe:2.3:a:watchguard:agent"
       ],
-      "reasoning": "All candidates (mcafee, leostream, acronis, grafana, trellix, action1, xata, watchguard) are unrelated agent software: endpoint protection, connection brokers, backup agents, telemetry collectors. None match Stakpak's code deployment/autopilot service.",
-      "ai_vetted_at": "2026-11-02T07:00:36+00:00",
+      "reasoning": "The conda package is Stakpak's deployment automation agent. All candidates are unrelated agent software (McAfee, Leostream, Acronis, Grafana, Trellix, Action1, Xata, WatchGuard) for security, monitoring, and infrastructure\u2014none match Stakpak's deployment automation purpose.",
+      "ai_vetted_at": "2026-11-09T06:34:38+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -1600,44 +1607,8 @@
       "candidate_cpes": [
         "cpe:2.3:a:linuxfoundation:magma"
       ],
-      "reasoning": "The Linux Foundation Magma CPE refers to mobile/cellular network infrastructure (MME, 5G), while the conda package is a GPU/multicore linear algebra library. These are completely different domains despite sharing a name.",
-      "ai_vetted_at": "2026-11-02T07:00:36+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "entire",
-      "current_purl": "pkg:github/entireio/cli",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:areca:cli",
-        "cpe:2.3:a:cisco:cli",
-        "cpe:2.3:a:cli_project:cli",
-        "cpe:2.3:a:snyk:cli",
-        "cpe:2.3:a:github:cli",
-        "cpe:2.3:a:nhost:cli",
-        "cpe:2.3:a:bitwarden:cli"
-      ],
-      "reasoning": "The candidates are all generic CLI tools (areca, cisco, cli_project, snyk, github, nhost, bitwarden) unrelated to Entire's AI agent session capture tool. All are repo-name fallback matches with no semantic connection.",
-      "ai_vetted_at": "2026-11-02T07:00:36+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "exoscale-cli",
-      "current_purl": "pkg:github/exoscale/cli",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:areca:cli",
-        "cpe:2.3:a:cisco:cli",
-        "cpe:2.3:a:cli_project:cli",
-        "cpe:2.3:a:snyk:cli",
-        "cpe:2.3:a:github:cli",
-        "cpe:2.3:a:nhost:cli",
-        "cpe:2.3:a:bitwarden:cli"
-      ],
-      "reasoning": "The candidates are all unrelated CLI tools (areca, cisco, cli_project, snyk, github, nhost, bitwarden). None are Exoscale's cloud platform CLI. These are generic 'cli' product name collisions with no vendor connection to Exoscale.",
-      "ai_vetted_at": "2026-11-02T07:00:36+00:00",
+      "reasoning": "The conda package is MAGMA, a GPU/multicore linear algebra library. The LinuxFoundation CPE is for Magma, a cellular/telecom platform (MME component), entirely different from numerical computing.",
+      "ai_vetted_at": "2026-11-09T06:34:38+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -1648,8 +1619,8 @@
       "candidate_cpes": [
         "cpe:2.3:a:xavier_ducrohet:felix"
       ],
-      "reasoning": "The Xavier Ducrohet Felix candidate is an IRC client from 2000 with a DoS vulnerability, completely unrelated to the conda package which is a modern TUI file manager with Vim keybindings. These are different applications despite the name match.",
-      "ai_vetted_at": "2026-11-02T07:00:36+00:00",
+      "reasoning": "The conda package is a TUI file manager with vim-like keybindings. The candidate CPE is for an old IRC client for BeOS, unrelated software despite the shared name.",
+      "ai_vetted_at": "2026-11-09T06:34:38+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -1660,8 +1631,8 @@
       "candidate_cpes": [
         "cpe:2.3:a:utilities_project:utilities"
       ],
-      "reasoning": "The candidate CPE refers to a JavaScript 'utilities' package vulnerable to Prototype Pollution, whereas SCINE Utilities is a C++ library for SCINE chemistry modules. The CVE description and product type do not match the conda package.",
-      "ai_vetted_at": "2026-11-02T07:00:45+00:00",
+      "reasoning": "The conda package is SCINE utilities for chemistry modules. The candidate CPE is for a generic npm utilities package with prototype pollution vulnerability, likely unrelated despite generic naming.",
+      "ai_vetted_at": "2026-11-09T06:34:38+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -1672,8 +1643,8 @@
       "candidate_cpes": [
         "cpe:2.3:a:wpquads:ads"
       ],
-      "reasoning": "The candidate CPE references WPQuads Ads, a WordPress advertising plugin, not the Beckhoff ADS protocol library. The CVE is about authorization in a WordPress plugin, not a communication protocol.",
-      "ai_vetted_at": "2026-11-02T07:00:45+00:00",
+      "reasoning": "The conda package is the Beckhoff ADS protocol library for TwinCAT industrial devices. The candidate CPE is for WPQuads advertising plugin, unrelated despite the name overlap.",
+      "ai_vetted_at": "2026-11-09T06:34:38+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -1684,8 +1655,8 @@
       "candidate_cpes": [
         "cpe:2.3:a:springshare:libcal"
       ],
-      "reasoning": "The conda package is NVIDIA cuBLASMp (a linear algebra library), but the candidate CPE is for Springshare LibCal (a calendar system). These are unrelated software despite sharing a similar name.",
-      "ai_vetted_at": "2026-11-02T07:00:45+00:00",
+      "reasoning": "The candidate CPE is for Springshare LibCal, a calendar management system for web, which is completely unrelated to NVIDIA cuBLASMp, a GPU-accelerated linear algebra library. The conda summary describes a numerical computing library, not a web calendar tool.",
+      "ai_vetted_at": "2026-11-09T06:34:47+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -1696,8 +1667,8 @@
       "candidate_cpes": [
         "cpe:2.3:a:rice_project:rice"
       ],
-      "reasoning": "The conda package is a Ruby-C++ binding library, but the candidate CPE refers to Rice, an Ethereum smart contract token. The CVE describes a smart contract vulnerability, not a programming interface library.",
-      "ai_vetted_at": "2026-11-02T07:00:45+00:00",
+      "reasoning": "The candidate CPE refers to an Ethereum smart contract token called Rice, while the conda package is Ruby Interface for C++ Extensions. These are completely unrelated despite sharing a name; the CVE describes a blockchain vulnerability, not a language binding library.",
+      "ai_vetted_at": "2026-11-09T06:34:47+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -1708,50 +1679,22 @@
       "candidate_cpes": [
         "cpe:2.3:a:wpquads:ads"
       ],
-      "reasoning": "The candidate CPE references WPQuads Ads, a WordPress advertising plugin, not the Beckhoff ADS protocol library. The CVE is about authorization in a WordPress plugin, unrelated to industrial communication protocols.",
-      "ai_vetted_at": "2026-11-02T07:00:45+00:00",
+      "reasoning": "The candidate CPE is for WPQuads Ads, a WordPress plugin, while the conda package is for Beckhoff ADS protocol for TwinCAT device communication. These are unrelated; the CVE describes a WordPress security issue, not an industrial protocol.",
+      "ai_vetted_at": "2026-11-09T06:34:47+00:00",
       "model": "claude-haiku-4-5"
     },
     {
       "conda_name": "libdate",
       "current_purl": "pkg:github/howardhinnant/date",
-      "verdict": "uncertain",
-      "selected_cpes": [
-        "cpe:2.3:a:date_project:date"
-      ],
+      "verdict": "none",
+      "selected_cpes": [],
       "candidate_cpes": [
         "cpe:2.3:a:karen_stevenson:date",
         "cpe:2.3:a:date_project:date",
         "cpe:2.3:a:ruby-lang:date"
       ],
-      "reasoning": "The libdate conda package is a C++11/14/17 chrono-based library. Candidate (B) date_project is likely a generic date library project, but candidates (A) and (C) are clearly unrelated (Drupal module and Ruby gem). Selecting only (B) but flagging uncertain due to weak heuristics and Drupal-related CVEs in other candidates.",
-      "ai_vetted_at": "2026-11-02T07:00:45+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "communique",
-      "current_purl": "pkg:github/jdx/communique",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:day:communique"
-      ],
-      "reasoning": "The conda package is an AI-powered release notes tool, but the candidate CPE is for Day Communique, an old CMS product from 2005. The CVE describes an XSS in a content management system, not a modern release notes generator.",
-      "ai_vetted_at": "2026-11-02T07:00:45+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "m2-mintty",
-      "current_purl": "pkg:github/mintty/mintty",
-      "verdict": "confident",
-      "selected_cpes": [
-        "cpe:2.3:a:mintty_project:mintty"
-      ],
-      "candidate_cpes": [
-        "cpe:2.3:a:mintty_project:mintty"
-      ],
-      "reasoning": "The conda package is the mintty terminal emulator. The candidate CPE matches the github owner/repo (mintty/mintty) and the CVEs directly describe mintty terminal behavior (title changes, paste mode, character injection).",
-      "ai_vetted_at": "2026-11-02T07:00:45+00:00",
+      "reasoning": "All three candidates are Drupal-related (two explicitly) or Ruby language date modules, while libdate is a C++11/14/17 header-based date/time library. These are distinct software projects despite sharing the name 'date'.",
+      "ai_vetted_at": "2026-11-09T06:34:47+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -1762,32 +1705,8 @@
       "candidate_cpes": [
         "cpe:2.3:a:adobe:air"
       ],
-      "reasoning": "The conda package is an R formatter/language server, but the candidate CPE is Adobe AIR, a Flash/web runtime platform. The CVEs describe ActionScript and Flash vulnerabilities, completely unrelated to R tooling.",
-      "ai_vetted_at": "2026-11-02T07:00:45+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "filament-filagui-static",
-      "current_purl": "pkg:github/google/filament",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:filamentphp:filament"
-      ],
-      "reasoning": "The conda package is Google's Filament rendering engine, but the candidate CPE is FilamentPHP, a Laravel UI component library. The CVEs describe Laravel/PHP vulnerabilities, not a rendering engine.",
-      "ai_vetted_at": "2026-11-02T07:00:45+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "pacman",
-      "current_purl": "pkg:git/gitlab.com/drti/pacman",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:pacman_project:pacman"
-      ],
-      "reasoning": "The conda package is PACMAN (Portable Algorithms for Coupling, Mapping, and Adaptive Interpolation), but the candidate CPE is the Arch Linux package manager. The CVEs describe package manager functionality (file traversal, command injection), not coupling/interpolation algorithms.",
-      "ai_vetted_at": "2026-11-02T07:00:45+00:00",
+      "reasoning": "The candidate CPE is for Adobe AIR, a Flash/web runtime platform with 400+ CVEs, while the conda package is an R language formatter and language server. These are completely unrelated despite both being called 'air'.",
+      "ai_vetted_at": "2026-11-09T06:34:47+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -1798,8 +1717,8 @@
       "candidate_cpes": [
         "cpe:2.3:a:lomart:up"
       ],
-      "reasoning": "The conda package is a CLI tool for writing pipes with live preview, but the candidate CPE is a Joomla WordPress plugin. The CVEs describe PHP command injection and SQL injection in WordPress, not a command-line utility.",
-      "ai_vetted_at": "2026-11-02T07:00:45+00:00",
+      "reasoning": "The candidate CPE is for a Joomla plugin called UP, while the conda package is a command-line piping tool for live preview. These are unrelated; the CVE describes web application vulnerabilities, not a CLI utility.",
+      "ai_vetted_at": "2026-11-09T06:34:47+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -1811,8 +1730,8 @@
         "cpe:2.3:a:deltek:vision",
         "cpe:2.3:a:intel:vision"
       ],
-      "reasoning": "The conda package is PyTorch's vision library for computer vision, but both candidates refer to unrelated products: Deltek Vision (enterprise software) and Intel Vision (software for Ring 3 applications). Neither CVE matches a deep learning vision library.",
-      "ai_vetted_at": "2026-11-02T07:00:45+00:00",
+      "reasoning": "Both candidate CPEs (Deltek Vision and Intel Vision) are unrelated to PyTorch torchvision, which is a deep learning image/video library. The CVEs describe enterprise software and processor security issues, not computer vision for machine learning.",
+      "ai_vetted_at": "2026-11-09T06:34:47+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -1826,8 +1745,8 @@
         "cpe:2.3:a:jetbrains:toolbox",
         "cpe:2.3:a:themedy:toolbox"
       ],
-      "reasoning": "The conda package is ToolBox++ (C++ helpers for string/bytes), but candidates refer to Mp3 ToolBox (PHP music tool), PC-Doctor Toolbox (diagnostics), JetBrains Toolbox (IDE launcher), and Themedy Toolbox (WordPress plugin). No candidate matches a C++ utility library.",
-      "ai_vetted_at": "2026-11-02T07:00:45+00:00",
+      "reasoning": "The conda package is a C++ helper library, while candidates cover MP3 tools, PC diagnostics, JetBrains IDE toolbox, and a WordPress plugin. None match a general-purpose C++ string/bytes helper library.",
+      "ai_vetted_at": "2026-11-09T06:34:47+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -1838,8 +1757,8 @@
       "candidate_cpes": [
         "cpe:2.3:a:clipboard_project:clipboard"
       ],
-      "reasoning": "The conda package is a modern clipboard manager (by slackadays), but the candidate CPE refers to a Perl clipboard module with a 2014 CVE about symlink attacks. These are different clipboard implementations across different eras and languages.",
-      "ai_vetted_at": "2026-11-02T07:00:45+00:00",
+      "reasoning": "The candidate CPE refers to a Perl clipboard module with an old CVE about file deletion, while cb-clipboard is a modern clipboard manager tool. These are different clipboard implementations with no meaningful relationship.",
+      "ai_vetted_at": "2026-11-09T06:34:47+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -1850,8 +1769,8 @@
       "candidate_cpes": [
         "cpe:2.3:a:openagentplatform:dive"
       ],
-      "reasoning": "The candidate CPE is for OpenAgentPlatform's Dive (an MCP Host application), not wagoodman/dive (a Docker image explorer tool). The CVE descriptions confirm these are completely different products.",
-      "ai_vetted_at": "2026-11-02T07:00:44+00:00",
+      "reasoning": "The candidate CPE is for Dive, an MCP Host Desktop Application for LLMs, while the conda package is a Docker image exploration tool. These are completely different tools despite sharing the name 'dive'.",
+      "ai_vetted_at": "2026-11-09T06:34:47+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -1864,56 +1783,8 @@
         "cpe:2.3:a:hp:diagnostics",
         "cpe:2.3:a:lenovo:diagnostics"
       ],
-      "reasoning": "All candidates (Oracle, HP, Lenovo diagnostics) are unrelated enterprise/system diagnostics tools, not the .NET Core runtime diagnostic tools from dotnet/diagnostics. The heuristics are weak repo-fallback-only matches.",
-      "ai_vetted_at": "2026-11-02T07:00:44+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "vivid",
-      "current_purl": "pkg:github/sharkdp/vivid",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:ubuntu:vivid"
-      ],
-      "reasoning": "The candidate is for Ubuntu Vivid (a Linux distribution release codename), not sharkdp/vivid (an LS_COLORS generator). These are unrelated products.",
-      "ai_vetted_at": "2026-11-02T07:00:44+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "alex",
-      "current_purl": "pkg:github/simonmar/alex",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:alex_project:alex"
-      ],
-      "reasoning": "The candidate CPE is for ALEX (an Ethereum token smart contract), not simonmar/alex (a Haskell lexical analyser generator). These are completely different projects.",
-      "ai_vetted_at": "2026-11-02T07:00:44+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "latte-integrale",
-      "current_purl": "pkg:github/latte-int/latte",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:nette:latte"
-      ],
-      "reasoning": "The candidate is for Nette Latte (a PHP template engine), not latte-int/latte (a mathematics/lattice point software). These are distinct projects.",
-      "ai_vetted_at": "2026-11-02T07:00:44+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "pop",
-      "current_purl": "pkg:github/charmbracelet/pop",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:university_of_washington:pop"
-      ],
-      "reasoning": "The candidate is for University of Washington's POP mail server protocol implementation, not charmbracelet/pop (a terminal email tool). The CVE describes a mail server buffer overflow, not an email client.",
-      "ai_vetted_at": "2026-11-02T07:00:44+00:00",
+      "reasoning": "The candidates are Oracle, HP, and Lenovo diagnostic tools for enterprise systems, while dotnet-diagnostics is a .NET Core runtime diagnostic toolset. These are unrelated diagnostic systems from different vendors.",
+      "ai_vetted_at": "2026-11-09T06:34:47+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -1924,8 +1795,56 @@
       "candidate_cpes": [
         "cpe:2.3:a:intel:unison"
       ],
-      "reasoning": "The candidate is for Intel Unison (a company collaboration/productivity tool), not bcpierce00/unison (the file synchronizer). These are distinct software products.",
-      "ai_vetted_at": "2026-11-02T07:00:44+00:00",
+      "reasoning": "The candidate CPE is for Intel Unison, a software platform (appears to be a workspace/collaboration tool), while the conda package is Unison file synchronizer. These are different tools despite sharing a name.",
+      "ai_vetted_at": "2026-11-09T06:34:47+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "vivid",
+      "current_purl": "pkg:github/sharkdp/vivid",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:ubuntu:vivid"
+      ],
+      "reasoning": "The candidate CPE refers to Ubuntu Vivid, the Ubuntu 15.04 distribution, while the conda package is vivid, a themeable LS_COLORS generator. These are completely unrelated despite the name overlap.",
+      "ai_vetted_at": "2026-11-09T06:34:47+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "alex",
+      "current_purl": "pkg:github/simonmar/alex",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:alex_project:alex"
+      ],
+      "reasoning": "The candidate CPE is for ALEX, an Ethereum smart contract token, while the conda package is Alex, a lexical analyzer generator for Haskell. These are unrelated; the CVE describes blockchain vulnerabilities, not a compiler tool.",
+      "ai_vetted_at": "2026-11-09T06:34:47+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "latte-integrale",
+      "current_purl": "pkg:github/latte-int/latte",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:nette:latte"
+      ],
+      "reasoning": "The candidate CPE is for Nette Latte, a PHP template engine, while latte-integrale is software for lattice point enumeration and polytope integration. These are completely different applications despite sharing the name 'latte'.",
+      "ai_vetted_at": "2026-11-09T06:34:47+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "pop",
+      "current_purl": "pkg:github/charmbracelet/pop",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:university_of_washington:pop"
+      ],
+      "reasoning": "The conda package is an email client by charmbracelet. The candidate CPE is for University of Washington's IMAP/POP server, a completely different product. No match.",
+      "ai_vetted_at": "2026-11-09T06:34:47+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -1942,8 +1861,47 @@
         "cpe:2.3:a:nhost:cli",
         "cpe:2.3:a:bitwarden:cli"
       ],
-      "reasoning": "All candidates are generic CLI products (Areca, Cisco, cli_project, Snyk, GitHub, Nhost, Bitwarden) unrelated to exercism/cli. None match the exercism.io command-line tool described in the conda summary.",
-      "ai_vetted_at": "2026-11-02T07:00:44+00:00",
+      "reasoning": "The conda package is the exercism.io CLI tool by exercism. All candidates are unrelated products (Areca backup, Cisco IOS, node-cli, Snyk, GitHub CLI, Nhost, Bitwarden) that happen to have 'cli' in their name. None match the actual exercism product.",
+      "ai_vetted_at": "2026-11-09T06:34:47+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "filament-gltfio",
+      "current_purl": "pkg:github/google/filament",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:filamentphp:filament"
+      ],
+      "reasoning": "The conda package is Google's real-time rendering engine. The candidate CPE is for FilamentPHP, a Laravel framework package\u2014a completely different product. No match.",
+      "ai_vetted_at": "2026-11-09T06:34:47+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "jacoco",
+      "current_purl": "pkg:github/jacoco/jacoco",
+      "verdict": "uncertain",
+      "selected_cpes": [
+        "cpe:2.3:a:jenkins:jacoco"
+      ],
+      "candidate_cpes": [
+        "cpe:2.3:a:jenkins:jacoco"
+      ],
+      "reasoning": "The conda package is the JaCoCo Java code coverage library itself. The candidate is a Jenkins plugin that wraps JaCoCo. The vendor mismatch (Jenkins vs. standalone library) and lack of description match create ambiguity, so this is flagged uncertain for human review.",
+      "ai_vetted_at": "2026-11-09T06:34:47+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "octave-statistics",
+      "current_purl": "pkg:github/gnu-octave/statistics",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:inmedias:statistics",
+        "cpe:2.3:a:kennziffer:statistics"
+      ],
+      "reasoning": "The conda package is a statistics package for GNU Octave. Both candidates are TYPO3 extensions (unrelated Drupal/CMS statistics modules), not Octave packages. No match.",
+      "ai_vetted_at": "2026-11-09T06:34:47+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -1957,132 +1915,8 @@
         "cpe:2.3:a:oracle:database",
         "cpe:2.3:a:jenkins:database"
       ],
-      "reasoning": "The candidates are for unrelated database systems (Progress, RapidShare, Oracle, Jenkins databases), not the SCINE database module for MongoDB reaction networks. All are weak repo-fallback matches.",
-      "ai_vetted_at": "2026-11-02T07:00:44+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "eva",
-      "current_purl": "pkg:github/nerdypepper/eva",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:coderd-repos:eva"
-      ],
-      "reasoning": "The candidate CPE is for coderd-repos Eva (with a file traversal vulnerability), not nerdypepper/eva (a calculator REPL). These are unrelated software products.",
-      "ai_vetted_at": "2026-11-02T07:00:44+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "octave-statistics",
-      "current_purl": "pkg:github/gnu-octave/statistics",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:inmedias:statistics",
-        "cpe:2.3:a:kennziffer:statistics"
-      ],
-      "reasoning": "The candidates are for TYPO3 statistics extensions (inmedias, kennziffer), not the GNU Octave statistics package. These are unrelated products in different contexts.",
-      "ai_vetted_at": "2026-11-02T07:00:44+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "osc",
-      "current_purl": "pkg:github/theimpostor/osc",
-      "verdict": "confident",
-      "selected_cpes": [
-        "cpe:2.3:a:opensuse:osc"
-      ],
-      "candidate_cpes": [
-        "cpe:2.3:a:opensuse:osc"
-      ],
-      "reasoning": "openSUSE's osc tool matches theimpostor/osc for ANSI OSC52 clipboard access. The CVE descriptions confirm this is the same command-line tool for managing OBS repositories.",
-      "ai_vetted_at": "2026-11-02T07:00:44+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "wishlist",
-      "current_purl": "pkg:github/charmbracelet/wishlist",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:mclewin:wishlist",
-        "cpe:2.3:a:wishlist_project:wishlist"
-      ],
-      "reasoning": "Both candidates are for Drupal wishlist modules (mclewin and wishlist_project), not charmbracelet/wishlist (an SSH directory tool). These are unrelated products.",
-      "ai_vetted_at": "2026-11-02T07:00:44+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "amp",
-      "current_purl": "pkg:github/jmacdonald/amp",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:cubecoders:amp"
-      ],
-      "reasoning": "The candidate is for CubeCoders AMP (an application deployment service), not jmacdonald/amp (a terminal text editor). These are completely different software products.",
-      "ai_vetted_at": "2026-11-02T07:00:44+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "fetch",
-      "current_purl": "pkg:github/gruntwork-io/fetch",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:freebsd:fetch"
-      ],
-      "reasoning": "The candidate is for FreeBSD's fetch HTTP client utility, not gruntwork-io/fetch (a GitHub asset downloader). While both are download tools, they serve different purposes and have different version spaces.",
-      "ai_vetted_at": "2026-11-02T07:00:44+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "jacoco",
-      "current_purl": "pkg:github/jacoco/jacoco",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:jenkins:jacoco"
-      ],
-      "reasoning": "The candidate CPE is for the Jenkins JaCoCo Plugin (a plugin for Jenkins CI), not the upstream JaCoCo Java Code Coverage Library itself. The CVE describes a Jenkins plugin vulnerability, not the core library.",
-      "ai_vetted_at": "2026-11-02T07:00:47+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "happy",
-      "current_purl": "pkg:github/simonmar/happy",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:happycloud:happy"
-      ],
-      "reasoning": "The candidate CPE is for a HappyCloud Android application unrelated to the Haskell lexical analyser generator. The CVE is about an Android app lacking SSL certificate verification, not a Haskell tool.",
-      "ai_vetted_at": "2026-11-02T07:00:47+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "rsc-2fa",
-      "current_purl": "pkg:github/rsc/2fa",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:thememylogin:2fa"
-      ],
-      "reasoning": "The candidate CPE is for a WordPress plugin (Theme My Login 2FA), not the command-line tool rsc-2fa. The CVE is about a WordPress plugin vulnerability, representing a completely different product.",
-      "ai_vetted_at": "2026-11-02T07:00:47+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "libcap-ng",
-      "current_purl": "pkg:github/stevegrubb/libcap-ng",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:libcap:libcap"
-      ],
-      "reasoning": "The candidate CPE is for libcap, not libcap-ng. These are distinct libraries; libcap-ng is a separate, newer wrapper library around libcap with different naming and a different upstream maintainer (stevegrubb).",
-      "ai_vetted_at": "2026-11-02T07:00:47+00:00",
+      "reasoning": "The conda package is SCINE's MongoDB database wrapper for reaction networks. All candidates are unrelated database products (Progress, RapidShare, Oracle, Jenkins plugin). None match SCINE's database module.",
+      "ai_vetted_at": "2026-11-09T06:34:47+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -2094,8 +1928,105 @@
         "cpe:2.3:a:guppy:guppy",
         "cpe:2.3:a:freeguppy:guppy"
       ],
-      "reasoning": "Cargo-hakari is a Rust workspace tool within the guppy project, but the candidates reference GuppY CMS, a completely unrelated PHP content management system from the 2000s with security vulnerabilities in that domain.",
-      "ai_vetted_at": "2026-11-02T07:00:47+00:00",
+      "reasoning": "The conda package is a Rust workspace tool (cargo-hakari) from the guppy-rs project. The CPE candidates refer to GuppY CMS, a completely different PHP-based product. No match despite name overlap.",
+      "ai_vetted_at": "2026-11-09T06:34:47+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "eva",
+      "current_purl": "pkg:github/nerdypepper/eva",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:coderd-repos:eva"
+      ],
+      "reasoning": "The conda package is a calculator REPL by nerdypepper. The candidate CVE refers to a coderd-repos Eva product with an unrelated vulnerability. These are distinct projects.",
+      "ai_vetted_at": "2026-11-09T06:34:47+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "wishlist",
+      "current_purl": "pkg:github/charmbracelet/wishlist",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:mclewin:wishlist",
+        "cpe:2.3:a:wishlist_project:wishlist"
+      ],
+      "reasoning": "The conda package is charmbracelet's SSH directory tool. The candidates are Drupal wishlist modules, completely unrelated. No match.",
+      "ai_vetted_at": "2026-11-09T06:34:47+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "amp",
+      "current_purl": "pkg:github/jmacdonald/amp",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:cubecoders:amp"
+      ],
+      "reasoning": "The conda package is a terminal text editor by jmacdonald. The candidate is CubeCoders' AMP (Application Deployment Service), a completely different product. No match.",
+      "ai_vetted_at": "2026-11-09T06:34:47+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "fetch",
+      "current_purl": "pkg:github/gruntwork-io/fetch",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:freebsd:fetch"
+      ],
+      "reasoning": "The conda package downloads assets from GitHub repositories. The candidate is FreeBSD's fetch utility for HTTP downloads, a different tool with different purpose and implementation. No match.",
+      "ai_vetted_at": "2026-11-09T06:34:47+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "happy",
+      "current_purl": "pkg:github/simonmar/happy",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:happycloud:happy"
+      ],
+      "reasoning": "The conda package is a lexical analyzer generator for Haskell. The candidate is a mobile app (HAPPY for Android), completely unrelated. No match.",
+      "ai_vetted_at": "2026-11-09T06:34:47+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "rsc-2fa",
+      "current_purl": "pkg:github/rsc/2fa",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:thememylogin:2fa"
+      ],
+      "reasoning": "The conda package is rsc's command-line 2FA tool. The candidate is a WordPress plugin for Theme My Login, a completely different product. No match.",
+      "ai_vetted_at": "2026-11-09T06:34:47+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "libcap-ng",
+      "current_purl": "pkg:github/stevegrubb/libcap-ng",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:libcap:libcap"
+      ],
+      "reasoning": "The conda package is libcap-ng (POSIX capabilities), which is distinct from libcap (the candidate CPE). These are related but separate projects with different APIs and versioning; libcap-ng is a different library wrapper.",
+      "ai_vetted_at": "2026-11-09T06:34:47+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "weave-merge",
+      "current_purl": "pkg:github/ataraxy-labs/weave",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:weave:weave"
+      ],
+      "reasoning": "The conda package is ataraxy-labs' Git merge driver. The candidate CVE is for Weave Net (Docker networking), a completely different product. No match.",
+      "ai_vetted_at": "2026-11-09T06:34:47+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -2106,8 +2037,20 @@
       "candidate_cpes": [
         "cpe:2.3:a:helpcenterlive:hcl"
       ],
-      "reasoning": "The candidate CPE is for Help Center Live (HCL), a customer support application, not the HashiCorp HCL configuration language tool. The CVE describes a PHP application directory traversal, not a configuration language parser.",
-      "ai_vetted_at": "2026-11-02T07:00:47+00:00",
+      "reasoning": "The conda package transforms HCL (HashiCorp Configuration Language) into JSON, and the PURL points to hashicorp/hcl. The candidate CPE for helpcenterlive:hcl refers to Help Center Live, a completely unrelated help desk application. No match.",
+      "ai_vetted_at": "2026-11-09T06:34:51+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "ocaml-seq",
+      "current_purl": "pkg:github/c-cube/seq",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:datalust:seq"
+      ],
+      "reasoning": "The conda package is an OCaml compatibility library for the standard iterator type. The candidate datalust:seq refers to Datalust Seq, a .NET logging and data analysis tool. These are unrelated products despite the repo name match heuristic.",
+      "ai_vetted_at": "2026-11-09T06:34:51+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -2118,8 +2061,8 @@
       "candidate_cpes": [
         "cpe:2.3:a:clevelandwebdeveloper:spacer"
       ],
-      "reasoning": "The candidate CPE is for a WordPress plugin Spacer, not the CLI tool spacer by samwho. The CVE is about a WordPress plugin XSS vulnerability in admin settings, not a command-line utility.",
-      "ai_vetted_at": "2026-11-02T07:00:47+00:00",
+      "reasoning": "The conda package is a CLI tool to insert spacers in command output. The candidate clevelandwebdeveloper:spacer refers to a WordPress plugin called Spacer. These are unrelated despite the name collision.",
+      "ai_vetted_at": "2026-11-09T06:34:51+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -2131,8 +2074,8 @@
         "cpe:2.3:a:eeye:blink",
         "cpe:2.3:a:google:blink"
       ],
-      "reasoning": "Candidate A is for Blink Professional (a Windows security tool from eEye), and candidate B is for Google's Blink rendering engine used in Chromium. The conda package is an x86-64 Linux emulator, a completely different product from both.",
-      "ai_vetted_at": "2026-11-02T07:00:47+00:00",
+      "reasoning": "The conda package is an x86-64-linux emulator by jart. The candidates (eeye:blink, a security tool; google:blink, the Chromium rendering engine) are unrelated to an emulator. No valid match.",
+      "ai_vetted_at": "2026-11-09T06:34:51+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -2145,8 +2088,8 @@
       "candidate_cpes": [
         "cpe:2.3:a:wix:jam"
       ],
-      "reasoning": "The CVE mentions 'wix-incubator jam' as a build tool, which could match the conda package description of a software build tool. However, without a GitHub URL and given the recent/vague CVE, the connection is uncertain and should be reviewed by a human.",
-      "ai_vetted_at": "2026-11-02T07:00:47+00:00",
+      "reasoning": "The conda package describes Jam as a software build tool. The wix:jam candidate has a CVE mentioning it's a build/development tool (jam by wix-incubator), but the match is weak without more version/context confirmation. Flagging as uncertain.",
+      "ai_vetted_at": "2026-11-09T06:34:51+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -2157,20 +2100,22 @@
       "candidate_cpes": [
         "cpe:2.3:a:jenkins:cccc"
       ],
-      "reasoning": "The candidate CPE is for the Jenkins CCCC Plugin, not the standalone C/C++ Code Counter tool itself. The CVE describes a Jenkins plugin XML parsing vulnerability, not the core cccc metrics tool.",
-      "ai_vetted_at": "2026-11-02T07:00:47+00:00",
+      "reasoning": "The conda package is a C/C++ code counter/metrics tool. The candidate jenkins:cccc is the Jenkins CCCC Plugin, not the standalone cccc tool itself. These are related but distinct products.",
+      "ai_vetted_at": "2026-11-09T06:34:51+00:00",
       "model": "claude-haiku-4-5"
     },
     {
       "conda_name": "emi",
       "current_purl": "pkg:github/biophys-turin/efficientmutualinformation",
-      "verdict": "none",
-      "selected_cpes": [],
+      "verdict": "uncertain",
+      "selected_cpes": [
+        "cpe:2.3:a:emilyploszaj:emi"
+      ],
       "candidate_cpes": [
         "cpe:2.3:a:emilyploszaj:emi"
       ],
-      "reasoning": "The conda package is for efficient mutual information estimation in biophysics, while the candidate CPE appears to be for an unrelated product by emilyploszaj. The product names and domains do not align.",
-      "ai_vetted_at": "2026-11-02T07:00:47+00:00",
+      "reasoning": "The conda package estimates mutual information (a scientific tool). The emilyploszaj:emi candidate's CVE title mentions 'EMI v.1.1.10', suggesting it may be the same project, but the package's GitHub repo name (efficientmutualinformation) and the vendor name (emilyploszaj, likely a personal author) need confirmation.",
+      "ai_vetted_at": "2026-11-09T06:34:51+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -2182,8 +2127,8 @@
         "cpe:2.3:a:openstack:grizzly",
         "cpe:2.3:a:eclipse:grizzly"
       ],
-      "reasoning": "Candidate A is for OpenStack Grizzly (a cloud compute release from 2013), and candidate B is for Eclipse Grizzly (a networking framework). The conda package is a Grafana dashboard utility, unrelated to both OpenStack and Eclipse projects.",
-      "ai_vetted_at": "2026-11-02T07:00:47+00:00",
+      "reasoning": "The conda package is a Grafana dashboard management tool. Candidate openstack:grizzly is OpenStack's Grizzly release (a cloud platform), and eclipse:grizzly is an Eclipse networking library\u2014neither matches a Grafana utility.",
+      "ai_vetted_at": "2026-11-09T06:34:51+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -2197,22 +2142,8 @@
         "cpe:2.3:a:cesanta:mongoose",
         "cpe:2.3:a:mongoosejs:mongoose"
       ],
-      "reasoning": "The conda package is a graph partitioning library for SuiteSparse, but all candidates are for Mongoose web servers or ORMs (Cesanta web server, MongooseJS ODM). None match the graph partitioning library described in the conda summary.",
-      "ai_vetted_at": "2026-11-02T07:00:47+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "weave-merge",
-      "current_purl": "pkg:github/ataraxy-labs/weave",
-      "verdict": "uncertain",
-      "selected_cpes": [
-        "cpe:2.3:a:weave:weave"
-      ],
-      "candidate_cpes": [
-        "cpe:2.3:a:weave:weave"
-      ],
-      "reasoning": "The candidate CPE matches the GitHub repo name 'weave' and describes a networking/container tool. However, the conda package 'weave-merge' is specifically a Git merge driver utility, while the CVE describes Weave Net container networking, making the connection uncertain.",
-      "ai_vetted_at": "2026-11-02T07:00:47+00:00",
+      "reasoning": "The conda package is a graph partitioning library (part of SuiteSparse). Candidates refer to a web server (sergey_lyubka, valenok, cesanta) and a Node.js ODM (mongoosejs), none of which are graph partitioning libraries.",
+      "ai_vetted_at": "2026-11-09T06:34:51+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -2225,8 +2156,8 @@
         "cpe:2.3:a:date_project:date",
         "cpe:2.3:a:ruby-lang:date"
       ],
-      "reasoning": "All candidates are for Drupal Date modules or Ruby's date gem, not the howardhinnant C++ date/time library. The CVEs describe Drupal/Ruby vulnerabilities, which are completely different from a modern C++ library.",
-      "ai_vetted_at": "2026-11-02T07:00:47+00:00",
+      "reasoning": "The conda package is a C++ date/time library by howardhinnant. All candidates refer to Drupal modules or Ruby language features, not a C++ library. No valid match.",
+      "ai_vetted_at": "2026-11-09T06:34:51+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -2237,133 +2168,8 @@
       "candidate_cpes": [
         "cpe:2.3:a:simplejson_project:simplejson"
       ],
-      "reasoning": "The conda package is a C++ library (forked from Mike Anchor), but the CVE for simplejson_project describes a Python module vulnerability in the _json module. These are different implementations with divergent version spaces.",
-      "ai_vetted_at": "2026-11-02T07:00:52+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "krill-orchestrator",
-      "current_purl": "pkg:github/zero-robotics/krill",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:nlnetlabs:krill"
-      ],
-      "reasoning": "The conda package is a DAG orchestrator for robotics, while NLnet Labs Krill is an RPKI/RRDP repository software. Despite the name match, they are unrelated products with different purposes and CVE contexts.",
-      "ai_vetted_at": "2026-11-02T07:00:52+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "vale-styles-alex",
-      "current_purl": "pkg:github/errata-ai/alex",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:alex_project:alex"
-      ],
-      "reasoning": "The conda package is a vale grammar/style checker rule set, while the CVE is for an Ethereum token contract (ALEX). These are completely unrelated products that happen to share a name.",
-      "ai_vetted_at": "2026-11-02T07:00:52+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "blitzpp",
-      "current_purl": "pkg:github/blitzpp/blitz",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:blitzjs:blitz",
-        "cpe:2.3:a:returnfi:blitz"
-      ],
-      "reasoning": "The conda package is a C++ N-dimensional array library. Candidate A (blitzjs) describes a JavaScript serialization vulnerability, and candidate B (returnfi) is a login panel product. Neither matches the C++ array library.",
-      "ai_vetted_at": "2026-11-02T07:00:52+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "font-cherry-swash",
-      "current_purl": "pkg:github/google/fonts",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:fontsplugin:fonts"
-      ],
-      "reasoning": "The conda package is a font from Google Fonts repository, but the CPE candidate is for a WordPress plugin called 'Fonts Plugin'. These are unrelated products despite the repo name match.",
-      "ai_vetted_at": "2026-11-02T07:00:52+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "libleapct",
-      "current_purl": "pkg:github/llnl/leap",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:cisco:leap",
-        "cpe:2.3:a:gowondesigns:leap"
-      ],
-      "reasoning": "The conda package is a 3D computed tomography algorithms library from LLNL. Candidate A is Cisco LEAP authentication and candidate B is Leap CMS, neither of which match the CT library.",
-      "ai_vetted_at": "2026-11-02T07:00:52+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "posix",
-      "current_purl": null,
-      "verdict": "uncertain",
-      "selected_cpes": [
-        "cpe:2.3:a:posix_project:posix"
-      ],
-      "candidate_cpes": [
-        "cpe:2.3:a:posix_project:posix"
-      ],
-      "reasoning": "The CVE mentions invoking toString() on a posix package object, consistent with a JavaScript/Node.js package. Without clearer conda metadata, matching repo name and CVE description suggest this could be correct, but confidence is low.",
-      "ai_vetted_at": "2026-11-02T07:00:52+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "tuxedo",
-      "current_purl": "pkg:github/webstonehq/tuxedo",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:bea:tuxedo",
-        "cpe:2.3:a:oracle:tuxedo"
-      ],
-      "reasoning": "The conda package is a terminal UI for todo.txt files, while BEA/Oracle Tuxedo are middleware/middleware platforms. The name overlap is coincidental; CVEs describe enterprise middleware, not a todo UI.",
-      "ai_vetted_at": "2026-11-02T07:00:52+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "filament-bluegl-static",
-      "current_purl": "pkg:github/google/filament",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:filamentphp:filament"
-      ],
-      "reasoning": "The conda package is Google's Filament real-time rendering engine. The CVE candidate is FilamentPHP, a Laravel development framework. These are unrelated products with different purposes despite name overlap.",
-      "ai_vetted_at": "2026-11-02T07:00:52+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "filament-gltfio",
-      "current_purl": "pkg:github/google/filament",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:filamentphp:filament"
-      ],
-      "reasoning": "The conda package is Google's Filament real-time rendering engine. The CVE candidate is FilamentPHP, a Laravel development framework. These are unrelated products with different purposes despite name overlap.",
-      "ai_vetted_at": "2026-11-02T07:00:52+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "git-pkgs-forge",
-      "current_purl": "pkg:github/git-pkgs/forge",
-      "verdict": "none",
-      "selected_cpes": [],
-      "candidate_cpes": [
-        "cpe:2.3:a:digitalbazaar:forge"
-      ],
-      "reasoning": "The conda package is a Go library for working with git forges. The CVE candidate is node-forge (Digital Bazaar), a JavaScript cryptography library. These are completely different tools and languages.",
-      "ai_vetted_at": "2026-11-02T07:00:52+00:00",
+      "reasoning": "The conda package is a C++ JSON library forked from MJPA. The candidate simplejson_project:simplejson's CVE refers to Python 2.7's _json module, not a C++ library. These are different products despite the name overlap.",
+      "ai_vetted_at": "2026-11-09T06:34:51+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -2376,36 +2182,20 @@
         "cpe:2.3:a:uiga:proxy",
         "cpe:2.3:a:proxy_project:proxy"
       ],
-      "reasoning": "The conda package is a caching proxy for package registries. Candidates A, B, C are legacy proxy software (AnalogX, Uiga, generic proxy), none of which match a modern Go package registry proxy.",
-      "ai_vetted_at": "2026-11-02T07:00:52+00:00",
+      "reasoning": "The conda package is a package registry caching proxy. Candidates refer to AnalogX (old proxy server), Uiga (PHP CMS proxy), and an unrelated proxy project\u2014none match a modern package registry proxy tool.",
+      "ai_vetted_at": "2026-11-09T06:34:51+00:00",
       "model": "claude-haiku-4-5"
     },
     {
-      "conda_name": "gp-connect",
-      "current_purl": "pkg:github/yuezk/globalprotect-openconnect",
-      "verdict": "confident",
-      "selected_cpes": [
-        "cpe:2.3:a:globalprotect-openconnect_project:globalprotect-openconnect"
-      ],
+      "conda_name": "krill-orchestrator",
+      "current_purl": "pkg:github/zero-robotics/krill",
+      "verdict": "none",
+      "selected_cpes": [],
       "candidate_cpes": [
-        "cpe:2.3:a:globalprotect-openconnect_project:globalprotect-openconnect"
+        "cpe:2.3:a:nlnetlabs:krill"
       ],
-      "reasoning": "The conda package name and GitHub repo (yuezk/globalprotect-openconnect) directly match the CPE candidate. The CVEs describe access control issues in GlobalProtect-openconnect VPN client, consistent with the conda summary.",
-      "ai_vetted_at": "2026-11-02T07:00:52+00:00",
-      "model": "claude-haiku-4-5"
-    },
-    {
-      "conda_name": "libghostty-vt",
-      "current_purl": "pkg:github/ghostty-org/ghostty",
-      "verdict": "confident",
-      "selected_cpes": [
-        "cpe:2.3:a:ghostty:ghostty"
-      ],
-      "candidate_cpes": [
-        "cpe:2.3:a:ghostty:ghostty"
-      ],
-      "reasoning": "The conda package is a VT parsing library from ghostty-org/ghostty, which directly matches the CPE. The CVE describes control character handling in Ghostty terminal emulator, consistent with the VT parsing functionality.",
-      "ai_vetted_at": "2026-11-02T07:00:52+00:00",
+      "reasoning": "The conda package is a DAG orchestrator for robotics. The candidate nlnetlabs:krill is NLnet Labs' RRDP/RPKI certificate management tool, a completely different product despite the repo-fallback heuristic.",
+      "ai_vetted_at": "2026-11-09T06:34:51+00:00",
       "model": "claude-haiku-4-5"
     },
     {
@@ -2415,41 +2205,130 @@
       "selected_cpes": [],
       "candidate_cpes": [
         "cpe:2.3:a:novell:client",
-        "cpe:2.3:a:akamai_technologies:client",
         "cpe:2.3:a:red_swoosh:client",
+        "cpe:2.3:a:akamai_technologies:client",
         "cpe:2.3:a:pulsesecure:client",
         "cpe:2.3:a:microfocus:client",
         "cpe:2.3:a:1e:client",
         "cpe:2.3:a:mimsoftware:client"
       ],
-      "reasoning": "The conda package is a Triton Inference Server client library. All CPE candidates (Novell, Akamai, etc.) are unrelated legacy software or enterprise products, not Triton Inference Server clients.",
-      "ai_vetted_at": "2026-11-02T07:00:52+00:00",
+      "reasoning": "The conda package is a C++/Python client for Triton Inference Server. Candidates refer to Novell/Windows clients, Akamai, Pulse Secure, and other unrelated client applications\u2014none are Triton Inference Server clients.",
+      "ai_vetted_at": "2026-11-09T06:34:51+00:00",
       "model": "claude-haiku-4-5"
     },
     {
-      "conda_name": "ocaml-seq",
-      "current_purl": "pkg:github/c-cube/seq",
+      "conda_name": "vale-styles-alex",
+      "current_purl": "pkg:github/errata-ai/alex",
       "verdict": "none",
       "selected_cpes": [],
       "candidate_cpes": [
-        "cpe:2.3:a:datalust:seq"
+        "cpe:2.3:a:alex_project:alex"
       ],
-      "reasoning": "The OCaml-seq conda package is a compatibility library for OCaml's iterator type, while Datalust Seq is a .NET/log aggregation server. These are completely unrelated products despite the shared name; the CVE descriptions confirm Datalust Seq handles authentication, database queries, and file access\u2014not OCaml iterators.",
-      "ai_vetted_at": "2026-11-02T07:00:47+00:00",
+      "reasoning": "The conda package provides alex style rules for vale (a grammar checker). The candidate alex_project:alex is an Ethereum smart contract token, not a grammar/style checking tool. No valid match.",
+      "ai_vetted_at": "2026-11-09T06:34:51+00:00",
       "model": "claude-haiku-4-5"
     },
     {
-      "conda_name": "tuxguitar",
-      "current_purl": "pkg:github/helge17/tuxguitar",
-      "verdict": "confident",
+      "conda_name": "font-cherry-swash",
+      "current_purl": "pkg:github/google/fonts",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:fontsplugin:fonts"
+      ],
+      "reasoning": "The candidate CPE is for a WordPress plugin (FontsPlugin), not the Google Fonts library itself. The conda package ships a font family from google/fonts, which is unrelated to the WordPress plugin.",
+      "ai_vetted_at": "2026-11-09T06:34:45+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "blitzpp",
+      "current_purl": "pkg:github/blitzpp/blitz",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:blitzjs:blitz",
+        "cpe:2.3:a:returnfi:blitz"
+      ],
+      "reasoning": "The conda package is a C++ array library (blitzpp/blitz). Candidate (A) is BlitzJS, a JavaScript framework, and (B) is Blitz Panel, neither of which match the C++ array library.",
+      "ai_vetted_at": "2026-11-09T06:34:45+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "git-pkgs-forge",
+      "current_purl": "pkg:github/git-pkgs/forge",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:digitalbazaar:forge"
+      ],
+      "reasoning": "The conda package is a Go library for git forges. The candidate CPE is for node-forge, a JavaScript TLS implementation by Digital Bazaar, which is unrelated to a git forge library.",
+      "ai_vetted_at": "2026-11-09T06:34:45+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "libleapct",
+      "current_purl": "pkg:github/llnl/leap",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:cisco:leap",
+        "cpe:2.3:a:gowondesigns:leap"
+      ],
+      "reasoning": "The conda package is a 3D CT algorithms library. The candidates are Cisco LEAP (authentication) and Leap CMS (web application), neither matching a computed tomography library.",
+      "ai_vetted_at": "2026-11-09T06:34:45+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "posix",
+      "current_purl": null,
+      "verdict": "uncertain",
       "selected_cpes": [
-        "cpe:2.3:a:herac:tuxguitar"
+        "cpe:2.3:a:posix_project:posix"
       ],
       "candidate_cpes": [
-        "cpe:2.3:a:herac:tuxguitar"
+        "cpe:2.3:a:posix_project:posix"
       ],
-      "reasoning": "The CPE vendor:product matches the conda package (multitrack guitar tablature editor/player) and the GitHub repository owner. The sample CVEs describe TuxGuitar privilege escalation and XXE vulnerabilities in actual guitar file processing, confirming this is the correct upstream software.",
-      "ai_vetted_at": "2026-11-02T07:00:47+00:00",
+      "reasoning": "The candidate CPE matches by name and has a CVE describing package behavior. However, without additional context (version numbers, repository URL), it's unclear if this is the actual upstream software or a coincidental name match.",
+      "ai_vetted_at": "2026-11-09T06:34:45+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "tuxedo",
+      "current_purl": "pkg:github/webstonehq/tuxedo",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:bea:tuxedo",
+        "cpe:2.3:a:oracle:tuxedo"
+      ],
+      "reasoning": "The conda package is a terminal UI for todo.txt. The candidates are BEA/Oracle Tuxedo, an enterprise middleware platform, which is unrelated to a keyboard-driven terminal UI.",
+      "ai_vetted_at": "2026-11-09T06:34:45+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "filament-bluegl-static",
+      "current_purl": "pkg:github/google/filament",
+      "verdict": "none",
+      "selected_cpes": [],
+      "candidate_cpes": [
+        "cpe:2.3:a:filamentphp:filament"
+      ],
+      "reasoning": "The conda package is a physically based rendering engine by Google. The candidate CPE is FilamentPHP, a Laravel web framework, which is unrelated to a graphics rendering engine.",
+      "ai_vetted_at": "2026-11-09T06:34:45+00:00",
+      "model": "claude-haiku-4-5"
+    },
+    {
+      "conda_name": "rtklib-ex",
+      "current_purl": "pkg:github/rtklibexplorer/rtklib",
+      "verdict": "confident",
+      "selected_cpes": [
+        "cpe:2.3:a:rtklib:rtklib"
+      ],
+      "candidate_cpes": [
+        "cpe:2.3:a:rtklib:rtklib"
+      ],
+      "reasoning": "The conda package (rtklib-ex) ships RTKLIB from rtklibexplorer/rtklib, matching the CPE vendor:product name and repository context. The sample CVEs describe RTKLIB vulnerabilities consistent with the GNSS library.",
+      "ai_vetted_at": "2026-11-09T06:34:45+00:00",
       "model": "claude-haiku-4-5"
     }
   ]
