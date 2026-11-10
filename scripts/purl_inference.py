@@ -376,7 +376,11 @@ def guess_cran(url: str) -> PurlGuess | None:
     if m:
         name = m.group(1)
         return PurlGuess(f"pkg:cran/{name}", "cran", None, name, 0.92, "recipe-source")
-    # /src/contrib/NAME_VERSION.tar.gz (also under /Archive/NAME/...)
+    # /src/contrib/NAME_VERSION.tar.gz (also under /Archive/NAME/...). Only the
+    # contributed-package tree names CRAN packages: /src/base/R-4/R-4.6.2.tar.gz
+    # is the R interpreter itself, which is not a CRAN package.
+    if "/src/contrib/" not in parsed.path:
+        return None
     leaf = parsed.path.rsplit("/", 1)[-1]
     stem = _strip_archive_suffix(leaf)
     name = _strip_version_tail(stem)
@@ -619,18 +623,58 @@ def infer_all(
             # The synth is a soft signal — only "the recipe builds with pip,
             # so it might be on PyPI". Don't let it override harder URL
             # evidence; sort by confidence so e.g. a 0.85 github match wins
-            # primary while the synth stays as a low-confidence alt.
+            # primary while the synth stays as a low-confidence alt. When it
+            # is the only candidate it still ranks first here so callers can
+            # compare it with independent evidence; see ``split_primary``.
             return sorted([synth] + others, key=lambda h: h.confidence, reverse=True)
         return others
 
     return sorted(deduped, key=lambda h: h.confidence, reverse=True)
 
 
+NAME_ONLY_SOURCE = "recipe-deps"
+
+
+def split_primary(
+    candidates: list[PurlGuess],
+    *,
+    independently_verified: bool,
+    artifact_candidates: list[PurlGuess] | None = None,
+) -> tuple[PurlGuess | None, list[PurlGuess]]:
+    """Split ranked candidates into ``(primary, alternatives)``.
+
+    ``candidates`` are the recipe-inferred guesses, best first. Only they can
+    supply the primary. ``artifact_candidates`` describe package contents, not
+    identity, so they only ever extend the alternatives.
+
+    A ``recipe-deps`` guess is synthesized from the conda package name alone
+    ("the build environment contains setuptools, so it might be
+    ``pkg:pypi/<conda name>``"). No URL names that registry project, so native
+    libraries such as ``poppler`` or ``gstreamer`` collide with unrelated
+    registry projects of the same name. Such a guess is therefore never the
+    primary identity unless an independent source confirmed it; it stays a
+    low-confidence alternative for reviewers.
+    """
+    ranked = list(candidates) + list(artifact_candidates or [])
+    primary = candidates[0] if candidates else None
+    if (
+        primary is not None
+        and primary.source == NAME_ONLY_SOURCE
+        and not independently_verified
+    ):
+        return None, ranked
+    # Historical behaviour, kept unchanged: the head of the combined list is
+    # never an alternative, even when there is no recipe-inferred primary.
+    return primary, ranked[1:]
+
+
 def infer(urls: list[str], *, context: RecipeContext | None = None) -> PurlGuess | None:
     """Best single PURL guess (the primary). See :func:`infer_all` for the
     full candidate list."""
-    candidates = infer_all(urls, context=context)
-    return candidates[0] if candidates else None
+    primary, _ = split_primary(
+        infer_all(urls, context=context), independently_verified=False
+    )
+    return primary
 
 
 # Backwards-compat alias.

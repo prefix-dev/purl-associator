@@ -3,11 +3,16 @@ from __future__ import annotations
 import unittest
 
 from scripts.purl_inference import (
+    PurlGuess,
     RecipeContext,
+    derive_recipe_context,
     guess_bitbucket,
     guess_cpan,
+    guess_cran,
     guess_gitlab,
+    infer,
     infer_all,
+    split_primary,
 )
 
 
@@ -209,6 +214,157 @@ class SourceHostRankingTest(unittest.TestCase):
         self.assertEqual(candidates[0].purl, "pkg:pypi/demo")
         self.assertAlmostEqual(candidates[0].confidence, 0.94)
         self.assertEqual(candidates[1].purl, "pkg:bitbucket/example/demo")
+
+
+class CranInferenceTest(unittest.TestCase):
+    def test_contributed_package_archives_name_the_package(self) -> None:
+        for url in (
+            "https://cran.r-project.org/src/contrib/ggplot2_3.5.1.tar.gz",
+            "https://cran.r-project.org/src/contrib/Archive/ggplot2/ggplot2_3.5.1.tar.gz",
+            "https://cran.r-project.org/web/packages/ggplot2/index.html",
+            "https://cran.r-project.org/package=ggplot2",
+        ):
+            with self.subTest(url=url):
+                guess = guess_cran(url)
+                self.assertIsNotNone(guess)
+                self.assertEqual(guess.purl, "pkg:cran/ggplot2")
+
+    def test_r_interpreter_tarball_is_not_a_cran_package(self) -> None:
+        for url in (
+            "https://cran.r-project.org/src/base/R-4/R-4.6.2.tar.gz",
+            "https://cran.r-project.org/bin/windows/base/R-4.6.2-win.exe",
+            "https://cran.r-project.org/",
+        ):
+            with self.subTest(url=url):
+                self.assertIsNone(guess_cran(url))
+
+
+class NameOnlyGuessTest(unittest.TestCase):
+    """PFX-2246: a guess built from the conda name alone is not an identity."""
+
+    def _native_context(self, name: str) -> RecipeContext:
+        # conda-build renders the solved build environment, so a C/C++ library
+        # that merely has setuptools next to meson gets the PyPI hint.
+        return derive_recipe_context(
+            conda_name=name,
+            host_deps=["glib", "cairo"],
+            build_deps=["cmake", "ninja", "setuptools 84.2.1 pyhe730653_0"],
+            noarch=None,
+        )
+
+    def test_native_library_does_not_get_a_registry_primary(self) -> None:
+        for name, urls in (
+            (
+                "poppler",
+                [
+                    "https://poppler.freedesktop.org/poppler-26.11.0.tar.xz",
+                    "https://poppler.freedesktop.org/",
+                ],
+            ),
+            (
+                "gstreamer",
+                [
+                    "https://gstreamer.freedesktop.org/src/gstreamer/gstreamer-1.28.9.tar.xz",
+                    "https://cgit.freedesktop.org/gstreamer/gstreamer/tree/",
+                ],
+            ),
+        ):
+            with self.subTest(name=name):
+                context = self._native_context(name)
+                candidates = infer_all(urls, context=context)
+                # The soft hint is still a candidate, so Parselmouth agreement
+                # can promote genuine Python packages.
+                self.assertEqual([c.purl for c in candidates], [f"pkg:pypi/{name}"])
+                self.assertEqual(candidates[0].source, "recipe-deps")
+
+                primary, alternatives = split_primary(
+                    candidates, independently_verified=False
+                )
+                self.assertIsNone(primary)
+                self.assertEqual(alternatives, candidates)
+                self.assertIsNone(infer(urls, context=context))
+
+    def test_r_base_is_not_a_cran_package(self) -> None:
+        context = derive_recipe_context(
+            conda_name="r-base", host_deps=[], build_deps=[], noarch=None
+        )
+        candidates = infer_all(
+            [
+                "https://cran.r-project.org/src/base/R-4/R-4.6.2.tar.gz",
+                "http://www.r-project.org/",
+            ],
+            context=context,
+        )
+        self.assertNotIn("pkg:cran/R", [c.purl for c in candidates])
+        primary, alternatives = split_primary(candidates, independently_verified=False)
+        self.assertIsNone(primary)
+        self.assertEqual([c.source for c in alternatives], ["recipe-deps"])
+
+    def test_independent_confirmation_keeps_the_name_only_guess_primary(self) -> None:
+        context = RecipeContext(
+            conda_name="demo", ecosystem_hint="pypi", inferred_name="demo"
+        )
+        candidates = infer_all(["https://example.org/demo-1.0.tar.gz"], context=context)
+        primary, alternatives = split_primary(candidates, independently_verified=True)
+        self.assertEqual(primary.purl, "pkg:pypi/demo")
+        self.assertEqual(alternatives, [])
+
+    def test_url_evidence_is_unaffected(self) -> None:
+        context = RecipeContext(
+            conda_name="demo", ecosystem_hint="pypi", inferred_name="demo"
+        )
+        # Repository evidence outranks the name-only guess, which stays an
+        # alternative exactly as before.
+        candidates = infer_all(["https://github.com/example/demo"], context=context)
+        primary, alternatives = split_primary(candidates, independently_verified=False)
+        self.assertEqual(primary.purl, "pkg:github/example/demo")
+        self.assertEqual([c.purl for c in alternatives], ["pkg:pypi/demo"])
+
+        # A registry source URL is evidence, not a name-only guess.
+        candidates = infer_all(
+            ["https://files.pythonhosted.org/packages/source/d/demo/demo-1.0.tar.gz"],
+            context=context,
+        )
+        primary, alternatives = split_primary(candidates, independently_verified=False)
+        self.assertEqual(primary.purl, "pkg:pypi/demo")
+        self.assertEqual(primary.source, "recipe-source+recipe-deps")
+        self.assertEqual(alternatives, [])
+
+    def test_no_candidates(self) -> None:
+        self.assertEqual(split_primary([], independently_verified=False), (None, []))
+
+    def test_artifact_contents_never_supply_the_primary(self) -> None:
+        artifact = [
+            PurlGuess(
+                f"pkg:pypi/{name}", "pypi", None, name, 0.99, "parselmouth-artifact"
+            )
+            for name in ("first", "second")
+        ]
+        # Without a recipe-inferred candidate there is no primary, and the
+        # alternatives are what the mapper has always published.
+        self.assertEqual(
+            split_primary(
+                [], independently_verified=False, artifact_candidates=artifact
+            ),
+            (None, artifact[1:]),
+        )
+
+        context = RecipeContext(
+            conda_name="demo", ecosystem_hint="pypi", inferred_name="demo"
+        )
+        name_only = infer_all([], context=context)
+        primary, alternatives = split_primary(
+            name_only, independently_verified=False, artifact_candidates=artifact
+        )
+        self.assertIsNone(primary)
+        self.assertEqual(alternatives, name_only + artifact)
+
+        repository = infer_all(["https://github.com/example/demo"])
+        primary, alternatives = split_primary(
+            repository, independently_verified=False, artifact_candidates=artifact
+        )
+        self.assertEqual(primary.purl, "pkg:github/example/demo")
+        self.assertEqual(alternatives, artifact)
 
 
 if __name__ == "__main__":

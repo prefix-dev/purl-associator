@@ -52,6 +52,7 @@ from scripts.purl_inference import (
     normalize_pypi_name,
     pypi_project_from_url,
     recipe_context_hints,
+    split_primary,
 )
 from scripts.top_downloads import fetch_top_names
 
@@ -403,6 +404,7 @@ async def _process_record(
     # artifacts can vendor their dependency tree. Only surface unambiguous or
     # package-correlated distributions as alternative identities.
     seen_purls = {c.purl for c in candidates}
+    artifact_candidates: list[PurlGuess] = []
     if parselmouth:
         for purl, pypi_name in artifact_identity_pairs(
             zip(parselmouth.pypi_purls, parselmouth.pypi_normalized_names),
@@ -410,7 +412,7 @@ async def _process_record(
         ):
             if purl in seen_purls:
                 continue
-            candidates.append(
+            artifact_candidates.append(
                 PurlGuess(
                     purl=purl,
                     type="pypi",
@@ -422,6 +424,13 @@ async def _process_record(
             )
             seen_purls.add(purl)
 
+    # A name-only recipe guess that Parselmouth did not confirm must not become
+    # the primary identity (poppler is not ``pkg:pypi/poppler``).
+    primary, alternate_candidates = split_primary(
+        candidates,
+        independently_verified=auto_verified,
+        artifact_candidates=artifact_candidates,
+    )
     alternates = [
         {
             "purl": c.purl,
@@ -431,7 +440,7 @@ async def _process_record(
             "confidence": c.confidence,
             "source": c.source,
         }
-        for c in candidates[1:]
+        for c in alternate_candidates
     ]
 
     note_parts: list[str] = []
