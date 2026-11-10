@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "title": "Give poppler, gstreamer and r-base native upstream identities (PFX-2246)",
+  "author": "wolfv",
+  "author_name": "Wolf Vollprecht",
+  "timestamp": "2026-11-10T17:10:00Z",
+  "source": "PFX-2246. The automatic mapper gave three native packages registry identities that name unrelated or nonexistent registry projects, so downstream advisory matching found nothing. poppler 26.11.0 (h7469418_0) builds https://poppler.freedesktop.org/poppler-26.11.0.tar.xz and gstreamer 1.28.9 (hc5b18f8_2) builds https://gstreamer.freedesktop.org/src/gstreamer/gstreamer-1.28.9.tar.xz; both received pkg:pypi/<conda name> only because setuptools is present in the rendered build environment (sources: recipe-deps, confidence 0.6, no URL or Parselmouth evidence). The primary PURLs follow the reviewed sibling outputs of the same source archives in 2026-10-30T13-48-16-000Z--wolfv--purlfix.json (poppler-qt -> pkg:git/gitlab.freedesktop.org/poppler/poppler, gst-plugins-base -> pkg:git/gitlab.freedesktop.org/gstreamer/gstreamer). r-base 4.6.2 (h42bdfef_2) builds https://cran.r-project.org/src/base/R-4/R-4.6.2.tar.gz, the R interpreter itself; pkg:cran/R came from parsing that tarball name as a CRAN contributed package. R is developed in Subversion (https://svn.r-project.org/R) and released as tarballs, so it maps to pkg:generic/r, as libsqlite maps to pkg:generic/sqlite. CPE evidence, NVD CVE API 2.0 virtualMatchString queries on 2026-11-10: cpe:2.3:a:freedesktop:poppler matches 88 CVEs (e.g. CVE-2007-3387, CVE-2010-3702, CVE-2013-1788); cpe:2.3:a:gstreamer:gstreamer matches 110 CVEs (e.g. CVE-2009-0586, CVE-2015-0797, CVE-2016-9807); cpe:2.3:a:r_project:r matches CVE-2016-8714 and cpe:2.3:a:r_foundation:r matches CVE-2008-3931, the same two prefixes already reviewed for the conda package r in 2026-06-10T15-31-43-384Z--cpe-pipeline--ab1b8.json. Deliberately omitted because NVD matches no CVE to them: cpe:2.3:a:gstreamer_project:gstreamer (188 CPE dictionary entries) and cpe:2.3:a:r-project:r (29 CPE dictionary entries).",
+  "packages": {
+    "gstreamer": {
+      "purl": "pkg:git/gitlab.freedesktop.org/gstreamer/gstreamer",
+      "type": "git",
+      "namespace": "gitlab.freedesktop.org/gstreamer",
+      "pkg_name": "gstreamer",
+      "alternative_purls": [],
+      "cpes": [
+        "cpe:2.3:a:gstreamer:gstreamer"
+      ]
+    },
+    "poppler": {
+      "purl": "pkg:git/gitlab.freedesktop.org/poppler/poppler",
+      "type": "git",
+      "namespace": "gitlab.freedesktop.org/poppler",
+      "pkg_name": "poppler",
+      "alternative_purls": [],
+      "cpes": [
+        "cpe:2.3:a:freedesktop:poppler"
+      ]
+    },
+    "r-base": {
+      "purl": "pkg:generic/r",
+      "type": "generic",
+      "namespace": null,
+      "pkg_name": "r",
+      "alternative_purls": [],
+      "cpes": [
+        "cpe:2.3:a:r_project:r",
+        "cpe:2.3:a:r_foundation:r"
+      ],
+      "note": "The R interpreter is not a CRAN package; upstream is Subversion plus release tarballs, so it maps to generic."
+    }
+  }
+}

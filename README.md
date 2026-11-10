@@ -173,6 +173,16 @@ unchanged. Entries whose persisted note starts with `fetch error:` are retried o
 the next run even when those coordinates are unchanged, so transient processing
 failures cannot remain cached indefinitely.
 
+A registry PURL needs evidence that names the registry project: a registry URL in
+the recipe, or Parselmouth artifact agreement. A guess built only from the conda
+package name and build tooling (`recipe-deps`, for example `pkg:pypi/<conda name>`
+because `setuptools` is in the build environment) is never the primary PURL on its
+own; it stays a low-confidence alternative for review. Native libraries such as
+`poppler` otherwise collide with unrelated registry projects of the same name.
+CRAN inference accepts only contributed-package URLs (`/src/contrib/`,
+`/web/packages/`, `package=`); the R interpreter tarball under `/src/base/` is not
+a CRAN package.
+
 Source URL inference includes registered `pkg:bitbucket` repository identities and
 case-sensitive `pkg:cpan` distribution identities. Because `gitlab` is not a
 registered PURL type, `gitlab.com` repositories use the registered host-neutral
