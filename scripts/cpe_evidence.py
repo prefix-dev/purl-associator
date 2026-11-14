@@ -91,6 +91,15 @@ def _load_effective_cpes(manual: Path, contrib_dir: Path) -> dict[str, ReviewedC
     return effective
 
 
+def _names_with_cpe_decision(effective: dict[str, ReviewedCpeSet]) -> set[str]:
+    """Names whose CPE list a reviewed layer has already decided.
+
+    This includes explicit clears (``"cpes": []``): a reviewer who removed a
+    wrong CPE has decided the package, so discovery must not propose the same
+    CPE again on its next run."""
+    return set(effective)
+
+
 def _load_existing_cpes(manual: Path, contrib_dir: Path) -> set[str]:
     """Names whose effective reviewed CPE replacement is non-empty."""
     return {

@@ -67,6 +67,9 @@ class EffectiveCpeEvidenceTests(unittest.TestCase):
             "widget",
             cpe_discover._load_existing_cpes(self.manual, self.contributions),
         )
+        # The clear is still a reviewed decision: discovery must not re-propose
+        # the CPE a reviewer just removed.
+        self.assertIn("widget", cpe_discover._names_with_cpe_decision(effective))
 
     def test_later_contribution_replaces_effective_cpe_and_provenance(self) -> None:
         write_json(

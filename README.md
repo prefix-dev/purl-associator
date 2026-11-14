@@ -410,7 +410,9 @@ the same archive—for example, `libegl` must not automatically inherit a GLX CP
 from another libglvnd output.
 
 CPE list behavior is intentionally unchanged: a contribution containing `cpes`
-replaces the prior list. Changing that to union semantics could make explicit
+replaces the prior list. An explicit clear (`"cpes": []`) is a reviewed
+decision: discovery skips the package afterwards, so a removed CPE is not
+re-proposed by the next pipeline run. Changing that to union semantics could make explicit
 UI/pipeline removals impossible, so PFX-1826 does not silently change it. A
 separate follow-up should decide whether CPE contributions need an explicit
 replace/union operation before any union behavior is introduced.
