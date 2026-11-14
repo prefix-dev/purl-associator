@@ -62,6 +62,7 @@ from scripts.cpe_evidence import (
     _is_cpe_candidate,
     _load_effective_cpes,
     _load_effective_mappings,
+    _names_with_cpe_decision,
     _shared_source_evidence,
 )
 from scripts.nvd_fetch import NvdIndex, fetch_index
@@ -530,9 +531,7 @@ def main(
     """Discover CPE candidates for top-downloaded conda-forge packages."""
     auto_data = _load_effective_mappings(auto, manual, contributions)
     effective_cpes = _load_effective_cpes(manual, contributions)
-    already_have_cpes = {
-        name for name, reviewed in effective_cpes.items() if reviewed.cpes
-    }
+    already_decided = _names_with_cpe_decision(effective_cpes)
     shared_reviews, shared_conflicts = _shared_source_evidence(
         auto_data, effective_cpes
     )
@@ -562,7 +561,7 @@ def main(
             if top > 0 and considered >= top:
                 break
         considered += 1
-        if name in already_have_cpes:
+        if name in already_decided:
             continue
         if not _is_cpe_candidate(name, entry):
             continue
