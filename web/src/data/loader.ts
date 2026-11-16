@@ -57,6 +57,7 @@ const FULL_ENTRY_KEYS = [
   "auto_verified",
   "verification_sources",
   "cpes",
+  "version_scheme",
   "identities",
   "auto",
   "download_count",
@@ -74,6 +75,7 @@ const INDEX_ENTRY_KEYS = [
   "unmapped",
   "unmapped_reason",
   "cpes",
+  "version_scheme",
   "identities",
   "auto",
   "detail_path",
@@ -144,6 +146,20 @@ function stringArray(value: unknown, label: string): string[] {
     throw new Error(`${label} must be an array of strings`);
   }
   return value;
+}
+
+const VERSION_SCHEMES = new Set(["letter-patch"]);
+
+function decodeVersionScheme(value: unknown, label: string): void {
+  const scheme = record(value, label);
+  requireOnlyKeys(scheme, ["scheme", "review"], label);
+  const name = stringValue(required(scheme, "scheme", label), `${label}.scheme`, false);
+  if (!VERSION_SCHEMES.has(name)) throw new Error(`${label}.scheme is unsupported: ${name}`);
+  const review = record(required(scheme, "review", label), `${label}.review`);
+  requireOnlyKeys(review, ["status", "reviewer", "reviewed_at"], `${label}.review`);
+  if (review.status !== "verified") throw new Error(`${label}.review.status must be verified`);
+  stringValue(required(review, "reviewer", `${label}.review`), `${label}.review.reviewer`, false);
+  stringValue(required(review, "reviewed_at", `${label}.review`), `${label}.review.reviewed_at`, false);
 }
 
 function hasOnlyKeys(
@@ -452,6 +468,9 @@ function decodeLegacyIdentityFields(
     stringValue(required(review, "reviewer", `${label}.unmapped_reason.review`), `${label}.unmapped_reason.review.reviewer`, false);
     stringValue(required(review, "reviewed_at", `${label}.unmapped_reason.review`), `${label}.unmapped_reason.review.reviewed_at`, false);
   }
+  if (hasOwn(entry, "version_scheme") && entry.version_scheme !== null) {
+    decodeVersionScheme(entry.version_scheme, `${label}.version_scheme`);
+  }
   if (hasOwn(entry, "auto")) decodeAutoMapping(entry.auto, `${label}.auto`);
 
   const seenPurls = new Set<string>();
@@ -659,6 +678,7 @@ function normalizedIndexIdentityContract(
     unmapped_reason: entry.unmapped_reason ?? null,
     alternative_purls: entry.alternative_purls ?? [],
     cpes: entry.cpes ?? [],
+    version_scheme: entry.version_scheme ?? null,
     identities: entry.identities,
   };
   if (includeDownloadCount) contract.download_count = entry.download_count;

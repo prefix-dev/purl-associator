@@ -107,6 +107,45 @@ Coverage is identity-based. A package has no identity only when `identities` is
 empty; a missing primary PURL can still leave alternative PURLs or CPEs. The
 legacy `unmapped` field records an intentional no-PURL decision, not the absence
 of every identity.
+### Version scheme
+
+Some upstreams spell patch releases with a trailing letter: OpenSSL `1.1.1` →
+`1.1.1a` → … → `1.1.1w` → `3.0.0`, IJG libjpeg `9` → `9a` → `9f`, tmux `3.3` →
+`3.3a`. Conda version ordering reads a bare trailing letter as a pre-release
+and sorts `1.1.1j` *before* `1.1.1`, so a downstream range such as
+`1.1.1 ≤ v < 1.1.1k` silently matches nothing. A reviewed package may therefore
+carry an optional `version_scheme`, which says how the package's versions must
+be ordered:
+
+```json
+"version_scheme": {
+  "scheme": "letter-patch",
+  "review": {
+    "status": "verified",
+    "reviewer": "wolfv",
+    "reviewed_at": "2026-11-16T09:30:00Z"
+  }
+}
+```
+
+- `letter-patch`: a single lowercase letter after the final numeric segment is
+  a patch release after the bare version (`X` < `Xa` < `Xb` < next `X`). A
+  trailing `_`, which conda-forge appends to some releases (tmux `3.7_`,
+  `3.7b_`), is ignored, so `3.7_` equals `3.7`. Every other spelling (`1.0rc1`,
+  `3.0.0-alpha1`, `1.1.1-pre9`) keeps ordinary conda meaning.
+- Absent means ordinary conda ordering. The field is an enum, so more schemes
+  can be added; consumers should ignore values they do not know.
+- The field is an optional addition within the current payload schemas (bundle
+  4, index 5, detail 4) rather than a schema bump: consumers that ignore unknown
+  package fields keep working, and ones that do not know the field fall back to
+  conda ordering, which was the behaviour before it existed.
+
+The field is reviewed-only. A contribution sets it with
+`"version_scheme": "letter-patch"` and clears it with `"version_scheme": null`.
+A contribution entry that contains only `version_scheme` is metadata review: it does not change the package's mapping status, source,
+attribution, or identity provenance. A scheme survives later mapping reviews
+until a contribution clears it.
+
 Every published confidence is a finite JSON number; `NaN` and infinities are
 rejected. Contribution precedence compares timezone-aware timestamps as UTC
 instants, with the on-disk filename as the deterministic tie-breaker.
@@ -469,7 +508,8 @@ A downstream CVE project should consume `web/public/mappings.json` or the split
 1. enumerate conda-forge package versions independently,
 2. use PURLs for OSV/package-ecosystem matching,
 3. use CPE prefixes for NVD matching,
-4. apply OSV/NVD affected-version logic in that downstream project, and
+4. apply OSV/NVD affected-version logic in that downstream project, ordering
+   versions by the package's `version_scheme` when one is published, and
 5. store CVE assignment/review state outside this repository.
 
 ## Verification

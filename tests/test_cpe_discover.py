@@ -71,6 +71,23 @@ class EffectiveCpeEvidenceTests(unittest.TestCase):
         # the CPE a reviewer just removed.
         self.assertIn("widget", cpe_discover._names_with_cpe_decision(effective))
 
+    def test_version_scheme_only_contribution_is_not_a_cpe_decision(self) -> None:
+        write_json(self.manual, {"packages": {}})
+        write_json(
+            self.contributions / "scheme.json",
+            {
+                "timestamp": "2026-01-02T00:00:00Z",
+                "author": "curator",
+                "packages": {"jpeg": {"version_scheme": "letter-patch"}},
+            },
+        )
+
+        effective = cpe_discover._load_effective_cpes(self.manual, self.contributions)
+
+        # Version-spelling metadata says nothing about CPEs; discovery must
+        # still be free to propose one for the package.
+        self.assertNotIn("jpeg", cpe_discover._names_with_cpe_decision(effective))
+
     def test_later_contribution_replaces_effective_cpe_and_provenance(self) -> None:
         write_json(
             self.manual,

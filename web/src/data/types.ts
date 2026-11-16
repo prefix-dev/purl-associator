@@ -171,12 +171,23 @@ export type PackageEntry = {
   verification_sources?: string[] | null;
   /** CPE 2.3 vendor/product prefixes for downstream NVD matching. */
   cpes?: string[] | null;
+  /** Reviewed upstream version spelling when conda ordering would misread it. */
+  version_scheme?: VersionScheme | null;
   /** Versioned public per-identity provenance (absent on legacy schemas). */
   identities?: PublishedIdentity[];
   /** the original auto guess, kept for diff display when an override exists */
   auto?: AutoMapping;
   /** total downloads on prefix.dev for this package (null if not ranked) */
   download_count?: number | null;
+};
+
+/**
+ * `letter-patch`: a trailing lowercase letter is a patch release after the bare
+ * version (OpenSSL 1.1.1 < 1.1.1a < 1.1.2), not a conda pre-release.
+ */
+export type VersionScheme = {
+  scheme: "letter-patch";
+  review: { status: "verified"; reviewer: string; reviewed_at: string };
 };
 
 export type MappingPackageIndex = Pick<
@@ -193,6 +204,7 @@ export type MappingPackageIndex = Pick<
   | "unmapped"
   | "unmapped_reason"
   | "cpes"
+  | "version_scheme"
   | "identities"
   | "auto"
 > & {

@@ -227,6 +227,51 @@ test("hostile current shards cannot replace an internally valid index identity c
   }
 });
 
+const LETTER_PATCH = {
+  scheme: "letter-patch",
+  review: { status: "verified", reviewer: "reviewer", reviewed_at: "2026-11-16T00:00:00Z" },
+};
+
+async function loadVersionSchemeCase(indexScheme, detailScheme) {
+  const id = sequence++;
+  const name = `scheme-${id}`;
+  const indexPath = `./scheme-index-${id}.json`;
+  const detailPath = `scheme-detail-${id}.json`;
+  const { index, detail } = fixture(name, detailPath);
+  if (indexScheme !== undefined) index.version_scheme = indexScheme;
+  if (detailScheme !== undefined) detail.version_scheme = detailScheme;
+  responses.set(indexPath, metadata(4, { [name]: index }));
+  responses.set(`./${detailPath}`, { schema_version: 3, packages: { [name]: detail } });
+  const decodedIndex = await loader.loadMappingsIndex(indexPath);
+  return loader.loadMappingPackageDetail(decodedIndex.packages[name]);
+}
+
+test("reviewed version scheme is accepted when index and detail agree", async () => {
+  const detail = await loadVersionSchemeCase(LETTER_PATCH, structuredClone(LETTER_PATCH));
+  assert.equal(detail.version_scheme.scheme, "letter-patch");
+});
+
+test("version scheme must match between index and detail", async () => {
+  await assert.rejects(
+    loadVersionSchemeCase(undefined, LETTER_PATCH),
+    /identity contract mismatch/,
+  );
+});
+
+test("malformed version schemes are rejected", async (t) => {
+  const cases = {
+    "unknown scheme": { ...LETTER_PATCH, scheme: "calver" },
+    "bare string": "letter-patch",
+    "unreviewed": { ...LETTER_PATCH, review: { ...LETTER_PATCH.review, status: "auto-verified" } },
+    "extra field": { ...LETTER_PATCH, note: "x" },
+  };
+  for (const [label, scheme] of Object.entries(cases)) {
+    await t.test(label, async () => {
+      await assert.rejects(loadVersionSchemeCase(scheme, structuredClone(scheme)));
+    });
+  }
+});
+
 test("previous identity schema accepts explicitly unavailable CPE provenance", async () => {
   const id = sequence++;
   const name = `previous-${id}`;

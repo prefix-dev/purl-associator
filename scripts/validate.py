@@ -409,6 +409,14 @@ def _validate_identity_contract(
         )
     if isinstance(purl, str) and purl in _purl_list(alternatives):
         errors.append(f"{label}: primary PURL must not appear as an alternative")
+    scheme = entry.get("version_scheme")
+    if scheme is not None:
+        try:
+            merge_mappings._validate_version_scheme(
+                scheme, f"{label}.version_scheme", published=True
+            )
+        except ValueError as exc:
+            errors.append(str(exc))
     reason = entry.get("unmapped_reason")
     if reason is not None:
         if not unmapped:
@@ -490,6 +498,7 @@ CANONICAL_MAPPING_FIELDS = (
     "cpes",
     "unmapped",
     "unmapped_reason",
+    "version_scheme",
     "status",
     "source",
     "approved_by",
@@ -504,6 +513,7 @@ INDEX_CANONICAL_FIELDS = (
     "cpes",
     "unmapped",
     "unmapped_reason",
+    "version_scheme",
     "status",
 )
 
@@ -543,11 +553,18 @@ def _canonical_shape(
         if key in entry
         and not (
             index
-            and key in {"alternative_purls", "cpes", "unmapped", "unmapped_reason"}
+            and key
+            in {
+                "alternative_purls",
+                "cpes",
+                "unmapped",
+                "unmapped_reason",
+                "version_scheme",
+            }
             and entry[key] is None
         )
         and not (not current and key == "unmapped" and entry[key] is False)
-        and not (not current and key == "unmapped_reason")
+        and not (not current and key in {"unmapped_reason", "version_scheme"})
     }
     if current and "identities" in entry:
         shaped["identities"] = entry["identities"]
