@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "title": "Mark packages whose upstream spells patch releases with a trailing letter",
+  "author": "wolfv",
+  "author_name": "Wolf Vollprecht",
+  "timestamp": "2026-11-16T09:30:00Z",
+  "source": "Conda ordering sorts a bare trailing letter as a pre-release, so 1.1.1j < 1.1.1 and 9a < 9. Downstream NVD matching then drops whole ranges: on basilisk staging CVE-2021-3449 (openssl 1.1.1 <= v < 1.1.1k) matched no openssl release, and CVE-2023-0286 missed the entire 1.1.1 line. Each package below was checked against its conda-forge version history (api.anaconda.org, 2026-11-16) and its upstream release naming. openssl: 1.0.2h-1.0.2u and 1.1.1a-1.1.1w are OpenSSL letter releases after 1.0.2/1.1.1. libopenssl-static: the same OpenSSL releases (1.1.1c-1.1.1w). tmux: upstream releases 3.2a, 3.3a, 3.5a, 3.6a, 3.6b are fix releases after 3.2/3.3/3.5/3.6 (conda-forge spells newer releases 3.7_, 3.7b_, 3.7c_, 3.8_; under letter-patch the trailing underscore is ignored, whereas conda ordering puts 3.7_ before 3.7). jpeg: IJG libjpeg 8d, 9b-9e and 10e follow the bare 8/9/10 releases. xfig and fig2dev: 3.2.6a is the patch release after 3.2.6. libmad: 0.15.1b follows 0.15.1. tzdata and tzcode are left out on purpose: they publish no bare-year version, so conda ordering is already correct, and tzdata's 2020.1 would collide with 2020a.",
+  "packages": {
+    "openssl": {
+      "version_scheme": "letter-patch"
+    },
+    "libopenssl-static": {
+      "version_scheme": "letter-patch"
+    },
+    "tmux": {
+      "version_scheme": "letter-patch"
+    },
+    "jpeg": {
+      "version_scheme": "letter-patch"
+    },
+    "xfig": {
+      "version_scheme": "letter-patch"
+    },
+    "fig2dev": {
+      "version_scheme": "letter-patch"
+    },
+    "libmad": {
+      "version_scheme": "letter-patch"
+    }
+  }
+}

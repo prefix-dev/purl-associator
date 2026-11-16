@@ -306,6 +306,128 @@ class IdentityPayloadTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "reviewed-only"):
             merge_mappings._validate_source_payload(auto, "auto", kind="auto")
 
+    def _write_scheme_contribution(self, filename: str, timestamp: str, packages: dict) -> None:
+        self._write_json(
+            self.contributions / filename,
+            {
+                "schema_version": 1,
+                "author": "scheme-reviewer",
+                "timestamp": timestamp,
+                "packages": packages,
+            },
+        )
+
+    def _validate_generated(self, output: Path) -> tuple[dict, dict]:
+        bundle_path, index_path, detail_dir = self._generate(output)
+        errors: list[str] = []
+        validate.validate_mapping_alternatives(
+            self.manual, self.contributions, bundle_path, errors, self.auto
+        )
+        validate.validate_split_mappings(index_path, detail_dir, errors, bundle_path)
+        self.assertEqual(errors, [])
+        return (
+            json.loads(bundle_path.read_text())["packages"],
+            json.loads(index_path.read_text())["packages"],
+        )
+
+    def test_version_scheme_only_review_keeps_mapping_review_state(self) -> None:
+        before, _ = self._validate_generated(self.root / "before")
+        self._write_scheme_contribution(
+            "scheme.json",
+            "2026-01-05T00:00:00Z",
+            {"auto-detailed": {"version_scheme": "letter-patch"}},
+        )
+        after, index = self._validate_generated(self.root / "after")
+        expected = {
+            "scheme": "letter-patch",
+            "review": {
+                "status": "verified",
+                "reviewer": "scheme-reviewer",
+                "reviewed_at": "2026-01-05T00:00:00Z",
+            },
+        }
+        self.assertEqual(after["auto-detailed"]["version_scheme"], expected)
+        self.assertEqual(index["auto-detailed"]["version_scheme"], expected)
+        # The mapping itself was not reviewed: status, source, attribution and
+        # identity provenance are exactly what they were without the scheme.
+        unchanged = {k: v for k, v in after["auto-detailed"].items() if k != "version_scheme"}
+        self.assertEqual(unchanged, before["auto-detailed"])
+
+    def test_version_scheme_survives_later_mapping_review_and_can_be_cleared(self) -> None:
+        self._write_scheme_contribution(
+            "scheme.json",
+            "2026-01-05T00:00:00Z",
+            {"reviewed": {"version_scheme": "letter-patch"}},
+        )
+        self._write_json(
+            self.contributions / "remap.json",
+            {
+                "schema_version": 1,
+                "author": "mapping-reviewer",
+                "timestamp": "2026-01-06T00:00:00Z",
+                "packages": {"reviewed": {"cpes": ["cpe:2.3:a:other:project"]}},
+            },
+        )
+        kept, _ = self._validate_generated(self.root / "kept")
+        self.assertEqual(kept["reviewed"]["version_scheme"]["scheme"], "letter-patch")
+        self.assertEqual(
+            kept["reviewed"]["version_scheme"]["review"]["reviewer"], "scheme-reviewer"
+        )
+
+        self._write_scheme_contribution(
+            "unscheme.json",
+            "2026-01-07T00:00:00Z",
+            {"reviewed": {"version_scheme": None}},
+        )
+        cleared, index = self._validate_generated(self.root / "cleared")
+        self.assertNotIn("version_scheme", cleared["reviewed"])
+        self.assertNotIn("version_scheme", index["reviewed"])
+
+    def test_rejects_malformed_version_scheme_sources(self) -> None:
+        contribution = {
+            "schema_version": 1,
+            "author": "scheme-reviewer",
+            "timestamp": "2026-01-05T00:00:00Z",
+            "packages": {"reviewed": {"version_scheme": "calver"}},
+        }
+        with self.assertRaisesRegex(ValueError, "version_scheme is unsupported"):
+            merge_mappings._validate_source_payload(
+                contribution, "unknown-scheme", kind="contribution"
+            )
+        auto = json.loads(self.auto.read_text())
+        auto["packages"]["reviewed"]["version_scheme"] = "letter-patch"
+        with self.assertRaisesRegex(ValueError, "reviewed-only"):
+            merge_mappings._validate_source_payload(auto, "auto", kind="auto")
+
+        self._write_scheme_contribution(
+            "missing.json",
+            "2026-01-05T00:00:00Z",
+            {"no-such-package": {"version_scheme": "letter-patch"}},
+        )
+        with self.assertRaisesRegex(ValueError, "unknown package"):
+            self._generate(self.root / "missing")
+
+    def test_published_version_scheme_contract_is_validated(self) -> None:
+        good = {
+            "scheme": "letter-patch",
+            "review": {
+                "status": "verified",
+                "reviewer": "r",
+                "reviewed_at": "2026-01-05T00:00:00Z",
+            },
+        }
+        merge_mappings._validate_version_scheme(good, "ok", published=True)
+        mutations = {
+            "bare string": "letter-patch",
+            "unknown scheme": {**good, "scheme": "calver"},
+            "unverified": {**good, "review": {**good["review"], "status": "edited"}},
+            "extra field": {**good, "note": "x"},
+            "bad timestamp": {**good, "review": {**good["review"], "reviewed_at": "x"}},
+        }
+        for label, value in mutations.items():
+            with self.subTest(label=label), self.assertRaises(ValueError):
+                merge_mappings._validate_version_scheme(value, label, published=True)
+
     def test_new_primary_uses_only_current_reviewer(self) -> None:
         self._write_json(
             self.contributions / "later.json",

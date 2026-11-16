@@ -252,7 +252,22 @@ type EditPayload = {
   cpes?: string[];
   unmapped: boolean;
   note: string;
+  /** Reviewed version scheme; absent = untouched, null = clear. */
+  versionScheme?: string | null;
+  /** Only the version scheme changed; the mapping is not re-reviewed. */
+  metadataOnly?: boolean;
 };
+
+/** Mirrors VERSION_SCHEMES in scripts/merge_mappings.py. */
+const VERSION_SCHEMES = new Set(["letter-patch"]);
+
+/** The contribution's `version_scheme` value, or undefined to omit it. */
+function contributionVersionScheme(edit: EditPayload): string | null | undefined {
+  const scheme = edit.versionScheme;
+  if (scheme === undefined) return undefined;
+  if (scheme === null || VERSION_SCHEMES.has(scheme)) return scheme;
+  throw new Error(`unsupported version scheme: ${String(scheme)}`);
+}
 
 type SubmitBody = {
   userToken: string;
@@ -285,10 +300,16 @@ function buildContributionFile(
     // (including []) replaces all earlier layers; an absent one leaves the
     // cpe-pipeline layer in charge.
     const cpes = Array.isArray(edit.cpes) ? edit.cpes : undefined;
-    if (edit.unmapped) {
+    const versionScheme = contributionVersionScheme(edit);
+    if (edit.metadataOnly && versionScheme !== undefined) {
+      // Metadata review: merge_mappings leaves the mapping's status,
+      // attribution and identity provenance untouched for this entry.
+      packages[name] = { version_scheme: versionScheme };
+    } else if (edit.unmapped) {
       packages[name] = {
         unmapped: true,
         cpes,
+        version_scheme: versionScheme,
         note: edit.note || undefined,
       };
     } else {
@@ -302,6 +323,7 @@ function buildContributionFile(
         // layer, which makes reviewer removals ineffective.
         alternative_purls: edit.alternative_purls,
         cpes,
+        version_scheme: versionScheme,
         note: edit.note || undefined,
       };
     }
@@ -340,6 +362,16 @@ async function handleSubmit(request: Request, env: Env): Promise<Response> {
     typeof payload.edits !== "object"
   ) {
     return json({ error: "missing_fields" }, { status: 400, origin, env });
+  }
+  for (const edit of Object.values(payload.edits)) {
+    try {
+      contributionVersionScheme(edit);
+    } catch (err) {
+      return json(
+        { error: "invalid_version_scheme", detail: String(err) },
+        { status: 400, origin, env },
+      );
+    }
   }
   if (!env.GITHUB_APP_PRIVATE_KEY || !env.GITHUB_INSTALLATION_ID) {
     return json({ error: "app_not_configured" }, { status: 500, origin, env });

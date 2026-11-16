@@ -3,6 +3,7 @@ import { repoFullName } from "../config";
 import { purlFromAlternative, purlsFromAlternatives } from "../data/purlAlternatives";
 import { submitEditsAsPR } from "../github/api";
 import type { Edit, GitHubUser, PackageEntry } from "../data/types";
+import { publishedVersionScheme, versionSchemeLabel } from "../data/versionScheme";
 import {
   Avatar,
   Btn,
@@ -92,7 +93,14 @@ export function PRDrawer({
     const lines: string[] = [];
     // Headline summary: counts by transition so a reviewer can size up the
     // PR at a glance before scrolling.
-    const stats = { approved: 0, overrode: 0, unmapped: 0, updated: 0, cpes: 0 };
+    const stats = {
+      approved: 0,
+      overrode: 0,
+      unmapped: 0,
+      updated: 0,
+      cpes: 0,
+      schemes: 0,
+    };
     const bullets: string[] = [];
 
     for (const [id, e] of editEntries) {
@@ -134,7 +142,10 @@ export function PRDrawer({
 
       // Classify the transition for the headline counter and prefix tag.
       let tag = "approved auto guess";
-      if (e.unmapped) {
+      if (e.metadataOnly) {
+        stats.schemes++;
+        tag = "set version ordering";
+      } else if (e.unmapped) {
         stats.unmapped++;
         tag = "marked as no-PURL";
       } else if (pkg.status === "verified" && purlChanged) {
@@ -189,6 +200,12 @@ export function PRDrawer({
       for (const cpe of cpeAdded) {
         bullets.push(`  - \`+\` \`${cpe}\` (cpe)`);
       }
+      if (e.versionScheme !== undefined) {
+        bullets.push(
+          `  - version ordering: ${versionSchemeLabel(publishedVersionScheme(pkg))} → ` +
+            `${versionSchemeLabel(e.versionScheme)}`,
+        );
+      }
       if (e.note) bullets.push(`  - _${e.note}_`);
     }
 
@@ -198,6 +215,7 @@ export function PRDrawer({
     if (stats.overrode) parts.push(`${stats.overrode} overrode auto`);
     if (stats.updated) parts.push(`${stats.updated} updated existing`);
     if (stats.cpes) parts.push(`${stats.cpes} updated CPEs`);
+    if (stats.schemes) parts.push(`${stats.schemes} set version ordering`);
     if (stats.unmapped) parts.push(`${stats.unmapped} marked no-PURL`);
 
     lines.push(

@@ -52,6 +52,14 @@ UNMAPPED_REASON_CODES = frozenset(
         "compatibility_shim",
     }
 )
+# How the upstream spells its versions, when ordinary conda ordering would
+# misread them. ``letter-patch``: a trailing lowercase letter is a patch release
+# after the bare version (OpenSSL 1.1.1 < 1.1.1a < 1.1.2, libjpeg 9 < 9a < 10),
+# not a pre-release as conda ordering assumes. A trailing ``_`` (conda-forge's
+# ``3.7b_`` spelling) carries no meaning under this scheme.
+VERSION_SCHEMES = frozenset({"letter-patch"})
+# Keys a reviewed override may carry without reviewing the package mapping.
+METADATA_ONLY_FIELDS = frozenset({"version_scheme"})
 UNMAPPED_EVIDENCE_FIELDS = frozenset(
     {
         "version",
@@ -282,6 +290,33 @@ def _validate_unmapped_reason(
             )
 
 
+def _validate_version_scheme(
+    value: Any, label: str, *, published: bool = False
+) -> None:
+    if not published:
+        if value is not None and value not in VERSION_SCHEMES:
+            raise ValueError(f"{label} is unsupported: {value!r}")
+        return
+    if not isinstance(value, dict) or set(value) != {"scheme", "review"}:
+        raise ValueError(f"{label} must contain exactly ['review', 'scheme']")
+    if value["scheme"] not in VERSION_SCHEMES:
+        raise ValueError(f"{label}.scheme is unsupported: {value['scheme']!r}")
+    review = value["review"]
+    if not isinstance(review, dict) or set(review) != {
+        "status",
+        "reviewer",
+        "reviewed_at",
+    }:
+        raise ValueError(f"{label}.review has an unsupported shape")
+    if review["status"] != "verified":
+        raise ValueError(f"{label}.review.status must be verified")
+    _require_string(review["reviewer"], f"{label}.review.reviewer")
+    if not _valid_timestamp(review["reviewed_at"]):
+        raise ValueError(
+            f"{label}.review.reviewed_at must be a valid ISO-8601 timestamp"
+        )
+
+
 def _validate_package_entry(entry: Any, label: str, *, auto: bool) -> None:
     if not isinstance(entry, dict):
         raise ValueError(f"{label} must be an object")
@@ -307,6 +342,10 @@ def _validate_package_entry(entry: Any, label: str, *, auto: bool) -> None:
         if entry.get("unmapped") is not True:
             raise ValueError(f"{label}.unmapped_reason requires unmapped: true")
         _validate_unmapped_reason(entry["unmapped_reason"], f"{label}.unmapped_reason")
+    if "version_scheme" in entry:
+        if auto:
+            raise ValueError(f"{label}.version_scheme is reviewed-only")
+        _validate_version_scheme(entry["version_scheme"], f"{label}.version_scheme")
     if "status" in entry and entry["status"] not in REVIEW_STATUSES:
         raise ValueError(f"{label}.status is unsupported: {entry['status']!r}")
     if entry.get("status") == "unmapped" and entry.get("unmapped") is not True:
@@ -469,6 +508,17 @@ def _apply_reviewed_override(
     label: str,
 ) -> None:
     base = merged.get(name, {"name": name})
+    if "version_scheme" in override:
+        base = _with_version_scheme(
+            base, override["version_scheme"], override, attribution, label
+        )
+    if "version_scheme" in override and set(override) <= METADATA_ONLY_FIELDS:
+        # Version-spelling metadata is reviewed on its own: it must not mark an
+        # unreviewed mapping as manual/verified or replace its attribution.
+        if name not in merged:
+            raise ValueError(f"{label}: version_scheme names an unknown package")
+        merged[name] = base
+        return
     reviews_primary = _reviews_primary(override)
     reviews_cpes = override.get("cpes") is not None
     patch = {
@@ -568,6 +618,26 @@ def _apply_reviewed_override(
     merged[name] = result
 
 
+def _with_version_scheme(
+    base: dict, scheme: str | None, override: dict, attribution: dict, label: str
+) -> dict:
+    """Set or clear (``null``) the reviewed version scheme on a package."""
+    result = dict(base)
+    if scheme is None:
+        result.pop("version_scheme", None)
+        return result
+    current = _effective_attribution(override, attribution, label)
+    result["version_scheme"] = {
+        "scheme": scheme,
+        "review": {
+            "status": "verified",
+            "reviewer": current["approved_by"],
+            "reviewed_at": current["approved_at"],
+        },
+    }
+    return result
+
+
 def _identity_records(entry: dict) -> list[dict]:
     identities: list[dict] = []
     if isinstance(entry.get("purl"), str) and not entry.get("unmapped"):
@@ -640,7 +710,13 @@ def _index_package(name: str, entry: dict, detail_path: str) -> dict:
         "detail_path": detail_path,
         "identities": entry.get("identities", []),
     }
-    for key in ("alternative_purls", "unmapped", "unmapped_reason", "cpes"):
+    for key in (
+        "alternative_purls",
+        "unmapped",
+        "unmapped_reason",
+        "cpes",
+        "version_scheme",
+    ):
         if key in entry and entry.get(key) is not None:
             out[key] = entry[key]
     return out
