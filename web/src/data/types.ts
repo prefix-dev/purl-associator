@@ -185,8 +185,10 @@ export type PackageEntry = {
  * `letter-patch`: a trailing lowercase letter is a patch release after the bare
  * version (OpenSSL 1.1.1 < 1.1.1a < 1.1.2), not a conda pre-release.
  */
+export type VersionSchemeName = "letter-patch";
+
 export type VersionScheme = {
-  scheme: "letter-patch";
+  scheme: VersionSchemeName;
   review: { status: "verified"; reviewer: string; reviewed_at: string };
 };
 
@@ -284,6 +286,12 @@ export type Edit = {
   unmapped: boolean;
   note: string;
   approved?: boolean;
+  /** Reviewed version scheme. undefined = untouched; null = clear the
+   *  published scheme (back to conda ordering). */
+  versionScheme?: VersionSchemeName | null;
+  /** Only the version scheme changed: the contribution carries just
+   *  `version_scheme`, so the mapping keeps its review state. */
+  metadataOnly?: boolean;
 };
 
 export type Repo = {

@@ -15,6 +15,7 @@ import { repoFullName } from "./config";
 import { purlsFromAlternatives } from "./data/purlAlternatives";
 import type { Edit, MappingPackageIndex, PackageEntry } from "./data/types";
 import { useMappingsData } from "./data/useMappingsData";
+import { reconcileVersionScheme } from "./data/versionScheme";
 import { usePurlEditStore } from "./stores/userState";
 
 export function App() {
@@ -89,7 +90,7 @@ export function App() {
     if (newEdit.cpes !== undefined && cpesMatch) {
       newEdit = { ...newEdit, cpes: undefined };
     }
-    const isSame =
+    const mappingUnchanged =
       !newEdit.unmapped &&
       newEdit.purl === (focusedPkg.purl ?? "") &&
       newEdit.type === (focusedPkg.type ?? "") &&
@@ -98,6 +99,19 @@ export function App() {
       altsMatch &&
       cpesMatch &&
       !newEdit.note;
+    const approved = edits[focusedPkg.name]?.approved === true;
+    const scheme = reconcileVersionScheme(focusedPkg, newEdit, mappingUnchanged, approved);
+    newEdit = {
+      ...newEdit,
+      versionScheme: scheme.versionScheme,
+      metadataOnly: scheme.metadataOnly || undefined,
+      // Changing only the scheme of an approved package keeps the approval.
+      approved:
+        approved && mappingUnchanged && scheme.versionScheme !== undefined
+          ? true
+          : newEdit.approved,
+    };
+    const isSame = mappingUnchanged && scheme.versionScheme === undefined;
     setEdits((prev) => {
       const next = { ...prev };
       if (isSame) delete next[focusedPkg.name];

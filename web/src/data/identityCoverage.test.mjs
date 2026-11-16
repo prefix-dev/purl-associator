@@ -147,3 +147,21 @@ test("drafts override package review status without conflating coverage", () => 
     "edited",
   );
 });
+
+test("a scheme-only edit keeps the mapping status and coverage", () => {
+  const p = pkg({ status: "auto-unverified", purl: null, cpes: [] });
+  const edit = {
+    type: "pypi",
+    namespace: "",
+    pkgName: "replacement",
+    purl: "pkg:pypi/replacement",
+    alternative_purls: [],
+    unmapped: false,
+    note: "",
+    versionScheme: "letter-patch",
+    metadataOnly: true,
+  };
+  assert.equal(coverage.effectiveMappingStatus(p, edit), "auto-unverified");
+  assert.equal(coverage.packageIdentityCoverage(p, edit), "none");
+  assert.equal(coverage.effectiveMappingStatus(p, { ...edit, metadataOnly: undefined }), "edited");
+});

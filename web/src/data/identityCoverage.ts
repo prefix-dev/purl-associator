@@ -32,10 +32,14 @@ export function packageIdentityCoverage(
   edit?: Edit,
 ): IdentityCoverage {
   const published = publishedIdentityKinds(pkg);
-  const hasPurl = edit
-    ? !edit.unmapped && Boolean(edit.purl || edit.alternative_purls?.length)
+  const mappingEdit = edit?.metadataOnly ? undefined : edit;
+  const hasPurl = mappingEdit
+    ? !mappingEdit.unmapped &&
+      Boolean(mappingEdit.purl || mappingEdit.alternative_purls?.length)
     : published.hasPurl;
-  const hasCpe = edit ? effectiveCpes(pkg, edit).length > 0 : published.hasCpe;
+  const hasCpe = mappingEdit
+    ? effectiveCpes(pkg, mappingEdit).length > 0
+    : published.hasCpe;
 
   if (hasPurl && hasCpe) return "purl+cpe";
   if (hasPurl) return "purl";
@@ -56,5 +60,6 @@ export function effectiveMappingStatus(
   pkg: IdentityPackage,
   edit?: Edit,
 ): ReviewStatus {
-  return edit ? "edited" : pkg.status;
+  // A scheme-only edit does not review the mapping, so its status stands.
+  return edit && !edit.metadataOnly ? "edited" : pkg.status;
 }

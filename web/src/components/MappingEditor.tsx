@@ -6,11 +6,17 @@ import {
   effectiveAlternativeValues,
   purlsFromAlternatives,
 } from "../data/purlAlternatives";
-import type { Edit, PackageEntry } from "../data/types";
+import type { Edit, PackageEntry, VersionSchemeName } from "../data/types";
+import {
+  VERSION_SCHEME_OPTIONS,
+  effectiveVersionScheme,
+  publishedVersionScheme,
+} from "../data/versionScheme";
 import { IdentityProvenance } from "./IdentityProvenance";
 import {
   DraftButton,
   DraftCheckbox,
+  DraftRadio,
   DraftSelect,
   DraftTextArea,
   DraftTextInput,
@@ -112,6 +118,7 @@ export function MappingEditor({
     cpes: edit?.cpes,
     unmapped: edit?.unmapped ?? p.unmapped ?? p.status === "unmapped",
     note: edit?.note ?? "",
+    versionScheme: edit?.versionScheme,
   };
   const effCpes = eff.cpes ?? p.cpes ?? [];
 
@@ -544,6 +551,19 @@ export function MappingEditor({
           />
         </Section>
 
+        <Section
+          title="Version ordering"
+          subtitle="How downstream CVE tooling must order this package's versions when it evaluates advisory ranges. Changing only this does not re-review the PURL mapping."
+        >
+          <VersionSchemeChooser
+            theme={theme}
+            pkg={p}
+            value={effectiveVersionScheme(p, eff)}
+            isEdited={eff.versionScheme !== undefined}
+            onChange={(versionScheme) => onEdit({ ...eff, versionScheme })}
+          />
+        </Section>
+
         {p.identities && p.identities.length > 0 && (
           <Section
             title="Identity provenance"
@@ -943,6 +963,89 @@ function ResultingPurls({
           </button>
         </form>
       </div>
+    </div>
+  );
+}
+
+function VersionSchemeChooser({
+  theme,
+  pkg,
+  value,
+  isEdited,
+  onChange,
+}: {
+  theme: Theme;
+  pkg: PackageEntry;
+  value: VersionSchemeName | null;
+  isEdited: boolean;
+  onChange: (scheme: VersionSchemeName | null) => void;
+}) {
+  const t = theme.t;
+  const published = publishedVersionScheme(pkg);
+  const review = pkg.version_scheme?.review;
+  return (
+    <div
+      style={{
+        background: t.surface,
+        border: `1px solid ${t.border}`,
+        borderRadius: 12,
+        padding: 14,
+        display: "flex",
+        flexDirection: "column",
+        gap: 6,
+      }}
+    >
+      {VERSION_SCHEME_OPTIONS.map((option) => {
+        const selected = option.value === value;
+        return (
+          <label
+            key={option.value ?? "conda"}
+            style={{
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 10,
+              padding: "8px 10px",
+              background: selected ? t.surface2 : "transparent",
+              border: `1px solid ${selected ? t.border : "transparent"}`,
+              borderRadius: 8,
+              cursor: "pointer",
+            }}
+          >
+            <DraftRadio
+              name={`version-scheme-${pkg.name}`}
+              checked={selected}
+              onDraftSelect={() => onChange(option.value)}
+              style={{ accentColor: t.accent, marginTop: 2 }}
+            />
+            <span>
+              <span style={{ fontSize: 13, color: t.fg1 }}>
+                {option.label}
+                {option.value === published && (
+                  <span style={{ fontSize: 11, color: t.fg3, marginLeft: 6 }}>
+                    published
+                  </span>
+                )}
+                {selected && isEdited && (
+                  <span style={{ fontSize: 11, color: t.accent, marginLeft: 6 }}>
+                    staged
+                  </span>
+                )}
+              </span>
+              <span
+                className="mono"
+                style={{ display: "block", fontSize: 11.5, color: t.fg2, marginTop: 2 }}
+              >
+                {option.example}
+              </span>
+            </span>
+          </label>
+        );
+      })}
+      {review && (
+        <div style={{ fontSize: 11.5, color: t.fg3, marginTop: 4 }}>
+          Reviewed by <strong>{review.reviewer}</strong> · {review.reviewed_at}
+        </div>
+      )}
     </div>
   );
 }

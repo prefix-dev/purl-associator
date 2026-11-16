@@ -107,6 +107,30 @@ export function DraftCheckbox({
   );
 }
 
+export function DraftRadio({
+  name,
+  checked,
+  onDraftSelect,
+  style,
+}: {
+  name: string;
+  checked: boolean;
+  onDraftSelect: DraftAction;
+  style?: CSSProperties;
+}) {
+  return (
+    <input
+      type="radio"
+      name={name}
+      checked={checked}
+      onChange={(e) => {
+        if (e.target.checked) onDraftSelect();
+      }}
+      style={style}
+    />
+  );
+}
+
 export function DraftSelect<T extends string>({
   value,
   onDraftChange,
