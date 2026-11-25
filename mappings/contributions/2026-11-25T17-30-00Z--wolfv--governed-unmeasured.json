@@ -1,0 +1,344 @@
+{
+  "schema_version": 1,
+  "title": "Map conda-forge packages that had no PURL or CPE for advisory matching",
+  "author": "wolfv",
+  "author_name": "Wolf Vollprecht",
+  "timestamp": "2026-11-25T17:30:00Z",
+  "source": "Identities for conda-forge packages a customer's governed environment could not evaluate in Basilisk (governed-unmeasured-packages-2026-11-24.xlsx, group 'no PURL or CPE to match it to an advisory source'). Every package had no primary PURL in mappings/auto.json ('heuristics did not recognise any source URL'); the source URL, repo and homepage come from the auto.json record of its recipe. Repositories were confirmed to exist on 2026-11-25. X.org libraries: each recipe builds https://www.x.org/releases/individual/lib/<lib>-<version>.tar.xz, developed at gitlab.freedesktop.org/xorg/lib/<lib>; xorgproto builds xorgproto-2025.1 from gitlab.freedesktop.org/xorg/proto/xorgproto; libpciaccess builds from gitlab.freedesktop.org/xorg/lib/libpciaccess; the path form follows the reviewed xorg-libxau and xorg-libxdmcp. libdrm builds gitlab.freedesktop.org/mesa/drm/-/archive/libdrm-2.4.129, a project now served at gitlab.freedesktop.org/mesa/libdrm (the old path redirects). libegl, libegl-devel, libgl, libgl-devel, libglvnd, libglx and libglx-devel are outputs of the single source archive gitlab.freedesktop.org/glvnd/libglvnd/-/archive/v1.7.0, so they share its PURL; no CPE is added (cpe:2.3:a:nvidia:libglvnd matches 0 CVEs, and libglx's explicit empty CPE list is left unchanged). gtk3 builds download.gnome.org/sources/gtk/3.24 (repo gitlab.gnome.org/GNOME/gtk, as reviewed for gtk2); libgirepository builds gobject-introspection-1.86.0 (repo gitlab.gnome.org/GNOME/gobject-introspection, as reviewed for g-ir-build-tools). gsl and libiconv build GNU tarballs from ftp.gnu.org with Savannah git repositories (form as reviewed for groff); mpc builds ftp.gnu.org/gnu/mpc/mpc-1.4.1 and is developed at gitlab.inria.fr/mpc/mpc. libgcrypt-lib builds libgcrypt-1.12.2 and libintl builds gettext-1.0; both take the CPE already reviewed for their sibling package (libgcrypt, gettext). libgdal-core is GDAL 3.13.3 (repo github.com/OSGeo/gdal) and takes the CPE reviewed for libgdal; proj builds download.osgeo.org/proj/proj-9.9.0 (repo github.com/OSGeo/PROJ). mkl repackages Intel oneMKL 2026.1.0 runtime libraries. CPE evidence, NVD CVE API 2.0 virtualMatchString counts on 2026-11-25: x.org:libx11 15 (e.g. CVE-2006-5397, CVE-2013-7439), x:libx11 3 (CVE-2013-1981, CVE-2013-1997, CVE-2013-2004), freedesktop:libice 1 (CVE-2017-2626), x:libxcursor 3 (CVE-2013-2003, CVE-2017-16612, CVE-2015-9262), x:libxext 1 (CVE-2013-1982), x.org:libxfixes 1 (CVE-2016-7944), x:libxfixes 1 (CVE-2013-1983), x.org:libxi 5 (e.g. CVE-2013-1984), x:libxinerama 1 (CVE-2013-1985), x.org:libxpm 5 (e.g. CVE-2022-44617, CVE-2022-46285), x.org:libxrandr 2 (CVE-2016-7947, CVE-2016-7948), x:libxrandr 1 (CVE-2013-1986), x.org:libxrender 2 (CVE-2016-7949, CVE-2016-7950), x:libxrender 1 (CVE-2013-1987), x:libxt 2 (CVE-2013-2002, CVE-2013-2005), x.org:libxtst 1 (CVE-2016-7952), x:libxtst 2 (CVE-2013-2063, CVE-2016-7951), x:libxxf86vm 1 (CVE-2013-2001), gnome:gtk 15 (e.g. CVE-2004-0753), gnu:gnu_scientific_library 2 (CVE-2020-35357, CVE-2024-50610), gnupg:libgcrypt 17 (e.g. CVE-2013-4242), gnu:gettext 2 (CVE-2004-0966, CVE-2018-18751), gdal:gdal 1 (CVE-2005-3581), intel:oneapi_math_kernel_library 7 (e.g. CVE-2023-22355, CVE-2022-25864), intel:math_kernel_library 1 (CVE-2017-5682). No CPE is added where NVD matches 0 CVEs: x.org or x for libice, libsm, libxcomposite, libxdamage, libpciaccess, xorgproto, libdrm; freedesktop:libsm; freedesktop:libdrm; x.org:libxcursor, libxext, libxinerama, libxt, libxxf86vm; x:libxi, x:libxpm; gnu:gsl, gnu:libiconv, gnu:mpc; gnome:gobject-introspection; osgeo:proj, proj:proj. fonts-conda-forge 1 (hc364b38_1) and python-gil 3.15.2 (h4df99d1_102) contain no payload files: fonts-conda-forge depends only on font-ttf-ubuntu, font-ttf-inconsolata, font-ttf-dejavu-sans-mono and font-ttf-source-code-pro, and python-gil only on cpython 3.15.2.* and python_abi, so both are dependency-only metapackages like the reviewed fonts-conda-ecosystem.",
+  "packages": {
+    "fonts-conda-forge": {
+      "unmapped": true,
+      "unmapped_reason": {
+        "code": "dependency_only_metapackage",
+        "explanation": "Conda dependency-only aggregate or convenience package without an independent upstream package payload.",
+        "rule_id": "dependency-only-metapackage-v1",
+        "evidence": {
+          "version": "1",
+          "build": "hc364b38_1",
+          "summary": "The curated conda-forge standard fonts",
+          "homepage": "https://conda-forge.org/",
+          "payload_file_count": "0",
+          "dependency_count": "4",
+          "constraint_count": "0"
+        }
+      }
+    },
+    "gsl": {
+      "purl": "pkg:git/git.savannah.gnu.org/gsl",
+      "type": "git",
+      "namespace": "git.savannah.gnu.org",
+      "pkg_name": "gsl",
+      "alternative_purls": [],
+      "cpes": [
+        "cpe:2.3:a:gnu:gnu_scientific_library"
+      ]
+    },
+    "gtk3": {
+      "purl": "pkg:git/gitlab.gnome.org/GNOME/gtk",
+      "type": "git",
+      "namespace": "gitlab.gnome.org/GNOME",
+      "pkg_name": "gtk",
+      "alternative_purls": [],
+      "cpes": [
+        "cpe:2.3:a:gnome:gtk"
+      ]
+    },
+    "libdrm": {
+      "purl": "pkg:git/gitlab.freedesktop.org/mesa/libdrm",
+      "type": "git",
+      "namespace": "gitlab.freedesktop.org/mesa",
+      "pkg_name": "libdrm",
+      "alternative_purls": []
+    },
+    "libegl": {
+      "purl": "pkg:git/gitlab.freedesktop.org/glvnd/libglvnd",
+      "type": "git",
+      "namespace": "gitlab.freedesktop.org/glvnd",
+      "pkg_name": "libglvnd",
+      "alternative_purls": []
+    },
+    "libegl-devel": {
+      "purl": "pkg:git/gitlab.freedesktop.org/glvnd/libglvnd",
+      "type": "git",
+      "namespace": "gitlab.freedesktop.org/glvnd",
+      "pkg_name": "libglvnd",
+      "alternative_purls": []
+    },
+    "libgcrypt-lib": {
+      "cpes": [
+        "cpe:2.3:a:gnupg:libgcrypt"
+      ]
+    },
+    "libgdal-core": {
+      "purl": "pkg:github/osgeo/gdal",
+      "type": "github",
+      "namespace": "osgeo",
+      "pkg_name": "gdal",
+      "alternative_purls": [],
+      "cpes": [
+        "cpe:2.3:a:gdal:gdal"
+      ]
+    },
+    "libgirepository": {
+      "purl": "pkg:git/gitlab.gnome.org/GNOME/gobject-introspection",
+      "type": "git",
+      "namespace": "gitlab.gnome.org/GNOME",
+      "pkg_name": "gobject-introspection",
+      "alternative_purls": []
+    },
+    "libgl": {
+      "purl": "pkg:git/gitlab.freedesktop.org/glvnd/libglvnd",
+      "type": "git",
+      "namespace": "gitlab.freedesktop.org/glvnd",
+      "pkg_name": "libglvnd",
+      "alternative_purls": []
+    },
+    "libgl-devel": {
+      "purl": "pkg:git/gitlab.freedesktop.org/glvnd/libglvnd",
+      "type": "git",
+      "namespace": "gitlab.freedesktop.org/glvnd",
+      "pkg_name": "libglvnd",
+      "alternative_purls": []
+    },
+    "libglvnd": {
+      "purl": "pkg:git/gitlab.freedesktop.org/glvnd/libglvnd",
+      "type": "git",
+      "namespace": "gitlab.freedesktop.org/glvnd",
+      "pkg_name": "libglvnd",
+      "alternative_purls": []
+    },
+    "libglx": {
+      "purl": "pkg:git/gitlab.freedesktop.org/glvnd/libglvnd",
+      "type": "git",
+      "namespace": "gitlab.freedesktop.org/glvnd",
+      "pkg_name": "libglvnd",
+      "alternative_purls": []
+    },
+    "libglx-devel": {
+      "purl": "pkg:git/gitlab.freedesktop.org/glvnd/libglvnd",
+      "type": "git",
+      "namespace": "gitlab.freedesktop.org/glvnd",
+      "pkg_name": "libglvnd",
+      "alternative_purls": []
+    },
+    "libiconv": {
+      "purl": "pkg:git/git.savannah.gnu.org/libiconv",
+      "type": "git",
+      "namespace": "git.savannah.gnu.org",
+      "pkg_name": "libiconv",
+      "alternative_purls": []
+    },
+    "libintl": {
+      "cpes": [
+        "cpe:2.3:a:gnu:gettext"
+      ]
+    },
+    "libpciaccess": {
+      "purl": "pkg:git/gitlab.freedesktop.org/xorg/lib/libpciaccess",
+      "type": "git",
+      "namespace": "gitlab.freedesktop.org/xorg/lib",
+      "pkg_name": "libpciaccess",
+      "alternative_purls": []
+    },
+    "mkl": {
+      "cpes": [
+        "cpe:2.3:a:intel:oneapi_math_kernel_library",
+        "cpe:2.3:a:intel:math_kernel_library"
+      ]
+    },
+    "mpc": {
+      "purl": "pkg:git/gitlab.inria.fr/mpc/mpc",
+      "type": "git",
+      "namespace": "gitlab.inria.fr/mpc",
+      "pkg_name": "mpc",
+      "alternative_purls": []
+    },
+    "proj": {
+      "purl": "pkg:github/osgeo/proj",
+      "type": "github",
+      "namespace": "osgeo",
+      "pkg_name": "proj",
+      "alternative_purls": []
+    },
+    "python-gil": {
+      "unmapped": true,
+      "unmapped_reason": {
+        "code": "dependency_only_metapackage",
+        "explanation": "Conda dependency-only aggregate or convenience package without an independent upstream package payload.",
+        "rule_id": "dependency-only-metapackage-v1",
+        "evidence": {
+          "version": "3.15.2",
+          "build": "h4df99d1_102",
+          "summary": "General purpose programming language",
+          "homepage": "https://www.python.org/",
+          "payload_file_count": "0",
+          "dependency_count": "2",
+          "constraint_count": "0"
+        }
+      }
+    },
+    "xorg-libice": {
+      "purl": "pkg:git/gitlab.freedesktop.org/xorg/lib/libice",
+      "type": "git",
+      "namespace": "gitlab.freedesktop.org/xorg/lib",
+      "pkg_name": "libice",
+      "alternative_purls": [],
+      "cpes": [
+        "cpe:2.3:a:freedesktop:libice"
+      ]
+    },
+    "xorg-libsm": {
+      "purl": "pkg:git/gitlab.freedesktop.org/xorg/lib/libsm",
+      "type": "git",
+      "namespace": "gitlab.freedesktop.org/xorg/lib",
+      "pkg_name": "libsm",
+      "alternative_purls": []
+    },
+    "xorg-libx11": {
+      "purl": "pkg:git/gitlab.freedesktop.org/xorg/lib/libx11",
+      "type": "git",
+      "namespace": "gitlab.freedesktop.org/xorg/lib",
+      "pkg_name": "libx11",
+      "alternative_purls": [],
+      "cpes": [
+        "cpe:2.3:a:x.org:libx11",
+        "cpe:2.3:a:x:libx11"
+      ]
+    },
+    "xorg-libxcomposite": {
+      "purl": "pkg:git/gitlab.freedesktop.org/xorg/lib/libxcomposite",
+      "type": "git",
+      "namespace": "gitlab.freedesktop.org/xorg/lib",
+      "pkg_name": "libxcomposite",
+      "alternative_purls": []
+    },
+    "xorg-libxcursor": {
+      "purl": "pkg:git/gitlab.freedesktop.org/xorg/lib/libxcursor",
+      "type": "git",
+      "namespace": "gitlab.freedesktop.org/xorg/lib",
+      "pkg_name": "libxcursor",
+      "alternative_purls": [],
+      "cpes": [
+        "cpe:2.3:a:x:libxcursor"
+      ]
+    },
+    "xorg-libxdamage": {
+      "purl": "pkg:git/gitlab.freedesktop.org/xorg/lib/libxdamage",
+      "type": "git",
+      "namespace": "gitlab.freedesktop.org/xorg/lib",
+      "pkg_name": "libxdamage",
+      "alternative_purls": []
+    },
+    "xorg-libxext": {
+      "purl": "pkg:git/gitlab.freedesktop.org/xorg/lib/libxext",
+      "type": "git",
+      "namespace": "gitlab.freedesktop.org/xorg/lib",
+      "pkg_name": "libxext",
+      "alternative_purls": [],
+      "cpes": [
+        "cpe:2.3:a:x:libxext"
+      ]
+    },
+    "xorg-libxfixes": {
+      "purl": "pkg:git/gitlab.freedesktop.org/xorg/lib/libxfixes",
+      "type": "git",
+      "namespace": "gitlab.freedesktop.org/xorg/lib",
+      "pkg_name": "libxfixes",
+      "alternative_purls": [],
+      "cpes": [
+        "cpe:2.3:a:x.org:libxfixes",
+        "cpe:2.3:a:x:libxfixes"
+      ]
+    },
+    "xorg-libxi": {
+      "purl": "pkg:git/gitlab.freedesktop.org/xorg/lib/libxi",
+      "type": "git",
+      "namespace": "gitlab.freedesktop.org/xorg/lib",
+      "pkg_name": "libxi",
+      "alternative_purls": [],
+      "cpes": [
+        "cpe:2.3:a:x.org:libxi"
+      ]
+    },
+    "xorg-libxinerama": {
+      "purl": "pkg:git/gitlab.freedesktop.org/xorg/lib/libxinerama",
+      "type": "git",
+      "namespace": "gitlab.freedesktop.org/xorg/lib",
+      "pkg_name": "libxinerama",
+      "alternative_purls": [],
+      "cpes": [
+        "cpe:2.3:a:x:libxinerama"
+      ]
+    },
+    "xorg-libxpm": {
+      "purl": "pkg:git/gitlab.freedesktop.org/xorg/lib/libxpm",
+      "type": "git",
+      "namespace": "gitlab.freedesktop.org/xorg/lib",
+      "pkg_name": "libxpm",
+      "alternative_purls": [],
+      "cpes": [
+        "cpe:2.3:a:x.org:libxpm"
+      ]
+    },
+    "xorg-libxrandr": {
+      "purl": "pkg:git/gitlab.freedesktop.org/xorg/lib/libxrandr",
+      "type": "git",
+      "namespace": "gitlab.freedesktop.org/xorg/lib",
+      "pkg_name": "libxrandr",
+      "alternative_purls": [],
+      "cpes": [
+        "cpe:2.3:a:x.org:libxrandr",
+        "cpe:2.3:a:x:libxrandr"
+      ]
+    },
+    "xorg-libxrender": {
+      "purl": "pkg:git/gitlab.freedesktop.org/xorg/lib/libxrender",
+      "type": "git",
+      "namespace": "gitlab.freedesktop.org/xorg/lib",
+      "pkg_name": "libxrender",
+      "alternative_purls": [],
+      "cpes": [
+        "cpe:2.3:a:x.org:libxrender",
+        "cpe:2.3:a:x:libxrender"
+      ]
+    },
+    "xorg-libxt": {
+      "purl": "pkg:git/gitlab.freedesktop.org/xorg/lib/libxt",
+      "type": "git",
+      "namespace": "gitlab.freedesktop.org/xorg/lib",
+      "pkg_name": "libxt",
+      "alternative_purls": [],
+      "cpes": [
+        "cpe:2.3:a:x:libxt"
+      ]
+    },
+    "xorg-libxtst": {
+      "purl": "pkg:git/gitlab.freedesktop.org/xorg/lib/libxtst",
+      "type": "git",
+      "namespace": "gitlab.freedesktop.org/xorg/lib",
+      "pkg_name": "libxtst",
+      "alternative_purls": [],
+      "cpes": [
+        "cpe:2.3:a:x.org:libxtst",
+        "cpe:2.3:a:x:libxtst"
+      ]
+    },
+    "xorg-libxxf86vm": {
+      "purl": "pkg:git/gitlab.freedesktop.org/xorg/lib/libxxf86vm",
+      "type": "git",
+      "namespace": "gitlab.freedesktop.org/xorg/lib",
+      "pkg_name": "libxxf86vm",
+      "alternative_purls": [],
+      "cpes": [
+        "cpe:2.3:a:x:libxxf86vm"
+      ]
+    },
+    "xorg-xorgproto": {
+      "purl": "pkg:git/gitlab.freedesktop.org/xorg/proto/xorgproto",
+      "type": "git",
+      "namespace": "gitlab.freedesktop.org/xorg/proto",
+      "pkg_name": "xorgproto",
+      "alternative_purls": []
+    }
+  }
+}
